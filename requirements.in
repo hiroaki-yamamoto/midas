@@ -1,4 +1,6 @@
 tensorflow-gpu
+scikit-learn
+pandas
 click
 requests
 flake8
