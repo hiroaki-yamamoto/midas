@@ -9,14 +9,13 @@ import numpy as np
 import pandas as pd
 import sklearn.preprocessing as prep
 import tensorflow as tf
+# import keras
 
 import click as cl
 
 
 class Machine(object):
     """Machine."""
-
-    num_units = 30
 
     def __init__(self, raw_data, field):
         """Init."""
@@ -32,29 +31,33 @@ class Machine(object):
         scaler = prep.MinMaxScaler()
         return pd.DataFrame(scaler.fit_transform(data))
 
-    @property
-    def model(self):
+    def model(self, input_shape):
         """Return LSTM model."""
         model = tf.keras.models.Sequential([
             tf.keras.layers.LSTM(
-                unis=self.num_units, return_sequences=True,
-                input_shape=(None, 1)
+                units=30, return_sequences=False,
+                input_shape=input_shape
             ),
             tf.keras.layers.Dense(
-                unis=1, activation='linear'
+                units=1, activation='linear'
             ),
         ])
         model.compile(optimizer='rmsprop', loss='mean_squared_error')
         return model
 
-    def train(self, X_train, Y_train, out):
+    def train(self, X_train, Y_train, X_test, Y_test, out):
         """Train."""
-        model = self.model
+        model = self.model(input_shape=(None, 1))
         model.fit(
             x=X_train, y=Y_train,
             batch_size=2,
             epochs=15,
-            validation_split=0.05
+            validation_split=0.15,
+            # callbacks=[
+            #     keras.callbacks.EarlyStopping(
+            #         monitor='val_loss', mode='auto', patience=0
+            #     )
+            # ]
         )
         model.save(out)
 
@@ -78,6 +81,9 @@ class Machine(object):
         X_train, X_test = \
             np.reshape(X_train,  (X_train.shape[0], X_train.shape[1], 1)),\
             np.reshape(X_test,  (X_test.shape[0], X_test.shape[1], 1))
+        # Y_train, Y_test = \
+        #     np.reshape(Y_train,  (Y_train.shape[0], 1)),\
+        #     np.reshape(Y_test,  (Y_test.shape[0], 1))
         return X_train, Y_train, X_test, Y_test
 
 
@@ -86,7 +92,7 @@ class Machine(object):
 @cl.argument('field')
 @cl.option(
     "-o", "--output", type=cl.File(mode='wb'),
-    default="sltm_model.hdf",
+    default="lstm_model.hdf",
     help="File path to store the model"
 )
 def main(output, field, fin):
@@ -95,7 +101,13 @@ def main(output, field, fin):
     fin.close()
     model = Machine(reader, field)
     (X_train, Y_train, X_test, Y_test) = model.split_data(0.85)
-    model.train(X_train, Y_train, output)
+    from pprint import pprint
+    pprint(model.data)
+    pprint(X_train)
+    pprint(X_test)
+    pprint(Y_train)
+    pprint(Y_test)
+    model.train(X_train, Y_train, X_test, Y_test, output)
     output.close()
     print("Done.")
 
