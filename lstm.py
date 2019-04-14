@@ -61,6 +61,13 @@ class Machine(object):
         )
         model.save(out)
 
+    def split_seq(self, size: int):
+        """Split the price data into a nested list of the length of size."""
+        return [
+            self.data[index:index + size].values
+            for index in range(len(self.data) - size + 1)
+        ]
+
     def split_data(self, rate: float):
         """
         Split data with data to learn and data to test.
@@ -72,7 +79,7 @@ class Machine(object):
         """
         if 0.0 >= rate or 1.0 <= rate:
             raise ValueError("The rate must be between >0.1 and <1.0")
-        data = np.array(self.data)
+        data = np.array(self.split_seq(30))
         row = int(len(data) * rate)
         train = data[:row, :]
 
