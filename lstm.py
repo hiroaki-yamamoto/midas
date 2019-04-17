@@ -70,7 +70,8 @@ class Machine(object):
         model.fit(
             x=X_train, y=Y_train,
             batch_size=2,
-            epochs=15,
+            shuffle=True,
+            epochs=16,
             validation_split=0.15,
             callbacks=callbacks
         )
@@ -127,8 +128,9 @@ def main(output, logdir, field, fin):
     fin.close()
     model = Machine(reader, field)
     (X_train, Y_train, X_test, Y_test) = model.split_data(0.85)
-    tb = tf.keras.callbacks.TensorBoard(log_dir=logdir, histogram_freq=1)
-    model.train(X_train, Y_train, X_test, Y_test, output, callbacks=[tb])
+    model.train(X_train, Y_train, X_test, Y_test, output, callbacks=[
+        tf.keras.callbacks.TensorBoard(log_dir=logdir, histogram_freq=1)
+    ])
     output.close()
     print("Done.")
 
