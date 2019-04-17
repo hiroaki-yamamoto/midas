@@ -22,23 +22,42 @@ class Machine(object):
         self.field = field
 
     @property
-    def data(self):
-        """Return preprocessed data."""
-        data = pd.DataFrame([
+    def filtered_data(self):
+        """Return filtered data by field column."""
+        return pd.DataFrame([
             float(item[self.field]) for item in self.raw_data
         ])
+
+    @property
+    def scaler(self):
+        """Scaler."""
+        data = self.filtered_data
         scaler = prep.MinMaxScaler()
-        return pd.DataFrame(scaler.fit_transform(data))
+        scaler.fit(data)
+        return scaler
+
+    @property
+    def data(self):
+        """Return preprocessed data."""
+        data = data = self.filtered_data
+        return pd.DataFrame(self.scaler.transform(data))
 
     def model(self, input_shape):
         """Return LSTM model."""
         model = tf.keras.models.Sequential([
             tf.keras.layers.CuDNNLSTM(
-                units=30, return_sequences=False,
+                units=110, return_sequences=True,
                 input_shape=input_shape
             ),
             tf.keras.layers.Dense(
-                units=1, activation='linear'
+                units=96, activation='relu'
+            ),
+            tf.keras.layers.CuDNNLSTM(
+                units=110, return_sequences=False,
+                input_shape=input_shape
+            ),
+            tf.keras.layers.Dense(
+                units=1, activation='relu'
             ),
         ])
         model.compile(optimizer='rmsprop', loss='mean_squared_error')
@@ -48,9 +67,6 @@ class Machine(object):
         """Train."""
         model = self.model(input_shape=(None, 1))
         callbacks = callbacks or []
-        callbacks.append(tf.keras.callbacks.EarlyStopping(
-            monitor='val_loss', mode='auto', patience=0
-        ))
         model.fit(
             x=X_train, y=Y_train,
             batch_size=2,
