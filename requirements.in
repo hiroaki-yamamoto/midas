@@ -5,4 +5,3 @@ click
 requests
 flake8
 flake8-docstrings
-keras

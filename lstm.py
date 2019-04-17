@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 import sklearn.preprocessing as prep
 import tensorflow as tf
-# import keras
 
 import click as cl
 
@@ -34,7 +33,7 @@ class Machine(object):
     def model(self, input_shape):
         """Return LSTM model."""
         model = tf.keras.models.Sequential([
-            tf.keras.layers.LSTM(
+            tf.keras.layers.CuDNNLSTM(
                 units=30, return_sequences=False,
                 input_shape=input_shape
             ),
@@ -45,19 +44,19 @@ class Machine(object):
         model.compile(optimizer='rmsprop', loss='mean_squared_error')
         return model
 
-    def train(self, X_train, Y_train, X_test, Y_test, out):
+    def train(self, X_train, Y_train, X_test, Y_test, out, callbacks=None):
         """Train."""
         model = self.model(input_shape=(None, 1))
+        callbacks = callbacks or []
+        callbacks.append(tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss', mode='auto', patience=0
+        ))
         model.fit(
             x=X_train, y=Y_train,
             batch_size=2,
             epochs=15,
             validation_split=0.15,
-            # callbacks=[
-            #     keras.callbacks.EarlyStopping(
-            #         monitor='val_loss', mode='auto', patience=0
-            #     )
-            # ]
+            callbacks=callbacks
         )
         model.save(out)
 
@@ -98,23 +97,22 @@ class Machine(object):
 @cl.argument('fin', type=cl.File())
 @cl.argument('field')
 @cl.option(
+    "-l", "--logdir", type=cl.Path(), default="logs",
+    help="Directory to store the log compatible with tensorboard."
+)
+@cl.option(
     "-o", "--output", type=cl.File(mode='wb'),
     default="lstm_model.hdf",
     help="File path to store the model"
 )
-def main(output, field, fin):
+def main(output, logdir, field, fin):
     """Main."""
     reader = [dict(item) for item in csv.DictReader(fin)]
     fin.close()
     model = Machine(reader, field)
     (X_train, Y_train, X_test, Y_test) = model.split_data(0.85)
-    from pprint import pprint
-    pprint(model.data)
-    pprint(X_train)
-    pprint(X_test)
-    pprint(Y_train)
-    pprint(Y_test)
-    model.train(X_train, Y_train, X_test, Y_test, output)
+    tb = tf.keras.callbacks.TensorBoard(log_dir=logdir, histogram_freq=1)
+    model.train(X_train, Y_train, X_test, Y_test, output, callbacks=[tb])
     output.close()
     print("Done.")
 
