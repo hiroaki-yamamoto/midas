@@ -4,6 +4,7 @@
 """Price preditor with LSTM."""
 
 import csv
+from os import path
 
 import numpy as np
 import pandas as pd
@@ -16,16 +17,20 @@ import click as cl
 class Machine(object):
     """Machine."""
 
-    def __init__(self, raw_data, field):
+    def __init__(self, raw_data):
         """Init."""
         self.raw_data = raw_data
-        self.field = field
 
     @property
     def filtered_data(self):
         """Return filtered data by field column."""
         return pd.DataFrame([
-            float(item[self.field]) for item in self.raw_data
+            [
+                float(item['open']),
+                float(item['close']),
+                float(item['high']),
+                float(item['low']),
+            ] for item in self.raw_data
         ])
 
     @property
@@ -57,31 +62,32 @@ class Machine(object):
                 input_shape=input_shape
             ),
             tf.keras.layers.Dense(
-                units=1, activation='relu'
+                units=4, activation='relu'
             ),
         ])
-        model.compile(optimizer='rmsprop', loss='mean_squared_error')
+        model.compile(optimizer='adam', loss='msle')
         return model
 
     def train(self, X_train, Y_train, X_test, Y_test, out, callbacks=None):
         """Train."""
-        model = self.model(input_shape=(None, 1))
+        model = self.model(input_shape=(None, 4))
         callbacks = callbacks or []
         model.fit(
             x=X_train, y=Y_train,
-            batch_size=2,
+            batch_size=None,
             shuffle=True,
-            epochs=16,
-            validation_split=0.15,
+            epochs=100,
+            validation_data=(X_test, Y_test),
             callbacks=callbacks
         )
         model.save(out)
 
     def split_seq(self, size: int):
         """Split the price data into a nested list of the length of size."""
+        data = self.data
         return [
-            self.data[index:index + size].values
-            for index in range(len(self.data) - size + 1)
+            data[index:index + size].values
+            for index in range(len(data) - size + 1)
         ]
 
     def split_data(self, rate: float):
@@ -102,8 +108,8 @@ class Machine(object):
         X_train, Y_train = train[:row, :-1], train[:row, -1]
         X_test, Y_test = data[row:, :-1], data[row:, -1]
         X_train, X_test = \
-            np.reshape(X_train,  (X_train.shape[0], X_train.shape[1], 1)),\
-            np.reshape(X_test,  (X_test.shape[0], X_test.shape[1], 1))
+            np.reshape(X_train,  (X_train.shape[0], X_train.shape[1], 4)),\
+            np.reshape(X_test,  (X_test.shape[0], X_test.shape[1], 4))
         # Y_train, Y_test = \
         #     np.reshape(Y_train,  (Y_train.shape[0], 1)),\
         #     np.reshape(Y_test,  (Y_test.shape[0], 1))
@@ -112,26 +118,30 @@ class Machine(object):
 
 @cl.command()
 @cl.argument('fin', type=cl.File())
-@cl.argument('field')
 @cl.option(
     "-l", "--logdir", type=cl.Path(), default="logs",
     help="Directory to store the log compatible with tensorboard."
 )
 @cl.option(
-    "-o", "--output", type=cl.File(mode='wb'),
-    default="lstm_model.hdf",
-    help="File path to store the model"
+    "-o", "--out", type=cl.File('wb'),
+    default=path.join("data", "lstm.hd5"),
+    help="File path to store the model."
 )
-def main(output, logdir, field, fin):
+def main(out, logdir, fin):
     """Main."""
     reader = [dict(item) for item in csv.DictReader(fin)]
     fin.close()
-    model = Machine(reader, field)
+    model = Machine(reader)
     (X_train, Y_train, X_test, Y_test) = model.split_data(0.85)
-    model.train(X_train, Y_train, X_test, Y_test, output, callbacks=[
-        tf.keras.callbacks.TensorBoard(log_dir=logdir, histogram_freq=1)
-    ])
-    output.close()
+    model.train(
+        X_train, Y_train, X_test, Y_test, out,
+        callbacks=[
+            tf.keras.callbacks.TensorBoard(
+                log_dir=logdir, histogram_freq=1
+            )
+        ]
+    )
+    out.close()
     print("Done.")
 
 

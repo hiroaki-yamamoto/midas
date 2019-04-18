@@ -14,11 +14,12 @@ class Binance(object):
     url = "https://api.binance.com/api/v1/klines"
     args = {
         "symbol": "BTCUSDT",
-        "interval": "1d"
+        "interval": "1d",
+        "limit": 1000,
     }
     fields = [
-        "openTime", "openPrice", "high", "low", "close",
-        "volume", "close_time", "asset_vol", "num_trades"
+        "openTime", "open", "high", "low", "close",
+        "volume", "closeTime", "asset_vol", "num_trades"
     ]
 
     def fetch(self):
@@ -38,11 +39,11 @@ class Binance(object):
 
     def store(self, fname, data):
         """Store the data as csv."""
-
         with open(fname, 'w') as f:
             w = csv.DictWriter(f, self.fields)
             w.writeheader()
             w.writerows(data)
+
 
 @cl.command()
 @cl.option(
@@ -52,9 +53,11 @@ class Binance(object):
     type=cl.Path()
 )
 def main(output):
+    """Main."""
     binance = Binance()
     binance.run(output)
     print("Done.")
+
 
 if __name__ == "__main__":
     main()
