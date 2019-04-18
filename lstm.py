@@ -54,6 +54,7 @@ class Machine(object):
                 units=110, return_sequences=True,
                 input_shape=input_shape
             ),
+            tf.keras.layers.Dropout(0.1),
             tf.keras.layers.Dense(
                 units=96, activation='relu'
             ),
@@ -74,8 +75,6 @@ class Machine(object):
         callbacks = callbacks or []
         model.fit(
             x=X_train, y=Y_train,
-            batch_size=None,
-            shuffle=True,
             epochs=100,
             validation_data=(X_test, Y_test),
             callbacks=callbacks
@@ -99,7 +98,7 @@ class Machine(object):
                 test-use data. Must be (0, 1.0)
 
         """
-        if 0.0 >= rate or 1.0 <= rate:
+        if 0.0 > rate or 1.0 < rate:
             raise ValueError("The rate must be between >0.1 and <1.0")
         data = np.array(self.split_seq(30))
         row = int(len(data) * rate)
