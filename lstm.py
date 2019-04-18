@@ -51,15 +51,15 @@ class Machine(object):
         """Return LSTM model."""
         model = tf.keras.models.Sequential([
             tf.keras.layers.CuDNNLSTM(
-                units=110, return_sequences=True,
+                units=300, return_sequences=True,
                 input_shape=input_shape
             ),
-            tf.keras.layers.Dropout(0.1),
             tf.keras.layers.Dense(
-                units=96, activation='relu'
+                units=320, activation='relu'
             ),
+            tf.keras.layers.Dropout(0.2),
             tf.keras.layers.CuDNNLSTM(
-                units=110, return_sequences=False,
+                units=300, return_sequences=False,
                 input_shape=input_shape
             ),
             tf.keras.layers.Dense(
@@ -129,6 +129,7 @@ class Machine(object):
 def main(out, logdir, fin):
     """Main."""
     reader = [dict(item) for item in csv.DictReader(fin)]
+    reader.pop()
     fin.close()
     model = Machine(reader)
     (X_train, Y_train, X_test, Y_test) = model.split_data(0.85)
