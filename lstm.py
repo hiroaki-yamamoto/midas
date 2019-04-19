@@ -65,6 +65,7 @@ class Machine(object):
             tf.keras.layers.Dense(
                 units=4, activation='relu'
             ),
+            tf.keras.layers.Activation('linear'),
         ])
         model.compile(optimizer='adam', loss='msle')
         return model
