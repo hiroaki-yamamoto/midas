@@ -76,7 +76,7 @@ class Machine(object):
         callbacks = callbacks or []
         model.fit(
             x=X_train, y=Y_train,
-            epochs=200,
+            epochs=100,
             validation_data=(X_test, Y_test),
             callbacks=callbacks
         )

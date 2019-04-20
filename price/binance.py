@@ -31,7 +31,7 @@ class Binance(object):
             end_time = start_time + timedelta(days=1000)
             args = self.args.copy()
             args["startTime"] = int(start_time.timestamp() * 1000)
-            args["endTime"] = int(start_time.timestamp() * 1000)
+            args["endTime"] = int(end_time.timestamp() * 1000)
             print(
                 "Start downloading price data since "
                 f"{start_time.date().isoformat()} "
@@ -42,7 +42,12 @@ class Binance(object):
             ret.extend(resp.json())
             start_time = end_time + timedelta(days=1)
 
-        return ret
+        return [
+            item for item in ret
+            if datetime.utcfromtimestamp(
+                item[0] / 1000
+            ).date() < datetime.utcnow().date()
+        ]
 
     def run(self, filename):
         """Run the fetcher."""
