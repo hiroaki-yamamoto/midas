@@ -52,18 +52,18 @@ class Machine(object):
         model = tf.keras.models.Sequential([
             tf.keras.layers.CuDNNLSTM(
                 units=300, return_sequences=True,
-                input_shape=input_shape
+                input_shape=input_shape,
             ),
             tf.keras.layers.Dense(
-                units=320, activation='relu'
+                units=300, activation='relu'
             ),
             tf.keras.layers.Dropout(0.2),
             tf.keras.layers.CuDNNLSTM(
-                units=300, return_sequences=False,
-                input_shape=input_shape
+                units=300, return_sequences=True,
+                input_shape=input_shape,
             ),
             tf.keras.layers.Dense(
-                units=4, activation='relu'
+                units=4, activation='relu',
             ),
             tf.keras.layers.Activation('linear'),
         ])
@@ -76,7 +76,7 @@ class Machine(object):
         callbacks = callbacks or []
         model.fit(
             x=X_train, y=Y_train,
-            epochs=100,
+            epochs=200,
             validation_data=(X_test, Y_test),
             callbacks=callbacks
         )
@@ -90,29 +90,32 @@ class Machine(object):
             for index in range(len(data) - size + 1)
         ]
 
-    def split_data(self, rate: float):
+    def split_data(
+        self, rate: float, num_seq_split: int = 30, dur_pred: int = 1
+    ):
         """
         Split data with data to learn and data to test.
 
         Parameters:
             rate: the percentage to determine the border of learn-use data and
                 test-use data. Must be (0, 1.0)
+            dur_pred: Duration to predict. Default = 1
+            num_seq_split: Number of Sequence to split
 
         """
         if 0.0 > rate or 1.0 < rate:
             raise ValueError("The rate must be between >0.1 and <1.0")
-        data = np.array(self.split_seq(30))
+        if dur_pred >= num_seq_split:
+            raise ValueError("The dur_pred must be less than num_seq_split")
+        data = np.array(self.split_seq(num_seq_split))
         row = int(len(data) * rate)
         train = data[:row, :]
 
-        X_train, Y_train = train[:row, :-1], train[:row, -1]
-        X_test, Y_test = data[row:, :-1], data[row:, -1]
+        X_train, Y_train = train[:row, :-dur_pred], train[:row, dur_pred:]
+        X_test, Y_test = data[row:, :-dur_pred], data[row:, dur_pred:]
         X_train, X_test = \
             np.reshape(X_train,  (X_train.shape[0], X_train.shape[1], 4)),\
             np.reshape(X_test,  (X_test.shape[0], X_test.shape[1], 4))
-        # Y_train, Y_test = \
-        #     np.reshape(Y_train,  (Y_train.shape[0], 1)),\
-        #     np.reshape(Y_test,  (Y_test.shape[0], 1))
         return X_train, Y_train, X_test, Y_test
 
 
@@ -127,13 +130,23 @@ class Machine(object):
     default=path.join("data", "lstm.hd5"),
     help="File path to store the model."
 )
-def main(out, logdir, fin):
+@cl.option(
+    "-s", "--seq", type=int,
+    default=30,
+    help="The number of sequence to split for study."
+)
+@cl.option(
+    "-d", "--dur", type=int,
+    default=1,
+    help="The number of duration to predict."
+)
+def main(dur, seq, out, logdir, fin):
     """Main."""
     reader = [dict(item) for item in csv.DictReader(fin)]
     reader.pop()
     fin.close()
     model = Machine(reader)
-    (X_train, Y_train, X_test, Y_test) = model.split_data(0.85)
+    (X_train, Y_train, X_test, Y_test) = model.split_data(0.85, seq, dur)
     model.train(
         X_train, Y_train, X_test, Y_test, out,
         callbacks=[
