@@ -4,6 +4,7 @@
 """Binance Quote Getter."""
 
 import click as cl
+from datetime import datetime, timedelta
 import csv
 import requests as req
 
@@ -24,7 +25,24 @@ class Binance(object):
 
     def fetch(self):
         """Fetch the data."""
-        return req.get(self.url, params=self.args).json()
+        ret = []
+        start_time = datetime(year=2010, month=1, day=1)
+        while start_time <= datetime.utcnow():
+            end_time = start_time + timedelta(days=1000)
+            args = self.args.copy()
+            args["startTime"] = int(start_time.timestamp() * 1000)
+            args["endTime"] = int(start_time.timestamp() * 1000)
+            print(
+                "Start downloading price data since "
+                f"{start_time.date().isoformat()} "
+                f"at {end_time.date().isoformat()}."
+            )
+            resp = req.get(self.url, params=self.args)
+            resp.raise_for_status()
+            ret.extend(resp.json())
+            start_time = end_time + timedelta(days=1)
+
+        return ret
 
     def run(self, filename):
         """Run the fetcher."""
