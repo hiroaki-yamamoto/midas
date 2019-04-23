@@ -28,7 +28,7 @@ class Binance(object):
         ret = []
         start_time = datetime(year=2010, month=1, day=1)
         while start_time <= datetime.utcnow():
-            end_time = start_time + timedelta(days=1000)
+            end_time = start_time + timedelta(days=self.args["limit"])
             args = self.args.copy()
             args["startTime"] = int(start_time.timestamp() * 1000)
             args["endTime"] = int(end_time.timestamp() * 1000)
@@ -37,10 +37,13 @@ class Binance(object):
                 f"{start_time.date().isoformat()} "
                 f"at {end_time.date().isoformat()}."
             )
-            resp = req.get(self.url, params=self.args)
+            resp = req.get(self.url, params=args)
             resp.raise_for_status()
             ret.extend(resp.json())
-            start_time = end_time + timedelta(days=1)
+            start_time = (
+                datetime.fromtimestamp(int(ret[-1][0]) / 1000)
+                if ret else end_time
+            ) + timedelta(days=1)
 
         return [
             item for item in ret
