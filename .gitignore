@@ -126,4 +126,4 @@ dmypy.json
 data
 
 # logs
-logs
+*.logs

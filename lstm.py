@@ -4,7 +4,6 @@
 """Price preditor with LSTM."""
 
 import csv
-from os import path
 
 import numpy as np
 import pandas as pd
@@ -12,6 +11,7 @@ import sklearn.preprocessing as prep
 import tensorflow as tf
 
 import click as cl
+import yaml
 
 
 class Machine(object):
@@ -127,42 +127,29 @@ class Machine(object):
 
 
 @cl.command()
-@cl.argument('fin', type=cl.File())
-@cl.option(
-    "-l", "--logdir", type=cl.Path(), default="logs",
-    help="Directory to store the log compatible with tensorboard."
-)
-@cl.option(
-    "-o", "--out", type=cl.File('wb'),
-    default=path.join("data", "lstm.hd5"),
-    help="File path to store the model."
-)
-@cl.option(
-    "-s", "--seq", type=int,
-    default=30,
-    help="The number of sequence to split for study."
-)
-@cl.option(
-    "-d", "--dur", type=int,
-    default=1,
-    help="The number of duration to predict."
-)
-def main(dur, seq, out, logdir, fin):
+@cl.argument('config', type=cl.File())
+def main(config):
     """Main."""
-    reader = [dict(item) for item in csv.DictReader(fin)]
-    reader.pop()
-    fin.close()
+    cfg = yaml.load(config, Loader=yaml.loader.SafeLoader)
+    config.close()
+    reader = None
+
+    with open(cfg["csv"]["out"]) as fin:
+        reader = [dict(item) for item in csv.DictReader(fin)]
+
     model = Machine(reader)
-    (X_train, Y_train, X_test, Y_test) = model.split_data(0.85, seq, dur)
-    model.train(
-        X_train, Y_train, X_test, Y_test, out,
-        callbacks=[
-            tf.keras.callbacks.TensorBoard(
-                log_dir=logdir, histogram_freq=1
-            )
-        ]
+    (X_train, Y_train, X_test, Y_test) = model.split_data(
+        cfg["splitRate"], cfg["seq"], cfg["dur"]
     )
-    out.close()
+    with open(cfg["model"], "wb") as out:
+        model.train(
+            X_train, Y_train, X_test, Y_test, out,
+            callbacks=[
+                tf.keras.callbacks.TensorBoard(
+                    log_dir=cfg["logdir"], histogram_freq=1
+                )
+            ]
+        )
     print("Done.")
 
 

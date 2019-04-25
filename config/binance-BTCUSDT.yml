@@ -1,5 +1,5 @@
 url: https://api.binance.com/api/v1/klines
-model: data/lstm.hd5
+model: data/binance-lstm.hd5
 timeFieldIndex: 0
 
 start: &start 2010-01-01 00:00:00
@@ -25,5 +25,6 @@ csv:
   out: data/binance-BTCUSDT.csv
 
 splitRate: 0.85
-seq: 30
+seq: 90
 dur: 15
+logdir: binance.logs
