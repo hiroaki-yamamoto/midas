@@ -8,3 +8,4 @@ flake8-docstrings
 jupyter
 plotly
 cufflinks
+PyYAML

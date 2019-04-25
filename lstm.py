@@ -34,6 +34,13 @@ class Machine(object):
         ])
 
     @property
+    def dates_list(self):
+        """Return the recorded date list."""
+        return [
+            int(item["openTime"]) for item in self.raw_data
+        ]
+
+    @property
     def scaler(self):
         """Scaler."""
         data = self.filtered_data

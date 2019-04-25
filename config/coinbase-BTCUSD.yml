@@ -1,0 +1,23 @@
+url: https://api.pro.coinbase.com/products/BTC-USD/candles
+model: data/lstm.hd5
+timeFieldIndex: 0
+
+start: &start 2016-09-01 00:00:00
+end: &end null
+epoch: false
+limit: 120
+
+timeFieldName:
+  start: start
+  end: end
+
+urlparams:
+  granularity: 86400
+
+csv:
+  fields: [openTime, low, high, open, close, volume]
+  out: data/coinbase-BTCUSD.csv
+
+splitRate: 0.85
+seq: 30
+dur: 15

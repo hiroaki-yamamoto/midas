@@ -45,7 +45,7 @@ mock==2.0.0               # via tensorflow-estimator
 nbconvert==5.4.1          # via jupyter, notebook
 nbformat==4.4.0           # via ipywidgets, nbconvert, notebook, plotly
 notebook==5.7.8           # via jupyter, widgetsnbextension
-numpy==1.16.2             # via cufflinks, h5py, keras-applications, keras-preprocessing, pandas, scikit-learn, scipy, tensorboard, tensorflow-estimator, tensorflow-gpu
+numpy==1.16.3             # via cufflinks, h5py, keras-applications, keras-preprocessing, pandas, scikit-learn, scipy, tensorboard, tensorflow-estimator, tensorflow-gpu
 pandas==0.24.2
 pandocfilters==1.4.2      # via nbconvert
 parso==0.4.0              # via jedi
@@ -64,6 +64,7 @@ pygments==2.3.1           # via ipython, jupyter-console, nbconvert, qtconsole
 pyrsistent==0.14.11       # via jsonschema
 python-dateutil==2.8.0    # via jupyter-client, pandas
 pytz==2019.1              # via pandas, plotly
+pyyaml==5.1
 pyzmq==18.0.1             # via jupyter-client, notebook
 qtconsole==4.4.3          # via jupyter
 requests==2.21.0
