@@ -41,7 +41,7 @@ markdown==3.1             # via tensorboard
 markupsafe==1.1.1         # via jinja2
 mccabe==0.6.1             # via flake8
 mistune==0.8.4            # via nbconvert
-mock==2.0.0               # via tensorflow-estimator
+mock==3.0.4               # via tensorflow-estimator
 nbconvert==5.4.1          # via jupyter, notebook
 nbformat==4.4.0           # via ipywidgets, nbconvert, notebook, plotly
 notebook==5.7.8           # via jupyter, widgetsnbextension
