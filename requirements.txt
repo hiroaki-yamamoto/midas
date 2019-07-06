@@ -58,7 +58,7 @@ prompt-toolkit==2.0.9     # via ipython, jupyter-console
 protobuf==3.8.0           # via tensorboard, tensorflow-gpu
 ptyprocess==0.6.0         # via pexpect, terminado
 pycodestyle==2.5.0        # via flake8
-pydocstyle==3.0.0         # via flake8-docstrings
+pydocstyle==4.0.0         # via flake8-docstrings
 pyflakes==2.1.1           # via flake8
 pygments==2.4.2           # via ipython, jupyter-console, nbconvert, qtconsole
 pyrsistent==0.15.2       # via jsonschema
