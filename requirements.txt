@@ -26,7 +26,7 @@ h5py==2.9.0               # via keras-applications
 idna==2.8                 # via requests
 ipykernel==5.1.1          # via ipywidgets, jupyter, jupyter-console, notebook, qtconsole
 ipython-genutils==0.2.0   # via nbformat, notebook, qtconsole, traitlets
-ipython==7.6.1            # via cufflinks, ipykernel, ipywidgets, jupyter-console
+ipython==7.7.0            # via cufflinks, ipykernel, ipywidgets, jupyter-console
 ipywidgets==7.5.0         # via cufflinks, jupyter
 jedi==0.14.1              # via ipython
 jinja2==2.10.1            # via nbconvert, notebook
@@ -45,7 +45,7 @@ mock==3.0.5               # via tensorflow-estimator
 nbconvert==5.5.0          # via jupyter, notebook
 nbformat==4.4.0           # via ipywidgets, nbconvert, notebook, plotly
 notebook==6.0.0           # via jupyter, widgetsnbextension
-numpy==1.16.4             # via cufflinks, h5py, keras-applications, keras-preprocessing, pandas, scikit-learn, scipy, tensorboard, tensorflow-estimator, tensorflow-gpu
+numpy==1.17.0             # via cufflinks, h5py, keras-applications, keras-preprocessing, pandas, scikit-learn, scipy, tensorboard, tensorflow-estimator, tensorflow-gpu
 pandas==0.25.0
 pandocfilters==1.4.2      # via nbconvert
 parso==0.5.1              # via jedi
@@ -61,7 +61,7 @@ pycodestyle==2.5.0        # via flake8
 pydocstyle==4.0.0         # via flake8-docstrings
 pyflakes==2.1.1           # via flake8
 pygments==2.4.2           # via ipython, jupyter-console, nbconvert, qtconsole
-pyrsistent==0.15.3       # via jsonschema
+pyrsistent==0.15.4       # via jsonschema
 python-dateutil==2.8.0    # via jupyter-client, pandas
 pytz==2019.1              # via pandas, plotly
 pyyaml==5.1.1
