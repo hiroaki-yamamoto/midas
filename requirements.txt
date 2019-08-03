@@ -17,7 +17,7 @@ cufflinks==0.16
 decorator==4.4.0          # via ipython, plotly, traitlets
 defusedxml==0.6.0         # via nbconvert
 entrypoints==0.3          # via flake8, nbconvert
-flake8-docstrings==1.3.0
+flake8-docstrings==1.3.1
 flake8-polyfill==1.0.2    # via flake8-docstrings
 flake8==3.7.8
 gast==0.2.2               # via tensorflow-gpu
@@ -27,10 +27,10 @@ idna==2.8                 # via requests
 ipykernel==5.1.1          # via ipywidgets, jupyter, jupyter-console, notebook, qtconsole
 ipython-genutils==0.2.0   # via nbformat, notebook, qtconsole, traitlets
 ipython==7.7.0            # via cufflinks, ipykernel, ipywidgets, jupyter-console
-ipywidgets==7.5.0         # via cufflinks, jupyter
+ipywidgets==7.5.1         # via cufflinks, jupyter
 jedi==0.14.1              # via ipython
 jinja2==2.10.1            # via nbconvert, notebook
-jsonschema==3.0.1         # via nbformat
+jsonschema==3.0.2         # via nbformat
 jupyter-client==5.3.1     # via ipykernel, jupyter-console, notebook, qtconsole
 jupyter-console==6.0.0    # via jupyter
 jupyter-core==4.5.0       # via jupyter-client, nbconvert, nbformat, notebook, qtconsole
@@ -63,13 +63,13 @@ pyflakes==2.1.1           # via flake8
 pygments==2.4.2           # via ipython, jupyter-console, nbconvert, qtconsole
 pyrsistent==0.15.4       # via jsonschema
 python-dateutil==2.8.0    # via jupyter-client, pandas
-pytz==2019.1              # via pandas, plotly
-pyyaml==5.1.1
+pytz==2019.2              # via pandas, plotly
+pyyaml==5.1.2
 pyzmq==18.0.2             # via jupyter-client, notebook
 qtconsole==4.5.2          # via jupyter
 requests==2.22.0
 retrying==1.3.3           # via plotly
-scikit-learn==0.21.2
+scikit-learn==0.21.3
 scipy==1.3.0              # via scikit-learn
 send2trash==1.5.0         # via notebook
 six==1.12.0               # via absl-py, bleach, cufflinks, grpcio, h5py, jsonschema, keras-preprocessing, mock, plotly, prompt-toolkit, protobuf, pydocstyle, pyrsistent, python-dateutil, retrying, tensorboard, tensorflow-estimator, tensorflow-gpu, traitlets
@@ -87,4 +87,4 @@ wcwidth==0.1.7            # via prompt-toolkit
 webencodings==0.5.1       # via bleach
 werkzeug==0.15.5          # via tensorboard
 wheel==0.33.4             # via tensorboard, tensorflow-gpu
-widgetsnbextension==3.5.0  # via ipywidgets
+widgetsnbextension==3.5.1  # via ipywidgets
