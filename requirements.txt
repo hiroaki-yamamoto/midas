@@ -86,5 +86,5 @@ urllib3==1.25.3           # via requests
 wcwidth==0.1.7            # via prompt-toolkit
 webencodings==0.5.1       # via bleach
 werkzeug==0.15.5          # via tensorboard
-wheel==0.33.4             # via tensorboard, tensorflow-gpu
+wheel==0.33.6             # via tensorboard, tensorflow-gpu
 widgetsnbextension==3.5.1  # via ipywidgets
