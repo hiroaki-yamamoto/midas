@@ -4,7 +4,7 @@
 #
 #    pip-compile -U
 #
-absl-py==0.7.1            # via tensorboard, tensorflow-estimator, tensorflow-gpu
+absl-py==0.8.0            # via tensorboard, tensorflow-estimator, tensorflow-gpu
 astor==0.8.0              # via tensorflow-gpu
 attrs==19.1.0             # via jsonschema
 backcall==0.1.0           # via ipython
@@ -17,7 +17,7 @@ cufflinks==0.16
 decorator==4.4.0          # via ipython, plotly, traitlets
 defusedxml==0.6.0         # via nbconvert
 entrypoints==0.3          # via flake8, nbconvert
-flake8-docstrings==1.3.1
+flake8-docstrings==1.4.0
 flake8-polyfill==1.0.2    # via flake8-docstrings
 flake8==3.7.8
 gast==0.2.2               # via tensorflow-gpu
@@ -26,7 +26,7 @@ h5py==2.9.0               # via keras-applications
 idna==2.8                 # via requests
 ipykernel==5.1.2          # via ipywidgets, jupyter, jupyter-console, notebook, qtconsole
 ipython-genutils==0.2.0   # via nbformat, notebook, qtconsole, traitlets
-ipython==7.7.0            # via cufflinks, ipykernel, ipywidgets, jupyter-console
+ipython==7.8.0            # via cufflinks, ipykernel, ipywidgets, jupyter-console
 ipywidgets==7.5.1         # via cufflinks, jupyter
 jedi==0.15.1              # via ipython
 jinja2==2.10.1            # via nbconvert, notebook
@@ -45,7 +45,7 @@ mock==3.0.5               # via tensorflow-estimator
 nbconvert==5.6.0          # via jupyter, notebook
 nbformat==4.4.0           # via ipywidgets, nbconvert, notebook, plotly
 notebook==6.0.1           # via jupyter, widgetsnbextension
-numpy==1.17.0             # via cufflinks, h5py, keras-applications, keras-preprocessing, pandas, scikit-learn, scipy, tensorboard, tensorflow-estimator, tensorflow-gpu
+numpy==1.17.1             # via cufflinks, h5py, keras-applications, keras-preprocessing, pandas, scikit-learn, scipy, tensorboard, tensorflow-estimator, tensorflow-gpu
 pandas==0.25.1
 pandocfilters==1.4.2      # via nbconvert
 parso==0.5.1              # via jedi
