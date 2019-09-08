@@ -20,7 +20,7 @@ entrypoints==0.3          # via flake8, nbconvert
 flake8-docstrings==1.4.0
 flake8-polyfill==1.0.2    # via flake8-docstrings
 flake8==3.7.8
-gast==0.2.2               # via tensorflow-gpu
+gast==0.3.1               # via tensorflow-gpu
 grpcio==1.23.0            # via tensorboard, tensorflow-gpu
 h5py==2.10.0               # via keras-applications
 idna==2.8                 # via requests
