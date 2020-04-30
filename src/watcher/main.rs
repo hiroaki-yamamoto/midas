@@ -12,6 +12,7 @@ fn main() {
   let mut soc: WebSockets = WebSockets::new(|event: WebsocketEvent| {
     match event {
       WebsocketEvent::DayTicker(ticker_events) => {
+        let log = log.clone();
         for ticker_evnet in ticker_events {
           info!(
             log,
