@@ -29,7 +29,11 @@ func init() {
 }
 
 func tradeHandler(event *binance.WsTradeEvent) {
-	logger.Info("Trade: ", zap.Any("event", event))
+	typeTxt := "🔥 Buy"
+	if event.IsBuyerMaker {
+		typeTxt = "💰 Sell"
+	}
+	logger.Info(fmt.Sprintf("Trade(%s): ", typeTxt), zap.Any("event", event))
 }
 
 func main() {
