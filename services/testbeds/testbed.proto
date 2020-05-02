@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+enum TradeType {
+  Buy = 0;
+  Sell = 1;
+}
+
+message SubscribeRequest {
+  string symbol = 1;
+  string tickInterval = 2;
+}
+
+message SubscribeResponse {
+  string symbol = 1;
+  TradeType type = 2;
+  double price = 3;
+  double qty = 4;
+}
