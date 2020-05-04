@@ -1,5 +1,8 @@
 syntax = "proto3";
 
+package testbeds;
+option go_package = "rpc";
+
 enum TradeType {
   Buy = 0;
   Sell = 1;
@@ -15,4 +18,8 @@ message SubscribeResponse {
   TradeType type = 2;
   double price = 3;
   double qty = 4;
+}
+
+service TestBed {
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse);
 }
