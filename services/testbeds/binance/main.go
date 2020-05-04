@@ -38,9 +38,14 @@ var download = &cli.Command{
 	Name: "get",
 	Desc: "Download 1 minute-ticked historical data from binance.",
 	Argv: func() interface{} { return &downloadMenu{} },
-	Fn: func(ctx *cli.Context) error {
-		return nil
-	},
+	Fn:   func(ctx *cli.Context) error { return nil },
+}
+
+var server = &cli.Command{
+	Name: "run",
+	Desc: "Start the server",
+	Argv: func() interface{} { return &struct{}{} },
+	Fn:   func(ctx *cli.Context) error { return nil },
 }
 
 func init() {
@@ -59,6 +64,7 @@ func init() {
 		root,
 		cli.Tree(helpTree),
 		cli.Tree(download),
+		cli.Tree(server),
 	)
 }
 

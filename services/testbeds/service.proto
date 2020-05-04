@@ -3,6 +3,8 @@ syntax = "proto3";
 package testbeds;
 option go_package = "rpc";
 
+import "google/protobuf/timestamp.proto";
+
 enum TradeType {
   Buy = 0;
   Sell = 1;
@@ -15,9 +17,10 @@ message SubscribeRequest {
 
 message SubscribeResponse {
   string symbol = 1;
-  TradeType type = 2;
-  double price = 3;
-  double qty = 4;
+  google.protobuf.Timestamp timestamp = 2;
+  TradeType type = 3;
+  double price = 4;
+  double qty = 5;
 }
 
 service TestBed {
