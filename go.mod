@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/Bowery/prompt v0.0.0-20190916142128-fa8279994f75 // indirect
 	github.com/adshao/go-binance v0.0.0-20200414012312-338a1df204bf
+	github.com/go-playground/validator/v10 v10.2.0
 	github.com/golang/protobuf v1.4.0
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
