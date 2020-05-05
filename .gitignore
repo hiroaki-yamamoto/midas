@@ -15,6 +15,7 @@
 # vendor/
 
 bin/
+db
 
 .ninja_deps
 .ninja_log

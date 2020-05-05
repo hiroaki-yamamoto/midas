@@ -1,0 +1,22 @@
+version: "3.8"
+services:
+  database:
+    image: mongo
+    volumes:
+      - "./db:/data/db"
+  testbed-binance:
+    build:
+      context: .
+      dockerfile: devel.dockerfile
+      args:
+        - SERVICE=testbeds
+    volumes:
+      - .:/opt/code
+    command:
+      - run
+      - -e binance
+      - -n tcp
+      - -a :5000
+      - -d mongodb://database
+    depends_on:
+      - database
