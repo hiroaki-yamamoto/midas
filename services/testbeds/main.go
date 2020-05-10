@@ -6,10 +6,12 @@ import (
 	stdlog "log"
 	"net"
 	"os"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/hiroaki-yamamoto/midas/services/testbeds/history"
 	"github.com/hiroaki-yamamoto/midas/services/testbeds/server"
 	"github.com/mkideal/cli"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,6 +19,8 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
+
+const testbedDBName = "midas-testbed"
 
 var log *zap.Logger
 var cmdRoot *cli.Command
@@ -41,14 +45,45 @@ var helpTree = cli.HelpCommand("Display Help Information.")
 
 type downloadMenu struct {
 	cli.Helper
-	Symbol string `cli:"s,symbol" dft:"all" usage:"Download the historical data of the specified specified symbol."`
+	Exchange string   `cli:"*e,exchange" usage:"Set exchange to test" validate:"required,oneof=binance"`
+	Symbols  []string `cli:"s,symbol" dft:"all" usage:"Download the historical data of the specified specified symbol."`
+	DBURL    string   `cli:"*d,dbURLa" usage:"Datanase URL."`
 }
 
 var download = &cli.Command{
 	Name: "get",
 	Desc: "Download 1 minute-ticked historical data from binance.",
 	Argv: func() interface{} { return &downloadMenu{} },
-	Fn:   func(ctx *cli.Context) error { return nil },
+	Fn: func(ctx *cli.Context) error {
+		conCtx, stop := context.WithTimeout(context.Background(), 10*time.Second)
+		defer stop()
+		menu := ctx.Argv().(*downloadMenu)
+		con, err := mongo.Connect(conCtx, options.Client().ApplyURI(menu.DBURL))
+		defer func() {
+			disConCtx, stop := context.WithTimeout(context.Background(), 10*time.Second)
+			defer stop()
+			con.Disconnect(disConCtx)
+		}()
+		if err != nil {
+			return err
+		}
+		var hist history.HistoricalPriceDataDownloader
+		switch strings.ToLower(menu.Exchange) {
+		case "binance":
+			hist = history.NewBinance(
+				log, con.Database(testbedDBName).Collection(menu.Exchange),
+			)
+			break
+		default:
+			return fmt.Errorf("Unknown exchange: %s", menu.Exchange)
+		}
+		for _, sym := range menu.Symbols {
+			if err := hist.Run(sym); err != nil {
+				return err
+			}
+		}
+		return err
+	},
 }
 
 type svrMenu struct {
@@ -72,10 +107,15 @@ var serverCmd = &cli.Command{
 		defer stop()
 		menu := ctx.Argv().(*svrMenu)
 		con, err := mongo.Connect(conCtx, options.Client().ApplyURI(menu.DBURL))
+		defer func() {
+			disConCtx, stop := context.WithTimeout(context.Background(), 10*time.Second)
+			defer stop()
+			con.Disconnect(disConCtx)
+		}()
 		if err != nil {
 			return err
 		}
-		db := con.Database("midas-testbed")
+		db := con.Database(testbedDBName)
 		col := db.Collection(menu.Exchange)
 		lis, err := net.Listen(menu.NetworkType, menu.NetworkAddr)
 		if err != nil {
