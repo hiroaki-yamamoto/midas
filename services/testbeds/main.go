@@ -46,7 +46,7 @@ var helpTree = cli.HelpCommand("Display Help Information.")
 type downloadMenu struct {
 	cli.Helper
 	Exchange string   `cli:"*e,exchange" usage:"Set exchange to test" validate:"required,oneof=binance"`
-	Symbols  []string `cli:"s,symbol" dft:"all" usage:"Download the historical data of the specified specified symbol."`
+	Symbols  []string `cli:"*s,symbol" usage:"Download the historical data of the specified specified symbol."`
 	DBURL    string   `cli:"*d,dbURLa" usage:"Datanase URL."`
 }
 
