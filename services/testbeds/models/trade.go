@@ -2,21 +2,18 @@ package models
 
 import "time"
 
-// TradeType represents the type of the trade.
-type TradeType string
-
-const (
-	// BUY trade was made by the taker
-	BUY TradeType = "Buy"
-	// SELL trade was made by the taker
-	SELL TradeType = "Sell"
-)
-
-// Trade represents trade data on the DB.
-type Trade struct {
-	Symbol    string
-	Timestamp time.Time
-	Type      TradeType
-	Price     float64
-	Qty       float64
+// Kline define kline info
+type Kline struct {
+	Symbol                   string    `json:"symbol"`
+	OpenTime                 time.Time `json:"openTime"`
+	Open                     float64   `json:"open"`
+	High                     float64   `json:"high"`
+	Low                      float64   `json:"low"`
+	Close                    float64   `json:"close"`
+	Volume                   float64   `json:"volume"`
+	CloseTime                time.Time `json:"closeTime"`
+	QuoteAssetVolume         float64   `json:"quoteAssetVolume"`
+	TradeNum                 int64     `json:"tradeNum"`
+	TakerBuyBaseAssetVolume  float64   `json:"takerBuyBaseAssetVolume"`
+	TakerBuyQuoteAssetVolume float64   `json:"takerBuyQuoteAssetVolume"`
 }

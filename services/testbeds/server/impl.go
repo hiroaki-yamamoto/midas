@@ -19,26 +19,31 @@ func (me *Server) Subscribe(
 		return err
 	}
 	for cur.Next(resp.Context()) {
-		trade := &models.Trade{}
+		trade := &models.Kline{}
 		if err := cur.Decode(trade); err != nil {
 			return err
 		}
-		ts, err := ptypes.TimestampProto(trade.Timestamp)
+		ts, err := ptypes.TimestampProto(trade.OpenTime)
 		if err != nil {
 			return err
 		}
 		ret := &rpc.SubscribeResponse{
 			Symbol:    trade.Symbol,
 			Timestamp: ts,
-			Price:     trade.Price,
-			Qty:       trade.Qty,
+			Qty:       trade.QuoteAssetVolume,
 		}
-		switch trade.Type {
-		case models.BUY:
-			ret.Type = rpc.TradeType_Buy
+		switch req.GetPriceBase() {
+		case rpc.PriceBase_High:
+			ret.Price = trade.High
 			break
-		case models.SELL:
-			ret.Type = rpc.TradeType_Sell
+		case rpc.PriceBase_Low:
+			ret.Price = trade.Low
+			break
+		case rpc.PriceBase_Open:
+			ret.Price = trade.Open
+			break
+		case rpc.PriceBase_Close:
+			ret.Price = trade.Close
 			break
 		}
 		if err := resp.SendMsg(ret); err != nil {

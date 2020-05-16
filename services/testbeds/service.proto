@@ -5,22 +5,24 @@ option go_package = "rpc";
 
 import "google/protobuf/timestamp.proto";
 
-enum TradeType {
-  Buy = 0;
-  Sell = 1;
+enum PriceBase {
+  High = 0;
+  Low = 1;
+  Open = 2;
+  Close = 3;
 }
 
 message SubscribeRequest {
   string symbol = 1;
   string tickInterval = 2;
+  PriceBase priceBase = 3;
 }
 
 message SubscribeResponse {
   string symbol = 1;
   google.protobuf.Timestamp timestamp = 2;
-  TradeType type = 3;
-  double price = 4;
-  double qty = 5;
+  double price = 3;
+  double qty = 4;
 }
 
 service TestBed {

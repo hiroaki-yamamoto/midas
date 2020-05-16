@@ -12,6 +12,7 @@ import (
 	"github.com/adshao/go-binance"
 	"github.com/adshao/go-binance/common"
 	"github.com/bitly/go-simplejson"
+	"github.com/hiroaki-yamamoto/midas/services/testbeds/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
@@ -37,7 +38,7 @@ func NewBinance(log *zap.Logger, col *mongo.Collection) *Binance {
 func (me *Binance) fetch(
 	pair string,
 	startTime, endTime time.Time,
-) ([]*binance.Kline, error) {
+) ([]*models.Kline, error) {
 	const endpoint = "https://api.binance.com/api/v3/klines"
 	query := make(url.Values)
 	query.Set("symbol", pair)
@@ -57,21 +58,21 @@ func (me *Binance) fetch(
 				return nil, err
 			}
 			jLen := len(j.MustArray())
-			klines := make([]*binance.Kline, jLen)
+			klines := make([]*models.Kline, jLen)
 			for ind := 0; ind < jLen; ind++ {
 				item := j.GetIndex(ind)
-				klines[ind] = &binance.Kline{
-					OpenTime:                 item.GetIndex(0).MustInt64(),
-					Open:                     item.GetIndex(1).MustString(),
-					High:                     item.GetIndex(2).MustString(),
-					Low:                      item.GetIndex(3).MustString(),
-					Close:                    item.GetIndex(4).MustString(),
-					Volume:                   item.GetIndex(5).MustString(),
-					CloseTime:                item.GetIndex(6).MustInt64(),
-					QuoteAssetVolume:         item.GetIndex(7).MustString(),
+				klines[ind] = &models.Kline{
+					OpenTime:                 time.Unix(item.GetIndex(0).MustInt64(), 0),
+					Open:                     item.GetIndex(1).MustFloat64(),
+					High:                     item.GetIndex(2).MustFloat64(),
+					Low:                      item.GetIndex(3).MustFloat64(),
+					Close:                    item.GetIndex(4).MustFloat64(),
+					Volume:                   item.GetIndex(5).MustFloat64(),
+					CloseTime:                time.Unix(item.GetIndex(6).MustInt64(), 0),
+					QuoteAssetVolume:         item.GetIndex(7).MustFloat64(),
 					TradeNum:                 item.GetIndex(8).MustInt64(),
-					TakerBuyBaseAssetVolume:  item.GetIndex(9).MustString(),
-					TakerBuyQuoteAssetVolume: item.GetIndex(10).MustString(),
+					TakerBuyBaseAssetVolume:  item.GetIndex(9).MustFloat64(),
+					TakerBuyQuoteAssetVolume: item.GetIndex(10).MustFloat64(),
 				}
 			}
 			return klines, nil
@@ -83,6 +84,11 @@ func (me *Binance) fetch(
 				err = nil
 				waitCount = 10
 			}
+			me.Logger.Warn(
+				"Got locked out!! Waiting...",
+				zap.Int("status", resp.StatusCode),
+				zap.Uint64("duration", waitCount),
+			)
 			<-time.After(time.Duration(waitCount) * time.Second)
 			break
 		case http.StatusNotFound:
@@ -134,13 +140,16 @@ func (me *Binance) Run(pair string) error {
 		for done {
 			findCtx, stop := context.WithTimeout(ctx, 10*time.Second)
 			defer stop()
-			me.Col.Find(findCtx, bson.M{
+			cur, err := me.Col.Find(findCtx, bson.M{
 				"symbol": pair,
-				"timestamp": bson.M{
-					"$gt": startTime,
-					"$lt": endTime,
+				"opentime": bson.M{
+					"$gte": startTime,
+					"$lte": endTime,
 				},
 			})
+			if err != nil {
+				// start fetch since startTime until endTime
+			}
 			endTime = startTime.Add(-1 * time.Minute)
 			startTime = endTime.Add(-999 * time.Minute)
 		}
