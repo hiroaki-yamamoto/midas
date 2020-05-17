@@ -156,9 +156,11 @@ func (me *Binance) Run(pair string) error {
 				}
 			} else {
 				nextCtx, stopNext := context.WithTimeout(
-					context.Background(), 10 * time.Second,
+					context.Background(), 10*time.Second,
 				)
-				for cur.Next()
+				defer stopNext()
+				for cur.Next(nextCtx) {
+				}
 			}
 			endAt = endAt.Add(-1 * time.Minute)
 			startAt = endAt.Add(-999 * time.Minute)
