@@ -37,14 +37,14 @@ func NewBinance(log *zap.Logger, col *mongo.Collection) *Binance {
 
 func (me *Binance) fetch(
 	pair string,
-	startTime, endTime time.Time,
+	startAt, endAt time.Time,
 ) ([]*models.Kline, error) {
 	const endpoint = "https://api.binance.com/api/v3/klines"
 	query := make(url.Values)
 	query.Set("symbol", pair)
 	query.Set("interval", "1m")
-	query.Set("startTime", strconv.FormatInt(startTime.Unix(), 10))
-	query.Set("endTime", strconv.FormatInt(endTime.Unix(), 10))
+	query.Set("startTime", strconv.FormatInt(startAt.Unix(), 10))
+	query.Set("endTime", strconv.FormatInt(endAt.Unix(), 10))
 	query.Set("limit", "1000")
 	for {
 		resp, err := http.Get(fmt.Sprintf("%s?%s", endpoint, query.Encode()))
@@ -133,8 +133,8 @@ func (me *Binance) Run(pair string) error {
 		}
 	}
 	me.Logger.Info("Pair to fetch", zap.Any("Pairs", targetSymbols))
-	endTime := time.Now().UTC().Add(time.Minute)
-	startTime := endTime.Add(-999 * time.Minute)
+	endAt := time.Now().UTC().Add(time.Minute)
+	startAt := endAt.Add(-999 * time.Minute)
 	for _, pair := range targetSymbols {
 		done := true
 		for done {
@@ -143,15 +143,25 @@ func (me *Binance) Run(pair string) error {
 			cur, err := me.Col.Find(findCtx, bson.M{
 				"symbol": pair,
 				"opentime": bson.M{
-					"$gte": startTime,
-					"$lte": endTime,
+					"$gte": startAt,
+					"$lte": endAt,
 				},
 			})
+			var klines []*models.Kline
 			if err != nil {
-				// start fetch since startTime until endTime
+				var err error
+				klines, err = me.fetch(pair, startAt, endAt)
+				if err != nil {
+					return err
+				}
+			} else {
+				nextCtx, stopNext := context.WithTimeout(
+					context.Background(), 10 * time.Second,
+				)
+				for cur.Next()
 			}
-			endTime = startTime.Add(-1 * time.Minute)
-			startTime = endTime.Add(-999 * time.Minute)
+			endAt = endAt.Add(-1 * time.Minute)
+			startAt = endAt.Add(-999 * time.Minute)
 		}
 	}
 	return nil
