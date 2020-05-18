@@ -4,6 +4,14 @@ services:
     image: mongo
     volumes:
       - "./db:/data/db"
+  express:
+    image: mongo-express
+    environment:
+      ME_CONFIG_MONGODB_SERVER: database
+    ports:
+      - 8081:8081
+    depends_on:
+      - database
   testbed-binance:
     build:
       context: .

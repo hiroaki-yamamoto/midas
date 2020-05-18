@@ -44,8 +44,8 @@ func (me *Binance) fetch(
 	query := make(url.Values)
 	query.Set("symbol", pair)
 	query.Set("interval", "1m")
-	query.Set("startTime", strconv.FormatInt(startAt.Unix(), 10))
-	query.Set("endTime", strconv.FormatInt(endAt.Unix(), 10))
+	query.Set("startTime", strconv.FormatInt(startAt.Unix()*1000, 10))
+	query.Set("endTime", strconv.FormatInt(endAt.Unix()*1000, 10))
 	query.Set("limit", "1000")
 	for {
 		resp, err := http.Get(fmt.Sprintf("%s?%s", endpoint, query.Encode()))
@@ -62,18 +62,62 @@ func (me *Binance) fetch(
 			klines := make([]*models.Kline, jLen)
 			for ind := 0; ind < jLen; ind++ {
 				item := j.GetIndex(ind)
+				var open, close, high, low, vol float64
+				var QuoteAssetVolume, TakerBuyBaseAssetVolume, TakerBuyQuoteAssetVolume float64
+				var err error
+				if open, err = strconv.ParseFloat(item.GetIndex(1).MustString(), 64); err != nil {
+					return nil, err
+				}
+				if close, err = strconv.ParseFloat(item.GetIndex(4).MustString(), 64); err != nil {
+					return nil, err
+				}
+				if high, err = strconv.ParseFloat(item.GetIndex(2).MustString(), 64); err != nil {
+					return nil, err
+				}
+				if low, err = strconv.ParseFloat(item.GetIndex(3).MustString(), 64); err != nil {
+					return nil, err
+				}
+				if vol, err = strconv.ParseFloat(item.GetIndex(5).MustString(), 64); err != nil {
+					return nil, err
+				}
+				if QuoteAssetVolume, err = strconv.ParseFloat(
+					item.GetIndex(7).MustString(), 64,
+				); err != nil {
+					return nil, err
+				}
+				if TakerBuyBaseAssetVolume, err = strconv.ParseFloat(
+					item.GetIndex(9).MustString(), 64,
+				); err != nil {
+					return nil, err
+				}
+				if TakerBuyQuoteAssetVolume, err = strconv.ParseFloat(
+					item.GetIndex(10).MustString(), 64,
+				); err != nil {
+					return nil, err
+				}
 				klines[ind] = &models.Kline{
-					OpenAt:                   time.Unix(item.GetIndex(0).MustInt64(), 0),
-					Open:                     item.GetIndex(1).MustFloat64(),
-					High:                     item.GetIndex(2).MustFloat64(),
-					Low:                      item.GetIndex(3).MustFloat64(),
-					Close:                    item.GetIndex(4).MustFloat64(),
-					Volume:                   item.GetIndex(5).MustFloat64(),
-					CloseAt:                  time.Unix(item.GetIndex(6).MustInt64(), 0),
-					QuoteAssetVolume:         item.GetIndex(7).MustFloat64(),
+					Symbol: pair,
+					OpenAt: time.Unix(
+						item.GetIndex(0).MustInt64()/1000,
+						int64(
+							time.Duration(item.GetIndex(0).MustInt64()%1000)*time.Millisecond,
+						),
+					),
+					Open:   open,
+					High:   high,
+					Low:    low,
+					Close:  close,
+					Volume: vol,
+					CloseAt: time.Unix(
+						item.GetIndex(6).MustInt64()/1000,
+						int64(
+							time.Duration(item.GetIndex(6).MustInt64()%1000)*time.Millisecond,
+						),
+					),
+					QuoteAssetVolume:         QuoteAssetVolume,
 					TradeNum:                 item.GetIndex(8).MustInt64(),
-					TakerBuyBaseAssetVolume:  item.GetIndex(9).MustFloat64(),
-					TakerBuyQuoteAssetVolume: item.GetIndex(10).MustFloat64(),
+					TakerBuyBaseAssetVolume:  TakerBuyBaseAssetVolume,
+					TakerBuyQuoteAssetVolume: TakerBuyQuoteAssetVolume,
 				}
 			}
 			return klines, nil
@@ -133,8 +177,12 @@ func (me *Binance) Run(pair string) error {
 			Pair: pair,
 		}
 	}
-	me.Logger.Info("Pair to fetch", zap.Any("Pairs", targetSymbols))
-	endAt := time.Now().UTC().Add(time.Minute)
+	me.Logger.Info("Pair to fetch", zap.Any("pairs", targetSymbols))
+	endAt := time.Now().UTC().Add(-1 * time.Minute)
+	endAt = endAt.Add(
+		-time.Duration(endAt.Second())*time.Second -
+			time.Duration(endAt.Nanosecond())*time.Nanosecond,
+	)
 	startAt := endAt.Add(-999 * time.Minute)
 	for _, pair := range targetSymbols {
 		for {
@@ -172,7 +220,7 @@ func (me *Binance) Run(pair string) error {
 				for cur.Next(nextCtx) {
 					kline := &models.Kline{}
 					cur.Decode(kline)
-					if kline.CloseAt != partialEndAt ||
+					if kline.CloseAt != partialEndAt.Add(-1*time.Millisecond) ||
 						kline.OpenAt != partialEndAt.Add(-1*time.Minute) {
 						break
 					}
@@ -219,7 +267,7 @@ func (me *Binance) Run(pair string) error {
 			if err != nil {
 				return err
 			}
-			endAt = endAt.Add(-1 * time.Minute)
+			endAt = startAt
 			startAt = endAt.Add(-999 * time.Minute)
 		}
 	}
