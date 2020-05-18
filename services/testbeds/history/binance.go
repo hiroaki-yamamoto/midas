@@ -137,8 +137,7 @@ func (me *Binance) Run(pair string) error {
 	endAt := time.Now().UTC().Add(time.Minute)
 	startAt := endAt.Add(-999 * time.Minute)
 	for _, pair := range targetSymbols {
-		done := true
-		for done {
+		for {
 			findCtx, stop := context.WithTimeout(ctx, 10*time.Second)
 			defer stop()
 			cur, err := me.Col.Find(findCtx, bson.M{
@@ -161,10 +160,13 @@ func (me *Binance) Run(pair string) error {
 				if err != nil {
 					return err
 				}
-			} else {
-				nextCtx, stopNext := context.WithTimeout(
-					context.Background(), 10*time.Second,
+				me.Logger.Info(
+					"Fetched k lines data",
+					zap.Time("since", startAt),
+					zap.Time("until", endAt),
 				)
+			} else {
+				nextCtx, stopNext := context.WithTimeout(ctx, 10*time.Second)
 				defer stopNext()
 				partialEndAt := endAt
 				for cur.Next(nextCtx) {
@@ -174,12 +176,48 @@ func (me *Binance) Run(pair string) error {
 						kline.OpenAt != partialEndAt.Add(-1*time.Minute) {
 						break
 					}
+					me.Logger.Info(
+						"Cache Hit",
+						zap.Time("start", startAt),
+						zap.Time("end", partialEndAt),
+					)
 					partialEndAt = partialEndAt.Add(-1 * time.Minute)
 				}
-				klines, err = me.fetch(pair, startAt, partialEndAt)
-				if err != nil {
-					return err
+				if partialEndAt.Add(-1*time.Minute) != startAt {
+					delCtx, stopDel := context.WithTimeout(ctx, 10*time.Second)
+					defer stopDel()
+					_, err := me.Col.DeleteMany(delCtx, bson.M{
+						"closeat": bson.M{
+							"$gt": startAt,
+							"$lt": partialEndAt,
+						},
+					})
+					if err != nil {
+						return err
+					}
+					klines, err = me.fetch(pair, startAt, partialEndAt)
+					if err != nil {
+						return err
+					}
+					me.Logger.Info(
+						"Fetched k lines data",
+						zap.Time("since", startAt),
+						zap.Time("until", partialEndAt),
+					)
 				}
+			}
+			if klines == nil || len(klines) < 1 {
+				break
+			}
+			toInsert := make([]interface{}, len(klines))
+			for ind, item := range klines {
+				toInsert[ind] = item
+			}
+			insCtx, stopIns := context.WithTimeout(ctx, 10*time.Second)
+			defer stopIns()
+			_, err = me.Col.InsertMany(insCtx, toInsert)
+			if err != nil {
+				return err
 			}
 			endAt = endAt.Add(-1 * time.Minute)
 			startAt = endAt.Add(-999 * time.Minute)

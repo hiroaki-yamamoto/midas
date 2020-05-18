@@ -82,7 +82,8 @@ var download = &cli.Command{
 				return err
 			}
 		}
-		return err
+		log.Info("Done.")
+		return nil
 	},
 }
 
