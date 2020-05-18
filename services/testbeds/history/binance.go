@@ -15,6 +15,7 @@ import (
 	"github.com/hiroaki-yamamoto/midas/services/testbeds/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
@@ -62,13 +63,13 @@ func (me *Binance) fetch(
 			for ind := 0; ind < jLen; ind++ {
 				item := j.GetIndex(ind)
 				klines[ind] = &models.Kline{
-					OpenTime:                 time.Unix(item.GetIndex(0).MustInt64(), 0),
+					OpenAt:                   time.Unix(item.GetIndex(0).MustInt64(), 0),
 					Open:                     item.GetIndex(1).MustFloat64(),
 					High:                     item.GetIndex(2).MustFloat64(),
 					Low:                      item.GetIndex(3).MustFloat64(),
 					Close:                    item.GetIndex(4).MustFloat64(),
 					Volume:                   item.GetIndex(5).MustFloat64(),
-					CloseTime:                time.Unix(item.GetIndex(6).MustInt64(), 0),
+					CloseAt:                  time.Unix(item.GetIndex(6).MustInt64(), 0),
 					QuoteAssetVolume:         item.GetIndex(7).MustFloat64(),
 					TradeNum:                 item.GetIndex(8).MustInt64(),
 					TakerBuyBaseAssetVolume:  item.GetIndex(9).MustFloat64(),
@@ -142,11 +143,17 @@ func (me *Binance) Run(pair string) error {
 			defer stop()
 			cur, err := me.Col.Find(findCtx, bson.M{
 				"symbol": pair,
-				"opentime": bson.M{
+				"openat": bson.M{
 					"$gte": startAt,
+					"$lt":  endAt,
+				},
+				"closeat": bson.M{
+					"$gt":  startAt,
 					"$lte": endAt,
 				},
-			})
+			}, options.Find().SetSort(bson.M{
+				"closeat": -1,
+			}))
 			var klines []*models.Kline
 			if err != nil {
 				var err error
@@ -159,7 +166,19 @@ func (me *Binance) Run(pair string) error {
 					context.Background(), 10*time.Second,
 				)
 				defer stopNext()
+				partialEndAt := endAt
 				for cur.Next(nextCtx) {
+					kline := &models.Kline{}
+					cur.Decode(kline)
+					if kline.CloseAt != partialEndAt ||
+						kline.OpenAt != partialEndAt.Add(-1*time.Minute) {
+						break
+					}
+					partialEndAt = partialEndAt.Add(-1 * time.Minute)
+				}
+				klines, err = me.fetch(pair, startAt, partialEndAt)
+				if err != nil {
+					return err
 				}
 			}
 			endAt = endAt.Add(-1 * time.Minute)

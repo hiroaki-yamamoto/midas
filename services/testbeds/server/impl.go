@@ -23,7 +23,7 @@ func (me *Server) Subscribe(
 		if err := cur.Decode(trade); err != nil {
 			return err
 		}
-		ts, err := ptypes.TimestampProto(trade.OpenTime)
+		ts, err := ptypes.TimestampProto(trade.OpenAt)
 		if err != nil {
 			return err
 		}
