@@ -178,81 +178,51 @@ func (me *Binance) Run(pair string) error {
 		}
 	}
 	me.Logger.Info("Pair to fetch", zap.Any("pairs", targetSymbols))
-	endAt := time.Now().UTC().Add(-1 * time.Minute)
+	endAt := time.Now().UTC()
 	endAt = endAt.Add(
 		-time.Duration(endAt.Second())*time.Second -
 			time.Duration(endAt.Nanosecond())*time.Nanosecond,
 	)
-	startAt := endAt.Add(-999 * time.Minute)
+	startAt := endAt.Add(-1000 * time.Minute)
 	for _, pair := range targetSymbols {
 		for {
-			findCtx, stop := context.WithTimeout(ctx, 10*time.Second)
+			dbCtx, stop := context.WithTimeout(ctx, 10*time.Second)
 			defer stop()
-			cur, err := me.Col.Find(findCtx, bson.M{
-				"symbol": pair,
-				"openat": bson.M{
-					"$gte": startAt,
-					"$lt":  endAt,
-				},
-				"closeat": bson.M{
-					"$gt":  startAt,
-					"$lte": endAt,
-				},
-			}, options.Find().SetSort(bson.M{
-				"closeat": -1,
-			}))
-			var klines []*models.Kline
-			if err != nil {
-				var err error
-				klines, err = me.fetch(pair, startAt, endAt)
+			klines, err := func() ([]*models.Kline, error) {
+				defer func() {
+					endAt = startAt
+					startAt = endAt.Add(-1000 * time.Minute)
+				}()
+				cur, err := me.Col.Find(dbCtx, bson.M{
+					"symbol": pair,
+					"openat": bson.M{
+						"$gte": startAt,
+					},
+					"closeat": bson.M{
+						"$lte": endAt,
+					},
+				}, options.Find().SetSort(bson.M{
+					"closeat": -1,
+				}).SetLimit(1))
+				var klines []*models.Kline
 				if err != nil {
-					return err
-				}
-				me.Logger.Info(
-					"Fetched k lines data",
-					zap.Time("since", startAt),
-					zap.Time("until", endAt),
-				)
-			} else {
-				nextCtx, stopNext := context.WithTimeout(ctx, 10*time.Second)
-				defer stopNext()
-				partialEndAt := endAt
-				for cur.Next(nextCtx) {
-					kline := &models.Kline{}
-					cur.Decode(kline)
-					if kline.CloseAt != partialEndAt.Add(-1*time.Millisecond) ||
-						kline.OpenAt != partialEndAt.Add(-1*time.Minute) {
-						break
+					klines, err = me.fetch(pair, startAt, endAt)
+				} else {
+					if cur.Next(dbCtx) {
+						kline := &models.Kline{}
+						cur.Decode(kline)
+						startAt = kline.CloseAt.Add(1 * time.Millisecond)
 					}
-					me.Logger.Info(
-						"Cache Hit",
-						zap.Time("start", startAt),
-						zap.Time("end", partialEndAt),
-					)
-					partialEndAt = partialEndAt.Add(-1 * time.Minute)
-				}
-				if partialEndAt.Add(-1*time.Minute) != startAt {
-					delCtx, stopDel := context.WithTimeout(ctx, 10*time.Second)
-					defer stopDel()
-					_, err := me.Col.DeleteMany(delCtx, bson.M{
-						"closeat": bson.M{
-							"$gt": startAt,
-							"$lt": partialEndAt,
-						},
-					})
-					if err != nil {
-						return err
+					if !startAt.Before(endAt) {
+						return nil, nil
 					}
-					klines, err = me.fetch(pair, startAt, partialEndAt)
-					if err != nil {
-						return err
-					}
-					me.Logger.Info(
-						"Fetched k lines data",
-						zap.Time("since", startAt),
-						zap.Time("until", partialEndAt),
-					)
+					klines, err = me.fetch(pair, startAt, endAt)
 				}
+				return klines, err
+			}()
+			if err != nil {
+				me.Logger.Error("Error while fetching", zap.Error(err))
+				continue
 			}
 			if klines == nil || len(klines) < 1 {
 				break
@@ -261,14 +231,15 @@ func (me *Binance) Run(pair string) error {
 			for ind, item := range klines {
 				toInsert[ind] = item
 			}
-			insCtx, stopIns := context.WithTimeout(ctx, 10*time.Second)
-			defer stopIns()
-			_, err = me.Col.InsertMany(insCtx, toInsert)
+			_, err = me.Col.InsertMany(dbCtx, toInsert)
 			if err != nil {
-				return err
+				me.Logger.Error("Error while inseting data to ", zap.Error(err))
 			}
-			endAt = startAt
-			startAt = endAt.Add(-999 * time.Minute)
+			me.Logger.Info(
+				"Fetched k lines data",
+				zap.Time("start", startAt),
+				zap.Time("end", endAt),
+			)
 		}
 	}
 	return nil
