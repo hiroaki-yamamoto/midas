@@ -38,24 +38,25 @@ func NewBinance(log *zap.Logger, col *mongo.Collection) *Binance {
 
 func (me *Binance) fetch(
 	pair string,
-	startAt, endAt time.Time,
+	startAt, endAt int64,
 ) ([]*models.Kline, error) {
 	const endpoint = "https://api.binance.com/api/v3/klines"
 	query := make(url.Values)
 	query.Set("symbol", pair)
 	query.Set("interval", "1m")
-	query.Set("startTime", strconv.FormatInt(startAt.Unix()*1000, 10))
-	if !endAt.IsZero() {
-		query.Set("endTime", strconv.FormatInt(endAt.Unix()*1000, 10))
+	query.Set("startTime", strconv.FormatInt(startAt*1000, 10))
+	if endAt > 0 {
+		query.Set("endTime", strconv.FormatInt(endAt*1000, 10))
 	}
-	timeDiff := int64(endAt.Sub(startAt) / time.Minute)
+	timeDiff := int64(endAt-startAt) / 60
 	if timeDiff > 0 {
-		query.Set("limit", "1000")
+		query.Set("limit", strconv.FormatInt(timeDiff, 10))
 	} else {
 		query.Set("limit", "1")
 	}
+	url := fmt.Sprintf("%s?%s", endpoint, query.Encode())
 	for {
-		resp, err := http.Get(fmt.Sprintf("%s?%s", endpoint, query.Encode()))
+		resp, err := http.Get(url)
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +149,9 @@ func (me *Binance) fetch(
 			return nil, nil
 		default:
 			me.Logger.Warn(
-				"Got irregular status code.", zap.Int("code", resp.StatusCode),
+				"Got irregular status code.",
+				zap.String("URL", url),
+				zap.Int("code", resp.StatusCode),
 			)
 			dec := json.NewDecoder(resp.Body)
 			apiErr := &common.APIError{}
@@ -197,7 +200,7 @@ func (me *Binance) Run(pair string) error {
 	startAt := endAt.Add(-1000 * time.Minute)
 	for _, pair := range targetSymbols {
 		me.Logger.Info("Fetching pair...", zap.Any("pair", pair))
-		firstKlines, err := me.fetch(pair, time.Time{}, time.Time{})
+		firstKlines, err := me.fetch(pair, 0, 0)
 		if err != nil {
 			me.Logger.Error("Error on fetching first kline date", zap.Error(err))
 		}
@@ -226,7 +229,7 @@ func (me *Binance) Run(pair string) error {
 				}).SetLimit(1))
 				var klines []*models.Kline
 				if err != nil {
-					klines, err = me.fetch(pair, startAt, endAt)
+					klines, err = me.fetch(pair, startAt.Unix(), endAt.Unix())
 				} else {
 					if cur.Next(dbCtx) {
 						kline := &models.Kline{}
@@ -236,7 +239,7 @@ func (me *Binance) Run(pair string) error {
 					if !startAt.Before(endAt) {
 						return nil, nil
 					}
-					klines, err = me.fetch(pair, startAt, endAt)
+					klines, err = me.fetch(pair, startAt.Unix(), endAt.Unix())
 				}
 				return klines, err
 			}()
