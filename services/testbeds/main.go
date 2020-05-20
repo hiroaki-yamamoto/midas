@@ -82,6 +82,8 @@ var download = &cli.Command{
 				return err
 			}
 		}
+		wg := hist.GetWaitGroup()
+		wg.Wait()
 		log.Info("Done.")
 		return nil
 	},

@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/adshao/go-binance"
@@ -25,6 +26,7 @@ type Binance struct {
 	Logger *zap.Logger
 	Col    *mongo.Collection
 	Cli    *binance.Client
+	wg     *sync.WaitGroup
 }
 
 // NewBinance constructs a new instance of Binance.
@@ -33,7 +35,13 @@ func NewBinance(log *zap.Logger, col *mongo.Collection) *Binance {
 		Logger: log,
 		Col:    col,
 		Cli:    binance.NewClient("", ""),
+		wg:     &sync.WaitGroup{},
 	}
+}
+
+// GetWaitGroup returns a wait group to wait async io.
+func (me *Binance) GetWaitGroup() *sync.WaitGroup {
+	return me.wg
 }
 
 func (me *Binance) fetch(
@@ -204,6 +212,20 @@ func (me *Binance) Run(pair string) error {
 		if err != nil {
 			me.Logger.Error("Error on fetching first kline date", zap.Error(err))
 		}
+		cacheCtx, cancelFind := context.WithTimeout(ctx, 10*time.Second)
+		defer cancelFind()
+		mostRecentCachedTime := time.Time{}
+		if cur, err := me.Col.Find(
+			cacheCtx,
+			bson.M{"symbol": pair},
+			options.Find().SetSort(bson.M{"closeat": -1}).SetLimit(1)); err == nil {
+			if cur.Next(cacheCtx) {
+				kline := &models.Kline{}
+				cur.Decode(kline)
+				mostRecentCachedTime = kline.CloseAt.Add(1 * time.Millisecond)
+			}
+		}
+
 		firstKline := firstKlines[0]
 		recentEndAt := endAt
 		recentStartAt := startAt
@@ -216,26 +238,11 @@ func (me *Binance) Run(pair string) error {
 					endAt = startAt
 					startAt = endAt.Add(-1000 * time.Minute)
 				}()
-				cur, err := me.Col.Find(dbCtx, bson.M{
-					"symbol": pair,
-					"openat": bson.M{
-						"$gte": startAt,
-					},
-					"closeat": bson.M{
-						"$lte": endAt,
-					},
-				}, options.Find().SetSort(bson.M{
-					"closeat": -1,
-				}).SetLimit(1))
 				var klines []*models.Kline
-				if err != nil {
+				if mostRecentCachedTime.IsZero() {
 					klines, err = me.fetch(pair, startAt.Unix(), endAt.Unix())
 				} else {
-					if cur.Next(dbCtx) {
-						kline := &models.Kline{}
-						cur.Decode(kline)
-						startAt = kline.CloseAt.Add(1 * time.Millisecond)
-					}
+					startAt = mostRecentCachedTime
 					if !startAt.Before(endAt) {
 						return nil, nil
 					}
@@ -250,14 +257,18 @@ func (me *Binance) Run(pair string) error {
 			if klines == nil || len(klines) < 1 {
 				continue
 			}
-			toInsert := make([]interface{}, len(klines))
-			for ind, item := range klines {
-				toInsert[ind] = item
-			}
-			_, err = me.Col.InsertMany(dbCtx, toInsert)
-			if err != nil {
-				me.Logger.Warn("Error while inseting data to ", zap.Error(err))
-			}
+			me.wg.Add(1)
+			go func(klines []*models.Kline) {
+				defer me.wg.Done()
+				toInsert := make([]interface{}, len(klines))
+				for ind, item := range klines {
+					toInsert[ind] = item
+				}
+				_, err = me.Col.InsertMany(dbCtx, toInsert)
+				if err != nil {
+					me.Logger.Warn("Error while inseting data to ", zap.Error(err))
+				}
+			}(klines)
 			me.Logger.Info(
 				"Fetched k lines data",
 				zap.Time("start", startAt),
