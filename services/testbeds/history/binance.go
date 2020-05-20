@@ -244,7 +244,7 @@ func (me *Binance) Run(pair string) error {
 				return klines, err
 			}()
 			if err != nil {
-				me.Logger.Error("Error while fetching", zap.Error(err))
+				me.Logger.Warn("Error while fetching", zap.Error(err))
 				continue
 			}
 			if klines == nil || len(klines) < 1 {
@@ -256,7 +256,7 @@ func (me *Binance) Run(pair string) error {
 			}
 			_, err = me.Col.InsertMany(dbCtx, toInsert)
 			if err != nil {
-				me.Logger.Error("Error while inseting data to ", zap.Error(err))
+				me.Logger.Warn("Error while inseting data to ", zap.Error(err))
 			}
 			me.Logger.Info(
 				"Fetched k lines data",
