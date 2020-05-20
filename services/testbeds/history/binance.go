@@ -45,8 +45,15 @@ func (me *Binance) fetch(
 	query.Set("symbol", pair)
 	query.Set("interval", "1m")
 	query.Set("startTime", strconv.FormatInt(startAt.Unix()*1000, 10))
-	query.Set("endTime", strconv.FormatInt(endAt.Unix()*1000, 10))
-	query.Set("limit", "1000")
+	if !endAt.IsZero() {
+		query.Set("endTime", strconv.FormatInt(endAt.Unix()*1000, 10))
+	}
+	timeDiff := int64(endAt.Sub(startAt) / time.Minute)
+	if timeDiff > 0 {
+		query.Set("limit", "1000")
+	} else {
+		query.Set("limit", "1")
+	}
 	for {
 		resp, err := http.Get(fmt.Sprintf("%s?%s", endpoint, query.Encode()))
 		if err != nil {
@@ -137,8 +144,12 @@ func (me *Binance) fetch(
 			<-time.After(time.Duration(waitCount) * time.Second)
 			break
 		case http.StatusNotFound:
+			me.Logger.Warn("The response status code got NotFound...")
 			return nil, nil
 		default:
+			me.Logger.Warn(
+				"Got irregular status code.", zap.Int("code", resp.StatusCode),
+			)
 			dec := json.NewDecoder(resp.Body)
 			apiErr := &common.APIError{}
 			if decErr := dec.Decode(apiErr); decErr != nil {
@@ -185,7 +196,16 @@ func (me *Binance) Run(pair string) error {
 	)
 	startAt := endAt.Add(-1000 * time.Minute)
 	for _, pair := range targetSymbols {
-		for {
+		me.Logger.Info("Fetching pair...", zap.Any("pair", pair))
+		firstKlines, err := me.fetch(pair, time.Time{}, time.Time{})
+		if err != nil {
+			me.Logger.Error("Error on fetching first kline date", zap.Error(err))
+		}
+		firstKline := firstKlines[0]
+		firstEndAt := endAt
+		firstStartAt := startAt
+		for (startAt.After(firstKline.OpenAt) || startAt.Equal(firstKline.OpenAt)) ||
+			(endAt.After(firstKline.CloseAt) || endAt.Equal(firstKline.CloseAt)) {
 			dbCtx, stop := context.WithTimeout(ctx, 10*time.Second)
 			defer stop()
 			klines, err := func() ([]*models.Kline, error) {
@@ -225,7 +245,7 @@ func (me *Binance) Run(pair string) error {
 				continue
 			}
 			if klines == nil || len(klines) < 1 {
-				break
+				continue
 			}
 			toInsert := make([]interface{}, len(klines))
 			for ind, item := range klines {
@@ -241,6 +261,7 @@ func (me *Binance) Run(pair string) error {
 				zap.Time("end", endAt),
 			)
 		}
+		startAt, endAt = firstStartAt, firstEndAt
 	}
 	return nil
 }
