@@ -202,8 +202,8 @@ func (me *Binance) Run(pair string) error {
 			me.Logger.Error("Error on fetching first kline date", zap.Error(err))
 		}
 		firstKline := firstKlines[0]
-		firstEndAt := endAt
-		firstStartAt := startAt
+		recentEndAt := endAt
+		recentStartAt := startAt
 		for (startAt.After(firstKline.OpenAt) || startAt.Equal(firstKline.OpenAt)) ||
 			(endAt.After(firstKline.CloseAt) || endAt.Equal(firstKline.CloseAt)) {
 			dbCtx, stop := context.WithTimeout(ctx, 10*time.Second)
@@ -261,7 +261,7 @@ func (me *Binance) Run(pair string) error {
 				zap.Time("end", endAt),
 			)
 		}
-		startAt, endAt = firstStartAt, firstEndAt
+		startAt, endAt = recentStartAt, recentEndAt
 	}
 	return nil
 }
