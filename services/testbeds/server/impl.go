@@ -39,12 +39,16 @@ func (me *Server) Subscribe(
 		case rpc.PriceBase_Low:
 			ret.Price = trade.Low
 			break
+		case rpc.PriceBase_MidHighAndLow:
+			ret.Price = (trade.High + trade.Low) / 2
 		case rpc.PriceBase_Open:
 			ret.Price = trade.Open
 			break
 		case rpc.PriceBase_Close:
 			ret.Price = trade.Close
 			break
+		case rpc.PriceBase_MidOpenClose:
+			ret.Price = (trade.Open + trade.Close) / 2
 		}
 		if err := resp.SendMsg(ret); err != nil {
 			return err
