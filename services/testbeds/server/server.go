@@ -42,9 +42,10 @@ func (me *Server) Close() error {
 func (me *Server) Trap(sigs ...os.Signal) {
 	sig := make(chan os.Signal)
 	signal.Notify(sig, sigs...)
-	defer close(sig)
 	go func() {
+		defer close(sig)
 		for range sig {
+			me.Log.Info("Graceful Stop...")
 			me.Close()
 		}
 	}()
