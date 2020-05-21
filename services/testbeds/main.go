@@ -6,6 +6,7 @@ import (
 	stdlog "log"
 	"net"
 	"os"
+	"os/signal"
 	"strings"
 	"syscall"
 	"time"
@@ -77,13 +78,21 @@ var download = &cli.Command{
 		default:
 			return fmt.Errorf("Unknown exchange: %s", menu.Exchange)
 		}
+		go func() {
+			sig := make(chan os.Signal)
+			defer close(sig)
+			signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+			for range sig {
+				hist.Stop()
+				log.Info("Graceful stopped.")
+			}
+		}()
 		for _, sym := range menu.Symbols {
 			if err := hist.Run(sym); err != nil {
 				return err
 			}
 		}
-		wg := hist.GetWaitGroup()
-		wg.Wait()
+		hist.Stop()
 		log.Info("Done.")
 		return nil
 	},

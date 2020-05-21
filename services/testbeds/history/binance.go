@@ -23,25 +23,31 @@ import (
 
 // Binance represents binance historical chart data downloader.
 type Binance struct {
-	Logger *zap.Logger
-	Col    *mongo.Collection
-	Cli    *binance.Client
-	wg     *sync.WaitGroup
+	Logger    *zap.Logger
+	Col       *mongo.Collection
+	Cli       *binance.Client
+	wg        *sync.WaitGroup
+	ctx       context.Context
+	cancelCtx context.CancelFunc
 }
 
 // NewBinance constructs a new instance of Binance.
 func NewBinance(log *zap.Logger, col *mongo.Collection) *Binance {
+	ctx, cancel := context.WithCancel(context.Background())
 	return &Binance{
-		Logger: log,
-		Col:    col,
-		Cli:    binance.NewClient("", ""),
-		wg:     &sync.WaitGroup{},
+		Logger:    log,
+		Col:       col,
+		Cli:       binance.NewClient("", ""),
+		wg:        &sync.WaitGroup{},
+		ctx:       ctx,
+		cancelCtx: cancel,
 	}
 }
 
-// GetWaitGroup returns a wait group to wait async io.
-func (me *Binance) GetWaitGroup() *sync.WaitGroup {
-	return me.wg
+// Stop stops the current running tasks.
+func (me *Binance) Stop() {
+	me.cancelCtx()
+	me.wg.Wait()
 }
 
 func (me *Binance) fetch(
@@ -173,8 +179,7 @@ func (me *Binance) fetch(
 
 // Run starts downloading Historical data.
 func (me *Binance) Run(pair string) error {
-	ctx := context.Background()
-	info, err := me.Cli.NewExchangeInfoService().Do(ctx)
+	info, err := me.Cli.NewExchangeInfoService().Do(me.ctx)
 	if err != nil {
 		return err
 	}
@@ -212,7 +217,7 @@ func (me *Binance) Run(pair string) error {
 		if err != nil {
 			me.Logger.Error("Error on fetching first kline date", zap.Error(err))
 		}
-		cacheCtx, cancelFind := context.WithTimeout(ctx, 10*time.Second)
+		cacheCtx, cancelFind := context.WithTimeout(me.ctx, 10*time.Second)
 		defer cancelFind()
 		mostRecentCachedTime := time.Time{}
 		if cur, err := me.Col.Find(
@@ -231,7 +236,7 @@ func (me *Binance) Run(pair string) error {
 		recentStartAt := startAt
 		for (startAt.After(firstKline.OpenAt) || startAt.Equal(firstKline.OpenAt)) ||
 			(endAt.After(firstKline.CloseAt) || endAt.Equal(firstKline.CloseAt)) {
-			dbCtx, stop := context.WithTimeout(ctx, 10*time.Second)
+			dbCtx, stop := context.WithTimeout(me.ctx, 10*time.Second)
 			defer stop()
 			klines, err := func() ([]*models.Kline, error) {
 				defer func() {
@@ -257,23 +262,28 @@ func (me *Binance) Run(pair string) error {
 			if klines == nil || len(klines) < 1 {
 				continue
 			}
-			me.wg.Add(1)
-			go func(klines []*models.Kline) {
-				defer me.wg.Done()
-				toInsert := make([]interface{}, len(klines))
-				for ind, item := range klines {
-					toInsert[ind] = item
-				}
-				_, err = me.Col.InsertMany(dbCtx, toInsert)
-				if err != nil {
-					me.Logger.Warn("Error while inseting data to ", zap.Error(err))
-				}
-			}(klines)
-			me.Logger.Info(
-				"Fetched k lines data",
-				zap.Time("start", startAt),
-				zap.Time("end", endAt),
-			)
+			select {
+			case <-me.ctx.Done():
+				return nil
+			default:
+				me.wg.Add(1)
+				go func(klines []*models.Kline) {
+					defer me.wg.Done()
+					toInsert := make([]interface{}, len(klines))
+					for ind, item := range klines {
+						toInsert[ind] = item
+					}
+					_, err = me.Col.InsertMany(dbCtx, toInsert)
+					if err != nil {
+						me.Logger.Warn("Error while inseting data to ", zap.Error(err))
+					}
+				}(klines)
+				me.Logger.Info(
+					"Fetched k lines data",
+					zap.Time("start", startAt),
+					zap.Time("end", endAt),
+				)
+			}
 		}
 		startAt, endAt = recentStartAt, recentEndAt
 	}
