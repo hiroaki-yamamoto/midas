@@ -161,9 +161,9 @@ func (me *Binance) fetch(
 			waitCount, err := strconv.ParseUint(
 				resp.Header.Get("Retry-After"), 10, 64,
 			)
-			if err != nil {
+			if err != nil || waitCount < 20 {
 				err = nil
-				waitCount = 10
+				waitCount = 20
 			}
 			me.Logger.Warn(
 				"Got locked out!! Waiting...",
