@@ -22,6 +22,19 @@ import (
 	"golang.org/x/net/context"
 )
 
+const numConcReq = 6
+
+type klinesError struct {
+	Klines   []*models.Kline
+	Err      error
+	Progress int64
+}
+
+type bulkFetchRequest struct {
+	Start time.Time
+	End   time.Time
+}
+
 // Binance represents binance historical chart data downloader.
 type Binance struct {
 	Logger    *zap.Logger
@@ -178,6 +191,22 @@ func (me *Binance) fetch(
 	}
 }
 
+func (me *Binance) bulkFetch(
+	pair string,
+	times <-chan *bulkFetchRequest,
+	results chan<- *klinesError,
+) {
+	defer close(results)
+	for t := range times {
+		res, err := me.fetch(pair, t.Start.Unix(), t.End.Unix())
+		results <- &klinesError{
+			Klines:   res,
+			Err:      err,
+			Progress: int64(t.End.Sub(t.Start) / time.Minute),
+		}
+	}
+}
+
 // Run starts downloading Historical data.
 func (me *Binance) Run(pair string) error {
 	info, err := me.Cli.NewExchangeInfoService().Do(me.ctx)
@@ -237,11 +266,15 @@ func (me *Binance) Run(pair string) error {
 			int64(startAt.Sub(firstKline.OpenAt) / time.Minute),
 		)
 		bar.Describe(fmt.Sprintf("%s [%d/%d]", pair, ind+1, len(targetSymbols)))
+		numObj := int64(startAt.Sub(firstKline.OpenAt) / time.Minute)
+		fetchReq := make(chan *bulkFetchRequest, numObj)
+		results := make(chan *klinesError, numObj)
+		for i := 0; i < numConcReq; i++ {
+			go me.bulkFetch(pair, fetchReq, results)
+		}
 		for (startAt.After(firstKline.OpenAt) || startAt.Equal(firstKline.OpenAt)) ||
 			(endAt.After(firstKline.CloseAt) || endAt.Equal(firstKline.CloseAt)) {
-			dbCtx, stop := context.WithTimeout(me.ctx, 10*time.Second)
-			defer stop()
-			klines, err := func() ([]*models.Kline, error) {
+			func() {
 				defer func() {
 					endAt = startAt
 					startdiff := startAt.Sub(firstKline.OpenAt) / time.Minute
@@ -249,15 +282,26 @@ func (me *Binance) Run(pair string) error {
 						startdiff = 1000
 					}
 					startAt = endAt.Add(-startdiff * time.Minute)
-					bar.Add64(int64(startdiff))
 				}()
-				return me.fetch(pair, startAt.Unix(), endAt.Unix())
+				fetchReq <- &bulkFetchRequest{
+					Start: startAt,
+					End:   endAt,
+				}
 			}()
-			if err != nil {
-				me.Logger.Warn("Error while fetching", zap.Error(err))
+			select {
+			case <-me.ctx.Done():
+				return nil
+			default:
+				break
+			}
+		}
+		close(fetchReq)
+		for res := range results {
+			if res.Err != nil {
+				me.Logger.Warn("Error while fetching", zap.Error(res.Err))
 				continue
 			}
-			if klines == nil || len(klines) < 1 {
+			if res.Klines == nil || len(res.Klines) < 1 {
 				continue
 			}
 			select {
@@ -265,17 +309,20 @@ func (me *Binance) Run(pair string) error {
 				return nil
 			default:
 				me.wg.Add(1)
+				bar.Add64(res.Progress)
 				go func(klines []*models.Kline) {
 					defer me.wg.Done()
 					toInsert := make([]interface{}, len(klines))
 					for ind, item := range klines {
 						toInsert[ind] = item
 					}
+					dbCtx, stop := context.WithTimeout(me.ctx, 10*time.Second)
+					defer stop()
 					_, err = me.Col.InsertMany(dbCtx, toInsert)
 					if err != nil {
-						me.Logger.Warn("Error while inseting data to ", zap.Error(err))
+						me.Logger.Warn("Error while inseting data to the db", zap.Error(err))
 					}
-				}(klines)
+				}(res.Klines)
 			}
 		}
 		fmt.Println("")
