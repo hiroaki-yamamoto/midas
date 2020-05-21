@@ -14,6 +14,7 @@ import (
 	"github.com/adshao/go-binance/common"
 	"github.com/bitly/go-simplejson"
 	"github.com/hiroaki-yamamoto/midas/services/testbeds/models"
+	"github.com/schollz/progressbar/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -211,15 +212,14 @@ func (me *Binance) Run(pair string) error {
 			time.Duration(endAt.Nanosecond())*time.Nanosecond,
 	)
 	startAt := endAt.Add(-1000 * time.Minute)
-	for _, pair := range targetSymbols {
-		me.Logger.Info("Fetching pair...", zap.Any("pair", pair))
+	for ind, pair := range targetSymbols {
 		firstKlines, err := me.fetch(pair, 0, 0)
 		if err != nil {
 			me.Logger.Error("Error on fetching first kline date", zap.Error(err))
 		}
+		firstKline := firstKlines[0]
 		cacheCtx, cancelFind := context.WithTimeout(me.ctx, 10*time.Second)
 		defer cancelFind()
-		mostRecentCachedTime := time.Time{}
 		if cur, err := me.Col.Find(
 			cacheCtx,
 			bson.M{"symbol": pair},
@@ -227,13 +227,16 @@ func (me *Binance) Run(pair string) error {
 			if cur.Next(cacheCtx) {
 				kline := &models.Kline{}
 				cur.Decode(kline)
-				mostRecentCachedTime = kline.CloseAt.Add(1 * time.Millisecond)
+				firstKline = kline
 			}
 		}
 
-		firstKline := firstKlines[0]
 		recentEndAt := endAt
 		recentStartAt := startAt
+		bar := progressbar.Default(
+			int64(startAt.Sub(firstKline.OpenAt) / time.Minute),
+		)
+		bar.Describe(fmt.Sprintf("%s [%d/%d]", pair, ind+1, len(targetSymbols)))
 		for (startAt.After(firstKline.OpenAt) || startAt.Equal(firstKline.OpenAt)) ||
 			(endAt.After(firstKline.CloseAt) || endAt.Equal(firstKline.CloseAt)) {
 			dbCtx, stop := context.WithTimeout(me.ctx, 10*time.Second)
@@ -241,19 +244,14 @@ func (me *Binance) Run(pair string) error {
 			klines, err := func() ([]*models.Kline, error) {
 				defer func() {
 					endAt = startAt
-					startAt = endAt.Add(-1000 * time.Minute)
-				}()
-				var klines []*models.Kline
-				if mostRecentCachedTime.IsZero() {
-					klines, err = me.fetch(pair, startAt.Unix(), endAt.Unix())
-				} else {
-					startAt = mostRecentCachedTime
-					if !startAt.Before(endAt) {
-						return nil, nil
+					startdiff := startAt.Sub(firstKline.OpenAt) / time.Minute
+					if startdiff < 1 || startdiff > 1000 {
+						startdiff = 1000
 					}
-					klines, err = me.fetch(pair, startAt.Unix(), endAt.Unix())
-				}
-				return klines, err
+					startAt = endAt.Add(-startdiff * time.Minute)
+					bar.Add64(int64(startdiff))
+				}()
+				return me.fetch(pair, startAt.Unix(), endAt.Unix())
 			}()
 			if err != nil {
 				me.Logger.Warn("Error while fetching", zap.Error(err))
@@ -278,14 +276,9 @@ func (me *Binance) Run(pair string) error {
 						me.Logger.Warn("Error while inseting data to ", zap.Error(err))
 					}
 				}(klines)
-				me.Logger.Info(
-					"Fetched hist data",
-					zap.String("symbol", pair),
-					zap.Time("start", startAt),
-					zap.Time("end", endAt),
-				)
 			}
 		}
+		fmt.Println("")
 		startAt, endAt = recentStartAt, recentEndAt
 	}
 	return nil

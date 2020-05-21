@@ -12,6 +12,7 @@ require (
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mkideal/cli v0.0.5
 	github.com/mkideal/pkg v0.0.0-20170503154153-3e188c9e7ecc // indirect
+	github.com/schollz/progressbar/v3 v3.3.3
 	go.mongodb.org/mongo-driver v1.3.2
 	go.uber.org/zap v1.15.0
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
