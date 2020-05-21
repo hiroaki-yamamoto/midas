@@ -279,7 +279,7 @@ func (me *Binance) Run(pair string) error {
 					}
 				}(klines)
 				me.Logger.Info(
-					"Fetched k lines data",
+					"Fetched hist data",
 					zap.String("symbol", pair),
 					zap.Time("start", startAt),
 					zap.Time("end", endAt),
