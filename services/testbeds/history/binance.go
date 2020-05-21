@@ -196,7 +196,6 @@ func (me *Binance) bulkFetch(
 	times <-chan *bulkFetchRequest,
 	results chan<- *klinesError,
 ) {
-	defer close(results)
 	for t := range times {
 		res, err := me.fetch(pair, t.Start.Unix(), t.End.Unix())
 		results <- &klinesError{
@@ -234,7 +233,7 @@ func (me *Binance) Run(pair string) error {
 			Pair: pair,
 		}
 	}
-	me.Logger.Info("Pair to fetch", zap.Any("pairs", targetSymbols))
+	me.Logger.Info("Number of pairs to fetch", zap.Any("numPairs", len(targetSymbols)))
 	endAt := time.Now().UTC()
 	endAt = endAt.Add(
 		-time.Duration(endAt.Second())*time.Second -
@@ -268,7 +267,7 @@ func (me *Binance) Run(pair string) error {
 		bar.Describe(fmt.Sprintf("%s [%d/%d]", pair, ind+1, len(targetSymbols)))
 		numObj := int64(startAt.Sub(firstKline.OpenAt) / time.Minute)
 		fetchReq := make(chan *bulkFetchRequest, numObj)
-		results := make(chan *klinesError, numObj)
+		results := make(chan *klinesError)
 		for i := 0; i < numConcReq; i++ {
 			go me.bulkFetch(pair, fetchReq, results)
 		}
@@ -292,11 +291,13 @@ func (me *Binance) Run(pair string) error {
 			case <-me.ctx.Done():
 				return nil
 			default:
-				break
+				continue
 			}
 		}
 		close(fetchReq)
-		for res := range results {
+		for i := int64(0); i < numObj; {
+			res := <-results
+			i += res.Progress
 			if res.Err != nil {
 				me.Logger.Warn("Error while fetching", zap.Error(res.Err))
 				continue
@@ -323,6 +324,9 @@ func (me *Binance) Run(pair string) error {
 						me.Logger.Warn("Error while inseting data to the db", zap.Error(err))
 					}
 				}(res.Klines)
+			}
+			if i == numObj-1 {
+				close(results)
 			}
 		}
 		fmt.Println("")
