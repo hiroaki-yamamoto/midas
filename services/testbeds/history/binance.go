@@ -267,7 +267,7 @@ func (me *Binance) Run(pair string) error {
 		bar.Describe(fmt.Sprintf("%s [%d/%d]", pair, ind+1, len(targetSymbols)))
 		numObj := int64(startAt.Sub(firstKline.OpenAt) / time.Minute)
 		fetchReq := make(chan *bulkFetchRequest, numObj)
-		results := make(chan *klinesError)
+		results := make(chan *klinesError, numObj)
 		for i := 0; i < numConcReq; i++ {
 			go me.bulkFetch(pair, fetchReq, results)
 		}
