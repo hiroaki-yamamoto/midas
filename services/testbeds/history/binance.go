@@ -296,18 +296,15 @@ func (me *Binance) Run(pair string) error {
 		}
 		close(fetchReq)
 		for res := range results {
-			bar.Add64(res.Progress)
-			if res.Err != nil {
-				me.Logger.Warn("Error while fetching", zap.Error(res.Err))
-				continue
-			}
-			if res.Klines == nil || len(res.Klines) < 1 {
-				continue
-			}
-			select {
-			case <-me.ctx.Done():
-				return nil
-			default:
+			func() {
+				defer bar.Add64(res.Progress)
+				if res.Err != nil {
+					me.Logger.Warn("Error while fetching", zap.Error(res.Err))
+					return
+				}
+				if res.Klines == nil || len(res.Klines) < 1 {
+					return
+				}
 				me.wg.Add(1)
 				go func(klines []*models.Kline) {
 					defer me.wg.Done()
@@ -322,12 +319,18 @@ func (me *Binance) Run(pair string) error {
 						me.Logger.Warn("Error while inseting data to the db", zap.Error(err))
 					}
 				}(res.Klines)
-			}
-			if bar.State().CurrentPercent >= 1 {
-				close(results)
+				if bar.State().CurrentPercent >= 1 {
+					close(results)
+				}
+			}()
+			select {
+			case <-me.ctx.Done():
+				return nil
+			default:
+				break
 			}
 		}
-		fmt.Println("")
+		bar.Finish()
 		startAt, endAt = recentStartAt, recentEndAt
 	}
 	return nil
