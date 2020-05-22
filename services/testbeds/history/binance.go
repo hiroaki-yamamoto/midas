@@ -327,6 +327,7 @@ func (me *Binance) Run(pair string) error {
 				close(results)
 			}
 		}
+		fmt.Println("")
 		startAt, endAt = recentStartAt, recentEndAt
 	}
 	return nil
