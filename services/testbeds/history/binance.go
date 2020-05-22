@@ -296,6 +296,7 @@ func (me *Binance) Run(pair string) error {
 		}
 		close(fetchReq)
 		for res := range results {
+			bar.Add64(res.Progress)
 			if res.Err != nil {
 				me.Logger.Warn("Error while fetching", zap.Error(res.Err))
 				continue
@@ -308,7 +309,6 @@ func (me *Binance) Run(pair string) error {
 				return nil
 			default:
 				me.wg.Add(1)
-				bar.Add64(res.Progress)
 				go func(klines []*models.Kline) {
 					defer me.wg.Done()
 					toInsert := make([]interface{}, len(klines))
