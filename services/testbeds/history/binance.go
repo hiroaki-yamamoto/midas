@@ -295,9 +295,7 @@ func (me *Binance) Run(pair string) error {
 			}
 		}
 		close(fetchReq)
-		for i := int64(0); i < numObj; {
-			res := <-results
-			i += res.Progress
+		for res := range results {
 			if res.Err != nil {
 				me.Logger.Warn("Error while fetching", zap.Error(res.Err))
 				continue
@@ -325,11 +323,10 @@ func (me *Binance) Run(pair string) error {
 					}
 				}(res.Klines)
 			}
-			if i == numObj-1 {
+			if bar.State().CurrentPercent >= 1 {
 				close(results)
 			}
 		}
-		fmt.Println("")
 		startAt, endAt = recentStartAt, recentEndAt
 	}
 	return nil
