@@ -3,6 +3,7 @@ package history
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -270,7 +271,7 @@ func (me *Binance) Run(pair string) error {
 		bar := progressbar.Default(int64(cap(results)))
 		bar.Describe(fmt.Sprintf("%s [%d/%d]", pair, ind+1, len(targetSymbols)))
 		bar.RenderBlank()
-		for i := 0; i < numConcReq; i++ {
+		for i := 0; i < numConcReq && i < int(math.Ceil(float64(cap(results))/1000)); i++ {
 			go me.bulkFetch(pair, fetchReq, results)
 		}
 		for i := 0; i < cap(fetchReq); i++ {
