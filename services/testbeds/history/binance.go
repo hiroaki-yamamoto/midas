@@ -25,9 +25,9 @@ import (
 const numConcReq = 6
 
 type klinesError struct {
-	Klines   []*models.Kline
-	Err      error
-	Progress int64
+	Klines       []*models.Kline
+	Err          error
+	IncrementObj int64
 }
 
 type bulkFetchRequest struct {
@@ -199,9 +199,9 @@ func (me *Binance) bulkFetch(
 	for t := range times {
 		res, err := me.fetch(pair, t.Start.Unix(), t.End.Unix())
 		results <- &klinesError{
-			Klines:   res,
-			Err:      err,
-			Progress: int64(t.End.Sub(t.Start) / time.Minute),
+			Klines:       res,
+			Err:          err,
+			IncrementObj: int64(t.End.Sub(t.Start) / time.Minute),
 		}
 	}
 }
@@ -239,7 +239,6 @@ func (me *Binance) Run(pair string) error {
 		-time.Duration(endAt.Second())*time.Second -
 			time.Duration(endAt.Nanosecond())*time.Nanosecond,
 	)
-	startAt := endAt.Add(-1000 * time.Minute)
 	for ind, pair := range targetSymbols {
 		firstKlines, err := me.fetch(pair, 0, 0)
 		if err != nil {
@@ -259,25 +258,27 @@ func (me *Binance) Run(pair string) error {
 			}
 		}
 
+		numObj := int64(endAt.Sub(firstKline.CloseAt) / time.Minute)
+		startAt := endAt.Add(time.Duration(-numObj) * time.Minute)
+		if numObj > 1000 {
+			startAt = endAt.Add(-1000 * time.Minute)
+		}
 		recentEndAt := endAt
 		recentStartAt := startAt
-		bar := progressbar.Default(
-			int64(startAt.Sub(firstKline.OpenAt) / time.Minute),
-		)
-		bar.Describe(fmt.Sprintf("%s [%d/%d]", pair, ind+1, len(targetSymbols)))
-		numObj := int64(startAt.Sub(firstKline.OpenAt) / time.Minute)
 		fetchReq := make(chan *bulkFetchRequest, numObj)
 		results := make(chan *klinesError, numObj)
+		bar := progressbar.Default(int64(cap(results)))
+		bar.Describe(fmt.Sprintf("%s [%d/%d]", pair, ind+1, len(targetSymbols)))
+		bar.RenderBlank()
 		for i := 0; i < numConcReq; i++ {
 			go me.bulkFetch(pair, fetchReq, results)
 		}
-		for (startAt.After(firstKline.OpenAt) || startAt.Equal(firstKline.OpenAt)) ||
-			(endAt.After(firstKline.CloseAt) || endAt.Equal(firstKline.CloseAt)) {
+		for i := 0; i < cap(fetchReq); i++ {
 			func() {
 				defer func() {
 					endAt = startAt
 					startdiff := startAt.Sub(firstKline.OpenAt) / time.Minute
-					if startdiff < 1 || startdiff > 1000 {
+					if startdiff > 1000 {
 						startdiff = 1000
 					}
 					startAt = endAt.Add(-startdiff * time.Minute)
@@ -295,41 +296,49 @@ func (me *Binance) Run(pair string) error {
 			}
 		}
 		close(fetchReq)
-		for res := range results {
-			func() {
-				defer bar.Add64(res.Progress)
-				if res.Err != nil {
-					me.Logger.Warn("Error while fetching", zap.Error(res.Err))
-					return
-				}
-				if res.Klines == nil || len(res.Klines) < 1 {
-					return
-				}
-				me.wg.Add(1)
-				go func(klines []*models.Kline) {
-					defer me.wg.Done()
-					toInsert := make([]interface{}, len(klines))
-					for ind, item := range klines {
-						toInsert[ind] = item
-					}
-					dbCtx, stop := context.WithTimeout(me.ctx, 10*time.Second)
-					defer stop()
-					_, err = me.Col.InsertMany(dbCtx, toInsert)
-					if err != nil {
-						me.Logger.Warn("Error while inseting data to the db", zap.Error(err))
-					}
-				}(res.Klines)
-				if bar.State().CurrentPercent >= 1 {
-					close(results)
-				}
-			}()
+		for i := 0; i < cap(results); i++ {
+			var stop = false
 			select {
-			case <-me.ctx.Done():
-				return nil
-			default:
+			case res := <-results:
+				func() {
+					defer func() {
+						bar.Add64(res.IncrementObj)
+					}()
+					if res.Err != nil {
+						me.Logger.Warn("Error while fetching", zap.Error(res.Err))
+						return
+					}
+					if res.Klines == nil || len(res.Klines) < 1 {
+						return
+					}
+					me.wg.Add(1)
+					go func(klines []*models.Kline) {
+						defer me.wg.Done()
+						toInsert := make([]interface{}, len(klines))
+						for ind, item := range klines {
+							toInsert[ind] = item
+						}
+						dbCtx, stop := context.WithTimeout(me.ctx, 30*time.Second)
+						defer stop()
+						_, err = me.Col.InsertMany(dbCtx, toInsert)
+						if err != nil {
+							me.Logger.Warn(
+								"Error while inseting data to the db",
+								zap.Error(err),
+								zap.String("pair", klines[0].Symbol),
+							)
+						}
+					}(res.Klines)
+				}()
 				break
+			case <-me.ctx.Done():
+				stop = true
+			}
+			if stop {
+				return nil
 			}
 		}
+		close(results)
 		bar.Finish()
 		startAt, endAt = recentStartAt, recentEndAt
 	}
