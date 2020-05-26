@@ -28,3 +28,10 @@ services:
       - -d mongodb://database
     depends_on:
       - database
+  frontend:
+    build:
+      context: frontend
+    volumes:
+      - ./frontend:/opt/code
+    ports:
+      - 8000:4200
