@@ -12,6 +12,6 @@ build $backOut/services.pb.go: protoc services.proto
   flags = $backFlags
   outdir = $backOut
 
-build $frontOut/services.pb.go: protoc services.proto
+build $frontOut/services_pb.d.ts $frontOut/ServicesServiceClientPb.ts: protoc services.proto
   flags = $frontFlags
   outdir = $frontOut
