@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/hiroaki-yamamoto/midas/services/testbeds/rpc"
+	"github.com/hiroaki-yamamoto/midas/backend/services/testbeds/rpc"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"

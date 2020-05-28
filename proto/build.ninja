@@ -1,0 +1,17 @@
+backFlags = --go_out=plugins=grpc
+backOut = ../backend/rpc
+
+frontFlags = --grpc-web_out=import_style=typescript,mode=grpcweb
+frontOut = ../frontend/src/app/rpc
+inc = .
+
+rule protoc
+  command = protoc $flags:$outdir -I $inc $in
+
+build $backOut/services.pb.go: protoc services.proto
+  flags = $backFlags
+  outdir = $backOut
+
+build $frontOut/services.pb.go: protoc services.proto
+  flags = $backFlags
+  outdir = $backOut

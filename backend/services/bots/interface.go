@@ -1,4 +1,4 @@
-package strategies
+package bots
 
 // Portfolio indicates a portfolio summary.
 // Symbol as a key, and the amount as a value.

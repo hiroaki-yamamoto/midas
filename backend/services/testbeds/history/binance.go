@@ -14,7 +14,7 @@ import (
 	"github.com/adshao/go-binance"
 	"github.com/adshao/go-binance/common"
 	"github.com/bitly/go-simplejson"
-	"github.com/hiroaki-yamamoto/midas/services/testbeds/models"
+	"github.com/hiroaki-yamamoto/midas/backend/services/testbeds/models"
 	"github.com/schollz/progressbar/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"

@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package services;
+option go_package = "rpc";
+
+enum Strategy {
+  Trailing = 0;
+}
+
+message BotInfo {
+  string id = 1;
+  Strategy strategy = 2;
+  string name = 3;
+  string config = 4;
+}
+
+message BotInfoList {
+  repeated BotInfo bots = 1;
+}
+
+message BotInfoListRequest {
+  int64 offset = 1;
+  int64 limit = 2;
+}
+
+service BotManager {
+  rpc BotInfoList(BotInfoListRequest) returns (BotInfoList);
+}

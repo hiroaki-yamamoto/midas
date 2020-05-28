@@ -1,4 +1,4 @@
-module github.com/hiroaki-yamamoto/midas
+module github.com/hiroaki-yamamoto/midas/backend
 
 go 1.14
 

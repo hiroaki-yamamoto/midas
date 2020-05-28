@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/hiroaki-yamamoto/midas/services/testbeds/history"
-	"github.com/hiroaki-yamamoto/midas/services/testbeds/server"
+	"github.com/hiroaki-yamamoto/midas/backend/services/testbeds/history"
+	"github.com/hiroaki-yamamoto/midas/backend/services/testbeds/server"
 	"github.com/mkideal/cli"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

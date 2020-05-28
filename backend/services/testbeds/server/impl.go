@@ -2,8 +2,8 @@ package server
 
 import (
 	"github.com/golang/protobuf/ptypes"
-	"github.com/hiroaki-yamamoto/midas/services/testbeds/models"
-	"github.com/hiroaki-yamamoto/midas/services/testbeds/rpc"
+	"github.com/hiroaki-yamamoto/midas/backend/services/testbeds/models"
+	"github.com/hiroaki-yamamoto/midas/backend/services/testbeds/rpc"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
