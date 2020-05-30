@@ -5,10 +5,11 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
+
+import * as am4core from '@amcharts/amcharts4/core';
+import am4themes_animated from '@amcharts/amcharts4/themes/animated';
 
 @NgModule({
   declarations: [
@@ -19,12 +20,14 @@ import { MatToolbarModule } from '@angular/material/toolbar';
     AppRoutingModule,
     BrowserAnimationsModule,
 
-    FlexLayoutModule,
     MatButtonModule,
-    MatSidenavModule,
     MatToolbarModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+  constructor() {
+    am4core.useTheme(am4themes_animated);
+  }
+}
