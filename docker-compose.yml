@@ -33,5 +33,6 @@ services:
       context: frontend
     volumes:
       - ./frontend:/opt/code
+      - /opt/code/node_modules
     ports:
       - 8000:4200
