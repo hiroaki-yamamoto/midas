@@ -3,7 +3,6 @@ package history
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -32,6 +31,7 @@ type klinesError struct {
 }
 
 type bulkFetchRequest struct {
+	Pair  string
 	Start time.Time
 	End   time.Time
 }
@@ -61,8 +61,8 @@ func NewBinance(log *zap.Logger, col *mongo.Collection) *Binance {
 
 // Stop stops the current running tasks.
 func (me *Binance) Stop() {
-	me.cancelCtx()
 	me.wg.Wait()
+	me.cancelCtx()
 }
 
 func (me *Binance) fetch(
@@ -167,7 +167,7 @@ func (me *Binance) fetch(
 				waitCount = 20
 			}
 			me.Logger.Warn(
-				"Got locked out!! Waiting...",
+				"Waiting...",
 				zap.Int("status", resp.StatusCode),
 				zap.Uint64("duration", waitCount),
 			)
@@ -193,16 +193,53 @@ func (me *Binance) fetch(
 }
 
 func (me *Binance) bulkFetch(
-	pair string,
 	times <-chan *bulkFetchRequest,
 	results chan<- *klinesError,
 ) {
 	for t := range times {
-		res, err := me.fetch(pair, t.Start.Unix(), t.End.Unix())
+		res, err := me.fetch(t.Pair, t.Start.Unix(), t.End.Unix())
 		results <- &klinesError{
 			Klines:       res,
 			Err:          err,
 			IncrementObj: int64(t.End.Sub(t.Start) / time.Minute),
+		}
+	}
+}
+
+func (me *Binance) record(results <-chan *klinesError, done chan<- int64) {
+	for res := range results {
+		func(res *klinesError) {
+			if res.Err != nil {
+				me.Logger.Warn("Error while fetching", zap.Error(res.Err))
+				return
+			}
+			if res.Klines == nil || len(res.Klines) < 1 {
+				return
+			}
+			me.wg.Add(1)
+			go func(klines []*models.Kline) {
+				defer me.wg.Done()
+				toInsert := make([]interface{}, len(klines))
+				for ind, item := range klines {
+					toInsert[ind] = item
+				}
+				dbCtx, stop := context.WithTimeout(me.ctx, 30*time.Second)
+				defer stop()
+				if _, err := me.Col.InsertMany(dbCtx, toInsert); err != nil {
+					me.Logger.Warn(
+						"Error while inseting data to the db",
+						zap.Error(err),
+						zap.String("pair", klines[0].Symbol),
+					)
+				}
+			}(res.Klines)
+		}(res)
+		done <- res.IncrementObj
+		select {
+		case <-me.ctx.Done():
+			return
+		default:
+			break
 		}
 	}
 }
@@ -240,6 +277,7 @@ func (me *Binance) Run(pair string) error {
 		-time.Duration(endAt.Second())*time.Second -
 			time.Duration(endAt.Nanosecond())*time.Nanosecond,
 	)
+
 	for ind, pair := range targetSymbols {
 		firstKlines, err := me.fetch(pair, 0, 0)
 		if err != nil {
@@ -266,81 +304,59 @@ func (me *Binance) Run(pair string) error {
 		}
 		recentEndAt := endAt
 		recentStartAt := startAt
-		fetchReq := make(chan *bulkFetchRequest, numObj)
-		results := make(chan *klinesError, numObj)
-		bar := progressbar.Default(int64(cap(results)))
+		bar := progressbar.Default(int64(numObj))
 		bar.Describe(fmt.Sprintf("%s [%d/%d]", pair, ind+1, len(targetSymbols)))
 		bar.RenderBlank()
-		for i := 0; i < numConcReq && i < int(math.Ceil(float64(cap(results))/1000)); i++ {
-			go me.bulkFetch(pair, fetchReq, results)
+
+		chanBuffCap := numObj / 1000
+		if numObj%1000 > 0 {
+			chanBuffCap++
 		}
-		for i := 0; i < cap(fetchReq); i++ {
-			func() {
-				defer func() {
-					endAt = startAt
-					startdiff := startAt.Sub(firstKline.OpenAt) / time.Minute
-					if startdiff > 1000 {
-						startdiff = 1000
-					}
-					startAt = endAt.Add(-startdiff * time.Minute)
-				}()
-				fetchReq <- &bulkFetchRequest{
-					Start: startAt,
-					End:   endAt,
-				}
+
+		func() {
+			fetchReq := make(chan *bulkFetchRequest, chanBuffCap)
+			results := make(chan *klinesError, chanBuffCap)
+			done := make(chan int64, chanBuffCap)
+			defer func() {
+				close(fetchReq)
+				close(results)
+				close(done)
 			}()
-			select {
-			case <-me.ctx.Done():
-				return nil
-			default:
-				continue
+
+			for i := 0; i < numConcReq; i++ {
+				go me.bulkFetch(fetchReq, results)
+				go me.record(results, done)
 			}
-		}
-		close(fetchReq)
-		for i := 0; i < cap(results); i++ {
-			var stop = false
-			select {
-			case res := <-results:
+
+			for i := int64(0); i < chanBuffCap; i++ {
 				func() {
 					defer func() {
-						bar.Add64(res.IncrementObj)
+						endAt = startAt
+						startdiff := startAt.Sub(firstKline.OpenAt) / time.Minute
+						if startdiff > 1000 {
+							startdiff = 1000
+						}
+						startAt = endAt.Add(-startdiff * time.Minute)
 					}()
-					if res.Err != nil {
-						me.Logger.Warn("Error while fetching", zap.Error(res.Err))
-						return
+					fetchReq <- &bulkFetchRequest{
+						Pair:  pair,
+						Start: startAt,
+						End:   endAt,
 					}
-					if res.Klines == nil || len(res.Klines) < 1 {
-						return
-					}
-					me.wg.Add(1)
-					go func(klines []*models.Kline) {
-						defer me.wg.Done()
-						toInsert := make([]interface{}, len(klines))
-						for ind, item := range klines {
-							toInsert[ind] = item
-						}
-						dbCtx, stop := context.WithTimeout(me.ctx, 30*time.Second)
-						defer stop()
-						_, err = me.Col.InsertMany(dbCtx, toInsert)
-						if err != nil {
-							me.Logger.Warn(
-								"Error while inseting data to the db",
-								zap.Error(err),
-								zap.String("pair", klines[0].Symbol),
-							)
-						}
-					}(res.Klines)
 				}()
-				break
-			case <-me.ctx.Done():
-				stop = true
+				select {
+				case <-me.ctx.Done():
+					return
+				default:
+					continue
+				}
 			}
-			if stop {
-				return nil
+			for i := 0; i < cap(done); i++ {
+				inc := <-done
+				bar.Add64(inc)
 			}
-		}
-		close(results)
-		bar.Finish()
+			bar.Finish()
+		}()
 		startAt, endAt = recentStartAt, recentEndAt
 	}
 	return nil

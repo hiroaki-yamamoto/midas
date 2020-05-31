@@ -26,8 +26,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         time.setDate(time.getDate() - i);
         g.data.push({
           date: time,
-          hodl: Math.cos(i/12),
-          bot: Math.sin(i/12),
+          hodl: Math.cos(i / 12),
+          bot: Math.sin(i / 12),
         });
       }
 
