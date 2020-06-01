@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/Bowery/prompt v0.0.0-20190916142128-fa8279994f75 // indirect
-	github.com/adshao/go-binance v0.0.0-20200414012312-338a1df204bf
+	github.com/adshao/go-binance/v2/v2 v2.1.1
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/go-playground/validator/v10 v10.3.0
 	github.com/golang/protobuf v1.4.2
