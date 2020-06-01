@@ -20,5 +20,11 @@
     "automerge": false,
     "groupName": "Major Updates",
     "extends": ["schedule:weekends"]
-  }
+  },
+  "packageRules": [
+    {
+      "packageName": ["typescript"],
+      "allowedVersions": "<3.9.0"
+    }
+  ]
 }
