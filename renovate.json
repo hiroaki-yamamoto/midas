@@ -23,7 +23,7 @@
   },
   "packageRules": [
     {
-      "packageName": ["typescript"],
+      "packageNames": ["typescript"],
       "allowedVersions": "<3.9.0"
     }
   ]
