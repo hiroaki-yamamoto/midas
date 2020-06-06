@@ -6,6 +6,8 @@
     "**/CVS": true,
     "**/.DS_Store": true,
     "backend": true,
-    "frontend": true
+    "backend/**/*": true,
+    "frontend": true,
+    "frontend/**/*": true
   }
 }

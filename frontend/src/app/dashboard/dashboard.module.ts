@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 import { DashboardComponent } from './dashboard.component';
 
@@ -9,6 +10,7 @@ import { DashboardComponent } from './dashboard.component';
   imports: [
     CommonModule,
     FlexLayoutModule,
+    MatExpansionModule,
   ],
   exports: [
     DashboardComponent,

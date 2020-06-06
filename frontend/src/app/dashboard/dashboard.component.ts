@@ -15,12 +15,16 @@ import {
   Legend,
 } from '@amcharts/amcharts4/charts';
 
+import { BotInfo, Strategy } from '../rpc/services_pb';
+
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, AfterViewInit {
+
+  public botInfo: BotInfo[];
 
   constructor(private zone: NgZone) { }
 
@@ -80,6 +84,20 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.botInfo = [];
+    for (let i = 0; i < 5; i++) {
+      const info = new BotInfo();
+      info.setId(`test-bot-${i}`);
+      info.setName(`Test Bot ${i}`);
+      info.setStrategy(Strategy.TRAILING);
+      info.setConfig(JSON.stringify({
+        entryBufferPercent: 3.0 + Math.random(),
+        entryTrailingPercent: 0.2,
+        exitBufferPercent: 2.0 + Math.random(),
+        exitTrailingPercent: 0.2,
+        stopLoss: 10.0,
+      }));
+      this.botInfo = this.botInfo.concat(info);
+    }
   }
-
 }

@@ -19,12 +19,14 @@ $frontend-accent: mat-palette($mat-pink, A200, A100, A400);
 $frontend-warn: mat-palette($mat-red);
 
 // Create the theme object (a Sass map containing all of the palettes).
-$frontend-theme: mat-light-theme($frontend-primary, $frontend-accent, $frontend-warn);
+$frontend-light-theme: mat-light-theme($frontend-primary, $frontend-accent, $frontend-warn);
+
+$frontend-dark-theme: mat-dark-theme($frontend-primary, $frontend-accent, $frontend-warn);
 
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
-@include angular-material-theme($frontend-theme);
+@include angular-material-theme($frontend-light-theme);
 
 /* You can add global styles to this file, and also import other style files */
 
@@ -37,8 +39,11 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
+  $background-color: #212122;
+  $text-color: #FAFAFB;
+  @include angular-material-theme($frontend-dark-theme);
   body {
-    background-color: #212122;
-    color: #FAFAFB;;
+    background-color: $background-color;
+    color: $text-color;
   }
 }
