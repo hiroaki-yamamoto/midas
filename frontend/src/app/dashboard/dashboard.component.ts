@@ -24,7 +24,7 @@ import { BotInfo, Strategy } from '../rpc/services_pb';
 })
 export class DashboardComponent implements OnInit, AfterViewInit {
 
-  public botInfo: BotInfo[];
+  public botsInfo: BotInfo[];
 
   constructor(private zone: NgZone) { }
 
@@ -84,12 +84,13 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.botInfo = [];
+    this.botsInfo = [];
     for (let i = 0; i < 5; i++) {
       const info = new BotInfo();
       info.setId(`test-bot-${i}`);
       info.setName(`Test Bot ${i}`);
       info.setStrategy(Strategy.TRAILING);
+      info.setDesc(`Test Description ${i}`);
       info.setConfig(JSON.stringify({
         entryBufferPercent: 3.0 + Math.random(),
         entryTrailingPercent: 0.2,
@@ -97,7 +98,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         exitTrailingPercent: 0.2,
         stopLoss: 10.0,
       }));
-      this.botInfo = this.botInfo.concat(info);
+      this.botsInfo = this.botsInfo.concat(info);
     }
   }
 }

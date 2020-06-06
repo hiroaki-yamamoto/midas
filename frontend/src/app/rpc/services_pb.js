@@ -114,7 +114,8 @@ proto.services.BotInfo.toObject = function(includeInstance, msg) {
     id: jspb.Message.getFieldWithDefault(msg, 1, ""),
     strategy: jspb.Message.getFieldWithDefault(msg, 2, 0),
     name: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    config: jspb.Message.getFieldWithDefault(msg, 4, "")
+    desc: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    config: jspb.Message.getFieldWithDefault(msg, 5, "")
   };
 
   if (includeInstance) {
@@ -164,6 +165,10 @@ proto.services.BotInfo.deserializeBinaryFromReader = function(msg, reader) {
       msg.setName(value);
       break;
     case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setDesc(value);
+      break;
+    case 5:
       var value = /** @type {string} */ (reader.readString());
       msg.setConfig(value);
       break;
@@ -217,10 +222,17 @@ proto.services.BotInfo.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getConfig();
+  f = message.getDesc();
   if (f.length > 0) {
     writer.writeString(
       4,
+      f
+    );
+  }
+  f = message.getConfig();
+  if (f.length > 0) {
+    writer.writeString(
+      5,
       f
     );
   }
@@ -282,10 +294,10 @@ proto.services.BotInfo.prototype.setName = function(value) {
 
 
 /**
- * optional string config = 4;
+ * optional string desc = 4;
  * @return {string}
  */
-proto.services.BotInfo.prototype.getConfig = function() {
+proto.services.BotInfo.prototype.getDesc = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
@@ -294,8 +306,26 @@ proto.services.BotInfo.prototype.getConfig = function() {
  * @param {string} value
  * @return {!proto.services.BotInfo} returns this
  */
-proto.services.BotInfo.prototype.setConfig = function(value) {
+proto.services.BotInfo.prototype.setDesc = function(value) {
   return jspb.Message.setProto3StringField(this, 4, value);
+};
+
+
+/**
+ * optional string config = 5;
+ * @return {string}
+ */
+proto.services.BotInfo.prototype.getConfig = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.services.BotInfo} returns this
+ */
+proto.services.BotInfo.prototype.setConfig = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
 };
 
 

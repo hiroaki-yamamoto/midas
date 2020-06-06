@@ -10,6 +10,9 @@ export class BotInfo extends jspb.Message {
   getName(): string;
   setName(value: string): void;
 
+  getDesc(): string;
+  setDesc(value: string): void;
+
   getConfig(): string;
   setConfig(value: string): void;
 
@@ -26,6 +29,7 @@ export namespace BotInfo {
     id: string,
     strategy: Strategy,
     name: string,
+    desc: string,
     config: string,
   }
 }

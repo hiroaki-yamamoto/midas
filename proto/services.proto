@@ -11,7 +11,8 @@ message BotInfo {
   string id = 1;
   Strategy strategy = 2;
   string name = 3;
-  string config = 4;
+  string desc = 4;
+  string config = 5;
 }
 
 message BotInfoList {
