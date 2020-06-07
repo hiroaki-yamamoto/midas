@@ -1,11 +1,11 @@
 import {
   Component,
   OnInit,
-  OnDestroy,
+  Input,
+  ViewChild,
+  ElementRef,
   NgZone,
-  AfterViewInit,
 } from '@angular/core';
-
 import { create, color } from '@amcharts/amcharts4/core';
 import {
   XYChart,
@@ -15,33 +15,35 @@ import {
   ValueAxis,
   Legend,
 } from '@amcharts/amcharts4/charts';
-
-import { BotInfo, Strategy } from '../rpc/services_pb';
+import { BotInfo } from '../../rpc/services_pb';
 
 @Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss']
+  selector: 'app-bot-panel',
+  templateUrl: './bot-panel.component.html',
+  styleUrls: ['./bot-panel.component.scss']
 })
-export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
+export class BotPanelComponent implements OnInit {
 
-  public botsInfo: BotInfo[];
+  @Input() bot: BotInfo;
+  @ViewChild('profitGraph') profitGraph: ElementRef;
   private g: XYChart;
 
   constructor(private zone: NgZone) { }
 
-  ngAfterViewInit() {
+  ngOnInit(): void {
+  }
+
+  open() {
     const txtColor = color('#ffffff');
     this.zone.runOutsideAngular(() => {
-      this.g = create('compare-graph', XYChart);
+      this.g = create(this.profitGraph.nativeElement, XYChart);
       this.g.data = [];
       for (let i = 0; i < 365; i++) {
         const time = new Date();
         time.setDate(time.getDate() - i);
         this.g.data.push({
           date: time,
-          hodl: Math.cos(i / 12) * 100,
-          bot: Math.sin(i / 12) * 100,
+          profitPercent: Math.sin(i / 12) * 100,
         });
       }
 
@@ -65,46 +67,18 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       valueAxis.renderer.grid.template.stroke = txtColor;
       valueAxis.renderer.labels.template.fill = txtColor;
 
-      const hodl = this.g.series.push(new LineSeries());
-      hodl.dataFields.dateX = 'date';
-      hodl.dataFields.valueY = 'hodl';
-      hodl.strokeWidth = 1;
-      hodl.tensionX = 0.5;
-      hodl.fillOpacity = 0.4;
-      hodl.name = 'Hodl BTC Profit';
-      hodl.tooltipText = 'Hodl BTC Profit Ratio: [bold]{hodl}%[/]';
-
+      // Create profitability series.
       const bot = this.g.series.push(new LineSeries());
       bot.dataFields.dateX = 'date';
-      bot.dataFields.valueY = 'bot';
+      bot.dataFields.valueY = 'profitPercent';
       bot.strokeWidth = 1;
       bot.tensionX = 0.5;
       bot.fillOpacity = 0.4;
-      bot.name = 'Bot Trading Profit';
-      bot.tooltipText = 'Bot Trading Profit Ratio: [bold]{bot}%[/]';
+      bot.name = 'Profit Percent';
+      bot.tooltipText = 'Trading Profit Ratio: [bold]{profitPercent}%[/]';
     });
   }
-
-  ngOnInit(): void {
-    this.botsInfo = [];
-    for (let i = 0; i < 5; i++) {
-      const info = new BotInfo();
-      info.setId(`test-bot-${i}`);
-      info.setName(`Test Bot ${i}`);
-      info.setStrategy(Strategy.TRAILING);
-      info.setDesc(`Test Description ${i}`);
-      info.setConfig(JSON.stringify({
-        entryBufferPercent: 3.0 + Math.random(),
-        entryTrailingPercent: 0.2,
-        exitBufferPercent: 2.0 + Math.random(),
-        exitTrailingPercent: 0.2,
-        stopLoss: 10.0,
-      }));
-      this.botsInfo = this.botsInfo.concat(info);
-    }
-  }
-
-  ngOnDestroy() {
+  close() {
     this.zone.runOutsideAngular(() => {
       if (this.g) {
         this.g.dispose();

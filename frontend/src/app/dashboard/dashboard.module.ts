@@ -4,9 +4,10 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatExpansionModule } from '@angular/material/expansion';
 
 import { DashboardComponent } from './dashboard.component';
+import { BotPanelComponent } from './bot-panel/bot-panel.component';
 
 @NgModule({
-  declarations: [DashboardComponent],
+  declarations: [DashboardComponent, BotPanelComponent],
   imports: [
     CommonModule,
     FlexLayoutModule,

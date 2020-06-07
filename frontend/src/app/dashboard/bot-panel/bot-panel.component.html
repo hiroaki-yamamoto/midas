@@ -1,0 +1,15 @@
+<mat-expansion-panel (opened)="open()" (closed)="close()">
+  <mat-expansion-panel-header>
+    <mat-panel-title>{{ bot.getName() }}</mat-panel-title>
+    <mat-panel-description>{{ bot.getDesc() }}</mat-panel-description>
+  </mat-expansion-panel-header>
+  <section>
+    <header><h2>Profit Graph</h2></header>
+    <div class="graph" #profitGraph></div>
+  </section>
+  <section>
+    <header>
+      <h2>Current Position</h2>
+    </header>
+  </section>
+</mat-expansion-panel>
