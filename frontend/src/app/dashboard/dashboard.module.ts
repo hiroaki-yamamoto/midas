@@ -5,7 +5,9 @@ import { MatExpansionModule } from '@angular/material/expansion';
 
 import { DashboardComponent } from './dashboard.component';
 import { BotPanelComponent } from './bot-panel/bot-panel.component';
-import { MatListModule } from '@angular/material/list';
+import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatPaginatorModule } from '@angular/material/paginator';
 
 @NgModule({
   declarations: [DashboardComponent, BotPanelComponent],
@@ -13,7 +15,9 @@ import { MatListModule } from '@angular/material/list';
     CommonModule,
     FlexLayoutModule,
     MatExpansionModule,
-    MatListModule,
+    MatPaginatorModule,
+    MatTableModule,
+    MatTabsModule,
   ],
   exports: [
     DashboardComponent,

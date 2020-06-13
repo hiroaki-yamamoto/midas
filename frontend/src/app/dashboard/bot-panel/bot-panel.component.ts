@@ -1,10 +1,15 @@
 import {
   Component,
   Input,
+  OnInit,
   ViewChild,
   ElementRef,
   NgZone,
 } from '@angular/core';
+
+import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
+
 import { create, color } from '@amcharts/amcharts4/core';
 import {
   XYChart,
@@ -14,6 +19,7 @@ import {
   ValueAxis,
   Legend,
 } from '@amcharts/amcharts4/charts';
+
 import { BotInfo, CurrentPosition } from '../../rpc/services_pb';
 import { IGraphStats } from './interfaces';
 
@@ -22,32 +28,59 @@ import { IGraphStats } from './interfaces';
   templateUrl: './bot-panel.component.html',
   styleUrls: ['./bot-panel.component.scss']
 })
-export class BotPanelComponent {
+export class BotPanelComponent implements OnInit {
 
   @Input() bot: BotInfo;
   @ViewChild('profitGraph') profitGraph: ElementRef;
+  @ViewChild('curPosPaginator', {static: true}) curPosPaginator: MatPaginator;
+  @ViewChild('arcPosPaginator', { static: true }) arcPosPaginator: MatPaginator;
 
   private g: XYChart;
 
-  public currentPositions: {[key: string]: CurrentPosition} = {};
+  public currentPositions: MatTableDataSource<CurrentPosition>;
+  public archivedPositions: MatTableDataSource<CurrentPosition>;
   public objItems = Object.entries;
+  public dispCol: string[] = [
+    'symbol', 'tradingAmount', 'profitAmount', 'profitPercent',
+  ];
 
-  constructor(private zone: NgZone) { }
+  constructor(private zone: NgZone) {
+    this.currentPositions = new MatTableDataSource<CurrentPosition>([]);
+    this.archivedPositions = new MatTableDataSource<CurrentPosition>([]);
+  }
+
+  ngOnInit() {
+    this.currentPositions.paginator = this.curPosPaginator;
+    this.archivedPositions.paginator = this.arcPosPaginator;
+  }
 
   open() {
-    const botStats: IGraphStats[] = [];
-    const txtColor = color('#ffffff');
     for (let i = 0; i < 20; i++) {
-      const id = `test-position-${i}`;
+      const id = `test-cur-position-${i}`;
       const pos = new CurrentPosition();
       pos.setId(id);
       pos.setBotid(this.bot.getId());
       pos.setSymbol('TESTUSDT');
       pos.setTradingamount(Math.random());
       pos.setProfitamount(Math.random());
-      pos.setProfitpercent(pos.getProfitamount() / pos.getTradingamount());
-      this.currentPositions[id] = pos;
+      pos.setProfitpercent(pos.getProfitamount() / pos.getTradingamount() * 100);
+      this.currentPositions.data = this.currentPositions.data.concat(pos);
     }
+
+    for (let i = 0; i < 20; i++) {
+      const id = `test-cur-position-${i}`;
+      const pos = new CurrentPosition();
+      pos.setId(id);
+      pos.setBotid(this.bot.getId());
+      pos.setSymbol('TESTUSDT');
+      pos.setTradingamount(Math.random());
+      pos.setProfitamount(Math.random());
+      pos.setProfitpercent(pos.getProfitamount() / pos.getTradingamount() * 100);
+      this.archivedPositions.data = this.archivedPositions.data.concat(pos);
+    }
+
+    const botStats: IGraphStats[] = [];
+    const txtColor = color('#ffffff');
 
     for (let i = 0; i < 90; i++) {
       const time = new Date();
