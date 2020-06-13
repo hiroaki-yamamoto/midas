@@ -11,8 +11,18 @@ message BotInfo {
   string id = 1;
   Strategy strategy = 2;
   string name = 3;
-  string desc = 4;
-  string config = 5;
+  string baseCurrency = 4;
+  string desc = 5;
+  string config = 6;
+}
+
+message CurrentPosition {
+  string id = 1;
+  string botId = 2;
+  string symbol = 3;
+  double tradingAmount = 4;
+  double profitAmount = 5;
+  double profitPercent = 6;
 }
 
 message BotInfoList {

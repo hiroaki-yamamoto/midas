@@ -1,6 +1,5 @@
 import {
   Component,
-  OnInit,
   Input,
   ViewChild,
   ElementRef,
@@ -15,37 +14,39 @@ import {
   ValueAxis,
   Legend,
 } from '@amcharts/amcharts4/charts';
-import { BotInfo } from '../../rpc/services_pb';
+import { BotInfo, CurrentPosition } from '../../rpc/services_pb';
+import { IGraphStats } from './interfaces';
 
 @Component({
   selector: 'app-bot-panel',
   templateUrl: './bot-panel.component.html',
   styleUrls: ['./bot-panel.component.scss']
 })
-export class BotPanelComponent implements OnInit {
+export class BotPanelComponent {
 
   @Input() bot: BotInfo;
   @ViewChild('profitGraph') profitGraph: ElementRef;
+
   private g: XYChart;
+
+  public currentPositions: {[key: string]: CurrentPosition};
 
   constructor(private zone: NgZone) { }
 
-  ngOnInit(): void {
-  }
-
   open() {
+    const botStats: IGraphStats[] = [];
     const txtColor = color('#ffffff');
+    for (let i = 0; i < 90; i++) {
+      const time = new Date();
+      time.setDate(time.getDate() - i);
+      botStats.push({
+        date: time,
+        realizedProfitPercent: Math.sin(i / 12) * 100,
+        unrealizedProfitPercent: Math.sin(i / 24) * 100,
+      });
+    }
     this.zone.runOutsideAngular(() => {
       this.g = create(this.profitGraph.nativeElement, XYChart);
-      this.g.data = [];
-      for (let i = 0; i < 365; i++) {
-        const time = new Date();
-        time.setDate(time.getDate() - i);
-        this.g.data.push({
-          date: time,
-          profitPercent: Math.sin(i / 12) * 100,
-        });
-      }
 
       this.g.cursor = new XYCursor();
       this.g.cursor.lineY.opacity = 0;
@@ -67,17 +68,33 @@ export class BotPanelComponent implements OnInit {
       valueAxis.renderer.grid.template.stroke = txtColor;
       valueAxis.renderer.labels.template.fill = txtColor;
 
-      // Create profitability series.
+      // Create realized profitability series.
       const bot = this.g.series.push(new LineSeries());
       bot.dataFields.dateX = 'date';
-      bot.dataFields.valueY = 'profitPercent';
+      bot.dataFields.valueY = 'realizedProfitPercent';
       bot.strokeWidth = 1;
-      bot.tensionX = 0.5;
-      bot.fillOpacity = 0.4;
-      bot.name = 'Profit Percent';
-      bot.tooltipText = 'Trading Profit Ratio: [bold]{profitPercent}%[/]';
+      bot.tensionX = 1.0;
+      bot.fillOpacity = 0.5;
+      bot.name = 'Realized Profit Percent';
+      bot.tooltipText =
+        'Realized Trading Profit Ratio: [bold]{realizedProfitPercent}%[/]';
+
+      // Create unrealized profitability series.
+      const uProfitPercent = this.g.series.push(new LineSeries());
+      uProfitPercent.dataFields.dateX = 'date';
+      uProfitPercent.dataFields.valueY = 'unrealizedProfitPercent';
+      uProfitPercent.strokeWidth = 1;
+      uProfitPercent.tensionX = 1.0;
+      uProfitPercent.fillOpacity = 0.5;
+      uProfitPercent.name = 'Realized Profit Percent';
+      uProfitPercent.tooltipText =
+        'Realized Trading Profit Ratio: [bold]{unrealizedProfitPercent}%[/]';
+
+      // Set the data.
+      this.g.data = botStats;
     });
   }
+
   close() {
     this.zone.runOutsideAngular(() => {
       if (this.g) {

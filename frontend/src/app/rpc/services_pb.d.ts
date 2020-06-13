@@ -10,6 +10,9 @@ export class BotInfo extends jspb.Message {
   getName(): string;
   setName(value: string): void;
 
+  getBasecurrency(): string;
+  setBasecurrency(value: string): void;
+
   getDesc(): string;
   setDesc(value: string): void;
 
@@ -29,8 +32,47 @@ export namespace BotInfo {
     id: string,
     strategy: Strategy,
     name: string,
+    basecurrency: string,
     desc: string,
     config: string,
+  }
+}
+
+export class CurrentPosition extends jspb.Message {
+  getId(): string;
+  setId(value: string): void;
+
+  getBotid(): string;
+  setBotid(value: string): void;
+
+  getSymbol(): string;
+  setSymbol(value: string): void;
+
+  getTradingamount(): number;
+  setTradingamount(value: number): void;
+
+  getProfitamount(): number;
+  setProfitamount(value: number): void;
+
+  getProfitpercent(): number;
+  setProfitpercent(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): CurrentPosition.AsObject;
+  static toObject(includeInstance: boolean, msg: CurrentPosition): CurrentPosition.AsObject;
+  static serializeBinaryToWriter(message: CurrentPosition, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CurrentPosition;
+  static deserializeBinaryFromReader(message: CurrentPosition, reader: jspb.BinaryReader): CurrentPosition;
+}
+
+export namespace CurrentPosition {
+  export type AsObject = {
+    id: string,
+    botid: string,
+    symbol: string,
+    tradingamount: number,
+    profitamount: number,
+    profitpercent: number,
   }
 }
 

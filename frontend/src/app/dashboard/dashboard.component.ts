@@ -69,7 +69,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       hodl.dataFields.dateX = 'date';
       hodl.dataFields.valueY = 'hodl';
       hodl.strokeWidth = 1;
-      hodl.tensionX = 0.5;
+      hodl.tensionX = 1;
       hodl.fillOpacity = 0.4;
       hodl.name = 'Hodl BTC Profit';
       hodl.tooltipText = 'Hodl BTC Profit Ratio: [bold]{hodl}%[/]';
@@ -78,7 +78,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       bot.dataFields.dateX = 'date';
       bot.dataFields.valueY = 'bot';
       bot.strokeWidth = 1;
-      bot.tensionX = 0.5;
+      bot.tensionX = 1;
       bot.fillOpacity = 0.4;
       bot.name = 'Bot Trading Profit';
       bot.tooltipText = 'Bot Trading Profit Ratio: [bold]{bot}%[/]';
@@ -91,6 +91,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       const info = new BotInfo();
       info.setId(`test-bot-${i}`);
       info.setName(`Test Bot ${i}`);
+      info.setBasecurrency('USDT');
       info.setStrategy(Strategy.TRAILING);
       info.setDesc(`Test Description ${i}`);
       info.setConfig(JSON.stringify({
