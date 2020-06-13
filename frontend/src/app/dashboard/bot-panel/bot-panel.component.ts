@@ -29,13 +29,26 @@ export class BotPanelComponent {
 
   private g: XYChart;
 
-  public currentPositions: {[key: string]: CurrentPosition};
+  public currentPositions: {[key: string]: CurrentPosition} = {};
+  public objItems = Object.entries;
 
   constructor(private zone: NgZone) { }
 
   open() {
     const botStats: IGraphStats[] = [];
     const txtColor = color('#ffffff');
+    for (let i = 0; i < 20; i++) {
+      const id = `test-position-${i}`;
+      const pos = new CurrentPosition();
+      pos.setId(id);
+      pos.setBotid(this.bot.getId());
+      pos.setSymbol('TESTUSDT');
+      pos.setTradingamount(Math.random());
+      pos.setProfitamount(Math.random());
+      pos.setProfitpercent(pos.getProfitamount() / pos.getTradingamount());
+      this.currentPositions[id] = pos;
+    }
+
     for (let i = 0; i < 90; i++) {
       const time = new Date();
       time.setDate(time.getDate() - i);

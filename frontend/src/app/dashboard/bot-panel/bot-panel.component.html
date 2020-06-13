@@ -9,10 +9,14 @@
   </section>
   <section>
     <header>
-      <h2>Current Position</h2>
+      <h2>Current Positions</h2>
     </header>
-    <!-- <mat-list>
-      <mat-list-item *ngFor=""></mat-list-item>
-    </mat-list> -->
+    <mat-list dense>
+      <mat-list-item *ngFor="let item of objItems(currentPositions)" fxLayout="row">
+        <div mat-line>{{ item[1].getSymbol() }}</div>
+        <div mat-line><strong>Trading Amount</strong>: {{ item[1].getTradingamount() }}</div>
+        <div mat-line><strong>Profit Amount</strong>: {{ item[1].getProfitamount() }}</div>
+      </mat-list-item>
+    </mat-list>
   </section>
 </mat-expansion-panel>

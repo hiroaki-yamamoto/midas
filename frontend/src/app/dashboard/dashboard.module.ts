@@ -5,6 +5,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 
 import { DashboardComponent } from './dashboard.component';
 import { BotPanelComponent } from './bot-panel/bot-panel.component';
+import { MatListModule } from '@angular/material/list';
 
 @NgModule({
   declarations: [DashboardComponent, BotPanelComponent],
@@ -12,6 +13,7 @@ import { BotPanelComponent } from './bot-panel/bot-panel.component';
     CommonModule,
     FlexLayoutModule,
     MatExpansionModule,
+    MatListModule,
   ],
   exports: [
     DashboardComponent,

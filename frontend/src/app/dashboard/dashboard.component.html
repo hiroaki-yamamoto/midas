@@ -20,14 +20,6 @@
       </header>
       <mat-accordion>
         <app-bot-panel *ngFor="let bot of botsInfo" [bot]="bot"></app-bot-panel>
-        <!-- <mat-expansion-panel *ngFor="let bot of botsInfo">
-          <mat-expansion-panel-header>
-            <mat-panel-title>{{ bot.getName() }}</mat-panel-title>
-            <mat-panel-description>{{ bot.getDesc() }}</mat-panel-description>
-          </mat-expansion-panel-header>
-          <h2>Profit Graph</h2>
-          <div class="graph" id="{{ bot.getId() }}"></div>
-        </mat-expansion-panel> -->
       </mat-accordion>
     </section>
   </div>
