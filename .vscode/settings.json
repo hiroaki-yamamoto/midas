@@ -4,10 +4,6 @@
     "**/.svn": true,
     "**/.hg": true,
     "**/CVS": true,
-    "**/.DS_Store": true,
-    "backend": true,
-    "backend/**/*": true,
-    "frontend": true,
-    "frontend/**/*": true
+    "**/.DS_Store": true
   }
 }
