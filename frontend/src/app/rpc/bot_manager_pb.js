@@ -1,4 +1,4 @@
-// source: services.proto
+// source: bot_manager.proto
 /**
  * @fileoverview
  * @enhanceable

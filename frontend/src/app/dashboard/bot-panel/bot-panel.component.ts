@@ -20,7 +20,7 @@ import {
   Legend,
 } from '@amcharts/amcharts4/charts';
 
-import { BotInfo, CurrentPosition } from '../../rpc/services_pb';
+import { BotInfo, CurrentPosition } from '../../rpc/bot_manager_pb';
 import { IGraphStats } from './interfaces';
 
 @Component({

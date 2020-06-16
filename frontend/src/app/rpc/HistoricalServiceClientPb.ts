@@ -1,5 +1,5 @@
 /**
- * @fileoverview gRPC-Web generated client stub for services
+ * @fileoverview gRPC-Web generated client stub for historical
  * @enhanceable
  * @public
  */
@@ -9,11 +9,13 @@
 
 import * as grpcWeb from 'grpc-web';
 
-import {
-  BotInfoList,
-  BotInfoListRequest} from './services_pb';
+import * as entities_pb from './entities_pb';
 
-export class BotManagerClient {
+import {
+  HistChartFetchReq,
+  HistChartProg} from './historical_pb';
+
+export class HistChartClient {
   client_: grpcWeb.AbstractClientBase;
   hostname_: string;
   credentials_: null | { [index: string]: string; };
@@ -32,26 +34,23 @@ export class BotManagerClient {
     this.options_ = options;
   }
 
-  methodInfoListBotInfo = new grpcWeb.AbstractClientBase.MethodInfo(
-    BotInfoList,
-    (request: BotInfoListRequest) => {
+  methodInfosync = new grpcWeb.AbstractClientBase.MethodInfo(
+    HistChartProg,
+    (request: HistChartFetchReq) => {
       return request.serializeBinary();
     },
-    BotInfoList.deserializeBinary
+    HistChartProg.deserializeBinary
   );
 
-  listBotInfo(
-    request: BotInfoListRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: BotInfoList) => void) {
-    return this.client_.rpcCall(
+  sync(
+    request: HistChartFetchReq,
+    metadata?: grpcWeb.Metadata) {
+    return this.client_.serverStreaming(
       this.hostname_ +
-        '/services.BotManager/ListBotInfo',
+        '/historical.HistChart/sync',
       request,
       metadata || {},
-      this.methodInfoListBotInfo,
-      callback);
+      this.methodInfosync);
   }
 
 }

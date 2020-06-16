@@ -16,7 +16,7 @@ import {
   Legend,
 } from '@amcharts/amcharts4/charts';
 
-import { BotInfo, Strategy } from '../rpc/services_pb';
+import { BotInfo, Strategy } from '../rpc/bot_manager_pb';
 
 @Component({
   selector: 'app-dashboard',

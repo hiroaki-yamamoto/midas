@@ -9,14 +9,38 @@ inc = .
 rule protoc
   command = protoc $flags:$outdir -I $inc $in
 
-build $backOut/services.pb.go: protoc services.proto
+build $backOut/bot_manager.pb.go: protoc bot_manager.proto
   flags = $backFlags
   outdir = $backOut
 
-build $frontOut/services_pb.d.ts $frontOut/ServicesServiceClientPb.ts: protoc services.proto
+build $backOut/historical.pb.go: protoc historical.proto
+  flags = $backFlags
+  outdir = $backOut
+
+build $backOut/entities.pb.go: protoc entities.proto
+  flags = $backFlags
+  outdir = $backOut
+
+build $frontOut/bot_manager_pb.d.ts $frontOut/Bot_managerServiceClientPb.ts: protoc bot_manager.proto
   flags = $frontTypeScriptFlags
   outdir = $frontOut
 
-build $frontOut/services_pb.js: protoc services.proto
+build $frontOut/bot_manager_pb.js: protoc bot_manager.proto
+  flags = $frontJSFlags
+  outdir = $frontOut
+
+build $frontOut/historical_pb.d.ts $frontOut/HistoricalServiceClientPb.ts: protoc historical.proto
+  flags = $frontTypeScriptFlags
+  outdir = $frontOut
+
+build $frontOut/historical_pb.js: protoc historical.proto
+  flags = $frontJSFlags
+  outdir = $frontOut
+
+build $frontOut/entities_pb.d.ts: protoc entities.proto
+  flags = $frontTypeScriptFlags
+  outdir = $frontOut
+
+build $frontOut/entities_pb.js: protoc entities.proto
   flags = $frontJSFlags
   outdir = $frontOut
