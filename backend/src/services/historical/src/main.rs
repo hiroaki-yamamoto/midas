@@ -1,4 +1,8 @@
+mod config;
+
+use crate::config::Config;
 use ::clap::Clap;
+use ::std::error::Error;
 
 #[derive(Clap)]
 #[clap(author="Hiroaki Yamamoto")]
@@ -7,7 +11,9 @@ struct CmdArgs {
     config: String,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let args: CmdArgs = CmdArgs::parse();
-    println!("{}", args.config);
+    let cfg = Config::from_fpath(args.config)?;
+    print!("{:?}", cfg);
+    return Ok(());
 }
