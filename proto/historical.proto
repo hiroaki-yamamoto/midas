@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "entities.proto";
+import "google/protobuf/empty.proto";
 
 package historical;
 option go_package="rpc";
@@ -18,6 +19,13 @@ message HistChartFetchReq {
   string symbol = 2;
 }
 
+message Status {
+  bool wip = 1;
+}
+
 service HistChart {
   rpc sync(HistChartFetchReq) returns (stream HistChartProg);
+  rpc status(google.protobuf.Empty) returns (Status);
+  rpc subscribe(google.protobuf.Empty) returns (stream HistChartProg);
+  rpc stop(google.protobuf.Empty) returns (google.protobuf.Empt);
 }

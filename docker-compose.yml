@@ -4,6 +4,8 @@ services:
     image: mongo
     volumes:
       - "./db:/data/db"
+  broker:
+    image: nats
   express:
     image: mongo-express
     environment:
