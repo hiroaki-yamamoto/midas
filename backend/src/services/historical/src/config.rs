@@ -10,6 +10,8 @@ pub struct Config {
   pub db_url: String,
   #[serde(rename = "brokerURL")]
   pub broker_url: String,
+  #[serde(default)]
+  pub debug: bool,
 }
 
 impl Config {

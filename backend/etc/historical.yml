@@ -1,2 +1,3 @@
 dbURL: mongodb://database
 brokerURL: nats://broker:4222
+debug: true
