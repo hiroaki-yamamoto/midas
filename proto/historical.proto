@@ -27,5 +27,5 @@ service HistChart {
   rpc sync(HistChartFetchReq) returns (stream HistChartProg);
   rpc status(google.protobuf.Empty) returns (Status);
   rpc subscribe(google.protobuf.Empty) returns (stream HistChartProg);
-  rpc stop(google.protobuf.Empty) returns (google.protobuf.Empt);
+  rpc stop(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

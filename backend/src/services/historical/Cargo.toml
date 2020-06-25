@@ -19,3 +19,7 @@ tokio = {version = "0.2.21", features = ["macros", "rt-threaded"]}
 slog_builder = { path = "../../libs/slog_builder" }
 slog = "2.5.2"
 slog-atomic = "3.0.0"
+prost = "0.6.1"
+
+[build-dependencies]
+prost-build = "0.6.1"
