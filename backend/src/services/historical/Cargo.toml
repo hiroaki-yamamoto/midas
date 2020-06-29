@@ -20,6 +20,7 @@ slog_builder = { path = "../../libs/slog_builder" }
 slog = "2.5.2"
 slog-atomic = "3.0.0"
 prost = "0.6.1"
+async-trait = "0.1.36"
 
 [build-dependencies]
 tonic-build = "0.2.0"
