@@ -1,4 +1,6 @@
 mod config;
+mod server;
+mod rpc;
 
 use ::std::error::Error;
 use crate::config::Config;
