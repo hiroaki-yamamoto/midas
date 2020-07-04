@@ -1,4 +1,7 @@
-use crate::rpc::{historical::hist_chart_server::HistChart};
+use crate::rpc::historical::{
+  hist_chart_server::HistChart,
+  HistChartProg, HistChartFetchReq, Status,
+};
 
 #[derive(Debug)]
 pub struct Server {
