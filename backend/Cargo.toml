@@ -8,10 +8,12 @@ edition = "2018"
 
 [workspace]
 members = [
+  "src/libs/slog_builder",
+  "src/libs/types",
   "src/services/historical",
-  "src/libs/slog_builder"
 ]
 
 [dependencies]
-historical = { path = "./src/services/historical" }
 slog_builder = { path = "./src/libs/slog_builder" }
+types = { path = "./src/libs/types" }
+historical = { path = "./src/services/historical" }
