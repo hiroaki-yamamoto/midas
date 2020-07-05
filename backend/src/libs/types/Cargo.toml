@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 tonic = "0.2.1"
+url = "2.1.1"
