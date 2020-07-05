@@ -13,5 +13,9 @@
 			"name": "Frontend"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"protoc": {
+			"options": ["-I", "."]
+		}
+	}
 }

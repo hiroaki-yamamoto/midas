@@ -6,3 +6,9 @@ option go_package = "rpc";
 enum Exchanges {
   Binance = 0;
 }
+
+message SymbolInfo {
+  string symbol = 1;
+  string base = 2;
+  string quote = 3;
+}

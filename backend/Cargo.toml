@@ -1,0 +1,23 @@
+[package]
+name = "backend"
+version = "0.1.0"
+authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace]
+members = [
+  "src/libs/exchanges",
+  "src/libs/slog_builder",
+  "src/libs/rpc",
+  "src/libs/types",
+  "src/services/historical",
+]
+
+[dependencies]
+slog_builder = { path = "./src/libs/slog_builder" }
+types = { path = "./src/libs/types" }
+historical = { path = "./src/services/historical" }
+exchanges = { path = "./src/libs/exchanges" }
+rpc = { path = "./src/libs/rpc" }
