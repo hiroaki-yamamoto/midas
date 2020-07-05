@@ -8,7 +8,9 @@ edition = "2018"
 
 [workspace]
 members = [
+  "src/libs/exchanges",
   "src/libs/slog_builder",
+  "src/libs/rpc",
   "src/libs/types",
   "src/services/historical",
 ]
@@ -17,3 +19,5 @@ members = [
 slog_builder = { path = "./src/libs/slog_builder" }
 types = { path = "./src/libs/types" }
 historical = { path = "./src/services/historical" }
+exchanges = { path = "./src/libs/exchanges" }
+rpc = { path = "./src/libs/rpc" }

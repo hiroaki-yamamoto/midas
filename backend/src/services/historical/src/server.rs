@@ -5,7 +5,7 @@ use ::tonic::{Request, Response};
 
 use ::types::Result;
 
-use crate::rpc::historical::{
+use ::rpc::historical::{
   hist_chart_server::HistChart,
   HistChartProg, HistChartFetchReq, Status,
 };

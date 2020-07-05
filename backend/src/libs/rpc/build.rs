@@ -5,7 +5,10 @@ fn main() -> Result<(), impl Error> {
     .build_server(true)
     .build_client(false)
     .compile(
-      &["../../../../proto/historical.proto"],
+      &[
+        "../../../../proto/entities.proto",
+        "../../../../proto/historical.proto",
+      ],
       &["../../../../proto"],
     );
 }
