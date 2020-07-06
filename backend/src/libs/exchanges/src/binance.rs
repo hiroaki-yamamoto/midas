@@ -14,5 +14,8 @@ impl Binance {
 }
 
 impl Exchange for Binance {
-
+  async fn refresh_historical(&self, symbol: String) -> Receiver<HistChartProg> {
+  }
+  async fn refresh_symbols(&self) -> Receiver<Vec<SymbolInfo>> {
+  }
 }
