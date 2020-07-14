@@ -13,10 +13,10 @@ types = { path = "../../libs/types" }
 exchanges = { path = "../../libs/exchanges" }
 rpc = { path = "../../libs/rpc" }
 
-tonic = "0.2.1"
+tonic = "0.3.0"
 serde = {version = "1.0.114", features = ["derive"]}
 rmp-serde = "0.14.3"
-nats = "0.6.0"
+nats = "0.7.0"
 mongodb = "1.0.0"
 crossbeam = "0.7.3"
 clap = "3.0.0-beta.1"
