@@ -1,10 +1,13 @@
-use ::chrono::{DateTime, Utc};
+use ::chrono::{DateTime, NaiveDateTime, Utc};
 use ::serde::Serialize;
+use ::serde_json::Value;
+use ::serde_qs::to_string;
 use ::std::error::Error;
 use ::types::ParseURLResult;
-use ::url::Url;
 
 use crate::traits::Exchange;
+
+type BinancePayload = Vec<Vec<Value>>;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -53,11 +56,37 @@ impl Binance {
     let url = url.join("/api/v3/klines")?;
     let param = HistQuery{
       symbol: pair,
-      interval: String::from("1m"),
+      interval: "1m".into(),
       start_time: format!("{}",startAt.timestamp()),
       end_time: format!("{}", endAt.timestamp()),
       limit: format!("{}", limit),
     };
+    let param = to_string(&param)?;
+    url.set_query(Some(&param));
+    let c: i8 = 0;
+    while c < 20 {
+      let resp = ::reqwest::get(url).await?;
+      if resp.status().is_success() {
+        let values = resp.json::<BinancePayload>().await?;
+        let ret = values.iter().map(|item|{
+          let open_time = match item[0].as_i64() {
+            Some(n) => n,
+            None => return Err("Failed to parse open_time"),
+          };
+          let open_price: f64 = match item[1].as_str() {
+            Some(s) => s.parse()?,
+            None => return Err("Failed to parse open_price"),
+          };
+          Kline{
+            open_time: DateTime::from_utc(
+              NaiveDateTime::from_timestamp(open_time, 0), Utc,
+            ),
+            open_price,
+          }
+        });
+      }
+      c += 1;
+    }
     return Ok(vec![Kline{}]);
   }
 }
