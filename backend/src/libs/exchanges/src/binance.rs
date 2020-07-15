@@ -1,11 +1,13 @@
-use ::chrono::{DateTime, NaiveDateTime, Utc};
+use ::chrono::{DateTime, Utc};
 use ::serde::Serialize;
 use ::serde_json::Value;
 use ::serde_qs::to_string;
+use ::std::fmt::{Display, Formatter, Result as FormatResult};
 use ::std::error::Error;
 use ::types::ParseURLResult;
 
 use crate::traits::Exchange;
+use crate::casting::{cast_datetime, cast_f64, cast_i64};
 
 type BinancePayload = Vec<Vec<Value>>;
 
@@ -33,6 +35,21 @@ struct Kline {
   pub taker_buy_quote_volume: f64
 }
 
+#[derive(Debug, Default)]
+struct MaximumAttemptExceeded;
+
+impl Display for MaximumAttemptExceeded {
+  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
+    return write!(f, "Maximum retrieving count exceeded.");
+  }
+}
+
+impl Error for MaximumAttemptExceeded {
+  fn source(&self) -> Option<&(dyn Error + 'static)> {
+    None
+  }
+}
+
 pub struct Binance;
 
 impl Binance {
@@ -47,13 +64,13 @@ impl Binance {
     pair: String,
     startAt: DateTime<Utc>,
     endAt: DateTime<Utc>,
-  ) -> Result<Vec<Kline>, Box<dyn Error>> {
+  ) -> Result<Vec<Result<Kline, Box<dyn Error>>>, Box<dyn Error>> {
     let mut limit = (endAt - startAt).num_minutes();
     if limit <= 1000 {
       limit = 1000;
     }
     let url = self.get_rest_endpoint()?;
-    let url = url.join("/api/v3/klines")?;
+    let mut url = url.join("/api/v3/klines")?;
     let param = HistQuery{
       symbol: pair,
       interval: "1m".into(),
@@ -63,31 +80,36 @@ impl Binance {
     };
     let param = to_string(&param)?;
     url.set_query(Some(&param));
-    let c: i8 = 0;
+    let mut c: i8 = 0;
     while c < 20 {
-      let resp = ::reqwest::get(url).await?;
+      let resp = ::reqwest::get(url.clone()).await?;
       if resp.status().is_success() {
         let values = resp.json::<BinancePayload>().await?;
-        let ret = values.iter().map(|item|{
-          let open_time = match item[0].as_i64() {
-            Some(n) => n,
-            None => return Err("Failed to parse open_time"),
-          };
-          let open_price: f64 = match item[1].as_str() {
-            Some(s) => s.parse()?,
-            None => return Err("Failed to parse open_price"),
-          };
-          Kline{
-            open_time: DateTime::from_utc(
-              NaiveDateTime::from_timestamp(open_time, 0), Utc,
-            ),
-            open_price,
-          }
-        });
+        let ret: Vec<Result<Kline, Box<dyn Error>>> =
+          values.iter().map(|item| {
+            return Ok(Kline{
+              open_time: cast_datetime("open_time", item[0].clone())?,
+              open_price: cast_f64("open_price", item[1].clone())?,
+              high_price: cast_f64("high_price", item[2].clone())?,
+              low_price: cast_f64("low_price", item[3].clone())?,
+              close_price: cast_f64("close_price", item[4].clone())?,
+              volume: cast_f64("volume",item[5].clone())?,
+              close_time: cast_datetime("close_time", item[6].clone())?,
+              quote_volume: cast_f64("quote_volume", item[7].clone())?,
+              num_trades: cast_i64("num_trades", item[8].clone())?,
+              taker_buy_base_volume:  cast_f64(
+                "taker_buy_base_volume", item[9].clone()
+              )?,
+              taker_buy_quote_volume:  cast_f64(
+                "taker_buy_quote_volume", item[10].clone()
+              )?,
+            });
+          }).collect();
+        return Ok(ret);
       }
       c += 1;
     }
-    return Ok(vec![Kline{}]);
+    return Err(Box::new(MaximumAttemptExceeded::default()));
   }
 }
 
