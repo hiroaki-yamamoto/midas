@@ -1,14 +1,18 @@
 use ::std::error::Error;
 use ::std::fmt::{Display, Formatter, Result as FormatResult};
+use ::std::marker::Send;
 use ::chrono::{DateTime, NaiveDateTime, Utc};
 use ::serde_json::Value;
+use ::types::ret_on_err;
 
-type CastResult<T> = Result<T, Box<dyn Error>>;
+type CastResult<T> = Result<T, Box<dyn Error + Send>>;
 
 #[derive(Debug)]
 pub(crate) struct ParseError {
   fld_name: String
 }
+
+unsafe impl Send for ParseError {}
 
 impl ParseError {
   fn new(fld_name: &str) -> Self {
@@ -43,7 +47,7 @@ pub(crate) fn cast_datetime(
 
 pub(crate) fn cast_f64(fld_name: &str, value: Value) -> CastResult<f64> {
   return match value.as_str() {
-    Some(s) => Ok(s.parse()?),
+    Some(s) => Ok(ret_on_err!(s.parse())),
     None => return Err(Box::new(ParseError::new(fld_name))),
   };
 }
