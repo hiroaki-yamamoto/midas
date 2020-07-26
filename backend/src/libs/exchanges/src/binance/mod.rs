@@ -1,6 +1,7 @@
+mod entities;
+
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, Utc};
-use ::serde::Serialize;
 use ::serde_json::Value;
 use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
@@ -12,11 +13,13 @@ use ::types::{
   ParseURLResult, SendableErrorResult, ret_on_err,
 };
 
-// use ::rpc::entities::SymbolInfo;
+use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
 
 use crate::casting::{cast_datetime, cast_f64, cast_i64};
 use crate::traits::Exchange;
+
+use self::entities::{HistFetcherParam, HistQuery, Kline};
 
 type BinancePayload = Vec<Vec<Value>>;
 pub type BinaceKlineResults = Vec<Result<Kline, Box<dyn Error + Send>>>;
@@ -24,36 +27,6 @@ pub type BinaceKlineResults = Vec<Result<Kline, Box<dyn Error + Send>>>;
 const DEFAULT_RECONNECT_INTERVAL: i64 = 30;
 const CHAN_BUF_SIZE: usize = 1024;
 const NUM_CONC_TASKS: u8 = 6;
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct HistQuery {
-  pub symbol: String,
-  pub interval: String,
-  pub start_time: String,
-  pub end_time: String,
-  pub limit: String,
-}
-
-pub struct HistFetcherParam {
-  pub symbol: String,
-  pub start_time: DateTime<Utc>,
-  pub end_time: DateTime<Utc>,
-}
-
-pub struct Kline {
-  pub open_time: DateTime<Utc>,
-  pub open_price: f64,
-  pub high_price: f64,
-  pub low_price: f64,
-  pub close_price: f64,
-  pub volume: f64,
-  pub close_time: DateTime<Utc>,
-  pub quote_volume: f64,
-  pub num_trades: i64,
-  pub taker_buy_base_volume: f64,
-  pub taker_buy_quote_volume: f64,
-}
 
 #[derive(Debug, Default)]
 struct MaximumAttemptExceeded;
@@ -160,9 +133,7 @@ impl Binance {
     return Err(Box::new(MaximumAttemptExceeded::default()));
   }
 
-  pub async fn spawn_history_fetcher(
-    self,
-  ) -> (
+  fn spawn_history_fetcher(self) -> (
     mpsc::Sender<HistFetcherParam>,
     mpsc::Receiver<Result<BinaceKlineResults, Box<dyn Error + Send>>>,
   ) {
@@ -199,11 +170,16 @@ impl Binance {
     });
     return (param_send, prog_rec);
   }
+
+  async fn get_symbols(self) -> SendableErrorResult<Vec<String>> {
+    let symbols = vec![];
+    return Ok(symbols);
+  }
 }
 
 #[async_trait]
 impl Exchange for Binance {
-  async fn refresh_historical(self, symbol: String) -> (
+  async fn refresh_historical(self, symbol: Vec<String>) -> (
     oneshot::Sender<()>,
     mpsc::Receiver<HistChartProg>
   ) {
@@ -212,11 +188,13 @@ impl Exchange for Binance {
     let mut senders = vec![];
     let mut recvers = vec![];
     for _ in 0..NUM_CONC_TASKS {
-      let (param, res) = self.clone().spawn_history_fetcher().await;
+      let (param, res) = self.clone().spawn_history_fetcher();
       senders.push(param);
       recvers.push(res);
     }
+    if symbol.len() == 1 && symbol[0] == "all" {}
     return (stop_send, res_recv);
   }
-  // async fn refresh_symbols(&self) -> mpsc::Receiver<Vec<SymbolInfo>> {}
+
+  async fn get_symbols(&self) -> SendableErrorResult<Vec<SymbolInfo>> {}
 }

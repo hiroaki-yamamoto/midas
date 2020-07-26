@@ -36,12 +36,12 @@ pub(crate) fn cast_datetime(
   fld_name: &str,
   value: Value,
 ) -> CastResult<DateTime<Utc>> {
-  let epoch = match value.as_i64() {
-    Some(n) => n,
+  let (epoch, mils) = match value.as_i64() {
+    Some(n) => (n/1000, n%1000) ,
     None => return Err(Box::new(ParseError::new(fld_name))),
   };
   return Ok(DateTime::from_utc(
-    NaiveDateTime::from_timestamp(epoch, 0), Utc,
+    NaiveDateTime::from_timestamp(epoch, (mils * 1000).abs() as u32), Utc,
   ));
 }
 
