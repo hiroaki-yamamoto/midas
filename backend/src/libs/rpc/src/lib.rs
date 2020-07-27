@@ -1,7 +1,7 @@
 pub mod entities {
-    tonic::include_proto!("entities");
+  tonic::include_proto!("entities");
 }
 
 pub mod historical {
-    tonic::include_proto!("historical");
+  tonic::include_proto!("historical");
 }

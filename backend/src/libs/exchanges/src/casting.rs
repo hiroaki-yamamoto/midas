@@ -1,22 +1,24 @@
+use ::chrono::{DateTime, NaiveDateTime, Utc};
+use ::serde_json::Value;
 use ::std::error::Error;
 use ::std::fmt::{Display, Formatter, Result as FormatResult};
 use ::std::marker::Send;
-use ::chrono::{DateTime, NaiveDateTime, Utc};
-use ::serde_json::Value;
 use ::types::ret_on_err;
 
 type CastResult<T> = Result<T, Box<dyn Error + Send>>;
 
 #[derive(Debug)]
 pub(crate) struct ParseError {
-  fld_name: String
+  fld_name: String,
 }
 
 unsafe impl Send for ParseError {}
 
 impl ParseError {
   fn new(fld_name: &str) -> Self {
-    return ParseError{fld_name: fld_name.into()};
+    return ParseError {
+      fld_name: fld_name.into(),
+    };
   }
 }
 
@@ -32,16 +34,14 @@ impl Error for ParseError {
   }
 }
 
-pub(crate) fn cast_datetime(
-  fld_name: &str,
-  value: Value,
-) -> CastResult<DateTime<Utc>> {
+pub(crate) fn cast_datetime(fld_name: &str, value: Value) -> CastResult<DateTime<Utc>> {
   let (epoch, mils) = match value.as_i64() {
-    Some(n) => (n/1000, n%1000) ,
+    Some(n) => (n / 1000, n % 1000),
     None => return Err(Box::new(ParseError::new(fld_name))),
   };
   return Ok(DateTime::from_utc(
-    NaiveDateTime::from_timestamp(epoch, (mils * 1000).abs() as u32), Utc,
+    NaiveDateTime::from_timestamp(epoch, (mils * 1000).abs() as u32),
+    Utc,
   ));
 }
 

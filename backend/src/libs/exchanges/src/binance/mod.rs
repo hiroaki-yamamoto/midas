@@ -1,17 +1,15 @@
 mod entities;
+mod errors;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, Utc};
 use ::serde_json::Value;
 use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
-use ::std::thread;
 use ::std::error::Error;
-use ::std::fmt::{Display, Formatter, Result as FormatResult};
+use ::std::thread;
 use ::tokio::sync::{mpsc, oneshot};
-use ::types::{
-  ParseURLResult, SendableErrorResult, ret_on_err,
-};
+use ::types::{ret_on_err, ParseURLResult, SendableErrorResult};
 
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
@@ -19,7 +17,8 @@ use ::rpc::historical::HistChartProg;
 use crate::casting::{cast_datetime, cast_f64, cast_i64};
 use crate::traits::Exchange;
 
-use self::entities::{HistFetcherParam, HistQuery, Kline};
+use self::entities::{HistFetcherParam, HistQuery, Kline, Symbol};
+use self::errors::{MaximumAttemptExceeded, StatusFailure};
 
 type BinancePayload = Vec<Vec<Value>>;
 pub type BinaceKlineResults = Vec<Result<Kline, Box<dyn Error + Send>>>;
@@ -27,21 +26,6 @@ pub type BinaceKlineResults = Vec<Result<Kline, Box<dyn Error + Send>>>;
 const DEFAULT_RECONNECT_INTERVAL: i64 = 30;
 const CHAN_BUF_SIZE: usize = 1024;
 const NUM_CONC_TASKS: u8 = 6;
-
-#[derive(Debug, Default)]
-struct MaximumAttemptExceeded;
-
-impl Display for MaximumAttemptExceeded {
-  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-    return write!(f, "Maximum retrieving count exceeded.");
-  }
-}
-
-impl Error for MaximumAttemptExceeded {
-  fn source(&self) -> Option<&(dyn Error + 'static)> {
-    None
-  }
-}
 
 #[derive(Debug, Clone)]
 pub struct Binance {
@@ -133,13 +117,15 @@ impl Binance {
     return Err(Box::new(MaximumAttemptExceeded::default()));
   }
 
-  fn spawn_history_fetcher(self) -> (
+  fn spawn_history_fetcher(
+    self,
+  ) -> (
     mpsc::Sender<HistFetcherParam>,
     mpsc::Receiver<Result<BinaceKlineResults, Box<dyn Error + Send>>>,
   ) {
     let (param_send, mut param_rec) = mpsc::channel::<HistFetcherParam>(CHAN_BUF_SIZE);
     let (mut prog_send, prog_rec) = mpsc::channel(CHAN_BUF_SIZE);
-    thread::spawn(move ||{
+    thread::spawn(move || {
       ::tokio::spawn(async move {
         loop {
           let param_option = param_rec.recv().await;
@@ -156,16 +142,19 @@ impl Binance {
                 if end_time > param.end_time {
                   end_time = param.end_time;
                 }
-                let _ = prog_send.send(
-                  self.clone()
-                    .get_hist(param.symbol.clone(), start_time, end_time)
-                    .await
-                ).await;
+                let _ = prog_send
+                  .send(
+                    self
+                      .clone()
+                      .get_hist(param.symbol.clone(), start_time, end_time)
+                      .await,
+                  )
+                  .await;
               }
             }
             None => break,
           }
-        };
+        }
       });
     });
     return (param_send, prog_rec);
@@ -179,10 +168,10 @@ impl Binance {
 
 #[async_trait]
 impl Exchange for Binance {
-  async fn refresh_historical(self, symbol: Vec<String>) -> (
-    oneshot::Sender<()>,
-    mpsc::Receiver<HistChartProg>
-  ) {
+  async fn refresh_historical(
+    self,
+    symbol: Vec<String>,
+  ) -> (oneshot::Sender<()>, mpsc::Receiver<HistChartProg>) {
     let (stop_send, stop_recv) = oneshot::channel::<()>();
     let (res_send, res_recv) = mpsc::channel::<HistChartProg>(CHAN_BUF_SIZE);
     let mut senders = vec![];
@@ -196,5 +185,23 @@ impl Exchange for Binance {
     return (stop_send, res_recv);
   }
 
-  async fn get_symbols(&self) -> SendableErrorResult<Vec<SymbolInfo>> {}
+  async fn get_symbols(&self) -> SendableErrorResult<Vec<SymbolInfo>> {
+    let mut url: url::Url = ret_on_err!(self.get_rest_endpoint());
+    url = ret_on_err!(url.join("/api/v3/exchangeInfo"));
+    let resp = ret_on_err!(reqwest::get(url.clone()).await);
+    let resp_status = resp.status();
+    if resp_status.is_success() {
+      let info: Value = ret_on_err!(resp.json().await);
+      let symbols: Vec<Symbol> = match info.get("symbols") {
+        None => vec![],
+        Some(s) => s.into(),
+      };
+    } else {
+      return Err(Box::new(StatusFailure {
+        url: url.clone(),
+        code: resp_status.as_u16(),
+        text: ret_on_err!(resp.text().await),
+      }));
+    }
+  }
 }
