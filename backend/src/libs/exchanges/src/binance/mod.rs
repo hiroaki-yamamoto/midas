@@ -17,7 +17,7 @@ use ::rpc::historical::HistChartProg;
 use crate::casting::{cast_datetime, cast_f64, cast_i64};
 use crate::traits::Exchange;
 
-use self::entities::{HistFetcherParam, HistQuery, Kline, Symbol};
+use self::entities::{ExchangeInfo, HistFetcherParam, HistQuery, Kline};
 use self::errors::{MaximumAttemptExceeded, StatusFailure};
 
 type BinancePayload = Vec<Vec<Value>>;
@@ -86,8 +86,7 @@ impl Binance {
           .collect();
         return Ok(ret);
       } else if rest_status == ::reqwest::StatusCode::IM_A_TEAPOT
-        || rest_status == ::reqwest::StatusCode::TOO_MANY_REQUESTS
-      {
+        || rest_status == ::reqwest::StatusCode::TOO_MANY_REQUESTS {
         let retry_secs: i64 = match resp.headers().get("retry-after") {
           Some(t) => i64::from_str_radix(
             t.to_str()
@@ -159,11 +158,6 @@ impl Binance {
     });
     return (param_send, prog_rec);
   }
-
-  async fn get_symbols(self) -> SendableErrorResult<Vec<String>> {
-    let symbols = vec![];
-    return Ok(symbols);
-  }
 }
 
 #[async_trait]
@@ -191,11 +185,11 @@ impl Exchange for Binance {
     let resp = ret_on_err!(reqwest::get(url.clone()).await);
     let resp_status = resp.status();
     if resp_status.is_success() {
-      let info: Value = ret_on_err!(resp.json().await);
-      let symbols: Vec<Symbol> = match info.get("symbols") {
-        None => vec![],
-        Some(s) => s.into(),
-      };
+      let info: ExchangeInfo = ret_on_err!(resp.json().await);
+      let symbols = info.symbols;
+      return Ok(symbols.iter().map(|e| {
+        return e.clone().as_symbol_info();
+      }).collect());
     } else {
       return Err(Box::new(StatusFailure {
         url: url.clone(),

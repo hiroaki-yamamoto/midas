@@ -1,5 +1,7 @@
 use ::chrono::{DateTime, Utc};
 use ::serde::{Deserialize, Serialize};
+use ::serde_json::Value;
+use ::rpc::entities::SymbolInfo;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -13,7 +15,15 @@ pub(crate) struct HistQuery {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct Symbol {
+pub(crate) struct ExchangeInfo {
+  pub timezone: String,
+  pub exchange_filters: Vec<Value>,
+  pub symbols: Vec<Symbol>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct Symbol {
   pub symbol: String,
   pub status: String,
   pub base_asset: String,
@@ -32,9 +42,19 @@ pub struct Symbol {
   pub permissions: Vec<String>,
 }
 
+impl Symbol {
+  pub(crate) fn as_symbol_info(self) -> SymbolInfo {
+    return SymbolInfo{
+      symbol: self.symbol,
+      base: self.base_asset,
+      quote: self.quote_asset,
+    };
+  }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(tag = "filterType")]
-pub enum Filters {
+pub(crate) enum Filters {
   #[serde(rename = "PRICE_FILTER", rename_all = "camelCase")]
   PriceFilter {
     min_price: String,
@@ -77,7 +97,7 @@ pub enum Filters {
   },
 }
 
-pub struct HistFetcherParam {
+pub(crate) struct HistFetcherParam {
   pub symbol: String,
   pub start_time: DateTime<Utc>,
   pub end_time: DateTime<Utc>,
