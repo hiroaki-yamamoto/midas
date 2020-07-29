@@ -3,12 +3,12 @@ mod errors;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, Utc};
+use ::mongodb::{bson::doc, bson::to_bson, bson::Document, Collection};
 use ::serde_json::Value;
 use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
 use ::std::error::Error;
 use ::std::thread;
-use ::mongodb::{Collection, bson::doc, bson::to_bson, bson::Document};
 use ::tokio::sync::{mpsc, oneshot};
 use ::types::{ret_on_err, ParseURLResult, SendableErrorResult};
 
@@ -41,10 +41,10 @@ impl Binance {
     histry_collection: Collection,
     symbol_info_collection: Collection,
   ) -> Self {
-    return Self{
+    return Self {
       hist_col: histry_collection,
       syminfo_col: symbol_info_collection,
-      logger
+      logger,
     };
   }
   pub fn get_ws_endpoint(&self) -> ParseURLResult {
@@ -97,7 +97,8 @@ impl Binance {
           .collect();
         return Ok(ret);
       } else if rest_status == ::reqwest::StatusCode::IM_A_TEAPOT
-        || rest_status == ::reqwest::StatusCode::TOO_MANY_REQUESTS {
+        || rest_status == ::reqwest::StatusCode::TOO_MANY_REQUESTS
+      {
         let retry_secs: i64 = match resp.headers().get("retry-after") {
           Some(t) => i64::from_str_radix(
             t.to_str()
@@ -198,9 +199,14 @@ impl Exchange for Binance {
     if resp_status.is_success() {
       let info: ExchangeInfo = ret_on_err!(resp.json().await);
       let symbols = info.symbols;
-      return Ok(symbols.iter().map(|e| {
-        return e.clone().as_symbol_info();
-      }).collect());
+      return Ok(
+        symbols
+          .iter()
+          .map(|e| {
+            return e.clone().as_symbol_info();
+          })
+          .collect(),
+      );
     } else {
       return Err(Box::new(StatusFailure {
         url: url.clone(),
@@ -217,20 +223,22 @@ impl Exchange for Binance {
     let resp_status = resp.status();
     if resp_status.is_success() {
       let info: ExchangeInfo = ret_on_err!(resp.json().await);
-      ret_on_err!(self.syminfo_col.delete_many(doc!{}, None).await);
+      ret_on_err!(self.syminfo_col.delete_many(doc! {}, None).await);
       let serialized = ret_on_err!(to_bson(&info.symbols));
       let empty: Vec<::mongodb::bson::Bson> = vec![];
       let mut docs: Vec<Option<&Document>> = serialized
         .as_array()
         .unwrap_or(&empty)
         .into_iter()
-        .map(|item| {item.as_document()})
+        .map(|item| item.as_document())
         .collect();
-      docs.retain(|item| { item.is_some() });
-      ret_on_err!(self.syminfo_col.insert_many(
-        docs.into_iter().map(|doc| { doc.unwrap().clone() }),
-        None
-      ).await);
+      docs.retain(|item| item.is_some());
+      ret_on_err!(
+        self
+          .syminfo_col
+          .insert_many(docs.into_iter().map(|doc| { doc.unwrap().clone() }), None)
+          .await
+      );
       return Ok(());
     } else {
       return Err(Box::new(StatusFailure {

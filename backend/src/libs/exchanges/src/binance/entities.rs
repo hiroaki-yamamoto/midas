@@ -1,7 +1,7 @@
 use ::chrono::{DateTime, Utc};
+use ::rpc::entities::SymbolInfo;
 use ::serde::{Deserialize, Serialize};
 use ::serde_json::Value;
-use ::rpc::entities::SymbolInfo;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -44,7 +44,7 @@ pub(crate) struct Symbol {
 
 impl Symbol {
   pub(crate) fn as_symbol_info(self) -> SymbolInfo {
-    return SymbolInfo{
+    return SymbolInfo {
       symbol: self.symbol,
       base: self.base_asset,
       quote: self.quote_asset,

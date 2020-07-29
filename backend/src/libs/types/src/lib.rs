@@ -1,7 +1,7 @@
-use ::url::{Url, ParseError};
 use ::std::error::Error;
 use ::std::result::Result as StdResult;
 use ::tonic::Status;
+use ::url::{ParseError, Url};
 
 pub type Result<T> = StdResult<T, Status>;
 pub type ParseURLResult = StdResult<Url, ParseError>;

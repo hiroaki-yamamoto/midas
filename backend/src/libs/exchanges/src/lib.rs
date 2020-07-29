@@ -1,6 +1,6 @@
-mod traits;
 mod binance;
 mod casting;
+mod traits;
 
-pub use crate::traits::Exchange;
 pub use crate::binance::Binance;
+pub use crate::traits::Exchange;

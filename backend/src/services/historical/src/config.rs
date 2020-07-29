@@ -1,7 +1,7 @@
-use ::std::fs::File;
-use ::std::error::Error;
-use ::std::io::Read;
 use ::serde::Deserialize;
+use ::std::error::Error;
+use ::std::fs::File;
+use ::std::io::Read;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -15,7 +15,10 @@ pub struct Config {
 }
 
 impl Config {
-  pub fn from_stream<T>(st:T) -> Result<Self, Box<dyn Error>> where T: Read {
+  pub fn from_stream<T>(st: T) -> Result<Self, Box<dyn Error>>
+  where
+    T: Read,
+  {
     let cfg: Self = ::serde_yaml::from_reader(st)?;
     return Ok(cfg);
   }
