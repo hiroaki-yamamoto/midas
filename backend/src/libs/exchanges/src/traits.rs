@@ -11,4 +11,5 @@ pub trait Exchange {
     symbols: Vec<String>,
   ) -> (oneshot::Sender<()>, mpsc::Receiver<HistChartProg>);
   async fn get_symbols(&self) -> SendableErrorResult<Vec<SymbolInfo>>;
+  async fn refresh_symbols(self) -> SendableErrorResult<()>;
 }

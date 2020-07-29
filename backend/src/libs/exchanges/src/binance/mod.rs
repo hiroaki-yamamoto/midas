@@ -8,6 +8,7 @@ use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
 use ::std::error::Error;
 use ::std::thread;
+use ::mongodb::{Collection, bson::doc, bson::to_bson, bson::Document};
 use ::tokio::sync::{mpsc, oneshot};
 use ::types::{ret_on_err, ParseURLResult, SendableErrorResult};
 
@@ -29,12 +30,22 @@ const NUM_CONC_TASKS: u8 = 6;
 
 #[derive(Debug, Clone)]
 pub struct Binance {
+  hist_col: Collection,
+  syminfo_col: Collection,
   logger: Logger,
 }
 
 impl Binance {
-  pub fn new(logger: Logger) -> Self {
-    return Self { logger };
+  pub fn new(
+    logger: Logger,
+    histry_collection: Collection,
+    symbol_info_collection: Collection,
+  ) -> Self {
+    return Self{
+      hist_col: histry_collection,
+      syminfo_col: symbol_info_collection,
+      logger
+    };
   }
   pub fn get_ws_endpoint(&self) -> ParseURLResult {
     return "wss://stream.binance.com:9443".parse();
@@ -190,6 +201,37 @@ impl Exchange for Binance {
       return Ok(symbols.iter().map(|e| {
         return e.clone().as_symbol_info();
       }).collect());
+    } else {
+      return Err(Box::new(StatusFailure {
+        url: url.clone(),
+        code: resp_status.as_u16(),
+        text: ret_on_err!(resp.text().await),
+      }));
+    }
+  }
+
+  async fn refresh_symbols(self) -> SendableErrorResult<()> {
+    let mut url: url::Url = ret_on_err!(self.get_rest_endpoint());
+    url = ret_on_err!(url.join("/api/v3/exchangeInfo"));
+    let resp = ret_on_err!(reqwest::get(url.clone()).await);
+    let resp_status = resp.status();
+    if resp_status.is_success() {
+      let info: ExchangeInfo = ret_on_err!(resp.json().await);
+      ret_on_err!(self.syminfo_col.delete_many(doc!{}, None).await);
+      let serialized = ret_on_err!(to_bson(&info.symbols));
+      let empty: Vec<::mongodb::bson::Bson> = vec![];
+      let mut docs: Vec<Option<&Document>> = serialized
+        .as_array()
+        .unwrap_or(&empty)
+        .into_iter()
+        .map(|item| {item.as_document()})
+        .collect();
+      docs.retain(|item| { item.is_some() });
+      ret_on_err!(self.syminfo_col.insert_many(
+        docs.into_iter().map(|doc| { doc.unwrap().clone() }),
+        None
+      ).await);
+      return Ok(());
     } else {
       return Err(Box::new(StatusFailure {
         url: url.clone(),
