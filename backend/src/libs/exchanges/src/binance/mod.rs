@@ -3,7 +3,12 @@ mod errors;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, Utc};
-use ::mongodb::{bson::doc, bson::to_bson, bson::Document, Collection};
+use ::futures::stream::StreamExt;
+use ::mongodb::{
+  bson::{de::Result as BsonDeResult, doc, from_bson, to_bson, Bson, Document},
+  error::Result as MongoResult,
+  Collection,
+};
 use ::serde_json::Value;
 use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
@@ -18,7 +23,7 @@ use ::rpc::historical::HistChartProg;
 use crate::casting::{cast_datetime, cast_f64, cast_i64};
 use crate::traits::Exchange;
 
-use self::entities::{ExchangeInfo, HistFetcherParam, HistQuery, Kline};
+use self::entities::{ExchangeInfo, HistFetcherParam, HistQuery, Kline, Symbol};
 use self::errors::{MaximumAttemptExceeded, StatusFailure};
 
 type BinancePayload = Vec<Vec<Value>>;
@@ -192,28 +197,30 @@ impl Exchange for Binance {
   }
 
   async fn get_symbols(&self) -> SendableErrorResult<Vec<SymbolInfo>> {
-    let mut url: url::Url = ret_on_err!(self.get_rest_endpoint());
-    url = ret_on_err!(url.join("/api/v3/exchangeInfo"));
-    let resp = ret_on_err!(reqwest::get(url.clone()).await);
-    let resp_status = resp.status();
-    if resp_status.is_success() {
-      let info: ExchangeInfo = ret_on_err!(resp.json().await);
-      let symbols = info.symbols;
-      return Ok(
-        symbols
-          .iter()
-          .map(|e| {
-            return e.clone().as_symbol_info();
-          })
-          .collect(),
-      );
-    } else {
-      return Err(Box::new(StatusFailure {
-        url: url.clone(),
-        code: resp_status.as_u16(),
-        text: ret_on_err!(resp.text().await),
-      }));
-    }
+    let cur = ret_on_err!(self.syminfo_col.find(doc! {}, None).await);
+    let mut docs: Vec<MongoResult<Document>> = cur.collect().await;
+    docs.retain(|doc| doc.is_ok());
+    let mut symbols: Vec<BsonDeResult<Symbol>> = docs
+      .iter()
+      .map(|doc_res| {
+        let doc = doc_res.clone().unwrap();
+        let item: BsonDeResult<Symbol> = from_bson(Bson::Document(doc));
+        return item;
+      })
+      .collect();
+    symbols.retain(|item| item.is_ok());
+    let ret = symbols
+      .into_iter()
+      .map(|item| {
+        let sym = item.unwrap();
+        return SymbolInfo {
+          symbol: sym.symbol,
+          base: sym.base_asset,
+          quote: sym.quote_asset,
+        };
+      })
+      .collect();
+    return Ok(ret);
   }
 
   async fn refresh_symbols(self) -> SendableErrorResult<()> {
