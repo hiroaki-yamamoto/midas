@@ -24,7 +24,7 @@ use crate::casting::{cast_datetime, cast_f64, cast_i64};
 use crate::traits::Exchange;
 
 use self::entities::{ExchangeInfo, HistFetcherParam, HistQuery, Kline, Symbol};
-use self::errors::{MaximumAttemptExceeded, StatusFailure};
+use self::errors::{EmptyError, MaximumAttemptExceeded, StatusFailure};
 
 type BinancePayload = Vec<Vec<Value>>;
 pub type BinaceKlineResults = Vec<Result<Kline, Box<dyn Error + Send>>>;
@@ -182,7 +182,12 @@ impl Exchange for Binance {
   async fn refresh_historical(
     self,
     symbol: Vec<String>,
-  ) -> (oneshot::Sender<()>, mpsc::Receiver<HistChartProg>) {
+  ) -> SendableErrorResult<(oneshot::Sender<()>, mpsc::Receiver<HistChartProg>)> {
+    if symbol.len() < 1 {
+      return Err(Box::new(EmptyError {
+        field: String::from("symbol"),
+      }));
+    }
     let (stop_send, stop_recv) = oneshot::channel::<()>();
     let (res_send, res_recv) = mpsc::channel::<HistChartProg>(CHAN_BUF_SIZE);
     let mut senders = vec![];
@@ -192,12 +197,19 @@ impl Exchange for Binance {
       senders.push(param);
       recvers.push(res);
     }
-    if symbol.len() == 1 && symbol[0] == "all" {}
-    return (stop_send, res_recv);
+    let mut query: Option<Document> = None;
+    if symbol[0] != "all" {
+      query = Some(doc! { "symbol": doc! { "$in": symbol } });
+    }
+    let symbol = self.get_symbols(query).await?;
+    return Ok((stop_send, res_recv));
   }
 
-  async fn get_symbols(&self) -> SendableErrorResult<Vec<SymbolInfo>> {
-    let cur = ret_on_err!(self.syminfo_col.find(doc! {}, None).await);
+  async fn get_symbols(
+    &self,
+    filter: impl Into<Option<Document>> + Send + 'async_trait,
+  ) -> SendableErrorResult<Vec<SymbolInfo>> {
+    let cur = ret_on_err!(self.syminfo_col.find(filter, None).await);
     let mut docs: Vec<MongoResult<Document>> = cur.collect().await;
     docs.retain(|doc| doc.is_ok());
     let mut symbols: Vec<BsonDeResult<Symbol>> = docs
@@ -211,14 +223,7 @@ impl Exchange for Binance {
     symbols.retain(|item| item.is_ok());
     let ret = symbols
       .into_iter()
-      .map(|item| {
-        let sym = item.unwrap();
-        return SymbolInfo {
-          symbol: sym.symbol,
-          base: sym.base_asset,
-          quote: sym.quote_asset,
-        };
-      })
+      .map(|item| item.unwrap().as_symbol_info())
       .collect();
     return Ok(ret);
   }
