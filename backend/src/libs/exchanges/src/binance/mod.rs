@@ -1,8 +1,7 @@
 mod entities;
-mod errors;
 
 use ::async_trait::async_trait;
-use ::chrono::{DateTime, Duration, Utc};
+use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::futures::stream::StreamExt;
 use ::mongodb::{
   bson::{de::Result as BsonDeResult, doc, from_bson, to_bson, Bson, Document},
@@ -24,7 +23,7 @@ use crate::casting::{cast_datetime, cast_f64, cast_i64};
 use crate::traits::Exchange;
 
 use self::entities::{ExchangeInfo, HistFetcherParam, HistQuery, Kline, Symbol};
-use self::errors::{EmptyError, MaximumAttemptExceeded, StatusFailure};
+use super::errors::{DeterminationFailed, EmptyError, MaximumAttemptExceeded, StatusFailure};
 
 type BinancePayload = Vec<Vec<Value>>;
 pub type BinaceKlineResults = Vec<Result<Kline, Box<dyn Error + Send>>>;
@@ -62,17 +61,23 @@ impl Binance {
     &self,
     pair: String,
     start_at: DateTime<Utc>,
-    end_at: DateTime<Utc>,
+    end_at: Option<DateTime<Utc>>,
   ) -> SendableErrorResult<BinaceKlineResults> {
-    let limit = (end_at - start_at).num_minutes();
+    let limit = match end_at {
+      Some(end_at) => Some((end_at - start_at).num_minutes()),
+      None => None,
+    };
     let url = ret_on_err!(self.get_rest_endpoint());
     let mut url = ret_on_err!(url.join("/api/v3/klines"));
     let param = HistQuery {
       symbol: pair,
       interval: "1m".into(),
       start_time: format!("{}", start_at.timestamp()),
-      end_time: format!("{}", end_at.timestamp()),
-      limit: format!("{}", limit),
+      end_time: match end_at {
+        Some(end_at) => Some(format!("{}", end_at.timestamp())),
+        None => None,
+      },
+      limit: format!("{}", limit.unwrap_or(1)),
     };
     let param = ret_on_err!(to_string(&param));
     url.set_query(Some(&param));
@@ -162,7 +167,7 @@ impl Binance {
                   .send(
                     self
                       .clone()
-                      .get_hist(param.symbol.clone(), start_time, end_time)
+                      .get_hist(param.symbol.clone(), start_time, Some(end_time))
                       .await,
                   )
                   .await;
@@ -201,7 +206,23 @@ impl Exchange for Binance {
     if symbol[0] != "all" {
       query = Some(doc! { "symbol": doc! { "$in": symbol } });
     }
-    let symbol = self.get_symbols(query).await?;
+    let symbols = self.get_symbols(query).await?;
+    for symbol in symbols {
+      let mut start = self
+        .get_hist(
+          symbol.symbol,
+          DateTime::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
+          None,
+        )
+        .await?;
+      start.retain(|item| item.is_ok());
+      if start.len() != 1 {
+        return Err(Box::new(DeterminationFailed::<()> {
+          field: String::from("Start Date"),
+          additional_data: None,
+        }));
+      }
+    }
     return Ok((stop_send, res_recv));
   }
 

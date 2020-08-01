@@ -9,7 +9,7 @@ pub(crate) struct HistQuery {
   pub symbol: String,
   pub interval: String,
   pub start_time: String,
-  pub end_time: String,
+  pub end_time: Option<String>,
   pub limit: String,
 }
 

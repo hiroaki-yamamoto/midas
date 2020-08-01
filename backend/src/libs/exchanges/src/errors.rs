@@ -1,9 +1,9 @@
 use ::std::error::Error;
-use ::std::fmt::{Display, Formatter, Result as FormatResult};
+use ::std::fmt::{Debug, Display, Formatter, Result as FormatResult};
 
 use ::url::Url;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Copy)]
 pub struct MaximumAttemptExceeded;
 
 impl Display for MaximumAttemptExceeded {
@@ -20,7 +20,7 @@ impl Error for MaximumAttemptExceeded {
 
 unsafe impl Send for MaximumAttemptExceeded {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct StatusFailure {
   pub url: Url,
   pub code: u16,
@@ -40,7 +40,7 @@ impl Error for StatusFailure {
 
 unsafe impl Send for StatusFailure {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct EmptyError {
   pub field: String,
 }
@@ -58,3 +58,33 @@ impl Error for EmptyError {
 }
 
 unsafe impl Send for EmptyError {}
+
+#[derive(Debug, Clone, Copy)]
+pub struct DeterminationFailed<T>
+where
+  T: Debug + Clone + Copy,
+{
+  pub field: String,
+  pub additional_data: Option<T>,
+}
+
+impl<T> Display for DeterminationFailed<T>
+where
+  T: Debug,
+{
+  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
+    return write!(
+      f,
+      "Determination of {} failed. Additional Data: {:?}",
+      self.field, self.additional_data
+    );
+  }
+}
+
+impl<T> Error for DeterminationFailed<T> {
+  fn source(&self) -> Option<&(dyn Error + 'static)> {
+    None
+  }
+}
+
+unsafe impl<T> Send for DeterminationFailed<T> {}
