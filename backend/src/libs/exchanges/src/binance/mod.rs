@@ -207,6 +207,7 @@ impl Exchange for Binance {
       query = Some(doc! { "symbol": doc! { "$in": symbol } });
     }
     let symbols = self.get_symbols(query).await?;
+    let end_at = Utc::now();
     for symbol in symbols {
       let mut start = self
         .get_hist(
@@ -222,6 +223,7 @@ impl Exchange for Binance {
           additional_data: None,
         }));
       }
+      let start_at = start[0].as_ref().unwrap().open_time;
     }
     return Ok((stop_send, res_recv));
   }
