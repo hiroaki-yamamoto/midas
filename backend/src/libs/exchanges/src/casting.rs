@@ -34,7 +34,10 @@ impl Error for ParseError {
   }
 }
 
-pub(crate) fn cast_datetime(fld_name: &str, value: Value) -> CastResult<DateTime<Utc>> {
+pub(crate) fn cast_datetime(
+  fld_name: &str,
+  value: Value,
+) -> CastResult<DateTime<Utc>> {
   let (epoch, mils) = match value.as_i64() {
     Some(n) => (n / 1000, n % 1000),
     None => return Err(Box::new(ParseError::new(fld_name))),

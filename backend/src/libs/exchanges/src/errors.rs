@@ -3,7 +3,7 @@ use ::std::fmt::{Debug, Display, Formatter, Result as FormatResult};
 
 use ::url::Url;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Default)]
 pub struct MaximumAttemptExceeded;
 
 impl Display for MaximumAttemptExceeded {
@@ -20,7 +20,7 @@ impl Error for MaximumAttemptExceeded {
 
 unsafe impl Send for MaximumAttemptExceeded {}
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct StatusFailure {
   pub url: Url,
   pub code: u16,
@@ -40,7 +40,7 @@ impl Error for StatusFailure {
 
 unsafe impl Send for StatusFailure {}
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct EmptyError {
   pub field: String,
 }
@@ -59,7 +59,7 @@ impl Error for EmptyError {
 
 unsafe impl Send for EmptyError {}
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct DeterminationFailed<T>
 where
   T: Debug + Clone + Copy,
@@ -70,7 +70,7 @@ where
 
 impl<T> Display for DeterminationFailed<T>
 where
-  T: Debug,
+  T: Debug + Clone + Copy,
 {
   fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
     return write!(
@@ -81,10 +81,37 @@ where
   }
 }
 
-impl<T> Error for DeterminationFailed<T> {
+impl<T> Error for DeterminationFailed<T>
+where
+  T: Debug + Clone + Copy,
+{
   fn source(&self) -> Option<&(dyn Error + 'static)> {
     None
   }
 }
 
-unsafe impl<T> Send for DeterminationFailed<T> {}
+unsafe impl<T> Send for DeterminationFailed<T> where T: Debug + Clone + Copy {}
+
+#[derive(Debug, Clone)]
+pub struct NumObjectError {
+  pub field: String,
+  pub num_object: u32,
+}
+
+impl Display for NumObjectError {
+  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
+    return write!(
+      f,
+      "{} should have {} objects at most.",
+      self.field, self.num_object
+    );
+  }
+}
+
+impl Error for NumObjectError {
+  fn source(&self) -> Option<&(dyn Error + 'static)> {
+    None
+  }
+}
+
+unsafe impl Send for NumObjectError {}

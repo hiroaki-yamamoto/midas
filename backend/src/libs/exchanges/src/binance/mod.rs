@@ -22,8 +22,13 @@ use ::rpc::historical::HistChartProg;
 use crate::casting::{cast_datetime, cast_f64, cast_i64};
 use crate::traits::Exchange;
 
-use self::entities::{ExchangeInfo, HistFetcherParam, HistQuery, Kline, Symbol};
-use super::errors::{DeterminationFailed, EmptyError, MaximumAttemptExceeded, StatusFailure};
+use self::entities::{
+  ExchangeInfo, HistFetcherParam, HistQuery, Kline, Symbol,
+};
+use super::errors::{
+  DeterminationFailed, EmptyError, MaximumAttemptExceeded, NumObjectError,
+  StatusFailure,
+};
 
 type BinancePayload = Vec<Vec<Value>>;
 pub type BinaceKlineResults = Vec<Result<Kline, Box<dyn Error + Send>>>;
@@ -100,8 +105,14 @@ impl Binance {
               close_time: cast_datetime("close_time", item[6].clone())?,
               quote_volume: cast_f64("quote_volume", item[7].clone())?,
               num_trades: cast_i64("num_trades", item[8].clone())?,
-              taker_buy_base_volume: cast_f64("taker_buy_base_volume", item[9].clone())?,
-              taker_buy_quote_volume: cast_f64("taker_buy_quote_volume", item[10].clone())?,
+              taker_buy_base_volume: cast_f64(
+                "taker_buy_base_volume",
+                item[9].clone(),
+              )?,
+              taker_buy_quote_volume: cast_f64(
+                "taker_buy_quote_volume",
+                item[10].clone(),
+              )?,
             });
           })
           .collect();
@@ -142,10 +153,12 @@ impl Binance {
     self,
   ) -> (
     mpsc::Sender<HistFetcherParam>,
-    mpsc::Receiver<Result<BinaceKlineResults, Box<dyn Error + Send>>>,
+    mpsc::Receiver<SendableErrorResult<BinaceKlineResults>>,
   ) {
-    let (param_send, mut param_rec) = mpsc::channel::<HistFetcherParam>(CHAN_BUF_SIZE);
-    let (mut prog_send, prog_rec) = mpsc::channel(CHAN_BUF_SIZE);
+    let (param_send, mut param_rec) =
+      mpsc::channel::<HistFetcherParam>(CHAN_BUF_SIZE);
+    let (mut prog_send, prog_rec) =
+      mpsc::channel::<SendableErrorResult<BinaceKlineResults>>(CHAN_BUF_SIZE);
     thread::spawn(move || {
       ::tokio::spawn(async move {
         loop {
@@ -153,25 +166,27 @@ impl Binance {
           match param_option {
             Some(param) => {
               let num_obj = (param.end_time - param.start_time).num_minutes();
-              let mut num_loop = num_obj / 1000;
-              if num_obj % 1000 > 0 {
-                num_loop += 1;
-              }
-              for i in 0..num_loop {
-                let start_time = param.start_time + Duration::minutes(1000 * i);
-                let mut end_time = start_time + Duration::minutes(1000);
-                if end_time > param.end_time {
-                  end_time = param.end_time;
-                }
+              if num_obj > 1000 {
                 let _ = prog_send
-                  .send(
-                    self
-                      .clone()
-                      .get_hist(param.symbol.clone(), start_time, Some(end_time))
-                      .await,
-                  )
+                  .send(Err(Box::new(NumObjectError {
+                    field: String::from("Duration between start and end date"),
+                    num_object: 1000,
+                  })))
                   .await;
+                continue;
               }
+              let _ = prog_send
+                .send(
+                  self
+                    .clone()
+                    .get_hist(
+                      param.symbol.clone(),
+                      param.start_time,
+                      Some(param.end_time),
+                    )
+                    .await,
+                )
+                .await;
             }
             None => break,
           }
@@ -187,7 +202,8 @@ impl Exchange for Binance {
   async fn refresh_historical(
     self,
     symbol: Vec<String>,
-  ) -> SendableErrorResult<(oneshot::Sender<()>, mpsc::Receiver<HistChartProg>)> {
+  ) -> SendableErrorResult<(oneshot::Sender<()>, mpsc::Receiver<HistChartProg>)>
+  {
     if symbol.len() < 1 {
       return Err(Box::new(EmptyError {
         field: String::from("symbol"),
@@ -271,7 +287,10 @@ impl Exchange for Binance {
       ret_on_err!(
         self
           .syminfo_col
-          .insert_many(docs.into_iter().map(|doc| { doc.unwrap().clone() }), None)
+          .insert_many(
+            docs.into_iter().map(|doc| { doc.unwrap().clone() }),
+            None
+          )
           .await
       );
       return Ok(());
