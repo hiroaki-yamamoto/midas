@@ -8,7 +8,7 @@ use ::types::SendableErrorResult;
 #[async_trait]
 pub trait Exchange {
   async fn refresh_historical(
-    self,
+    &self,
     symbols: Vec<String>,
   ) -> SendableErrorResult<(oneshot::Sender<()>, mpsc::Receiver<HistChartProg>)>;
   async fn get_symbols(

@@ -97,6 +97,7 @@ pub(crate) enum Filters {
   },
 }
 
+#[derive(Debug)]
 pub(crate) struct HistFetcherParam {
   pub symbol: String,
   pub start_time: DateTime<Utc>,

@@ -16,8 +16,10 @@ use ::std::thread;
 use ::tokio::sync::{mpsc, oneshot};
 use ::types::{ret_on_err, ParseURLResult, SendableErrorResult};
 
+use ::rand::{rngs::ThreadRng, thread_rng, Rng};
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
+use ::std::cmp;
 
 use crate::casting::{cast_datetime, cast_f64, cast_i64};
 use crate::traits::Exchange;
@@ -150,7 +152,7 @@ impl Binance {
   }
 
   fn spawn_history_fetcher(
-    self,
+    &self,
   ) -> (
     mpsc::Sender<HistFetcherParam>,
     mpsc::Receiver<SendableErrorResult<BinaceKlineResults>>,
@@ -159,6 +161,7 @@ impl Binance {
       mpsc::channel::<HistFetcherParam>(CHAN_BUF_SIZE);
     let (mut prog_send, prog_rec) =
       mpsc::channel::<SendableErrorResult<BinaceKlineResults>>(CHAN_BUF_SIZE);
+    let me = self.clone();
     thread::spawn(move || {
       ::tokio::spawn(async move {
         loop {
@@ -177,14 +180,12 @@ impl Binance {
               }
               let _ = prog_send
                 .send(
-                  self
-                    .clone()
-                    .get_hist(
-                      param.symbol.clone(),
-                      param.start_time,
-                      Some(param.end_time),
-                    )
-                    .await,
+                  me.get_hist(
+                    param.symbol.clone(),
+                    param.start_time,
+                    Some(param.end_time),
+                  )
+                  .await,
                 )
                 .await;
             }
@@ -195,12 +196,15 @@ impl Binance {
     });
     return (param_send, prog_rec);
   }
+  fn gen_rand_range(&self, min: usize, max: usize) -> usize {
+    return thread_rng().gen_range(min, max);
+  }
 }
 
 #[async_trait]
 impl Exchange for Binance {
   async fn refresh_historical(
-    self,
+    &self,
     symbol: Vec<String>,
   ) -> SendableErrorResult<(oneshot::Sender<()>, mpsc::Receiver<HistChartProg>)>
   {
@@ -214,7 +218,7 @@ impl Exchange for Binance {
     let mut senders = vec![];
     let mut recvers = vec![];
     for _ in 0..NUM_CONC_TASKS {
-      let (param, res) = self.clone().spawn_history_fetcher();
+      let (param, res) = self.spawn_history_fetcher();
       senders.push(param);
       recvers.push(res);
     }
@@ -227,7 +231,7 @@ impl Exchange for Binance {
     for symbol in symbols {
       let mut start = self
         .get_hist(
-          symbol.symbol,
+          symbol.symbol.clone(),
           DateTime::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
           None,
         )
@@ -240,6 +244,26 @@ impl Exchange for Binance {
         }));
       }
       let start_at = start[0].as_ref().unwrap().open_time;
+      let mut sec_end_date = end_at.clone();
+      while sec_end_date > start_at {
+        let mut sec_start_date = sec_end_date - Duration::minutes(1000);
+        if sec_start_date < start_at {
+          sec_start_date = start_at;
+        }
+        let index =
+          self.gen_rand_range(0, cmp::min(senders.len(), recvers.len()));
+        let sender = &mut senders[index];
+        let _ = ret_on_err!(
+          sender
+            .send(HistFetcherParam {
+              symbol: symbol.symbol.clone(),
+              start_time: sec_start_date.clone(),
+              end_time: sec_end_date,
+            })
+            .await
+        );
+        sec_end_date = sec_start_date.clone();
+      }
     }
     return Ok((stop_send, res_recv));
   }
