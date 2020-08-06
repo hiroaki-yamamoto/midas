@@ -10,7 +10,10 @@ pub trait Exchange {
   async fn refresh_historical(
     &self,
     symbols: Vec<String>,
-  ) -> SendableErrorResult<(oneshot::Sender<()>, mpsc::Receiver<HistChartProg>)>;
+  ) -> SendableErrorResult<(
+    oneshot::Sender<()>,
+    mpsc::Receiver<SendableErrorResult<HistChartProg>>,
+  )>;
   async fn get_symbols(
     &self,
     filter: impl Into<Option<Document>> + Send + 'async_trait,

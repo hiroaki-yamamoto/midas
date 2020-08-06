@@ -206,21 +206,42 @@ impl Exchange for Binance {
   async fn refresh_historical(
     &self,
     symbol: Vec<String>,
-  ) -> SendableErrorResult<(oneshot::Sender<()>, mpsc::Receiver<HistChartProg>)>
-  {
+  ) -> SendableErrorResult<(
+    oneshot::Sender<()>,
+    mpsc::Receiver<SendableErrorResult<HistChartProg>>,
+  )> {
     if symbol.len() < 1 {
       return Err(Box::new(EmptyError {
         field: String::from("symbol"),
       }));
     }
     let (stop_send, stop_recv) = oneshot::channel::<()>();
-    let (res_send, res_recv) = mpsc::channel::<HistChartProg>(CHAN_BUF_SIZE);
+    let (res_send, res_recv) =
+      mpsc::channel::<SendableErrorResult<HistChartProg>>(CHAN_BUF_SIZE);
     let mut senders = vec![];
     let mut recvers = vec![];
     for _ in 0..NUM_CONC_TASKS {
       let (param, res) = self.spawn_history_fetcher();
       senders.push(param);
       recvers.push(res);
+    }
+    for recv_ch in recvers {
+      let mut res_send = res_send.clone();
+      let mut recv_ch = recv_ch;
+      thread::spawn(move || {
+        ::tokio::spawn(async move {
+          loop {
+            let send_fut = match recv_ch.recv().await {
+              None => continue,
+              Some(kline_reuslt) => match kline_reuslt {
+                Err(err) => res_send.send(Err(err)).await,
+                Ok(ok) => ok,
+              },
+            };
+            send_fut.await;
+          }
+        });
+      });
     }
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
@@ -250,8 +271,7 @@ impl Exchange for Binance {
         if sec_start_date < start_at {
           sec_start_date = start_at;
         }
-        let index =
-          self.gen_rand_range(0, cmp::min(senders.len(), recvers.len()));
+        let index = self.gen_rand_range(0, senders.len());
         let sender = &mut senders[index];
         let _ = ret_on_err!(
           sender
