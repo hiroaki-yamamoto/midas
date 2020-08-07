@@ -25,7 +25,8 @@ use crate::casting::{cast_datetime, cast_f64, cast_i64};
 use crate::traits::Exchange;
 
 use self::entities::{
-  ExchangeInfo, HistFetcherParam, HistQuery, Kline, Symbol,
+  ExchangeInfo, HistFetcherParam, HistQuery, Kline, KlineResults,
+  KlineResultsWithSymbol, Symbol,
 };
 use super::errors::{
   DeterminationFailed, EmptyError, MaximumAttemptExceeded, NumObjectError,
@@ -33,7 +34,6 @@ use super::errors::{
 };
 
 type BinancePayload = Vec<Vec<Value>>;
-pub type BinaceKlineResults = Vec<Result<Kline, Box<dyn Error + Send>>>;
 
 const DEFAULT_RECONNECT_INTERVAL: i64 = 30;
 const CHAN_BUF_SIZE: usize = 1024;
@@ -67,9 +67,11 @@ impl Binance {
   async fn get_hist(
     &self,
     pair: String,
+    num_symbols: i64,
+    entire_data_len: i64,
     start_at: DateTime<Utc>,
     end_at: Option<DateTime<Utc>>,
-  ) -> SendableErrorResult<BinaceKlineResults> {
+  ) -> SendableErrorResult<KlineResultsWithSymbol> {
     let limit = match end_at {
       Some(end_at) => Some((end_at - start_at).num_minutes()),
       None => None,
@@ -77,7 +79,7 @@ impl Binance {
     let url = ret_on_err!(self.get_rest_endpoint());
     let mut url = ret_on_err!(url.join("/api/v3/klines"));
     let param = HistQuery {
-      symbol: pair,
+      symbol: pair.clone(),
       interval: "1m".into(),
       start_time: format!("{}", start_at.timestamp()),
       end_time: match end_at {
@@ -94,7 +96,7 @@ impl Binance {
       let rest_status = resp.status();
       if rest_status.is_success() {
         let values = ret_on_err!(resp.json::<BinancePayload>().await);
-        let ret: BinaceKlineResults = values
+        let ret: KlineResults = values
           .iter()
           .map(|item| {
             return Ok(Kline {
@@ -118,7 +120,12 @@ impl Binance {
             });
           })
           .collect();
-        return Ok(ret);
+        return Ok(KlineResultsWithSymbol {
+          symbol: pair,
+          num_symbols,
+          entire_data_len,
+          klines: ret,
+        });
       } else if rest_status == ::reqwest::StatusCode::IM_A_TEAPOT
         || rest_status == ::reqwest::StatusCode::TOO_MANY_REQUESTS
       {
@@ -155,12 +162,13 @@ impl Binance {
     &self,
   ) -> (
     mpsc::Sender<HistFetcherParam>,
-    mpsc::Receiver<SendableErrorResult<BinaceKlineResults>>,
+    mpsc::Receiver<SendableErrorResult<KlineResultsWithSymbol>>,
   ) {
     let (param_send, mut param_rec) =
       mpsc::channel::<HistFetcherParam>(CHAN_BUF_SIZE);
-    let (mut prog_send, prog_rec) =
-      mpsc::channel::<SendableErrorResult<BinaceKlineResults>>(CHAN_BUF_SIZE);
+    let (mut prog_send, prog_rec) = mpsc::channel::<
+      SendableErrorResult<KlineResultsWithSymbol>,
+    >(CHAN_BUF_SIZE);
     let me = self.clone();
     thread::spawn(move || {
       ::tokio::spawn(async move {
@@ -182,6 +190,8 @@ impl Binance {
                 .send(
                   me.get_hist(
                     param.symbol.clone(),
+                    param.num_symbols,
+                    param.entire_data_len,
                     param.start_time,
                     Some(param.end_time),
                   )
@@ -234,8 +244,14 @@ impl Exchange for Binance {
             let send_fut = match recv_ch.recv().await {
               None => continue,
               Some(kline_reuslt) => match kline_reuslt {
-                Err(err) => res_send.send(Err(err)).await,
-                Ok(ok) => ok,
+                Err(err) => res_send.send(Err(err)),
+                Ok(ok) => res_send.send(Ok(HistChartProg {
+                  symbol: ok.symbol,
+                  num_symbols: ok.num_symbols,
+                  cur_num_symbols_proceeded: 1,
+                  num_objects: ok.entire_data_len,
+                  num_obj_proceeded: ok.klines.len() as i64,
+                })),
               },
             };
             send_fut.await;
@@ -250,13 +266,16 @@ impl Exchange for Binance {
     let symbols = self.get_symbols(query).await?;
     let end_at = Utc::now();
     for symbol in symbols {
-      let mut start = self
+      let start = self
         .get_hist(
           symbol.symbol.clone(),
+          symbols.len() as i64,
+          1,
           DateTime::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
           None,
         )
         .await?;
+      let mut start = start.klines;
       start.retain(|item| item.is_ok());
       if start.len() != 1 {
         return Err(Box::new(DeterminationFailed::<()> {
@@ -265,6 +284,7 @@ impl Exchange for Binance {
         }));
       }
       let start_at = start[0].as_ref().unwrap().open_time;
+      let entire_data_len = (end_at.clone() - start_at).num_minutes();
       let mut sec_end_date = end_at.clone();
       while sec_end_date > start_at {
         let mut sec_start_date = sec_end_date - Duration::minutes(1000);
@@ -277,6 +297,8 @@ impl Exchange for Binance {
           sender
             .send(HistFetcherParam {
               symbol: symbol.symbol.clone(),
+              num_symbols: symbols.len() as i64,
+              entire_data_len,
               start_time: sec_start_date.clone(),
               end_time: sec_end_date,
             })

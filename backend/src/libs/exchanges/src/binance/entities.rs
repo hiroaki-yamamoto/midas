@@ -1,3 +1,5 @@
+use ::std::error::Error;
+
 use ::chrono::{DateTime, Utc};
 use ::rpc::entities::SymbolInfo;
 use ::serde::{Deserialize, Serialize};
@@ -100,6 +102,8 @@ pub(crate) enum Filters {
 #[derive(Debug)]
 pub(crate) struct HistFetcherParam {
   pub symbol: String,
+  pub num_symbols: i64,
+  pub entire_data_len: i64,
   pub start_time: DateTime<Utc>,
   pub end_time: DateTime<Utc>,
 }
@@ -116,4 +120,13 @@ pub struct Kline {
   pub num_trades: i64,
   pub taker_buy_base_volume: f64,
   pub taker_buy_quote_volume: f64,
+}
+
+pub type KlineResults = Vec<Result<Kline, Box<dyn Error + Send>>>;
+
+pub(crate) struct KlineResultsWithSymbol {
+  pub symbol: String,
+  pub num_symbols: i64,
+  pub entire_data_len: i64,
+  pub klines: KlineResults,
 }
