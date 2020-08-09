@@ -1,7 +1,4 @@
-pub mod entities {
-  tonic::include_proto!("entities");
-}
-
-pub mod historical {
-  tonic::include_proto!("historical");
-}
+#[allow(non_camel_case_types)]
+pub mod entities;
+#[allow(non_camel_case_types)]
+pub mod historical;

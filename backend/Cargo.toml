@@ -21,3 +21,7 @@ types = { path = "./src/libs/types" }
 historical = { path = "./src/services/historical" }
 exchanges = { path = "./src/libs/exchanges" }
 rpc = { path = "./src/libs/rpc" }
+
+[build-dependencies]
+tonic-build = "0.3.0"
+glob = "0.3.0"
