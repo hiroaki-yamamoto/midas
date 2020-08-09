@@ -1,14 +1,21 @@
 use ::std::error::Error;
 
-fn main() -> Result<(), impl Error> {
-  return ::tonic_build::configure()
+use ::glob::glob;
+
+fn main() -> Result<(), Box<dyn Error>> {
+  let mut protos = vec![];
+  for proto in glob("../../../../proto/**/*.proto")? {
+    let path = proto?;
+    let path = String::from(path.to_str().unwrap());
+    println!("cargo:rerun-if-changed={}", path);
+    protos.push(path);
+  }
+  return match ::tonic_build::configure()
     .build_server(true)
     .build_client(false)
-    .compile(
-      &[
-        "../../../../proto/entities.proto",
-        "../../../../proto/historical.proto",
-      ],
-      &["../../../../proto"],
-    );
+    .compile(&protos, &[String::from("../../../../proto")])
+  {
+    Err(e) => Err(Box::new(e)),
+    Ok(ok) => Ok(ok),
+  };
 }
