@@ -1,6 +1,7 @@
 use ::std::error::Error;
 
-use ::chrono::{DateTime, Utc};
+use ::chrono::{DateTime as ChronoDateTime, Utc};
+use ::mongodb::bson::DateTime as MongoDateTime;
 use ::rpc::entities::SymbolInfo;
 use ::serde::{Deserialize, Serialize};
 use ::serde_json::Value;
@@ -104,18 +105,20 @@ pub(crate) struct HistFetcherParam {
   pub symbol: String,
   pub num_symbols: i64,
   pub entire_data_len: i64,
-  pub start_time: DateTime<Utc>,
-  pub end_time: DateTime<Utc>,
+  pub start_time: ChronoDateTime<Utc>,
+  pub end_time: ChronoDateTime<Utc>,
 }
 
+#[derive(Debug, Clone, Serialize)]
 pub struct Kline {
-  pub open_time: DateTime<Utc>,
+  pub symbol: String,
+  pub open_time: MongoDateTime,
   pub open_price: f64,
   pub high_price: f64,
   pub low_price: f64,
   pub close_price: f64,
   pub volume: f64,
-  pub close_time: DateTime<Utc>,
+  pub close_time: MongoDateTime,
   pub quote_volume: f64,
   pub num_trades: i64,
   pub taker_buy_base_volume: f64,

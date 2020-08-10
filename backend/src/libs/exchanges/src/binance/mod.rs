@@ -2,24 +2,25 @@ mod entities;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
+use ::futures::join;
 use ::futures::stream::StreamExt;
 use ::mongodb::{
-  bson::{de::Result as BsonDeResult, doc, from_bson, to_bson, Bson, Document},
+  bson::{
+    de::Result as BsonDeResult, doc, from_bson, to_bson, Array, Bson, Document,
+  },
   error::Result as MongoResult,
   Collection,
 };
 use ::serde_json::Value;
 use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
-use ::std::error::Error;
 use ::std::thread;
 use ::tokio::sync::{mpsc, oneshot};
 use ::types::{ret_on_err, ParseURLResult, SendableErrorResult};
 
-use ::rand::{rngs::ThreadRng, thread_rng, Rng};
+use ::rand::{thread_rng, Rng};
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
-use ::std::cmp;
 
 use crate::casting::{cast_datetime, cast_f64, cast_i64};
 use crate::traits::Exchange;
@@ -100,13 +101,15 @@ impl Binance {
           .iter()
           .map(|item| {
             return Ok(Kline {
-              open_time: cast_datetime("open_time", item[0].clone())?,
+              symbol: pair.clone(),
+              open_time: (cast_datetime("open_time", item[0].clone())?).into(),
               open_price: cast_f64("open_price", item[1].clone())?,
               high_price: cast_f64("high_price", item[2].clone())?,
               low_price: cast_f64("low_price", item[3].clone())?,
               close_price: cast_f64("close_price", item[4].clone())?,
               volume: cast_f64("volume", item[5].clone())?,
-              close_time: cast_datetime("close_time", item[6].clone())?,
+              close_time: (cast_datetime("close_time", item[6].clone())?)
+                .into(),
               quote_volume: cast_f64("quote_volume", item[7].clone())?,
               num_trades: cast_i64("num_trades", item[8].clone())?,
               taker_buy_base_volume: cast_f64(
@@ -238,23 +241,46 @@ impl Exchange for Binance {
     for recv_ch in recvers {
       let mut res_send = res_send.clone();
       let mut recv_ch = recv_ch;
+      let me = self.clone();
       thread::spawn(move || {
         ::tokio::spawn(async move {
           loop {
-            let send_fut = match recv_ch.recv().await {
+            match recv_ch.recv().await {
               None => continue,
               Some(kline_reuslt) => match kline_reuslt {
-                Err(err) => res_send.send(Err(err)),
-                Ok(ok) => res_send.send(Ok(HistChartProg {
-                  symbol: ok.symbol,
-                  num_symbols: ok.num_symbols,
-                  cur_num_symbols_proceeded: 1,
-                  num_objects: ok.entire_data_len,
-                  num_obj_proceeded: ok.klines.len() as i64,
-                })),
+                Err(err) => {
+                  let _ = res_send.send(Err(err)).await;
+                }
+                Ok(ok) => {
+                  let raw_klines = ok.klines;
+                  let raw_klines_len = raw_klines.len();
+                  let empty = Array::new();
+                  let succeeded_klines: Vec<Kline> = raw_klines
+                    .into_iter()
+                    .filter_map(|item| item.ok())
+                    .map(|item| item.clone())
+                    .collect();
+                  let klines: Vec<Document> = to_bson(&succeeded_klines)
+                    .unwrap_or(Bson::Array(Array::new()))
+                    .as_array()
+                    .unwrap_or(&empty)
+                    .into_iter()
+                    .filter_map(|item| item.as_document())
+                    .map(|item| item.clone())
+                    .collect();
+                  let db_insert =
+                    me.hist_col.insert_many(klines.into_iter(), None);
+                  let resp_send = res_send.send(Ok(HistChartProg {
+                    symbol: ok.symbol,
+                    num_symbols: ok.num_symbols,
+                    cur_symbol_num: 1,
+                    num_objects: ok.entire_data_len,
+                    cur_object_num: raw_klines_len as i64,
+                  }));
+                  let _ = join!(db_insert, resp_send);
+                }
               },
             };
-            send_fut.await;
           }
         });
       });
@@ -264,12 +290,13 @@ impl Exchange for Binance {
       query = Some(doc! { "symbol": doc! { "$in": symbol } });
     }
     let symbols = self.get_symbols(query).await?;
+    let symbols_len = symbols.len();
     let end_at = Utc::now();
     for symbol in symbols {
       let start = self
         .get_hist(
           symbol.symbol.clone(),
-          symbols.len() as i64,
+          symbols_len as i64,
           1,
           DateTime::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
           None,
@@ -283,7 +310,7 @@ impl Exchange for Binance {
           additional_data: None,
         }));
       }
-      let start_at = start[0].as_ref().unwrap().open_time;
+      let start_at: DateTime<Utc> = start[0].as_ref().unwrap().open_time.into();
       let entire_data_len = (end_at.clone() - start_at).num_minutes();
       let mut sec_end_date = end_at.clone();
       while sec_end_date > start_at {
@@ -297,7 +324,7 @@ impl Exchange for Binance {
           sender
             .send(HistFetcherParam {
               symbol: symbol.symbol.clone(),
-              num_symbols: symbols.len() as i64,
+              num_symbols: symbols_len as i64,
               entire_data_len,
               start_time: sec_start_date.clone(),
               end_time: sec_end_date,
@@ -341,22 +368,18 @@ impl Exchange for Binance {
     if resp_status.is_success() {
       let info: ExchangeInfo = ret_on_err!(resp.json().await);
       ret_on_err!(self.syminfo_col.delete_many(doc! {}, None).await);
-      let serialized = ret_on_err!(to_bson(&info.symbols));
-      let empty: Vec<::mongodb::bson::Bson> = vec![];
-      let mut docs: Vec<Option<&Document>> = serialized
+      let empty = Array::new();
+      let serialized: Vec<Document> = ret_on_err!(to_bson(&info.symbols))
         .as_array()
         .unwrap_or(&empty)
         .into_iter()
-        .map(|item| item.as_document())
+        .filter_map(|item| item.as_document())
+        .map(|item| item.clone())
         .collect();
-      docs.retain(|item| item.is_some());
       ret_on_err!(
         self
           .syminfo_col
-          .insert_many(
-            docs.into_iter().map(|doc| { doc.unwrap().clone() }),
-            None
-          )
+          .insert_many(serialized.into_iter(), None)
           .await
       );
       return Ok(());
