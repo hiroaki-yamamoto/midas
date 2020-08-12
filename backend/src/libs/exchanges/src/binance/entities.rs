@@ -5,6 +5,9 @@ use ::mongodb::bson::DateTime as MongoDateTime;
 use ::rpc::entities::SymbolInfo;
 use ::serde::{Deserialize, Serialize};
 use ::serde_json::Value;
+use ::types::SendableErrorResult;
+
+use crate::casting::{cast_datetime, cast_f64, cast_i64};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -123,6 +126,34 @@ pub struct Kline {
   pub num_trades: i64,
   pub taker_buy_base_volume: f64,
   pub taker_buy_quote_volume: f64,
+}
+
+impl Kline {
+  pub fn new(
+    symbol: String,
+    payload: &Vec<Value>,
+  ) -> SendableErrorResult<Self> {
+    return Ok(Kline {
+      symbol,
+      open_time: (cast_datetime("open_time", payload[0].clone())?).into(),
+      open_price: cast_f64("open_price", payload[1].clone())?,
+      high_price: cast_f64("high_price", payload[2].clone())?,
+      low_price: cast_f64("low_price", payload[3].clone())?,
+      close_price: cast_f64("close_price", payload[4].clone())?,
+      volume: cast_f64("volume", payload[5].clone())?,
+      close_time: (cast_datetime("close_time", payload[6].clone())?).into(),
+      quote_volume: cast_f64("quote_volume", payload[7].clone())?,
+      num_trades: cast_i64("num_trades", payload[8].clone())?,
+      taker_buy_base_volume: cast_f64(
+        "taker_buy_base_volume",
+        payload[9].clone(),
+      )?,
+      taker_buy_quote_volume: cast_f64(
+        "taker_buy_quote_volume",
+        payload[10].clone(),
+      )?,
+    });
+  }
 }
 
 pub type KlineResults = Vec<Result<Kline, Box<dyn Error + Send>>>;

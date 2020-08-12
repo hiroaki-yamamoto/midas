@@ -18,12 +18,10 @@ use ::std::thread;
 use ::tokio::sync::{broadcast, mpsc};
 use ::types::{ret_on_err, ParseURLResult, SendableErrorResult};
 
+use crate::traits::Exchange;
 use ::rand::{thread_rng, Rng};
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
-
-use crate::casting::{cast_datetime, cast_f64, cast_i64};
-use crate::traits::Exchange;
 
 use self::entities::{
   ExchangeInfo, HistFetcherParam, HistQuery, Kline, KlineResults,
@@ -99,29 +97,7 @@ impl Binance {
         let values = ret_on_err!(resp.json::<BinancePayload>().await);
         let ret: KlineResults = values
           .iter()
-          .map(|item| {
-            return Ok(Kline {
-              symbol: pair.clone(),
-              open_time: (cast_datetime("open_time", item[0].clone())?).into(),
-              open_price: cast_f64("open_price", item[1].clone())?,
-              high_price: cast_f64("high_price", item[2].clone())?,
-              low_price: cast_f64("low_price", item[3].clone())?,
-              close_price: cast_f64("close_price", item[4].clone())?,
-              volume: cast_f64("volume", item[5].clone())?,
-              close_time: (cast_datetime("close_time", item[6].clone())?)
-                .into(),
-              quote_volume: cast_f64("quote_volume", item[7].clone())?,
-              num_trades: cast_i64("num_trades", item[8].clone())?,
-              taker_buy_base_volume: cast_f64(
-                "taker_buy_base_volume",
-                item[9].clone(),
-              )?,
-              taker_buy_quote_volume: cast_f64(
-                "taker_buy_quote_volume",
-                item[10].clone(),
-              )?,
-            });
-          })
+          .map(|item| Ok(Kline::new(pair.clone(), item)?))
           .collect();
         return Ok(KlineResultsWithSymbol {
           symbol: pair,
