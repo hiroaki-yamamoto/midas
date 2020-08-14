@@ -194,6 +194,88 @@ impl Binance {
   fn gen_rand_range(&self, min: usize, max: usize) -> usize {
     return thread_rng().gen_range(min, max);
   }
+  fn spawn_recorder(
+    &self,
+    stop_ch: broadcast::Receiver<()>,
+    value_ch: mpsc::Receiver<SendableErrorResult<KlineResultsWithSymbol>>,
+    prog_ch: mpsc::Sender<SendableErrorResult<HistChartProg>>,
+  ) {
+    let mut stop_ch = stop_ch;
+    let mut value_ch = value_ch;
+    let mut prog_ch = prog_ch;
+    let me = self.clone();
+    thread::spawn(move || {
+      ::tokio::spawn(async move {
+        loop {
+          match stop_ch.try_recv() {
+            Ok(_) => break,
+            Err(_) => {}
+          }
+          match value_ch.recv().await {
+            None => continue,
+            Some(kline_reuslt) => match kline_reuslt {
+              Err(err) => {
+                let _ = prog_ch.send(Err(err)).await;
+                continue;
+              }
+              Ok(ok) => {
+                let raw_klines = ok.klines;
+                let raw_klines_len = raw_klines.len();
+                let empty = Array::new();
+                let succeeded_klines: Vec<Kline> = raw_klines
+                  .into_iter()
+                  .filter_map(|item| item.ok())
+                  .map(|item| item.clone())
+                  .collect();
+                let klines: Vec<Document> = to_bson(&succeeded_klines)
+                  .unwrap_or(Bson::Array(Array::new()))
+                  .as_array()
+                  .unwrap_or(&empty)
+                  .into_iter()
+                  .filter_map(|item| item.as_document())
+                  .map(|item| item.clone())
+                  .collect();
+                let db_insert =
+                  me.hist_col.insert_many(klines.into_iter(), None);
+                let resp_send = prog_ch.send(Ok(HistChartProg {
+                  symbol: ok.symbol,
+                  num_symbols: ok.num_symbols,
+                  cur_symbol_num: 1,
+                  num_objects: ok.entire_data_len,
+                  cur_object_num: raw_klines_len as i64,
+                }));
+                let _ = join!(db_insert, resp_send);
+              }
+            },
+          }
+        }
+      });
+    });
+  }
+
+  async fn get_first_trade_date(
+    &self,
+    symbol: String,
+  ) -> SendableErrorResult<DateTime<Utc>> {
+    let start = self
+      .get_hist(
+        symbol.clone(),
+        1,
+        1,
+        DateTime::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
+        None,
+      )
+      .await?;
+    let mut start = start.klines;
+    start.retain(|item| item.is_ok());
+    if start.len() != 1 {
+      return Err(Box::new(DeterminationFailed::<()> {
+        field: String::from("Start Date"),
+        additional_data: None,
+      }));
+    }
+    return Ok(start[0].as_ref().unwrap().open_time.into());
+  }
 }
 
 #[async_trait]
@@ -221,56 +303,7 @@ impl Exchange for Binance {
       recvers.push(res);
     }
     for recv_ch in recvers {
-      let mut res_send = res_send.clone();
-      let mut recv_ch = recv_ch;
-      let me = self.clone();
-      let stop_send_clone = stop_send.clone();
-      thread::spawn(move || {
-        ::tokio::spawn(async move {
-          loop {
-            match stop_send_clone.subscribe().try_recv() {
-              Ok(_) => break,
-              Err(_) => {}
-            }
-            match recv_ch.recv().await {
-              None => continue,
-              Some(kline_reuslt) => match kline_reuslt {
-                Err(err) => {
-                  let _ = res_send.send(Err(err)).await;
-                }
-                Ok(ok) => {
-                  let raw_klines = ok.klines;
-                  let raw_klines_len = raw_klines.len();
-                  let empty = Array::new();
-                  let succeeded_klines: Vec<Kline> = raw_klines
-                    .into_iter()
-                    .filter_map(|item| item.ok())
-                    .map(|item| item.clone())
-                    .collect();
-                  let klines: Vec<Document> = to_bson(&succeeded_klines)
-                    .unwrap_or(Bson::Array(Array::new()))
-                    .as_array()
-                    .unwrap_or(&empty)
-                    .into_iter()
-                    .filter_map(|item| item.as_document())
-                    .map(|item| item.clone())
-                    .collect();
-                  let db_insert =
-                    me.hist_col.insert_many(klines.into_iter(), None);
-                  let resp_send = res_send.send(Ok(HistChartProg {
-                    symbol: ok.symbol,
-                    num_symbols: ok.num_symbols,
-                    cur_symbol_num: 1,
-                    num_objects: ok.entire_data_len,
-                    cur_object_num: raw_klines_len as i64,
-                  }));
-                  let _ = join!(db_insert, resp_send);
-                }
-              },
-            };
-          }
-        });
-      });
+      self.spawn_recorder(stop_send.subscribe(), recv_ch, res_send.clone());
     }
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
@@ -280,24 +313,7 @@ impl Exchange for Binance {
     let symbols_len = symbols.len();
     let end_at = Utc::now();
     for symbol in symbols {
-      let start = self
-        .get_hist(
-          symbol.symbol.clone(),
-          symbols_len as i64,
-          1,
-          DateTime::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
-          None,
-        )
-        .await?;
-      let mut start = start.klines;
-      start.retain(|item| item.is_ok());
-      if start.len() != 1 {
-        return Err(Box::new(DeterminationFailed::<()> {
-          field: String::from("Start Date"),
-          additional_data: None,
-        }));
-      }
-      let start_at: DateTime<Utc> = start[0].as_ref().unwrap().open_time.into();
+      let start_at = self.get_first_trade_date(symbol.symbol.clone()).await?;
       let entire_data_len = (end_at.clone() - start_at).num_minutes();
       let mut sec_end_date = end_at.clone();
       while sec_end_date > start_at {
