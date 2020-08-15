@@ -14,9 +14,9 @@ exchanges = { path = "../../libs/exchanges" }
 rpc = { path = "../../libs/rpc" }
 
 tonic = "0.3.0"
-serde = {version = "1.0.114", features = ["derive"]}
+serde = {version = "1.0.115", features = ["derive"]}
 rmp-serde = "0.14.4"
-nats = "0.7.2"
+nats = "0.7.3"
 mongodb = "1.0.0"
 crossbeam = "0.7.3"
 clap = "3.0.0-beta.1"
@@ -24,4 +24,4 @@ serde_yaml = "0.8.13"
 tokio = {version = "0.2.22", features = ["macros", "rt-threaded"]}
 slog = "2.5.2"
 slog-atomic = "3.0.0"
-async-trait = "0.1.36"
+async-trait = "0.1.37"

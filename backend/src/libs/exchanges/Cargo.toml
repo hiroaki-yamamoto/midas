@@ -10,14 +10,14 @@ edition = "2018"
 reqwest = {version = "0.10.7", features = ["json"]}
 tokio = {version = "0.2.22", features = ["sync", "rt-threaded", "macros"]}
 rpc = { path = "../rpc" }
-async-trait = "0.1.36"
+async-trait = "0.1.37"
 types = { path = "../types" }
-chrono = "0.4.13"
+chrono = "0.4.15"
 url = "2.1.1"
 serde_qs = "0.6.1"
-serde = "1.0.114"
+serde = "1.0.115"
 serde_json = "1.0.57"
-async-std = "1.6.2"
+async-std = "1.6.3"
 slog = "2.5.2"
 mongodb = "1.0.0"
 futures = "0.3.5"
