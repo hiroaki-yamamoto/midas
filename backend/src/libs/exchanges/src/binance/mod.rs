@@ -2,8 +2,8 @@ mod entities;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use ::futures::join;
 use ::futures::stream::StreamExt;
+use ::futures::{future::join_all, join};
 use ::mongodb::{
   bson::{
     de::Result as BsonDeResult, doc, from_bson, to_bson, Array, Bson, Document,
@@ -11,6 +11,7 @@ use ::mongodb::{
   error::Result as MongoResult,
   Collection,
 };
+use ::scopeguard::defer;
 use ::serde_json::Value;
 use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
@@ -48,11 +49,11 @@ pub struct Binance {
 impl Binance {
   pub fn new(
     logger: Logger,
-    histry_collection: Collection,
+    history_collection: Collection,
     symbol_info_collection: Collection,
   ) -> Self {
     return Self {
-      hist_col: histry_collection,
+      hist_col: history_collection,
       syminfo_col: symbol_info_collection,
       logger,
     };
@@ -312,6 +313,7 @@ impl Exchange for Binance {
     let symbols = self.get_symbols(query).await?;
     let symbols_len = symbols.len();
     let end_at = Utc::now();
+    let mut req_fut = vec![];
     for symbol in symbols {
       let start_at = self.get_first_trade_date(symbol.symbol.clone()).await?;
       let entire_data_len = (end_at.clone() - start_at).num_minutes();
@@ -326,20 +328,20 @@ impl Exchange for Binance {
           sec_start_date = start_at;
         }
         let index = self.gen_rand_range(0, senders.len());
-        let sender = &mut senders[index];
-        let _ = ret_on_err!(
-          sender
-            .send(HistFetcherParam {
-              symbol: symbol.symbol.clone(),
-              num_symbols: symbols_len as i64,
-              entire_data_len,
-              start_time: sec_start_date.clone(),
-              end_time: sec_end_date,
-            })
-            .await
-        );
+        let sender = &senders[index];
+        let fut = sender.clone().send(HistFetcherParam {
+          symbol: symbol.symbol.clone(),
+          num_symbols: symbols_len as i64,
+          entire_data_len,
+          start_time: sec_start_date.clone(),
+          end_time: sec_end_date,
+        });
+        req_fut.push(fut);
         sec_end_date = sec_start_date.clone();
       }
+    }
+    defer! {
+      join_all(req_fut);
     }
     return Ok((stop_send, res_recv));
   }
