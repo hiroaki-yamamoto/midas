@@ -2,8 +2,8 @@ mod entities;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
+use ::futures::join;
 use ::futures::stream::StreamExt;
-use ::futures::{future::join_all, join};
 use ::mongodb::{
   bson::{
     de::Result as BsonDeResult, doc, from_bson, to_bson, Array, Bson, Document,
@@ -11,7 +11,6 @@ use ::mongodb::{
   error::Result as MongoResult,
   Collection,
 };
-use ::scopeguard::defer;
 use ::serde_json::Value;
 use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
@@ -294,7 +293,7 @@ impl Exchange for Binance {
       }));
     }
     let (stop_send, mut stop_recv) = broadcast::channel::<()>(1);
-    let (res_send, res_recv) =
+    let (mut res_send, res_recv) =
       mpsc::channel::<SendableErrorResult<HistChartProg>>(CHAN_BUF_SIZE);
     let mut senders = vec![];
     let mut recvers = vec![];
@@ -313,36 +312,43 @@ impl Exchange for Binance {
     let symbols = self.get_symbols(query).await?;
     let symbols_len = symbols.len();
     let end_at = Utc::now();
-    let mut req_fut = vec![];
-    for symbol in symbols {
-      let start_at = self.get_first_trade_date(symbol.symbol.clone()).await?;
-      let entire_data_len = (end_at.clone() - start_at).num_minutes();
-      let mut sec_end_date = end_at.clone();
-      while sec_end_date > start_at {
-        match stop_recv.try_recv() {
-          Ok(_) => break,
-          Err(_) => {}
+    let me = self.clone();
+    thread::spawn(move || {
+      ::tokio::spawn(async move {
+        for symbol in symbols {
+          let start_at =
+            match me.get_first_trade_date(symbol.symbol.clone()).await {
+              Err(e) => {
+                let _ = res_send.send(Err(e)).await;
+                break;
+              }
+              Ok(v) => v,
+            };
+          let entire_data_len = (end_at.clone() - start_at).num_minutes();
+          let mut sec_end_date = end_at.clone();
+          while sec_end_date > start_at {
+            match stop_recv.try_recv() {
+              Ok(_) => break,
+              Err(_) => {}
+            }
+            let mut sec_start_date = sec_end_date - Duration::minutes(1000);
+            if sec_start_date < start_at {
+              sec_start_date = start_at;
+            }
+            let index = me.gen_rand_range(0, senders.len());
+            let sender = &mut senders[index];
+            let _ = sender.send(HistFetcherParam {
+              symbol: symbol.symbol.clone(),
+              num_symbols: symbols_len as i64,
+              entire_data_len,
+              start_time: sec_start_date.clone(),
+              end_time: sec_end_date,
+            });
+            sec_end_date = sec_start_date.clone();
+          }
         }
-        let mut sec_start_date = sec_end_date - Duration::minutes(1000);
-        if sec_start_date < start_at {
-          sec_start_date = start_at;
-        }
-        let index = self.gen_rand_range(0, senders.len());
-        let sender = &senders[index];
-        let fut = sender.clone().send(HistFetcherParam {
-          symbol: symbol.symbol.clone(),
-          num_symbols: symbols_len as i64,
-          entire_data_len,
-          start_time: sec_start_date.clone(),
-          end_time: sec_end_date,
-        });
-        req_fut.push(fut);
-        sec_end_date = sec_start_date.clone();
-      }
-    }
-    defer! {
-      join_all(req_fut);
-    }
+      });
+    });
     return Ok((stop_send, res_recv));
   }
 
