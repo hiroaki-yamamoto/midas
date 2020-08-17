@@ -25,3 +25,4 @@ tokio = {version = "0.2.22", features = ["macros", "rt-threaded"]}
 slog = "2.5.2"
 slog-atomic = "3.0.0"
 async-trait = "0.1.37"
+async-stream = "0.3.0"

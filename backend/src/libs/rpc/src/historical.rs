@@ -15,8 +15,8 @@ pub struct HistChartProg {
 pub struct HistChartFetchReq {
   #[prost(enumeration = "super::entities::Exchanges", tag = "1")]
   pub exchange: i32,
-  #[prost(string, tag = "2")]
-  pub symbol: std::string::String,
+  #[prost(string, repeated, tag = "2")]
+  pub symbols: ::std::vec::Vec<std::string::String>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Status {
