@@ -17,3 +17,13 @@ macro_rules! ret_on_err {
     }
   };
 }
+
+#[macro_export]
+macro_rules! rpc_ret_on_err {
+  ($status_code: expr, $result: expr) => {
+    match $result {
+      Err(err) => return Err(Status::new($status_code, format!("{}", err))),
+      Ok(v) => v,
+    }
+  };
+}
