@@ -1,13 +1,12 @@
 use ::std::collections::HashMap;
 use ::std::pin::Pin;
 
-use ::async_trait::async_trait;
 use ::futures::Stream;
 
 use ::mongodb::Database;
 use ::slog::{o, warn, Logger};
 use ::tokio::sync::{broadcast, mpsc};
-use ::tonic::{Code, Request, Response, Status};
+use ::tonic::{async_trait, Code, Request, Response, Status};
 
 use ::types::{rpc_ret_on_err, Result, SendableErrorResult};
 
@@ -107,7 +106,7 @@ impl HistChart for Server {
             Ok(v) => v
           },
         };
-        yield data;
+        yield data.clone();
       }
       stop.send(());
     };
