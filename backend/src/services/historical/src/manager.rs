@@ -36,7 +36,7 @@ where
     mpsc::Receiver<SendableErrorResult<HistChartProg>>,
   )> {
     let (stop, mut prog) = self.exchange.refresh_historical(symbols).await?;
-    let (ret_send, ret_recv) = mpsc::channel(CHAN_BUF_SIZE);
+    let (mut ret_send, ret_recv) = mpsc::channel(CHAN_BUF_SIZE);
     let mut stop_recv = stop.subscribe();
     thread::spawn(move || {
       ::tokio::spawn(async move {
