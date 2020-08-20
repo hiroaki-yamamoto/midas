@@ -212,7 +212,7 @@ impl Binance {
             Err(_) => {}
           }
           match value_ch.recv().await {
-            None => continue,
+            None => break,
             Some(kline_reuslt) => match kline_reuslt {
               Err(err) => {
                 let _ = prog_ch.send(Err(err)).await;
