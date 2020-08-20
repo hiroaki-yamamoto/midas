@@ -2,7 +2,6 @@ mod entities;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use ::futures::join;
 use ::futures::stream::StreamExt;
 use ::mongodb::{
   bson::{
@@ -215,7 +214,7 @@ impl Binance {
             None => break,
             Some(kline_reuslt) => match kline_reuslt {
               Err(err) => {
-                let _ = prog_ch.send(Err(err)).await;
+                let _ = prog_ch.send(Err(err));
                 continue;
               }
               Ok(ok) => {
@@ -237,14 +236,14 @@ impl Binance {
                   .collect();
                 let db_insert =
                   me.hist_col.insert_many(klines.into_iter(), None);
-                let resp_send = prog_ch.send(Ok(HistChartProg {
+                let _ = prog_ch.send(Ok(HistChartProg {
                   symbol: ok.symbol,
                   num_symbols: ok.num_symbols,
                   cur_symbol_num: 1,
                   num_objects: ok.entire_data_len,
                   cur_object_num: raw_klines_len as i64,
                 }));
-                let _ = join!(db_insert, resp_send);
+                let _ = db_insert.await;
               }
             },
           }
@@ -293,7 +292,7 @@ impl Exchange for Binance {
       }));
     }
     let (stop_send, mut stop_recv) = broadcast::channel::<()>(1);
-    let (mut res_send, res_recv) =
+    let (res_send, res_recv) =
       mpsc::channel::<SendableErrorResult<HistChartProg>>(CHAN_BUF_SIZE);
     let mut senders = vec![];
     let mut recvers = vec![];
@@ -313,13 +312,14 @@ impl Exchange for Binance {
     let symbols_len = symbols.len();
     let end_at = Utc::now();
     let me = self.clone();
+    let mut res_send_in_thread = res_send.clone();
     thread::spawn(move || {
       ::tokio::spawn(async move {
         for symbol in symbols {
           let start_at =
             match me.get_first_trade_date(symbol.symbol.clone()).await {
               Err(e) => {
-                let _ = res_send.send(Err(e)).await;
+                let _ = res_send_in_thread.send(Err(e));
                 break;
               }
               Ok(v) => v,
