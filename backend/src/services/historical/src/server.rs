@@ -63,18 +63,18 @@ where
 #[derive(Debug)]
 pub struct Server {
   logger: Logger,
-  binance: ExchangeManager<Binance>,
+  binance: Binance,
 }
 
 impl Server {
   fn new(log: Logger, db: &Database) -> Self {
     return Self {
       logger: log,
-      binance: ExchangeManager::new(Binance::new(
+      binance: Binance::new(
         log.new(o!("Exchange" => "Binance")),
         db.collection("binance.history"),
         db.collection("binance.symbolinfo"),
-      )),
+      ),
     };
   }
 }
@@ -89,18 +89,19 @@ impl HistChart for Server {
     req: Request<HistChartFetchReq>,
   ) -> Result<Response<Self::syncStream>> {
     let req = req.into_inner();
-    let manager = self.binance;
-    let (stop, progress) = rpc_ret_on_err!(
+    let mut manager = ExchangeManager::new(self.binance.clone());
+    let (stop, mut progress) = rpc_ret_on_err!(
       Code::Internal,
       manager.refresh_historical_klines(req.symbols).await
     );
+    let recv_log = self.logger.new(o!("scope" => "recv"));
     let out = async_stream::try_stream! {
       while !manager.is_completed() {
         let data = match progress.recv().await {
           None => continue,
           Some(d) => match d {
             Err(e) => {
-              warn!(self.logger, "Got an error: {}", e);
+              warn!(recv_log, "Got an error: {}", e);
               continue;
             },
             Ok(v) => v
