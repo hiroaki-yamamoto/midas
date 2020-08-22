@@ -22,7 +22,7 @@ pub struct Server {
   nats: NatsCon,
 }
 
-impl<'nats> Server {
+impl Server {
   fn new(log: Logger, db: &Database, nats: NatsCon) -> Self {
     return Self {
       logger: log,
@@ -46,19 +46,19 @@ impl HistChart for Server {
     req: Request<HistChartFetchReq>,
   ) -> Result<Response<Self::syncStream>> {
     let req = req.into_inner();
-    let mut manager = ExchangeManager::new(
+    let manager = ExchangeManager::new(
       String::from("binance"),
       self.binance.clone(),
-      self.nats.clone(),
+      &self.nats,
       self.logger.new(o!("scope" => "Binance Exchange Manager")),
     );
-    let (stop, mut progress) = rpc_ret_on_err!(
+    let (stop, mut progress, mut completed) = rpc_ret_on_err!(
       Code::Internal,
       manager.refresh_historical_klines(req.symbols).await
     );
     let recv_log = self.logger.new(o!("scope" => "recv"));
     let out = async_stream::try_stream! {
-      while !manager.is_completed() {
+      while let Err(_) = completed.try_recv() {
         let data = match progress.recv().await {
           None => continue,
           Some(d) => match d {

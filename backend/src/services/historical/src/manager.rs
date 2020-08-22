@@ -16,24 +16,24 @@ use ::types::SendableErrorResult;
 use crate::entities::KlineFetchStatus;
 
 #[derive(Debug)]
-pub(crate) struct ExchangeManager<T>
+pub(crate) struct ExchangeManager<'nats, T>
 where
-  T: Exchange + Send + Sync,
+  T: Exchange + Send,
 {
   pub name: String,
   pub exchange: T,
-  nats: NatsConnection,
+  nats: &'nats NatsConnection,
   logger: Logger,
 }
 
-impl<T> ExchangeManager<T>
+impl<'nats, T> ExchangeManager<'nats, T>
 where
-  T: Exchange + Send + Sync,
+  T: Exchange + Send,
 {
   pub fn new(
     name: String,
     exchange: T,
-    nats: NatsConnection,
+    nats: &'nats NatsConnection,
     logger: Logger,
   ) -> Self {
     return Self {
