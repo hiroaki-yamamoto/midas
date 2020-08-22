@@ -10,6 +10,7 @@ edition = "2018"
 reqwest = {version = "0.10.7", features = ["json"]}
 tokio = {version = "0.2.22", features = ["sync", "rt-threaded", "macros"]}
 rpc = { path = "../rpc" }
+config = { path = "../config" }
 async-trait = "0.1.37"
 types = { path = "../types" }
 chrono = "0.4.15"

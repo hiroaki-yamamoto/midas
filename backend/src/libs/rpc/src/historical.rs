@@ -1,4 +1,6 @@
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(
+  Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
+)]
 pub struct HistChartProg {
   #[prost(string, tag = "1")]
   pub symbol: std::string::String,

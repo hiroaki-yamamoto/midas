@@ -8,6 +8,7 @@ edition = "2018"
 
 [workspace]
 members = [
+  "src/libs/config",
   "src/libs/exchanges",
   "src/libs/slog_builder",
   "src/libs/rpc",
@@ -21,6 +22,7 @@ types = { path = "./src/libs/types" }
 historical = { path = "./src/services/historical" }
 exchanges = { path = "./src/libs/exchanges" }
 rpc = { path = "./src/libs/rpc" }
+config = { path = "./src/libs/config" }
 
 [build-dependencies]
 tonic-build = "0.3.0"

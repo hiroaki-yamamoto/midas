@@ -18,6 +18,7 @@ use ::tokio::sync::{broadcast, mpsc};
 use ::types::{ret_on_err, ParseURLResult, SendableErrorResult};
 
 use crate::traits::Exchange;
+use ::config::{CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_CONC_TASKS};
 use ::rand::{thread_rng, Rng};
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
@@ -32,10 +33,6 @@ use super::errors::{
 };
 
 type BinancePayload = Vec<Vec<Value>>;
-
-const DEFAULT_RECONNECT_INTERVAL: i64 = 30;
-const CHAN_BUF_SIZE: usize = 1024;
-const NUM_CONC_TASKS: u8 = 6;
 
 #[derive(Debug, Clone)]
 pub struct Binance {

@@ -12,6 +12,7 @@ slog_builder = { path = "../../libs/slog_builder" }
 types = { path = "../../libs/types" }
 exchanges = { path = "../../libs/exchanges" }
 rpc = { path = "../../libs/rpc" }
+config = { path = "../../libs/config" }
 
 tonic = "0.3.0"
 serde = {version = "1.0.115", features = ["derive"]}

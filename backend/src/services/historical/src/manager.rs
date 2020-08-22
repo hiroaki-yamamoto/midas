@@ -1,51 +1,68 @@
 use ::std::collections::HashMap;
+use ::std::error::Error;
 use ::std::thread;
 
-use ::tokio::sync::{broadcast, mpsc};
+use ::nats::Connection as NatsConnection;
+use ::tokio::sync::{broadcast, mpsc, oneshot};
 
+use ::config::CHAN_BUF_SIZE;
 use ::exchanges::Exchange;
+use ::rmp_serde::Serializer as MsgPackSer;
 use ::rpc::historical::HistChartProg;
+use ::serde::Serialize;
 use ::slog::{error, o, Logger};
 use ::types::SendableErrorResult;
 
-const CHAN_BUF_SIZE: usize = 1024;
+use crate::entities::KlineFetchStatus;
 
 #[derive(Debug)]
 pub(crate) struct ExchangeManager<T>
 where
-  T: Exchange + Send,
+  T: Exchange + Send + Sync,
 {
+  pub name: String,
   pub exchange: T,
-  pub hist_fetch_prog: HashMap<String, HistChartProg>,
+  nats: NatsConnection,
   logger: Logger,
 }
 
 impl<T> ExchangeManager<T>
 where
-  T: Exchange + Send,
+  T: Exchange + Send + Sync,
 {
-  pub fn new(exchange: T, logger: Logger) -> Self {
+  pub fn new(
+    name: String,
+    exchange: T,
+    nats: NatsConnection,
+    logger: Logger,
+  ) -> Self {
     return Self {
       exchange,
-      hist_fetch_prog: HashMap::new(),
+      name,
+      nats,
       logger,
     };
   }
   pub async fn refresh_historical_klines(
-    &'static mut self,
+    &self,
     symbols: Vec<String>,
   ) -> SendableErrorResult<(
     broadcast::Sender<()>,
     mpsc::Receiver<SendableErrorResult<HistChartProg>>,
+    oneshot::Receiver<()>,
   )> {
     let (stop, mut prog) = self.exchange.refresh_historical(symbols).await?;
+    let (send_complete, recv_complete) = oneshot::channel();
     let (mut ret_send, ret_recv) = mpsc::channel(CHAN_BUF_SIZE);
     let mut stop_recv = stop.subscribe();
     let logger_in_thread = self
       .logger
       .new(o!("scope" => "refresh_historical_klines.thread"));
+    let nats_con = self.nats.clone();
+    let name = self.name.clone();
     thread::spawn(move || {
       ::tokio::spawn(async move {
+        let mut hist_fetch_prog = HashMap::new();
         while let Err(_) = stop_recv.try_recv() {
           let prog = match prog.recv().await {
             None => break,
@@ -60,34 +77,49 @@ where
               Ok(k) => k,
             },
           };
-          match self.hist_fetch_prog.get_mut(&prog.symbol) {
+          let result = match hist_fetch_prog.get_mut(&prog.symbol) {
             None => {
-              self
-                .hist_fetch_prog
-                .insert(prog.symbol.clone(), prog.clone());
+              hist_fetch_prog.insert(prog.symbol.clone(), prog.clone());
+              &prog
             }
             Some(v) => {
               v.cur_symbol_num += prog.cur_symbol_num;
               v.cur_object_num += prog.cur_object_num;
+              v
             }
           };
-          ret_send.send(Ok(prog));
+          ret_send.send(Ok(result.clone()));
+          let result = KlineFetchStatus::WIP(result.to_owned());
+          nats_broadcast_status(&logger_in_thread, &nats_con, &name, &result);
         }
+        send_complete.send(());
+        let result = KlineFetchStatus::Completed;
+        nats_broadcast_status(&logger_in_thread, &nats_con, &name, &result);
       });
     });
-    return Ok((stop, ret_recv));
+    return Ok((stop, ret_recv, recv_complete));
   }
+}
 
-  pub fn is_completed(&self) -> bool {
-    match self.hist_fetch_prog.iter().next() {
-      None => return false,
-      Some((_, v)) => {
-        return v.num_symbols == (self.hist_fetch_prog.len() as i64)
-          && self
-            .hist_fetch_prog
-            .values()
-            .all(|item| item.num_objects == item.cur_object_num);
-      }
-    };
-  }
+fn nats_broadcast_status(
+  log: &Logger,
+  con: &NatsConnection,
+  name: &String,
+  status: &KlineFetchStatus,
+) -> Result<(), Box<dyn Error>> {
+  let mut buf: Vec<u8> = Vec::new();
+  let msg = match status.serialize(&mut MsgPackSer::new(&mut buf)) {
+    Ok(v) => v,
+    Err(err) => {
+      error!(
+        log,
+        "Failed to generate a message to broadcast history fetch
+                progress: {}, status: {:?}",
+        err,
+        status,
+      );
+      return Err(Box::new(err));
+    }
+  };
+  return Ok(con.publish(&format!("{}.kline_progress", name), &buf[..])?);
 }

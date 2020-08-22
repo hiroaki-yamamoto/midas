@@ -14,6 +14,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     .out_dir("./src/libs/rpc/src")
     .build_server(true)
     .build_client(false)
+    .type_attribute(
+      "historical.HistChartProg",
+      "#[derive(::serde::Serialize, ::serde::Deserialize)]",
+    )
     .compile(&protos, &[String::from("../proto")])
   {
     Err(e) => Err(Box::new(e)),

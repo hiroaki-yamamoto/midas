@@ -3,6 +3,7 @@ use ::std::pin::Pin;
 use ::futures::Stream;
 
 use ::mongodb::Database;
+use ::nats::Connection as NatsCon;
 use ::slog::{o, warn, Logger};
 use ::tonic::{async_trait, Code, Request, Response, Status};
 
@@ -18,10 +19,11 @@ use super::manager::ExchangeManager;
 pub struct Server {
   logger: Logger,
   binance: Binance,
+  nats: NatsCon,
 }
 
-impl Server {
-  fn new(log: Logger, db: &Database) -> Self {
+impl<'nats> Server {
+  fn new(log: Logger, db: &Database, nats: NatsCon) -> Self {
     return Self {
       logger: log,
       binance: Binance::new(
@@ -29,6 +31,7 @@ impl Server {
         db.collection("binance.history"),
         db.collection("binance.symbolinfo"),
       ),
+      nats,
     };
   }
 }
@@ -43,7 +46,12 @@ impl HistChart for Server {
     req: Request<HistChartFetchReq>,
   ) -> Result<Response<Self::syncStream>> {
     let req = req.into_inner();
-    let mut manager = ExchangeManager::new(self.binance.clone());
+    let mut manager = ExchangeManager::new(
+      String::from("binance"),
+      self.binance.clone(),
+      self.nats.clone(),
+      self.logger.new(o!("scope" => "Binance Exchange Manager")),
+    );
     let (stop, mut progress) = rpc_ret_on_err!(
       Code::Internal,
       manager.refresh_historical_klines(req.symbols).await

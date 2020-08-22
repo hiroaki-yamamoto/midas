@@ -1,4 +1,5 @@
 mod config;
+mod entities;
 mod manager;
 mod server;
 
