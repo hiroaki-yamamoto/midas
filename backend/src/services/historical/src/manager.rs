@@ -2,13 +2,13 @@ use ::std::collections::HashMap;
 use ::std::error::Error;
 use ::std::thread;
 
-use ::nats::Connection as NatsConnection;
+use ::nats::{Connection as NatsConnection, Subscription as NatsSubsc};
 
 use ::exchanges::Exchange;
 use ::rmp_serde::Serializer as MsgPackSer;
 use ::serde::Serialize;
 use ::slog::{error, o, Logger};
-use ::types::SendableErrorResult;
+use ::types::{GenericResult, SendableErrorResult};
 
 use crate::entities::KlineFetchStatus;
 
@@ -18,7 +18,7 @@ where
   T: Exchange + Send,
 {
   pub name: String,
-  pub exchange: T,
+  pub exchange: &'nats T,
   nats: &'nats NatsConnection,
   logger: Logger,
 }
@@ -29,7 +29,7 @@ where
 {
   pub fn new(
     name: String,
-    exchange: T,
+    exchange: &'nats T,
     nats: &'nats NatsConnection,
     logger: Logger,
   ) -> Self {
@@ -87,12 +87,20 @@ where
     });
     return Ok(());
   }
+
+  pub fn subscribe(&self) -> GenericResult<NatsSubsc> {
+    let channel = format!("{}.kline_progress", self.name);
+    return match self.nats.subscribe(&channel) {
+      Err(err) => Err(Box::new(err)),
+      Ok(v) => Ok(v),
+    };
+  }
 }
 
 fn nats_broadcast_status(
   log: &Logger,
   con: &NatsConnection,
-  name: &String,
+  name: &str,
   status: &KlineFetchStatus,
 ) -> Result<(), Box<dyn Error>> {
   let mut buf: Vec<u8> = Vec::new();

@@ -45,7 +45,7 @@ impl HistChart for Server {
     let req = req.into_inner();
     let manager = ExchangeManager::new(
       String::from("binance"),
-      self.binance.clone(),
+      &self.binance,
       &self.nats,
       self.logger.new(o!("scope" => "Binance Exchange Manager")),
     );
@@ -54,5 +54,20 @@ impl HistChart for Server {
       manager.refresh_historical_klines(req.symbols).await
     );
     return Ok(Response::new(()));
+  }
+
+  type subscribeStream =
+    Pin<Box<dyn Stream<Item = Result<HistChartProg>> + Send + Sync + 'static>>;
+  async fn subscribe(
+    &self,
+    request: tonic::Request<()>,
+  ) -> Result<tonic::Response<Self::subscribeStream>> {
+    let manager = ExchangeManager::new(
+      String::from("binance"),
+      &self.binance,
+      &self.nats,
+      self.logger.new(o!("scope" => "Binance Exchange Manager")),
+    );
+    let subscriber = manager.subscribe();
   }
 }
