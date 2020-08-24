@@ -25,5 +25,5 @@ rpc = { path = "./src/libs/rpc" }
 config = { path = "./src/libs/config" }
 
 [build-dependencies]
-tonic-build = "0.3.0"
+tonic-build = "0.3.1"
 glob = "0.3.0"
