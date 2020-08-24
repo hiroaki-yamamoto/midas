@@ -38,13 +38,10 @@ impl Server {
 
 #[async_trait]
 impl HistChart for Server {
-  type syncStream =
-    Pin<Box<dyn Stream<Item = Result<HistChartProg>> + Send + Sync + 'static>>;
-
   async fn sync(
     &self,
     req: Request<HistChartFetchReq>,
-  ) -> Result<Response<Self::syncStream>> {
+  ) -> Result<Response<()>> {
     let req = req.into_inner();
     let manager = ExchangeManager::new(
       String::from("binance"),
@@ -52,27 +49,10 @@ impl HistChart for Server {
       &self.nats,
       self.logger.new(o!("scope" => "Binance Exchange Manager")),
     );
-    let (stop, mut progress, mut completed) = rpc_ret_on_err!(
+    rpc_ret_on_err!(
       Code::Internal,
       manager.refresh_historical_klines(req.symbols).await
     );
-    let recv_log = self.logger.new(o!("scope" => "recv"));
-    let out = async_stream::try_stream! {
-      while let Err(_) = completed.try_recv() {
-        let data = match progress.recv().await {
-          None => continue,
-          Some(d) => match d {
-            Err(e) => {
-              warn!(recv_log, "Got an error: {}", e);
-              continue;
-            },
-            Ok(v) => v
-          },
-        };
-        yield data.clone();
-      }
-      stop.send(());
-    };
-    return Ok(Response::new(Box::pin(out) as Self::syncStream));
+    return Ok(Response::new(()));
   }
 }

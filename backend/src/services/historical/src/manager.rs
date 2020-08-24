@@ -3,12 +3,9 @@ use ::std::error::Error;
 use ::std::thread;
 
 use ::nats::Connection as NatsConnection;
-use ::tokio::sync::{broadcast, mpsc, oneshot};
 
-use ::config::CHAN_BUF_SIZE;
 use ::exchanges::Exchange;
 use ::rmp_serde::Serializer as MsgPackSer;
-use ::rpc::historical::HistChartProg;
 use ::serde::Serialize;
 use ::slog::{error, o, Logger};
 use ::types::SendableErrorResult;
@@ -46,15 +43,8 @@ where
   pub async fn refresh_historical_klines(
     &self,
     symbols: Vec<String>,
-  ) -> SendableErrorResult<(
-    broadcast::Sender<()>,
-    mpsc::Receiver<SendableErrorResult<HistChartProg>>,
-    oneshot::Receiver<()>,
-  )> {
-    let (stop, mut prog) = self.exchange.refresh_historical(symbols).await?;
-    let (send_complete, recv_complete) = oneshot::channel();
-    let (mut ret_send, ret_recv) = mpsc::channel(CHAN_BUF_SIZE);
-    let mut stop_recv = stop.subscribe();
+  ) -> SendableErrorResult<()> {
+    let mut prog = self.exchange.refresh_historical(symbols).await?;
     let logger_in_thread = self
       .logger
       .new(o!("scope" => "refresh_historical_klines.thread"));
@@ -63,7 +53,7 @@ where
     thread::spawn(move || {
       ::tokio::spawn(async move {
         let mut hist_fetch_prog = HashMap::new();
-        while let Err(_) = stop_recv.try_recv() {
+        loop {
           let prog = match prog.recv().await {
             None => break,
             Some(v) => match v {
@@ -88,16 +78,14 @@ where
               v
             }
           };
-          ret_send.send(Ok(result.clone()));
           let result = KlineFetchStatus::WIP(result.to_owned());
           nats_broadcast_status(&logger_in_thread, &nats_con, &name, &result);
         }
-        send_complete.send(());
         let result = KlineFetchStatus::Completed;
         nats_broadcast_status(&logger_in_thread, &nats_con, &name, &result);
       });
     });
-    return Ok((stop, ret_recv, recv_complete));
+    return Ok(());
   }
 }
 

@@ -14,7 +14,7 @@ use ::serde_json::Value;
 use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
 use ::std::thread;
-use ::tokio::sync::{broadcast, mpsc};
+use ::tokio::sync::mpsc;
 use ::types::{ret_on_err, ParseURLResult, SendableErrorResult};
 
 use crate::traits::Exchange;
@@ -135,7 +135,6 @@ impl Binance {
 
   fn spawn_history_fetcher(
     &self,
-    stop: broadcast::Receiver<()>,
   ) -> (
     mpsc::Sender<HistFetcherParam>,
     mpsc::Receiver<SendableErrorResult<KlineResultsWithSymbol>>,
@@ -148,12 +147,7 @@ impl Binance {
     let me = self.clone();
     thread::spawn(move || {
       ::tokio::spawn(async move {
-        let mut mut_stop = stop;
         loop {
-          match mut_stop.try_recv() {
-            Ok(_) => break,
-            Err(_) => {}
-          }
           let param_option = param_rec.recv().await;
           match param_option {
             Some(param) => {
@@ -192,21 +186,15 @@ impl Binance {
   }
   fn spawn_recorder(
     &self,
-    stop_ch: broadcast::Receiver<()>,
     value_ch: mpsc::Receiver<SendableErrorResult<KlineResultsWithSymbol>>,
     prog_ch: mpsc::Sender<SendableErrorResult<HistChartProg>>,
   ) {
-    let mut stop_ch = stop_ch;
     let mut value_ch = value_ch;
     let mut prog_ch = prog_ch;
     let me = self.clone();
     thread::spawn(move || {
       ::tokio::spawn(async move {
         loop {
-          match stop_ch.try_recv() {
-            Ok(_) => break,
-            Err(_) => {}
-          }
           match value_ch.recv().await {
             None => break,
             Some(kline_reuslt) => match kline_reuslt {
@@ -279,27 +267,24 @@ impl Exchange for Binance {
   async fn refresh_historical(
     &self,
     symbol: Vec<String>,
-  ) -> SendableErrorResult<(
-    broadcast::Sender<()>,
-    mpsc::Receiver<SendableErrorResult<HistChartProg>>,
-  )> {
+  ) -> SendableErrorResult<mpsc::Receiver<SendableErrorResult<HistChartProg>>>
+  {
     if symbol.len() < 1 {
       return Err(Box::new(EmptyError {
         field: String::from("symbol"),
       }));
     }
-    let (stop_send, mut stop_recv) = broadcast::channel::<()>(1);
     let (res_send, res_recv) =
       mpsc::channel::<SendableErrorResult<HistChartProg>>(CHAN_BUF_SIZE);
     let mut senders = vec![];
     let mut recvers = vec![];
     for _ in 0..NUM_CONC_TASKS {
-      let (param, res) = self.spawn_history_fetcher(stop_send.subscribe());
+      let (param, res) = self.spawn_history_fetcher();
       senders.push(param);
       recvers.push(res);
     }
     for recv_ch in recvers {
-      self.spawn_recorder(stop_send.subscribe(), recv_ch, res_send.clone());
+      self.spawn_recorder(recv_ch, res_send.clone());
     }
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
@@ -324,10 +309,6 @@ impl Exchange for Binance {
           let entire_data_len = (end_at.clone() - start_at).num_minutes();
           let mut sec_end_date = end_at.clone();
           while sec_end_date > start_at {
-            match stop_recv.try_recv() {
-              Ok(_) => break,
-              Err(_) => {}
-            }
             let mut sec_start_date = sec_end_date - Duration::minutes(1000);
             if sec_start_date < start_at {
               sec_start_date = start_at;
@@ -346,7 +327,7 @@ impl Exchange for Binance {
         }
       });
     });
-    return Ok((stop_send, res_recv));
+    return Ok(res_recv);
   }
 
   async fn get_symbols(

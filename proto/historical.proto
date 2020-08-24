@@ -19,13 +19,8 @@ message HistChartFetchReq {
   repeated string symbols = 2;
 }
 
-message Status {
-  bool wip = 1;
-}
-
 service HistChart {
-  rpc sync(HistChartFetchReq) returns (stream HistChartProg);
-  rpc status(google.protobuf.Empty) returns (Status);
+  rpc sync(HistChartFetchReq) returns (google.protobuf.Empty);
   rpc subscribe(google.protobuf.Empty) returns (stream HistChartProg);
   rpc stop(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

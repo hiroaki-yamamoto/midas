@@ -20,11 +20,6 @@ pub struct HistChartFetchReq {
   #[prost(string, repeated, tag = "2")]
   pub symbols: ::std::vec::Vec<std::string::String>,
 }
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Status {
-  #[prost(bool, tag = "1")]
-  pub wip: bool,
-}
 #[doc = r" Generated server implementations."]
 pub mod hist_chart_server {
   #![allow(unused_variables, dead_code, missing_docs)]
@@ -32,19 +27,10 @@ pub mod hist_chart_server {
   #[doc = "Generated trait containing gRPC methods that should be implemented for use with HistChartServer."]
   #[async_trait]
   pub trait HistChart: Send + Sync + 'static {
-    #[doc = "Server streaming response type for the sync method."]
-    type syncStream: Stream<Item = Result<super::HistChartProg, tonic::Status>>
-      + Send
-      + Sync
-      + 'static;
     async fn sync(
       &self,
       request: tonic::Request<super::HistChartFetchReq>,
-    ) -> Result<tonic::Response<Self::syncStream>, tonic::Status>;
-    async fn status(
-      &self,
-      request: tonic::Request<()>,
-    ) -> Result<tonic::Response<super::Status>, tonic::Status>;
+    ) -> Result<tonic::Response<()>, tonic::Status>;
     #[doc = "Server streaming response type for the subscribe method."]
     type subscribeStream: Stream<Item = Result<super::HistChartProg, tonic::Status>>
       + Send
@@ -101,13 +87,12 @@ pub mod hist_chart_server {
           #[allow(non_camel_case_types)]
           struct syncSvc<T: HistChart>(pub Arc<T>);
           impl<T: HistChart>
-            tonic::server::ServerStreamingService<super::HistChartFetchReq>
+            tonic::server::UnaryService<super::HistChartFetchReq>
             for syncSvc<T>
           {
-            type Response = super::HistChartProg;
-            type ResponseStream = T::syncStream;
+            type Response = ();
             type Future =
-              BoxFuture<tonic::Response<Self::ResponseStream>, tonic::Status>;
+              BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
             fn call(
               &mut self,
               request: tonic::Request<super::HistChartFetchReq>,
@@ -119,38 +104,9 @@ pub mod hist_chart_server {
           }
           let inner = self.inner.clone();
           let fut = async move {
-            let interceptor = inner.1;
-            let inner = inner.0;
-            let method = syncSvc(inner);
-            let codec = tonic::codec::ProstCodec::default();
-            let mut grpc = if let Some(interceptor) = interceptor {
-              tonic::server::Grpc::with_interceptor(codec, interceptor)
-            } else {
-              tonic::server::Grpc::new(codec)
-            };
-            let res = grpc.server_streaming(method, req).await;
-            Ok(res)
-          };
-          Box::pin(fut)
-        }
-        "/historical.HistChart/status" => {
-          #[allow(non_camel_case_types)]
-          struct statusSvc<T: HistChart>(pub Arc<T>);
-          impl<T: HistChart> tonic::server::UnaryService<()> for statusSvc<T> {
-            type Response = super::Status;
-            type Future =
-              BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-            fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
-              let inner = self.0.clone();
-              let fut = async move { (*inner).status(request).await };
-              Box::pin(fut)
-            }
-          }
-          let inner = self.inner.clone();
-          let fut = async move {
             let interceptor = inner.1.clone();
             let inner = inner.0;
-            let method = statusSvc(inner);
+            let method = syncSvc(inner);
             let codec = tonic::codec::ProstCodec::default();
             let mut grpc = if let Some(interceptor) = interceptor {
               tonic::server::Grpc::with_interceptor(codec, interceptor)
