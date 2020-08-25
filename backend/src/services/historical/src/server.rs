@@ -4,7 +4,8 @@ use ::futures::Stream;
 
 use ::mongodb::Database;
 use ::nats::Connection as NatsCon;
-use ::slog::{o, warn, Logger};
+use ::rmp_serde::from_slice as read_msgpack;
+use ::slog::{error, o, Logger};
 use ::tonic::{async_trait, Code, Request, Response, Status};
 
 use ::exchanges::Binance;
@@ -68,6 +69,24 @@ impl HistChart for Server {
       &self.nats,
       self.logger.new(o!("scope" => "Binance Exchange Manager")),
     );
-    let subscriber = manager.subscribe();
+    let subscriber = rpc_ret_on_err!(Code::Internal, manager.subscribe());
+    let stream_logger = self.logger.new(o!("scope" => "Stream Logger"));
+    let out = ::async_stream::try_stream! {
+      while let Some(msg) = subscriber.next() {
+        let prog: HistChartProg = match read_msgpack(&msg.data[..]) {
+          Err(e) => {
+            error!(
+              stream_logger,
+              "Got an error while deserializing HistFetch Prog. {}",
+              e
+            );
+            continue;
+          },
+          Ok(v) => v,
+        };
+        yield prog;
+      }
+    };
+    return Ok(Response::new(Box::pin(out) as Self::subscribeStream));
   }
 }
