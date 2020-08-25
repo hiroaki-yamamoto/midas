@@ -1,12 +1,10 @@
 use ::std::collections::HashMap;
-use ::std::error::Error;
 use ::std::thread;
 
 use ::nats::{Connection as NatsConnection, Subscription as NatsSubsc};
 
 use ::exchanges::Exchange;
-use ::rmp_serde::Serializer as MsgPackSer;
-use ::serde::Serialize;
+use ::rmp_serde::to_vec;
 use ::slog::{error, o, Logger};
 use ::types::{GenericResult, SendableErrorResult};
 
@@ -102,9 +100,8 @@ fn nats_broadcast_status(
   con: &NatsConnection,
   name: &str,
   status: &KlineFetchStatus,
-) -> Result<(), Box<dyn Error>> {
-  let mut buf: Vec<u8> = Vec::new();
-  let msg = match status.serialize(&mut MsgPackSer::new(&mut buf)) {
+) {
+  let msg = match to_vec(status) {
     Ok(v) => v,
     Err(err) => {
       error!(
@@ -114,8 +111,19 @@ fn nats_broadcast_status(
         err,
         status,
       );
-      return Err(Box::new(err));
+      return;
     }
   };
-  return Ok(con.publish(&format!("{}.kline.progress", name), &buf[..])?);
+  match con.publish(&format!("{}.kline.progress", name), &msg[..]) {
+    Err(err) => {
+      error!(
+        log,
+        "Failed to broadcast history fetch progress: {}, status: {:?}",
+        err,
+        status,
+      );
+      return;
+    }
+    Ok(_) => return,
+  }
 }

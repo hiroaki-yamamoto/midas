@@ -6,6 +6,7 @@ use ::std::io::Read;
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
+  pub host: String,
   #[serde(rename = "dbURL")]
   pub db_url: String,
   #[serde(rename = "brokerURL")]

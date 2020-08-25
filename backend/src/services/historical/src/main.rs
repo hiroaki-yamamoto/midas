@@ -4,14 +4,18 @@ mod manager;
 mod server;
 
 use crate::config::Config;
+use crate::server::Server;
 use ::clap::Clap;
+use ::rpc::historical::hist_chart_server::HistChartServer;
 use ::slog::info;
 use ::slog::Logger;
-use ::slog_atomic::AtomicSwitchCtrl;
 use ::slog_builder::{build_debug, build_json};
 use ::std::error::Error;
+use ::std::net::SocketAddr;
+use ::tonic::transport::Server as RPCServer;
 
 use ::mongodb::options::ClientOptions as MongoDBCliOpt;
+use ::mongodb::Client as DBCli;
 
 #[derive(Clap)]
 #[clap(author = "Hiroaki Yamamoto")]
@@ -25,18 +29,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(args.config)?;
   let logger: Logger;
-  let ctrl: AtomicSwitchCtrl;
   if cfg.debug {
-    let (debug_logger, debug_ctrl) = build_debug();
+    let (debug_logger, _) = build_debug();
     logger = debug_logger;
-    ctrl = debug_ctrl;
   } else {
-    let (prd_logger, prd_ctrl) = build_json();
+    let (prd_logger, _) = build_json();
     logger = prd_logger;
-    ctrl = prd_ctrl;
   }
-  info!(logger, "test");
+  info!(logger, "Kline History Fetcher");
   let broker = ::nats::connect(&cfg.broker_url)?;
-  let db = MongoDBCliOpt::parse(&cfg.db_url).await?;
+  let db = DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await?)?
+    .database("midas");
+  let host: SocketAddr = cfg.host.parse()?;
+  let svc = Server::new(&logger, &db, broker);
+  let svc = HistChartServer::new(svc);
+  info!(logger, "Opened history fetcher RPC server on {}", host);
+  RPCServer::builder().add_service(svc).serve(host).await?;
   return Ok(());
 }

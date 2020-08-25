@@ -24,9 +24,10 @@ pub struct Server {
 }
 
 impl Server {
-  fn new(log: Logger, db: &Database, nats: NatsCon) -> Self {
+  pub fn new(log: &Logger, db: &Database, nats: NatsCon) -> Self {
+    let log = log.new(o!("scope" => "History Fetch RPC Server"));
     return Self {
-      logger: log,
+      logger: log.clone(),
       binance: Binance::new(
         log.new(o!("Exchange" => "Binance")),
         db.collection("binance.history"),
@@ -61,7 +62,7 @@ impl HistChart for Server {
     Pin<Box<dyn Stream<Item = Result<HistChartProg>> + Send + Sync + 'static>>;
   async fn subscribe(
     &self,
-    request: tonic::Request<()>,
+    _: tonic::Request<()>,
   ) -> Result<tonic::Response<Self::subscribeStream>> {
     let manager = ExchangeManager::new(
       String::from("binance"),
@@ -98,9 +99,12 @@ impl HistChart for Server {
     let msg =
       rpc_ret_on_err!(Code::Internal, serialize_msgpack(&KlineCtrl::Stop));
     for exc in req.exchanges {
-      self
-        .nats
-        .publish(&format!("{}.kline.ctrl", exc.to_string()), &msg);
+      let _ = rpc_ret_on_err!(
+        Code::Internal,
+        self
+          .nats
+          .publish(&format!("{}.kline.ctrl", exc.to_string()), &msg)
+      );
     }
     return Ok(Response::new(()));
   }
