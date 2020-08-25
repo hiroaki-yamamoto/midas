@@ -20,6 +20,11 @@ pub struct HistChartFetchReq {
   #[prost(string, repeated, tag = "2")]
   pub symbols: ::std::vec::Vec<std::string::String>,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StopRequest {
+  #[prost(enumeration = "super::entities::Exchanges", repeated, tag = "1")]
+  pub exchanges: ::std::vec::Vec<i32>,
+}
 #[doc = r" Generated server implementations."]
 pub mod hist_chart_server {
   #![allow(unused_variables, dead_code, missing_docs)]
@@ -42,7 +47,7 @@ pub mod hist_chart_server {
     ) -> Result<tonic::Response<Self::subscribeStream>, tonic::Status>;
     async fn stop(
       &self,
-      request: tonic::Request<()>,
+      request: tonic::Request<super::StopRequest>,
     ) -> Result<tonic::Response<()>, tonic::Status>;
   }
   #[derive(Debug)]
@@ -153,11 +158,16 @@ pub mod hist_chart_server {
         "/historical.HistChart/stop" => {
           #[allow(non_camel_case_types)]
           struct stopSvc<T: HistChart>(pub Arc<T>);
-          impl<T: HistChart> tonic::server::UnaryService<()> for stopSvc<T> {
+          impl<T: HistChart> tonic::server::UnaryService<super::StopRequest>
+            for stopSvc<T>
+          {
             type Response = ();
             type Future =
               BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-            fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
+            fn call(
+              &mut self,
+              request: tonic::Request<super::StopRequest>,
+            ) -> Self::Future {
               let inner = self.0.clone();
               let fut = async move { (*inner).stop(request).await };
               Box::pin(fut)

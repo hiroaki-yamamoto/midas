@@ -4,13 +4,13 @@ use ::futures::Stream;
 
 use ::mongodb::Database;
 use ::nats::Connection as NatsCon;
-use ::rmp_serde::from_slice as read_msgpack;
+use ::rmp_serde::{from_slice as read_msgpack, to_vec as serialize_msgpack};
 use ::slog::{error, o, Logger};
 use ::tonic::{async_trait, Code, Request, Response, Status};
 
-use ::exchanges::Binance;
+use ::exchanges::{Binance, KlineCtrl};
 use ::rpc::historical::{
-  hist_chart_server::HistChart, HistChartFetchReq, HistChartProg,
+  hist_chart_server::HistChart, HistChartFetchReq, HistChartProg, StopRequest,
 };
 use ::types::{rpc_ret_on_err, Result};
 
@@ -88,5 +88,20 @@ impl HistChart for Server {
       }
     };
     return Ok(Response::new(Box::pin(out) as Self::subscribeStream));
+  }
+
+  async fn stop(
+    &self,
+    request: tonic::Request<StopRequest>,
+  ) -> Result<tonic::Response<()>> {
+    let req = request.into_inner();
+    let msg =
+      rpc_ret_on_err!(Code::Internal, serialize_msgpack(&KlineCtrl::Stop));
+    for exc in req.exchanges {
+      self
+        .nats
+        .publish(&format!("{}.kline.ctrl", exc.to_string()), &msg);
+    }
+    return Ok(Response::new(()));
   }
 }

@@ -19,8 +19,12 @@ message HistChartFetchReq {
   repeated string symbols = 2;
 }
 
+message StopRequest {
+  repeated entities.Exchanges exchanges = 1;
+}
+
 service HistChart {
   rpc sync(HistChartFetchReq) returns (google.protobuf.Empty);
   rpc subscribe(google.protobuf.Empty) returns (stream HistChartProg);
-  rpc stop(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc stop(StopRequest) returns (google.protobuf.Empty);
 }

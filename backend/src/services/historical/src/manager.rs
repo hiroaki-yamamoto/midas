@@ -89,7 +89,7 @@ where
   }
 
   pub fn subscribe(&self) -> GenericResult<NatsSubsc> {
-    let channel = format!("{}.kline_progress", self.name);
+    let channel = format!("{}.kline.progress", self.name);
     return match self.nats.subscribe(&channel) {
       Err(err) => Err(Box::new(err)),
       Ok(v) => Ok(v),
@@ -117,5 +117,5 @@ fn nats_broadcast_status(
       return Err(Box::new(err));
     }
   };
-  return Ok(con.publish(&format!("{}.kline_progress", name), &buf[..])?);
+  return Ok(con.publish(&format!("{}.kline.progress", name), &buf[..])?);
 }
