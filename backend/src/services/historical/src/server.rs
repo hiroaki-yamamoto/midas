@@ -111,7 +111,9 @@ impl HistChart for Server {
         }
       }
     }
-    let _ = join_all(stop_vec).await;
+    for result in join_all(stop_vec).await {
+      rpc_ret_on_err!(Code::Internal, result);
+    }
     return Ok(Response::new(()));
   }
 }
