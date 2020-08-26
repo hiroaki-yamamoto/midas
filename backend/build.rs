@@ -18,6 +18,10 @@ fn main() -> Result<(), Box<dyn Error>> {
       "historical.HistChartProg",
       "#[derive(::serde::Serialize, ::serde::Deserialize)]",
     )
+    .type_attribute(
+      "entities.Exchanges",
+      "#[derive(::num_derive::FromPrimitive)]",
+    )
     .compile(&protos, &[String::from("../proto")])
   {
     Err(e) => Err(Box::new(e)),

@@ -16,4 +16,5 @@ pub trait Exchange {
     filter: impl Into<Option<Document>> + Send + 'async_trait,
   ) -> SendableErrorResult<Vec<SymbolInfo>>;
   async fn refresh_symbols(self) -> SendableErrorResult<()>;
+  async fn stop(self) -> SendableErrorResult<()>;
 }

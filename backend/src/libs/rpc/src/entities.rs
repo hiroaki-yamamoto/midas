@@ -11,6 +11,7 @@ pub struct SymbolInfo {
   Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
 )]
 #[repr(i32)]
+#[derive(::num_derive::FromPrimitive)]
 pub enum Exchanges {
   Binance = 0,
 }

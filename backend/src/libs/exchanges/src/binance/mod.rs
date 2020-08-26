@@ -10,13 +10,17 @@ use ::mongodb::{
   error::Result as MongoResult,
   Collection,
 };
+use ::nats::Connection as NatsCon;
+use ::rmp_serde::to_vec as to_msgpack;
 use ::serde_json::Value;
 use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
 use ::std::thread;
 use ::tokio::sync::mpsc;
+use ::tokio::task::block_in_place;
 use ::types::{ret_on_err, ParseURLResult, SendableErrorResult};
 
+use crate::entities::KlineCtrl;
 use crate::traits::Exchange;
 use ::config::{CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_CONC_TASKS};
 use ::rand::{thread_rng, Rng};
@@ -39,6 +43,7 @@ pub struct Binance {
   hist_col: Collection,
   syminfo_col: Collection,
   logger: Logger,
+  broker: NatsCon,
 }
 
 impl Binance {
@@ -46,11 +51,13 @@ impl Binance {
     logger: Logger,
     history_collection: Collection,
     symbol_info_collection: Collection,
+    broker: NatsCon,
   ) -> Self {
     return Self {
       hist_col: history_collection,
       syminfo_col: symbol_info_collection,
       logger,
+      broker,
     };
   }
   pub fn get_ws_endpoint(&self) -> ParseURLResult {
@@ -383,5 +390,13 @@ impl Exchange for Binance {
         text: ret_on_err!(resp.text().await),
       }));
     }
+  }
+
+  async fn stop(self) -> SendableErrorResult<()> {
+    let msg = ret_on_err!(to_msgpack(&KlineCtrl::Stop));
+    ret_on_err!(block_in_place(move || {
+      self.broker.publish("binance.kline.ctrl", &msg[..])
+    }));
+    return Ok(());
   }
 }

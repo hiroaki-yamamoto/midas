@@ -2,13 +2,16 @@ use ::std::pin::Pin;
 
 use ::futures::Stream;
 
+use ::futures::future::join_all;
 use ::mongodb::Database;
 use ::nats::Connection as NatsCon;
-use ::rmp_serde::{from_slice as read_msgpack, to_vec as serialize_msgpack};
+use ::num_traits::FromPrimitive;
+use ::rmp_serde::from_slice as read_msgpack;
 use ::slog::{error, o, Logger};
 use ::tonic::{async_trait, Code, Request, Response, Status};
 
-use ::exchanges::{Binance, KlineCtrl};
+use ::exchanges::{Binance, Exchange};
+use ::rpc::entities::Exchanges;
 use ::rpc::historical::{
   hist_chart_server::HistChart, HistChartFetchReq, HistChartProg, StopRequest,
 };
@@ -32,6 +35,7 @@ impl Server {
         log.new(o!("Exchange" => "Binance")),
         db.collection("binance.history"),
         db.collection("binance.symbolinfo"),
+        nats.clone(),
       ),
       nats,
     };
@@ -96,16 +100,18 @@ impl HistChart for Server {
     request: tonic::Request<StopRequest>,
   ) -> Result<tonic::Response<()>> {
     let req = request.into_inner();
-    let msg =
-      rpc_ret_on_err!(Code::Internal, serialize_msgpack(&KlineCtrl::Stop));
+    let mut stop_vec = vec![];
     for exc in req.exchanges {
-      let _ = rpc_ret_on_err!(
-        Code::Internal,
-        self
-          .nats
-          .publish(&format!("{}.kline.ctrl", exc.to_string()), &msg)
-      );
+      match FromPrimitive::from_i32(exc) {
+        Some(Exchanges::Binance) => {
+          stop_vec.push(self.binance.clone().stop());
+        }
+        _ => {
+          continue;
+        }
+      }
     }
+    let _ = join_all(stop_vec).await;
     return Ok(Response::new(()));
   }
 }
