@@ -11,10 +11,10 @@ use ::mongodb::{
   Collection,
 };
 use ::nats::Connection as NatsCon;
-use ::rmp_serde::to_vec as to_msgpack;
+use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_json::Value;
 use ::serde_qs::to_string;
-use ::slog::{warn, Logger};
+use ::slog::{o, warn, Logger};
 use ::std::thread;
 use ::tokio::sync::mpsc;
 use ::tokio::task::block_in_place;
@@ -302,6 +302,9 @@ impl Exchange for Binance {
     let end_at = Utc::now();
     let me = self.clone();
     let mut res_send_in_thread = res_send.clone();
+    let ctrl_subsc = ret_on_err!(self.broker.subscribe("binance.kline.ctrl"));
+    let (stop_send, stop_recv) = mpsc::channel::<()>(CHAN_BUF_SIZE);
+    let req_thread_logger = self.logger.new(o!("scope", "Request Thread"));
     thread::spawn(move || {
       ::tokio::spawn(async move {
         for symbol in symbols {
@@ -316,6 +319,27 @@ impl Exchange for Binance {
           let entire_data_len = (end_at.clone() - start_at).num_minutes();
           let mut sec_end_date = end_at.clone();
           while sec_end_date > start_at {
+            match ctrl_subsc.try_next() {
+              Some(msg) => {
+                match from_msgpack::<KlineCtrl>(&msg.data[..]) {
+                  Err(err) => {
+                    warn!(
+                      req_thread_logger,
+                      "Received Control Message, but failed to parse it: {}",
+                      err
+                    );
+                  }
+                  Ok(v) => match (v) {
+                    KlineCtrl::Stop => {
+                      stop_send.send(());
+                      return;
+                    }
+                    _ => {}
+                  },
+                };
+              }
+              None => {}
+            }
             let mut sec_start_date = sec_end_date - Duration::minutes(1000);
             if sec_start_date < start_at {
               sec_start_date = start_at;
