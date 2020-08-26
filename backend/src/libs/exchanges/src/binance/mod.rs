@@ -303,8 +303,8 @@ impl Exchange for Binance {
     let me = self.clone();
     let mut res_send_in_thread = res_send.clone();
     let ctrl_subsc = ret_on_err!(self.broker.subscribe("binance.kline.ctrl"));
-    let (stop_send, stop_recv) = mpsc::channel::<()>(CHAN_BUF_SIZE);
-    let req_thread_logger = self.logger.new(o!("scope", "Request Thread"));
+    let (mut stop_send, stop_recv) = mpsc::channel::<()>(CHAN_BUF_SIZE);
+    let req_thread_logger = self.logger.new(o!("scope" => "Request Thread"));
     thread::spawn(move || {
       ::tokio::spawn(async move {
         for symbol in symbols {
@@ -331,10 +331,9 @@ impl Exchange for Binance {
                   }
                   Ok(v) => match (v) {
                     KlineCtrl::Stop => {
-                      stop_send.send(());
+                      let _ = stop_send.send(()).await;
                       return;
                     }
-                    _ => {}
                   },
                 };
               }
