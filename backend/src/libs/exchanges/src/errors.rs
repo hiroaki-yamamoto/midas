@@ -95,7 +95,7 @@ unsafe impl<T> Send for DeterminationFailed<T> where T: Debug + Clone + Copy {}
 #[derive(Debug, Clone)]
 pub struct NumObjectError {
   pub field: String,
-  pub num_object: u32,
+  pub num_object: usize,
 }
 
 impl Display for NumObjectError {

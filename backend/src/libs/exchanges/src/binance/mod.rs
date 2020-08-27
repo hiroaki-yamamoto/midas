@@ -22,7 +22,10 @@ use ::types::{ret_on_err, ParseURLResult, SendableErrorResult};
 
 use crate::entities::KlineCtrl;
 use crate::traits::Exchange;
-use ::config::{CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_CONC_TASKS};
+use ::config::{
+  CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_CONC_TASKS,
+  NUM_OBJECTS_TO_FETCH,
+};
 use ::rand::{thread_rng, Rng};
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
@@ -160,11 +163,11 @@ impl Binance {
           match param_option {
             Some(param) => {
               let num_obj = (param.end_time - param.start_time).num_minutes();
-              if num_obj > 1000 {
+              if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
                 let _ = prog_send
                   .send(Err(Box::new(NumObjectError {
                     field: String::from("Duration between start and end date"),
-                    num_object: 1000,
+                    num_object: NUM_OBJECTS_TO_FETCH,
                   })))
                   .await;
                 continue;
@@ -213,7 +216,6 @@ impl Binance {
               }
               Ok(ok) => {
                 let raw_klines = ok.klines;
-                let raw_klines_len = raw_klines.len();
                 let empty = Array::new();
                 let succeeded_klines: Vec<Kline> = raw_klines
                   .into_iter()
@@ -235,7 +237,7 @@ impl Binance {
                   num_symbols: ok.num_symbols,
                   cur_symbol_num: 1,
                   num_objects: ok.entire_data_len,
-                  cur_object_num: raw_klines_len as i64,
+                  cur_object_num: 1,
                 }));
                 let _ = db_insert.await;
               }
@@ -318,7 +320,13 @@ impl Exchange for Binance {
               }
               Ok(v) => v,
             };
-          let entire_data_len = (end_at.clone() - start_at).num_minutes();
+          let mut entire_data_len = (end_at.clone() - start_at).num_minutes();
+          let entire_data_len_rem =
+            entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
+          entire_data_len /= 1000;
+          if entire_data_len_rem > 0 {
+            entire_data_len += 1;
+          }
           let mut sec_end_date = end_at.clone();
           while sec_end_date > start_at {
             match ctrl_subsc.try_next() {
@@ -341,7 +349,8 @@ impl Exchange for Binance {
               }
               None => {}
             }
-            let mut sec_start_date = sec_end_date - Duration::minutes(1000);
+            let mut sec_start_date =
+              sec_end_date - Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
             if sec_start_date < start_at {
               sec_start_date = start_at;
             }
