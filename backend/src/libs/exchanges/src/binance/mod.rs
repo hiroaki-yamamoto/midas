@@ -16,7 +16,7 @@ use ::serde_json::Value;
 use ::serde_qs::to_string;
 use ::slog::{o, warn, Logger};
 use ::std::thread;
-use ::tokio::sync::mpsc;
+use ::tokio::sync::{broadcast, mpsc};
 use ::tokio::task::block_in_place;
 use ::types::{ret_on_err, ParseURLResult, SendableErrorResult};
 
@@ -142,6 +142,7 @@ impl Binance {
 
   fn spawn_history_fetcher(
     &self,
+    mut stop: broadcast::Receiver<()>,
   ) -> (
     mpsc::Sender<HistFetcherParam>,
     mpsc::Receiver<SendableErrorResult<KlineResultsWithSymbol>>,
@@ -154,7 +155,7 @@ impl Binance {
     let me = self.clone();
     thread::spawn(move || {
       ::tokio::spawn(async move {
-        loop {
+        while let Err(_) = stop.try_recv() {
           let param_option = param_rec.recv().await;
           match param_option {
             Some(param) => {
@@ -193,6 +194,7 @@ impl Binance {
   }
   fn spawn_recorder(
     &self,
+    mut stop: broadcast::Receiver<()>,
     value_ch: mpsc::Receiver<SendableErrorResult<KlineResultsWithSymbol>>,
     prog_ch: mpsc::Sender<SendableErrorResult<HistChartProg>>,
   ) {
@@ -201,7 +203,7 @@ impl Binance {
     let me = self.clone();
     thread::spawn(move || {
       ::tokio::spawn(async move {
-        loop {
+        while let Err(_) = stop.try_recv() {
           match value_ch.recv().await {
             None => break,
             Some(kline_reuslt) => match kline_reuslt {
@@ -283,15 +285,16 @@ impl Exchange for Binance {
     }
     let (res_send, res_recv) =
       mpsc::channel::<SendableErrorResult<HistChartProg>>(CHAN_BUF_SIZE);
+    let (stop_send, _) = broadcast::channel::<()>(CHAN_BUF_SIZE);
     let mut senders = vec![];
     let mut recvers = vec![];
     for _ in 0..NUM_CONC_TASKS {
-      let (param, res) = self.spawn_history_fetcher();
+      let (param, res) = self.spawn_history_fetcher(stop_send.subscribe());
       senders.push(param);
       recvers.push(res);
     }
     for recv_ch in recvers {
-      self.spawn_recorder(recv_ch, res_send.clone());
+      self.spawn_recorder(stop_send.subscribe(), recv_ch, res_send.clone());
     }
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
@@ -303,7 +306,6 @@ impl Exchange for Binance {
     let me = self.clone();
     let mut res_send_in_thread = res_send.clone();
     let ctrl_subsc = ret_on_err!(self.broker.subscribe("binance.kline.ctrl"));
-    let (mut stop_send, stop_recv) = mpsc::channel::<()>(CHAN_BUF_SIZE);
     let req_thread_logger = self.logger.new(o!("scope" => "Request Thread"));
     thread::spawn(move || {
       ::tokio::spawn(async move {
@@ -331,7 +333,7 @@ impl Exchange for Binance {
                   }
                   Ok(v) => match (v) {
                     KlineCtrl::Stop => {
-                      let _ = stop_send.send(()).await;
+                      let _ = stop_send.send(());
                       return;
                     }
                   },
