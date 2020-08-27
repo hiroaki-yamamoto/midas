@@ -9,6 +9,8 @@ use ::types::SendableErrorResult;
 
 use crate::casting::{cast_datetime, cast_f64, cast_i64};
 
+pub type BinancePayload = Vec<Vec<Value>>;
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct HistQuery {
