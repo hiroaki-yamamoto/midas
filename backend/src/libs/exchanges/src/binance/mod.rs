@@ -1,10 +1,10 @@
-mod constatnts;
+mod constants;
 mod entities;
 mod history_fetcher;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use ::crossbeam::channel::bounded;
+use ::crossbeam::channel::{bounded, Receiver, Sender};
 use ::futures::stream::StreamExt;
 use ::mongodb::{
   bson::{
@@ -15,10 +15,8 @@ use ::mongodb::{
 };
 use ::nats::Connection as NatsCon;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
-use ::serde_json::Value;
-use ::slog::{o, warn, Logger};
+use ::slog::{error, o, warn, Logger};
 use ::std::thread;
-use ::tokio::sync::{broadcast, mpsc};
 use ::tokio::task::block_in_place;
 use ::types::{ret_on_err, SendableErrorResult};
 
@@ -29,13 +27,13 @@ use ::rand::{thread_rng, Rng};
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
 
+use self::constants::REST_ENDPOINT;
 use self::entities::{
   ExchangeInfo, HistFetcherParam, Kline, KlineResultsWithSymbol, Symbol,
 };
 use self::history_fetcher::HistoryFetcher;
-use super::errors::{DeterminationFailed, EmptyError, StatusFailure};
 
-type BinancePayload = Vec<Vec<Value>>;
+use super::errors::{DeterminationFailed, EmptyError, StatusFailure};
 
 #[derive(Debug, Clone)]
 pub struct Binance {
@@ -64,19 +62,23 @@ impl Binance {
   }
   fn spawn_recorder(
     &self,
-    mut stop: broadcast::Receiver<()>,
-    value_ch: mpsc::Receiver<SendableErrorResult<KlineResultsWithSymbol>>,
-    prog_ch: mpsc::Sender<SendableErrorResult<HistChartProg>>,
+    stop: Receiver<()>,
+    value_ch: Receiver<SendableErrorResult<KlineResultsWithSymbol>>,
+    prog_ch: Sender<SendableErrorResult<HistChartProg>>,
   ) {
-    let mut value_ch = value_ch;
-    let mut prog_ch = prog_ch;
     let me = self.clone();
     thread::spawn(move || {
       ::tokio::spawn(async move {
         while let Err(_) = stop.try_recv() {
-          match value_ch.recv().await {
-            None => break,
-            Some(kline_reuslt) => match kline_reuslt {
+          match value_ch.recv() {
+            Err(err) => {
+              error!(
+                me.logger,
+                "Got an error while receiving Kline Value. error: {}", err
+              );
+              continue;
+            }
+            Ok(kline_reuslt) => match kline_reuslt {
               Err(err) => {
                 let _ = prog_ch.send(Err(err));
                 continue;
@@ -119,8 +121,14 @@ impl Binance {
     &self,
     symbol: String,
   ) -> SendableErrorResult<DateTime<Utc>> {
-    let start = self
-      .get_hist(
+    let fetcher = HistoryFetcher::new(
+      None,
+      self
+        .logger
+        .new(o!("scope" => "History Fetcher (Trade Start Date Inspector)")),
+    )?;
+    let start = fetcher
+      .fetch(
         symbol.clone(),
         1,
         1,
@@ -145,15 +153,14 @@ impl Exchange for Binance {
   async fn refresh_historical(
     &self,
     symbol: Vec<String>,
-  ) -> SendableErrorResult<mpsc::Receiver<SendableErrorResult<HistChartProg>>>
-  {
+  ) -> SendableErrorResult<Receiver<SendableErrorResult<HistChartProg>>> {
     if symbol.len() < 1 {
       return Err(Box::new(EmptyError {
         field: String::from("symbol"),
       }));
     }
     let (res_send, res_recv) =
-      mpsc::channel::<SendableErrorResult<HistChartProg>>(CHAN_BUF_SIZE);
+      bounded::<SendableErrorResult<HistChartProg>>(CHAN_BUF_SIZE);
     let (stop_send, stop_recv) = bounded(0);
     let fetchers = (0..NUM_CONC_TASKS)
       .map(|index| {
@@ -173,7 +180,7 @@ impl Exchange for Binance {
       recvers.push(res);
     }
     for recv_ch in recvers {
-      self.spawn_recorder(stop_send.subscribe(), recv_ch, res_send.clone());
+      self.spawn_recorder(stop_recv.clone(), recv_ch, res_send.clone());
     }
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
@@ -183,7 +190,7 @@ impl Exchange for Binance {
     let symbols_len = symbols.len();
     let end_at = Utc::now();
     let me = self.clone();
-    let mut res_send_in_thread = res_send.clone();
+    let res_send_in_thread = res_send.clone();
     let ctrl_subsc = ret_on_err!(self.broker.subscribe("binance.kline.ctrl"));
     let req_thread_logger = self.logger.new(o!("scope" => "Request Thread"));
     thread::spawn(move || {
@@ -272,7 +279,7 @@ impl Exchange for Binance {
   }
 
   async fn refresh_symbols(self) -> SendableErrorResult<()> {
-    let mut url: url::Url = ret_on_err!(self.get_rest_endpoint());
+    let mut url: url::Url = ret_on_err!(REST_ENDPOINT.parse());
     url = ret_on_err!(url.join("/api/v3/exchangeInfo"));
     let resp = ret_on_err!(reqwest::get(url.clone()).await);
     let resp_status = resp.status();

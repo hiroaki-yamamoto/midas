@@ -9,9 +9,9 @@ use ::config::{
   CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH,
 };
 use ::slog::{error, warn, Logger};
-use ::types::{ret_on_err, GenericResult, SendableErrorResult};
+use ::types::{ret_on_err, SendableErrorResult};
 
-use super::constatnts::REST_ENDPOINT;
+use super::constants::REST_ENDPOINT;
 use super::entities::{
   BinancePayload, HistFetcherParam, HistQuery, Kline, KlineResults,
   KlineResultsWithSymbol,
@@ -26,10 +26,15 @@ pub(super) struct HistoryFetcher {
 }
 
 impl HistoryFetcher {
-  pub fn new(num_reconnect: Option<i8>, logger: Logger) -> GenericResult<Self> {
+  pub fn new(
+    num_reconnect: Option<i8>,
+    logger: Logger,
+  ) -> SendableErrorResult<Self> {
     return Ok(Self {
       num_reconnect: num_reconnect.unwrap_or(20),
-      endpoint: (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()?,
+      endpoint: ret_on_err!(
+        (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()
+      ),
       logger,
     });
   }
@@ -108,7 +113,7 @@ impl HistoryFetcher {
 
   pub fn spawn(
     &self,
-    mut stop: Receiver<()>,
+    stop: Receiver<()>,
   ) -> (
     Sender<HistFetcherParam>,
     Receiver<SendableErrorResult<KlineResultsWithSymbol>>,
