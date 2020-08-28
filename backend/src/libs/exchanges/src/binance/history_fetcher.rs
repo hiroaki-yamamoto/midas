@@ -1,18 +1,25 @@
+use ::std::thread;
+
 use ::chrono::{DateTime, Duration, Utc};
+use ::crossbeam::channel::{bounded, Receiver, Sender};
 use ::serde_qs::to_string;
 use ::url::Url;
 
-use ::config::DEFAULT_RECONNECT_INTERVAL;
-use ::slog::{warn, Logger};
+use ::config::{
+  CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH,
+};
+use ::slog::{error, warn, Logger};
 use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use super::constatnts::REST_ENDPOINT;
 use super::entities::{
-  BinancePayload, HistQuery, Kline, KlineResults, KlineResultsWithSymbol,
+  BinancePayload, HistFetcherParam, HistQuery, Kline, KlineResults,
+  KlineResultsWithSymbol,
 };
-use crate::errors::MaximumAttemptExceeded;
+use crate::errors::{MaximumAttemptExceeded, NumObjectError};
 
-struct HistoryFetcher {
+#[derive(Debug, Clone)]
+pub(super) struct HistoryFetcher {
   pub num_reconnect: i8,
   logger: Logger,
   endpoint: Url,
@@ -26,7 +33,7 @@ impl HistoryFetcher {
       logger,
     });
   }
-  async fn fetch(
+  pub async fn fetch(
     &self,
     pair: String,
     num_symbols: i64,
@@ -97,5 +104,55 @@ impl HistoryFetcher {
       c += 1;
     }
     return Err(Box::new(MaximumAttemptExceeded::default()));
+  }
+
+  pub fn spawn(
+    &self,
+    mut stop: Receiver<()>,
+  ) -> (
+    Sender<HistFetcherParam>,
+    Receiver<SendableErrorResult<KlineResultsWithSymbol>>,
+  ) {
+    let (param_send, param_rec) = bounded::<HistFetcherParam>(CHAN_BUF_SIZE);
+    let (prog_send, prog_rec) =
+      bounded::<SendableErrorResult<KlineResultsWithSymbol>>(CHAN_BUF_SIZE);
+    let me = self.clone();
+    thread::spawn(move || {
+      ::tokio::spawn(async move {
+        while let Err(_) = stop.try_recv() {
+          let param_option = param_rec.recv();
+          match param_option {
+            Ok(param) => {
+              let num_obj = (param.end_time - param.start_time).num_minutes();
+              if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
+                let _ = prog_send.send(Err(Box::new(NumObjectError {
+                  field: String::from("Duration between start and end date"),
+                  num_object: NUM_OBJECTS_TO_FETCH,
+                })));
+                continue;
+              }
+              let _ = prog_send.send(
+                me.fetch(
+                  param.symbol.clone(),
+                  param.num_symbols,
+                  param.entire_data_len,
+                  param.start_time,
+                  Some(param.end_time),
+                )
+                .await,
+              );
+            }
+            Err(err) => {
+              error!(
+                me.logger,
+                "Got an error while reading param ch. Err: {}", err
+              );
+              continue;
+            }
+          }
+        }
+      });
+    });
+    return (param_send, prog_rec);
   }
 }
