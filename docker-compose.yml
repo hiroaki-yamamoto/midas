@@ -14,20 +14,15 @@ services:
       - 8081:8081
     depends_on:
       - database
-  testbed-binance:
+  binance-historical:
     build:
       context: .
-      dockerfile: devel.dockerfile
+      dockerfile: ./backend/devel.dockerfile
       args:
-        - SERVICE=testbeds
+        - SERVICE=historical
     volumes:
       - ./backend:/opt/code
-    command:
-      - run
-      - -e binance
-      - -n tcp
-      - -a :5000
-      - -d mongodb://database
+      - /opt/code/target
     depends_on:
       - database
   frontend:
