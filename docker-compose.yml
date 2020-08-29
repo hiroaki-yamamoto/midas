@@ -16,13 +16,10 @@ services:
       - database
   binance-historical:
     build:
-      context: .
-      dockerfile: ./backend/devel.dockerfile
+      context: ./backend
+      dockerfile: devel.dockerfile
       args:
         - SERVICE=historical
-    volumes:
-      - ./backend:/opt/code
-      - /opt/code/target
     depends_on:
       - database
   frontend:

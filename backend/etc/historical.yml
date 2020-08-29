@@ -1,3 +1,4 @@
 dbURL: mongodb://database
 brokerURL: nats://broker:4222
+host: '[::]:50000'
 debug: true
