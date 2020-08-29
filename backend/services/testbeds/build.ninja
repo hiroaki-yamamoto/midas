@@ -1,7 +1,0 @@
-outDir = ./rpc
-inc = .
-
-rule protoc
-  command = protoc --go_out=plugins=grpc:$outDir -I $inc $in
-
-build $outDir/service.pb.go: protoc service.proto

@@ -1,3 +1,0 @@
-package trailing
-
-// Not Implemented Yet...

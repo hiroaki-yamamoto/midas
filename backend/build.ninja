@@ -1,5 +1,0 @@
-rule bin
-  command = go build -o $out $in
-
-build ../bin/watcher: bin ./services/watcher/main.go
-build ../bin/testbed: bin ./services/testbeds/main.go
