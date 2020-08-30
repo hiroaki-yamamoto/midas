@@ -11,7 +11,7 @@ reqwest = {version = "0.10.8", features = ["json"]}
 tokio = {version = "0.2.22", features = ["sync", "rt-threaded", "macros", "blocking"]}
 rpc = { path = "../rpc" }
 config = { path = "../config" }
-async-trait = "0.1.39"
+async-trait = "0.1.40"
 types = { path = "../types" }
 chrono = "0.4.15"
 url = "2.1.1"
