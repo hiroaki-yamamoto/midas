@@ -63,9 +63,9 @@ jobs:
           version: 19.03.12
       - run:
           name: Log into docker.pkg.github.com
-          command: >
-            docker login https://docker.pkg.github.com
-              -u ${GITHUB_USERNAME}
+          command: |
+            docker login https://docker.pkg.github.com \
+              -u ${GITHUB_USERNAME} \
               -p ${GITHUB_TOKEN}
       # - run:
       #     name: Build Docker Image
