@@ -2,7 +2,6 @@ version: 2.1
 
 orbs:
   slack: circleci/slack@3.4.2
-  docker: circleci/docker@1.4.0
 
 executors:
   backend-rust:
@@ -67,24 +66,19 @@ jobs:
             docker login https://docker.pkg.github.com \
               -u ${GITHUB_USERNAME} \
               -p ${GITHUB_TOKEN}
-      # - run:
-      #     name: Build Docker Image
-      #     command: |
-      #       docker build \
-      #         -f prod.dockerfile \
-      #         --build-arg SERVICE=historical \
-      #         -t docker.pkg.github.com/hiroaki-yamamoto/midas/historical .
-      #     working_directory: backend
-      - docker/build:
-          image: docker.pkg.github.com/hiroaki-yamamoto/midas/historical
-          registry: docker.pkg.github.com
-          path: backend
-          docker-context: backend
-          dockerfile: prod.dockerfile
-          extra_build_args: --build-arg SERVICE=historical
-      - docker/push:
-          image: docker.pkg.github.com/hiroaki-yamamoto/midas/historical
-          registry: docker.pkg.github.com
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build \
+              -f prod.dockerfile \
+              --build-arg SERVICE=historical \
+              -t docker.pkg.github.com/hiroaki-yamamoto/midas/historical .
+          working_directory: backend
+      - run:
+          name: Push Docker Image
+          command: |
+            docker push docker.pkg.github.com/hiroaki-yamamoto/midas/historical
+      - run: docker logout https://docker.pkg.github.com
 
 devel-filter: &devel-filter
   filters:
