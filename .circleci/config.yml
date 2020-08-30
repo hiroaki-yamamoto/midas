@@ -44,7 +44,7 @@ jobs:
           key: build-cache-{{ checksum "backend/Cargo.lock" }}
       - store_artifacts:
           path: ./backend/target/x86_64-unknown-linux-musl/release/historical
-          destination: dist
+          destination: historical
       - slack/status
 
 workflows:
