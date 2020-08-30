@@ -7,15 +7,15 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = {version = "0.10.7", features = ["json"]}
+reqwest = {version = "0.10.8", features = ["json"]}
 tokio = {version = "0.2.22", features = ["sync", "rt-threaded", "macros", "blocking"]}
 rpc = { path = "../rpc" }
 config = { path = "../config" }
-async-trait = "0.1.38"
+async-trait = "0.1.39"
 types = { path = "../types" }
 chrono = "0.4.15"
 url = "2.1.1"
-serde_qs = "0.6.1"
+serde_qs = "0.7.0"
 serde = "1.0.115"
 serde_json = "1.0.57"
 async-std = "1.6.3"
