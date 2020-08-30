@@ -4,7 +4,7 @@ executors:
   backend-rust:
     docker:
       - image: rust
-    working_directory: .
+    # working_directory: .
 
 jobs:
   build-backend:
