@@ -26,6 +26,7 @@ jobs:
       - run:
           name: Build the package
           command: |
+            CPATH=${HOME}/openssl-musl/musl/include
             OPENSSL_DIR=${HOME}/openssl-musl/musl
             cargo build --target x86_64-unknown-linux-musl --release
           working_directory: ./backend
