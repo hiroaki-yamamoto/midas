@@ -94,4 +94,6 @@ workflows:
       - deploy-historical-image:
           requires:
             - build-backend
-          <<: *devel-filter
+          filters:
+            branches:
+              only: master
