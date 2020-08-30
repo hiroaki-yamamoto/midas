@@ -10,8 +10,8 @@ executors:
       - image: rust
     # working_directory: .
   docker-build:
-    docker:
-      - image: docker
+    machine:
+      image: ubuntu-1604:202007-01
 
 jobs:
   build-backend:
