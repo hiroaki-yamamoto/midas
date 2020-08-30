@@ -13,7 +13,6 @@ jobs:
   build-backend:
     executor: backend-rust
     steps:
-      - slack/status
       - checkout
       - restore_cache:
           key: build-cache
@@ -42,6 +41,7 @@ jobs:
             - ./target
             - ~/.rustup
           key: build-cache
+      - slack/status
 
 workflows:
   version: 2
