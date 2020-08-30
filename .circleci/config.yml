@@ -14,6 +14,9 @@ jobs:
       - restore_cache:
           key: build-cache
       - run:
+          name: "Install musl tools"
+          command: "apt-get install musl-tools"
+      - run:
           name: "Install musl package"
           command: "rustup target add x86_64-unknown-linux-musl"
       - run:
