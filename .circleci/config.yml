@@ -20,9 +20,17 @@ jobs:
           name: "Install musl package"
           command: "rustup target add x86_64-unknown-linux-musl"
       - run:
+          name: "Extract openssl-musl package"
+          command: "tar xJvf openssl-musl.txz"
+          working_directory: ./.circleci
+      - run:
           name: Build the package
           command: cargo build --target x86_64-unknown-linux-musl --release
           working_directory: ./backend
+          environment:
+            PKG_CONFIG_ALLOW_CROSS: '1'
+            OPENSSL_STATIC: 'true'
+            OPENSSL_DIR: ../.circleci/openssl-musl
       - save_cache:
           paths:
             - ./target
