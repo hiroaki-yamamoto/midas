@@ -43,7 +43,7 @@ jobs:
             - ~/.rustup
           key: build-cache-{{ checksum "backend/Cargo.lock" }}
       - store_artifacts:
-          path: ./target/x86_64-unknown-linux-musl/release/historical
+          path: ./backend/target/x86_64-unknown-linux-musl/release/historical
           destination: dist
       - slack/status
 
