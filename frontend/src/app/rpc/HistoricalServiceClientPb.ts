@@ -10,10 +10,12 @@
 import * as grpcWeb from 'grpc-web';
 
 import * as entities_pb from './entities_pb';
+import * as google_protobuf_empty_pb from 'google-protobuf/google/protobuf/empty_pb';
 
 import {
   HistChartFetchReq,
-  HistChartProg} from './historical_pb';
+  HistChartProg,
+  StopRequest} from './historical_pb';
 
 export class HistChartClient {
   client_: grpcWeb.AbstractClientBase;
@@ -35,22 +37,66 @@ export class HistChartClient {
   }
 
   methodInfosync = new grpcWeb.AbstractClientBase.MethodInfo(
-    HistChartProg,
+    google_protobuf_empty_pb.Empty,
     (request: HistChartFetchReq) => {
+      return request.serializeBinary();
+    },
+    google_protobuf_empty_pb.Empty.deserializeBinary
+  );
+
+  sync(
+    request: HistChartFetchReq,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: google_protobuf_empty_pb.Empty) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/historical.HistChart/sync',
+      request,
+      metadata || {},
+      this.methodInfosync,
+      callback);
+  }
+
+  methodInfosubscribe = new grpcWeb.AbstractClientBase.MethodInfo(
+    HistChartProg,
+    (request: google_protobuf_empty_pb.Empty) => {
       return request.serializeBinary();
     },
     HistChartProg.deserializeBinary
   );
 
-  sync(
-    request: HistChartFetchReq,
+  subscribe(
+    request: google_protobuf_empty_pb.Empty,
     metadata?: grpcWeb.Metadata) {
     return this.client_.serverStreaming(
       this.hostname_ +
-        '/historical.HistChart/sync',
+        '/historical.HistChart/subscribe',
       request,
       metadata || {},
-      this.methodInfosync);
+      this.methodInfosubscribe);
+  }
+
+  methodInfostop = new grpcWeb.AbstractClientBase.MethodInfo(
+    google_protobuf_empty_pb.Empty,
+    (request: StopRequest) => {
+      return request.serializeBinary();
+    },
+    google_protobuf_empty_pb.Empty.deserializeBinary
+  );
+
+  stop(
+    request: StopRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: google_protobuf_empty_pb.Empty) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/historical.HistChart/stop',
+      request,
+      metadata || {},
+      this.methodInfostop,
+      callback);
   }
 
 }

@@ -1,6 +1,3 @@
-backFlags = --go_out=plugins=grpc
-backOut = ../backend/rpc
-
 frontTypeScriptFlags = --grpc-web_out=import_style=typescript,mode=grpcwebtext
 frontJSFlags = --js_out=import_style=commonjs
 frontOut = ../frontend/src/app/rpc
@@ -8,18 +5,6 @@ inc = .
 
 rule protoc
   command = protoc $flags:$outdir -I $inc $in
-
-build $backOut/bot_manager.pb.go: protoc bot_manager.proto
-  flags = $backFlags
-  outdir = $backOut
-
-build $backOut/historical.pb.go: protoc historical.proto
-  flags = $backFlags
-  outdir = $backOut
-
-build $backOut/entities.pb.go: protoc entities.proto
-  flags = $backFlags
-  outdir = $backOut
 
 build $frontOut/bot_manager_pb.d.ts $frontOut/Bot_managerServiceClientPb.ts: protoc bot_manager.proto
   flags = $frontTypeScriptFlags
