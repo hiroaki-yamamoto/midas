@@ -11,3 +11,4 @@ export \
 cargo build --target x86_64-unknown-linux-musl
 
 docker-compose build
+docker-compose restart
