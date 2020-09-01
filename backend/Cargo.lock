@@ -2641,6 +2641,12 @@ dependencies = [
 [[package]]
 name = "symbol"
 version = "0.1.0"
+dependencies = [
+ "exchanges",
+ "rpc",
+ "tonic",
+ "types",
+]
 
 [[package]]
 name = "syn"
