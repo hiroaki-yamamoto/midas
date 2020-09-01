@@ -1,43 +1,72 @@
 use ::std::thread;
 
-use ::chrono::{DateTime, Duration, Utc};
+use ::async_trait::async_trait;
+use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::crossbeam::channel::{bounded, Receiver, Sender};
+use ::nats::Connection;
+use ::rand::{thread_rng, Rng};
+use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
+use ::tokio::task::block_in_place;
 use ::url::Url;
 
 use ::config::{
-  CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH,
+  CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_CONC_TASKS,
+  NUM_OBJECTS_TO_FETCH,
 };
-use ::slog::{error, warn, Logger};
-use ::types::{ret_on_err, SendableErrorResult};
+use ::mongodb::bson::{doc, Document};
+use ::mongodb::Collection;
+use ::rpc::historical::HistChartProg;
+use ::slog::{error, o, warn, Logger};
+use ::types::{ret_on_err, GenericResult, SendableErrorResult};
+
+use crate::entities::KlineCtrl;
+use crate::errors::{
+  DeterminationFailed, EmptyError, MaximumAttemptExceeded, NumObjectError,
+};
+use crate::traits::{
+  HistoryFetcher as HistoryFetcherTrait, SymbolFetcher as SymbolFetcherTrait,
+};
 
 use super::constants::REST_ENDPOINT;
 use super::entities::{
   BinancePayload, HistFetcherParam, HistQuery, Kline, KlineResults,
   KlineResultsWithSymbol,
 };
-use crate::errors::{MaximumAttemptExceeded, NumObjectError};
+use super::history_recorder::HistoryRecorder;
+use super::symbol_fetcher::SymbolFetcher;
 
 #[derive(Debug, Clone)]
-pub(super) struct HistoryFetcher {
+pub struct HistoryFetcher {
   pub num_reconnect: i8,
+  recorder: HistoryRecorder,
   logger: Logger,
   endpoint: Url,
+  broker: Connection,
+  symbol_fetcher: SymbolFetcher,
 }
 
 impl HistoryFetcher {
   pub fn new(
     num_reconnect: Option<i8>,
+    col: Collection,
     logger: Logger,
-  ) -> SendableErrorResult<Self> {
+    broker: Connection,
+    symbol_fetcher: SymbolFetcher,
+  ) -> GenericResult<Self> {
     return Ok(Self {
       num_reconnect: num_reconnect.unwrap_or(20),
-      endpoint: ret_on_err!(
-        (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()
+      endpoint: (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()?,
+      recorder: HistoryRecorder::new(
+        col,
+        logger.new(o!("scope" => "History Recorder")),
       ),
       logger,
+      broker,
+      symbol_fetcher,
     });
   }
+
   pub async fn fetch(
     &self,
     pair: String,
@@ -159,5 +188,137 @@ impl HistoryFetcher {
       });
     });
     return (param_send, prog_rec);
+  }
+
+  async fn get_first_trade_date(
+    &self,
+    symbol: String,
+  ) -> SendableErrorResult<DateTime<Utc>> {
+    let start = self
+      .fetch(
+        symbol.clone(),
+        1,
+        1,
+        DateTime::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
+        None,
+      )
+      .await?;
+    let mut start = start.klines;
+    start.retain(|item| item.is_ok());
+    if start.len() != 1 {
+      return Err(Box::new(DeterminationFailed::<()> {
+        field: String::from("Start Date"),
+        additional_data: None,
+      }));
+    }
+    return Ok(start[0].as_ref().unwrap().open_time.into());
+  }
+}
+
+#[async_trait]
+impl HistoryFetcherTrait for HistoryFetcher {
+  async fn refresh(
+    &self,
+    symbol: Vec<String>,
+  ) -> SendableErrorResult<Receiver<SendableErrorResult<HistChartProg>>> {
+    if symbol.len() < 1 {
+      return Err(Box::new(EmptyError {
+        field: String::from("symbol"),
+      }));
+    }
+    let (res_send, res_recv) =
+      bounded::<SendableErrorResult<HistChartProg>>(CHAN_BUF_SIZE);
+    let (stop_send, stop_recv) = bounded(0);
+    let mut senders = vec![];
+    let mut recvers = vec![];
+    for _ in 0..NUM_CONC_TASKS {
+      let (param, res) = self.spawn(stop_recv.clone());
+      senders.push(param);
+      recvers.push(res);
+    }
+    for recv_ch in recvers {
+      self
+        .recorder
+        .spawn(stop_recv.clone(), recv_ch, res_send.clone());
+    }
+    let mut query: Option<Document> = None;
+    if symbol[0] != "all" {
+      query = Some(doc! { "symbol": doc! { "$in": symbol } });
+    }
+    let symbols = self.symbol_fetcher.get(query).await?;
+    let symbols_len = symbols.len();
+    let end_at = Utc::now();
+    let me = self.clone();
+    let res_send_in_thread = res_send.clone();
+    let ctrl_subsc = ret_on_err!(self.broker.subscribe("binance.kline.ctrl"));
+    let req_thread_logger = self.logger.new(o!("scope" => "Request Thread"));
+    thread::spawn(move || {
+      ::tokio::spawn(async move {
+        for symbol in symbols {
+          let start_at =
+            match me.get_first_trade_date(symbol.symbol.clone()).await {
+              Err(e) => {
+                let _ = res_send_in_thread.send(Err(e));
+                break;
+              }
+              Ok(v) => v,
+            };
+          let mut entire_data_len = (end_at.clone() - start_at).num_minutes();
+          let entire_data_len_rem =
+            entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
+          entire_data_len /= 1000;
+          if entire_data_len_rem > 0 {
+            entire_data_len += 1;
+          }
+          let mut sec_end_date = end_at.clone();
+          while sec_end_date > start_at {
+            match ctrl_subsc.try_next() {
+              Some(msg) => {
+                match from_msgpack::<KlineCtrl>(&msg.data[..]) {
+                  Err(err) => {
+                    warn!(
+                      req_thread_logger,
+                      "Received Control Message, but failed to parse it: {}",
+                      err
+                    );
+                  }
+                  Ok(v) => match (v) {
+                    KlineCtrl::Stop => {
+                      let _ = stop_send.send(());
+                      return;
+                    }
+                  },
+                };
+              }
+              None => {}
+            }
+            let mut sec_start_date =
+              sec_end_date - Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
+            if sec_start_date < start_at {
+              sec_start_date = start_at;
+            }
+            let index: usize = thread_rng().gen_range(0, senders.len());
+            let sender = &mut senders[index];
+            let _ = sender.send(HistFetcherParam {
+              symbol: symbol.symbol.clone(),
+              num_symbols: symbols_len as i64,
+              entire_data_len,
+              start_time: sec_start_date.clone(),
+              end_time: sec_end_date,
+            });
+            sec_end_date = sec_start_date.clone();
+          }
+        }
+      });
+    });
+    return Ok(res_recv);
+  }
+
+  async fn stop(self) -> SendableErrorResult<()> {
+    let msg = ret_on_err!(to_msgpack(&KlineCtrl::Stop));
+    ret_on_err!(block_in_place(move || {
+      self.broker.publish("binance.kline.ctrl", &msg[..])
+    }));
+    return Ok(());
   }
 }

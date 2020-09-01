@@ -13,7 +13,7 @@ pub type BinancePayload = Vec<Vec<Value>>;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct HistQuery {
+pub struct HistQuery {
   pub symbol: String,
   pub interval: String,
   pub start_time: String,
@@ -23,7 +23,7 @@ pub(crate) struct HistQuery {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct ExchangeInfo {
+pub struct ExchangeInfo {
   pub timezone: String,
   pub exchange_filters: Vec<Value>,
   pub symbols: Vec<Symbol>,
@@ -31,7 +31,7 @@ pub(crate) struct ExchangeInfo {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct Symbol {
+pub struct Symbol {
   pub symbol: String,
   pub status: String,
   pub base_asset: String,
@@ -51,7 +51,7 @@ pub(crate) struct Symbol {
 }
 
 impl Symbol {
-  pub(crate) fn as_symbol_info(self) -> SymbolInfo {
+  pub fn as_symbol_info(self) -> SymbolInfo {
     return SymbolInfo {
       symbol: self.symbol,
       base: self.base_asset,
@@ -62,7 +62,7 @@ impl Symbol {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(tag = "filterType")]
-pub(crate) enum Filters {
+pub enum Filters {
   #[serde(rename = "PRICE_FILTER", rename_all = "camelCase")]
   PriceFilter {
     min_price: String,
@@ -106,7 +106,7 @@ pub(crate) enum Filters {
 }
 
 #[derive(Debug)]
-pub(crate) struct HistFetcherParam {
+pub struct HistFetcherParam {
   pub symbol: String,
   pub num_symbols: i64,
   pub entire_data_len: i64,
@@ -160,7 +160,7 @@ impl Kline {
 
 pub type KlineResults = Vec<Result<Kline, Box<dyn Error + Send>>>;
 
-pub(crate) struct KlineResultsWithSymbol {
+pub struct KlineResultsWithSymbol {
   pub symbol: String,
   pub num_symbols: i64,
   pub entire_data_len: i64,

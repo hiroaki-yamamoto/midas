@@ -41,7 +41,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
   let db = DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await?)?
     .database("midas");
   let host: SocketAddr = cfg.host.parse()?;
-  let svc = Service::new(&logger, &db, broker);
+  let svc = Service::new(&logger, &db, broker)?;
   let svc = HistChartServer::new(svc);
   info!(logger, "Opened history fetcher RPC server on {}", host);
   RPCServer::builder().add_service(svc).serve(host).await?;

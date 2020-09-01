@@ -3,7 +3,7 @@ use ::std::thread;
 
 use ::nats::{Connection as NatsConnection, Subscription as NatsSubsc};
 
-use ::exchanges::Exchange;
+use ::exchanges::HistoryFetcher;
 use ::rmp_serde::to_vec;
 use ::slog::{error, o, Logger};
 use ::types::{GenericResult, SendableErrorResult};
@@ -13,26 +13,26 @@ use crate::entities::KlineFetchStatus;
 #[derive(Debug)]
 pub(crate) struct ExchangeManager<'nats, T>
 where
-  T: Exchange + Send,
+  T: HistoryFetcher + Send,
 {
   pub name: String,
-  pub exchange: &'nats T,
+  pub HistoryFetcher: &'nats T,
   nats: &'nats NatsConnection,
   logger: Logger,
 }
 
 impl<'nats, T> ExchangeManager<'nats, T>
 where
-  T: Exchange + Send,
+  T: HistoryFetcher + Send,
 {
   pub fn new(
     name: String,
-    exchange: &'nats T,
+    HistoryFetcher: &'nats T,
     nats: &'nats NatsConnection,
     logger: Logger,
   ) -> Self {
     return Self {
-      exchange,
+      HistoryFetcher,
       name,
       nats,
       logger,
@@ -42,7 +42,7 @@ where
     &self,
     symbols: Vec<String>,
   ) -> SendableErrorResult<()> {
-    let prog = self.exchange.refresh_historical(symbols).await?;
+    let prog = self.HistoryFetcher.refresh(symbols).await?;
     let logger_in_thread = self
       .logger
       .new(o!("scope" => "refresh_historical_klines.thread"));

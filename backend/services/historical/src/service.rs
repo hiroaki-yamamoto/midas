@@ -10,35 +10,43 @@ use ::rmp_serde::from_slice as read_msgpack;
 use ::slog::{error, o, Logger};
 use ::tonic::{async_trait, Code, Request, Response, Status};
 
-use ::exchanges::{Binance, Exchange};
+use ::exchanges::{binance, HistoryFetcher};
 use ::rpc::entities::Exchanges;
 use ::rpc::historical::{
   hist_chart_server::HistChart, HistChartFetchReq, HistChartProg, StopRequest,
 };
-use ::types::{rpc_ret_on_err, Result};
+use ::types::{rpc_ret_on_err, GenericResult, Result};
 
 use super::manager::ExchangeManager;
 
 #[derive(Debug)]
 pub struct Service {
   logger: Logger,
-  binance: Binance,
+  binance: binance::HistoryFetcher,
   nats: NatsCon,
 }
 
 impl Service {
-  pub fn new(log: &Logger, db: &Database, nats: NatsCon) -> Self {
+  pub fn new(
+    log: &Logger,
+    db: &Database,
+    nats: NatsCon,
+  ) -> GenericResult<Self> {
     let log = log.new(o!("scope" => "History Fetch RPC Service"));
-    return Self {
+    return Ok(Self {
       logger: log.clone(),
-      binance: Binance::new(
-        log.new(o!("Exchange" => "Binance")),
+      binance: binance::HistoryFetcher::new(
+        None,
         db.collection("binance.history"),
-        db.collection("binance.symbolinfo"),
+        log.new(o!("exchange" => "Binance", "scope" => "HistoryFetch")),
         nats.clone(),
-      ),
+        binance::SymbolFetcher::new(
+          log.new(o!("exchange" => "Binance", "scope" => "SymbolFetch")),
+          db.collection("binance.symbolinfo"),
+        ),
+      )?,
       nats,
-    };
+    });
   }
 }
 
