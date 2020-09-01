@@ -20,15 +20,15 @@ use ::types::{rpc_ret_on_err, Result};
 use super::manager::ExchangeManager;
 
 #[derive(Debug)]
-pub struct Server {
+pub struct Service {
   logger: Logger,
   binance: Binance,
   nats: NatsCon,
 }
 
-impl Server {
+impl Service {
   pub fn new(log: &Logger, db: &Database, nats: NatsCon) -> Self {
-    let log = log.new(o!("scope" => "History Fetch RPC Server"));
+    let log = log.new(o!("scope" => "History Fetch RPC Service"));
     return Self {
       logger: log.clone(),
       binance: Binance::new(
@@ -43,7 +43,7 @@ impl Server {
 }
 
 #[async_trait]
-impl HistChart for Server {
+impl HistChart for Service {
   async fn sync(
     &self,
     req: Request<HistChartFetchReq>,

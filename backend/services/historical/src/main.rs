@@ -1,10 +1,10 @@
 mod config;
 mod entities;
 mod manager;
-mod server;
+mod service;
 
 use crate::config::Config;
-use crate::server::Server;
+use crate::service::Service;
 use ::clap::Clap;
 use ::rpc::historical::hist_chart_server::HistChartServer;
 use ::slog::info;
@@ -41,7 +41,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
   let db = DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await?)?
     .database("midas");
   let host: SocketAddr = cfg.host.parse()?;
-  let svc = Server::new(&logger, &db, broker);
+  let svc = Service::new(&logger, &db, broker);
   let svc = HistChartServer::new(svc);
   info!(logger, "Opened history fetcher RPC server on {}", host);
   RPCServer::builder().add_service(svc).serve(host).await?;

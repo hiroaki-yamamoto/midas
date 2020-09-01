@@ -6,4 +6,5 @@ members = [
   "libs/rpc",
   "libs/types",
   "services/historical",
+  "services/symbol"
 ]
