@@ -16,7 +16,7 @@ where
   T: HistoryFetcher + Send,
 {
   pub name: String,
-  pub HistoryFetcher: &'nats T,
+  pub history_fetcher: &'nats T,
   nats: &'nats NatsConnection,
   logger: Logger,
 }
@@ -27,12 +27,12 @@ where
 {
   pub fn new(
     name: String,
-    HistoryFetcher: &'nats T,
+    history_fetcher: &'nats T,
     nats: &'nats NatsConnection,
     logger: Logger,
   ) -> Self {
     return Self {
-      HistoryFetcher,
+      history_fetcher,
       name,
       nats,
       logger,
@@ -42,7 +42,7 @@ where
     &self,
     symbols: Vec<String>,
   ) -> SendableErrorResult<()> {
-    let prog = self.HistoryFetcher.refresh(symbols).await?;
+    let prog = self.history_fetcher.refresh(symbols).await?;
     let logger_in_thread = self
       .logger
       .new(o!("scope" => "refresh_historical_klines.thread"));

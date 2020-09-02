@@ -3,6 +3,13 @@ pub struct RefreshRequest {
   #[prost(string, tag = "1")]
   pub exchange: std::string::String,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Query {
+  #[prost(string, tag = "1")]
+  pub exchange: std::string::String,
+  #[prost(string, repeated, tag = "2")]
+  pub symbol: ::std::vec::Vec<std::string::String>,
+}
 #[doc = r" Generated server implementations."]
 pub mod symbol_server {
   #![allow(unused_variables, dead_code, missing_docs)]
