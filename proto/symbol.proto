@@ -4,9 +4,10 @@ package symbol;
 option go_package = "rpc";
 
 import "google/protobuf/empty.proto";
+import "entities.proto";
 
 message RefreshRequest {
-  string exchange = 1;
+  entities.Exchanges exchange = 1;
 }
 
 service Symbol {

@@ -12,3 +12,6 @@ exchanges = { path = "../../libs/exchanges" }
 types = { path = "../../libs/types" }
 
 tonic = "0.3.1"
+mongodb = "1.1.0"
+slog = "2.5.2"
+num-traits = "0.2.12"

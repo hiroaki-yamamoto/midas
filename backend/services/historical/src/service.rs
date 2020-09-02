@@ -42,7 +42,7 @@ impl Service {
         nats.clone(),
         binance::SymbolFetcher::new(
           log.new(o!("exchange" => "Binance", "scope" => "SymbolFetch")),
-          db.collection("binance.symbolinfo"),
+          db.collection("binance.symbol"),
         ),
       )?,
       nats,

@@ -23,13 +23,9 @@ impl SymbolFetcher {
   pub fn new(log: Logger, col: Collection) -> Self {
     return Self { col, log };
   }
-}
-
-#[async_trait]
-impl SymbolFetcherTrait for SymbolFetcher {
-  async fn get(
+  pub async fn get(
     &self,
-    filter: impl Into<Option<Document>> + Send + 'async_trait,
+    filter: impl Into<Option<Document>> + Send,
   ) -> SendableErrorResult<Vec<SymbolInfo>> {
     let cur = ret_on_err!(self.col.find(filter, None).await);
     let mut docs: Vec<MongoResult<Document>> = cur.collect().await;
@@ -49,8 +45,11 @@ impl SymbolFetcherTrait for SymbolFetcher {
       .collect();
     return Ok(ret);
   }
+}
 
-  async fn refresh(self) -> SendableErrorResult<()> {
+#[async_trait]
+impl SymbolFetcherTrait for SymbolFetcher {
+  async fn refresh(&self) -> SendableErrorResult<()> {
     let mut url: url::Url = ret_on_err!(REST_ENDPOINT.parse());
     url = ret_on_err!(url.join("/api/v3/exchangeInfo"));
     let resp = ret_on_err!(reqwest::get(url.clone()).await);

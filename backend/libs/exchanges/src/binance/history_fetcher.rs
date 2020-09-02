@@ -24,9 +24,7 @@ use crate::entities::KlineCtrl;
 use crate::errors::{
   DeterminationFailed, EmptyError, MaximumAttemptExceeded, NumObjectError,
 };
-use crate::traits::{
-  HistoryFetcher as HistoryFetcherTrait, SymbolFetcher as SymbolFetcherTrait,
-};
+use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 
 use super::constants::REST_ENDPOINT;
 use super::entities::{

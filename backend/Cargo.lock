@@ -2643,7 +2643,10 @@ name = "symbol"
 version = "0.1.0"
 dependencies = [
  "exchanges",
+ "mongodb",
+ "num-traits",
  "rpc",
+ "slog",
  "tonic",
  "types",
 ]

@@ -1,14 +1,7 @@
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RefreshRequest {
-  #[prost(string, tag = "1")]
-  pub exchange: std::string::String,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Query {
-  #[prost(string, tag = "1")]
-  pub exchange: std::string::String,
-  #[prost(string, repeated, tag = "2")]
-  pub symbol: ::std::vec::Vec<std::string::String>,
+  #[prost(enumeration = "super::entities::Exchanges", tag = "1")]
+  pub exchange: i32,
 }
 #[doc = r" Generated server implementations."]
 pub mod symbol_server {
