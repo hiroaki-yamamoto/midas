@@ -22,6 +22,15 @@ services:
         - SERVICE=historical
     depends_on:
       - database
+      - broker
+  symbol:
+    build:
+      context: ./backend
+      dockerfile: devel.dockerfile
+      args:
+        - SERVICE=symbol
+    depends_on:
+      - database
   frontend:
     build:
       context: frontend

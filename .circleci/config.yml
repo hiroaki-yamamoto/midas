@@ -53,8 +53,11 @@ jobs:
           paths:
             - ./backend/target/x86_64-unknown-linux-musl/release/historical
             - ./backend/prod.dockerfile
-  deploy-historical-image:
+  deploy-image:
     executor: docker-build
+    parameters:
+      name: service_name
+      type: string
     steps:
       - attach_workspace:
           at: .
@@ -71,14 +74,15 @@ jobs:
           command: |
             docker build \
               -f prod.dockerfile \
-              --build-arg SERVICE=historical \
-              -t docker.pkg.github.com/hiroaki-yamamoto/midas/historical .
+              --build-arg SERVICE=<<parameters.service_name>> \
+              -t docker.pkg.github.com/hiroaki-yamamoto/midas/<<parameters.service_name>> .
           working_directory: backend
       - run:
           name: Push Docker Image
           command: |
-            docker push docker.pkg.github.com/hiroaki-yamamoto/midas/historical
+            docker push docker.pkg.github.com/hiroaki-yamamoto/midas/<<parameters.service_name>>
       - run: docker logout https://docker.pkg.github.com
+      - slack/status
 
 devel-filter: &devel-filter
   filters:
@@ -91,9 +95,19 @@ workflows:
     jobs:
       - build-backend:
           <<: *devel-filter
-      - deploy-historical-image:
+      - deploy-image:
+          name: "Historical Kline Service Deployment"
           requires:
             - build-backend
           filters:
             branches:
               only: master
+          service_name: historical
+      - deploy-image:
+          name: "Symbol Service Deployment"
+          requires:
+            - build-backend
+          filters:
+            branches:
+              only: master
+          service_name: symbol

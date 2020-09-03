@@ -9,7 +9,7 @@ use ::rpc::entities::Exchanges;
 use ::rpc::symbol::{symbol_server::Symbol, RefreshRequest};
 use ::types::{rpc_ret_on_err, Result};
 
-struct Service {
+pub struct Service {
   binance: binance::SymbolFetcher,
 }
 

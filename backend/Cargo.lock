@@ -1102,6 +1102,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "hyper-rustls"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "37743cc83e8ee85eacfce90f2f4102030d9ff0a95244098d781e9bee4a90abb6"
+dependencies = [
+ "bytes",
+ "futures-util",
+ "hyper",
+ "log",
+ "rustls 0.18.0",
+ "tokio",
+ "tokio-rustls 0.14.1",
+ "webpki",
+]
+
+[[package]]
 name = "hyper-tls"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1352,9 +1368,9 @@ dependencies = [
 
 [[package]]
 name = "mongodb"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8cb54f85e6380c8cfe130a55a85cfc2584e8317f4bb8bda464d367fd4f24957"
+checksum = "a726495d7418c4579ecc9465b53ddade8187c0299e5db0e7250672b67d196913"
 dependencies = [
  "async-trait",
  "base64 0.11.0",
@@ -1386,7 +1402,7 @@ dependencies = [
  "take_mut",
  "time",
  "tokio",
- "tokio-rustls",
+ "tokio-rustls 0.13.1",
  "trust-dns-proto",
  "trust-dns-resolver",
  "typed-builder",
@@ -2099,6 +2115,7 @@ dependencies = [
  "http",
  "http-body",
  "hyper",
+ "hyper-rustls",
  "hyper-tls",
  "ipnet",
  "js-sys",
@@ -2109,15 +2126,18 @@ dependencies = [
  "native-tls",
  "percent-encoding",
  "pin-project-lite",
+ "rustls 0.18.0",
  "serde",
  "serde_json",
  "serde_urlencoded",
  "tokio",
+ "tokio-rustls 0.14.1",
  "tokio-tls",
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+ "webpki-roots 0.19.0",
  "winreg 0.7.0",
 ]
 
@@ -2647,11 +2667,15 @@ dependencies = [
 name = "symbol"
 version = "0.1.0"
 dependencies = [
+ "clap",
+ "config",
  "exchanges",
  "mongodb",
  "num-traits",
  "rpc",
  "slog",
+ "slog_builder",
+ "tokio",
  "tonic",
  "types",
 ]
@@ -2832,6 +2856,18 @@ checksum = "15cb62a0d2770787abc96e99c1cd98fcf17f94959f3af63ca85bdfb203f051b4"
 dependencies = [
  "futures-core",
  "rustls 0.17.0",
+ "tokio",
+ "webpki",
+]
+
+[[package]]
+name = "tokio-rustls"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e12831b255bcfa39dc0436b01e19fea231a37db570686c06ee72c423479f889a"
+dependencies = [
+ "futures-core",
+ "rustls 0.18.0",
  "tokio",
  "webpki",
 ]
