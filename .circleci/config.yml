@@ -56,8 +56,8 @@ jobs:
   deploy-image:
     executor: docker-build
     parameters:
-      name: service_name
-      type: string
+      service_name:
+        type: string
     steps:
       - attach_workspace:
           at: .
