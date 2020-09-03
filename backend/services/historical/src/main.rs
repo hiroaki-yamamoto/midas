@@ -13,18 +13,10 @@ use ::slog::Logger;
 use ::slog_builder::{build_debug, build_json};
 use ::tonic::transport::Server as RPCServer;
 
-use ::config::Config;
-use ::config::DEFAULT_CONFIG_PATH;
+use ::config::{CmdArgs, Config};
 use ::rpc::historical::hist_chart_server::HistChartServer;
 
 use crate::service::Service;
-
-#[derive(Clap)]
-#[clap(author = "Hiroaki Yamamoto")]
-struct CmdArgs {
-  #[clap(short, long, default_value = DEFAULT_CONFIG_PATH)]
-  config: String,
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
