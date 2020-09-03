@@ -1,33 +1,35 @@
-mod config;
 mod entities;
 mod manager;
 mod service;
 
-use crate::config::Config;
-use crate::service::Service;
+use ::std::error::Error;
+use ::std::net::SocketAddr;
+
 use ::clap::Clap;
-use ::rpc::historical::hist_chart_server::HistChartServer;
+use ::mongodb::options::ClientOptions as MongoDBCliOpt;
+use ::mongodb::Client as DBCli;
 use ::slog::info;
 use ::slog::Logger;
 use ::slog_builder::{build_debug, build_json};
-use ::std::error::Error;
-use ::std::net::SocketAddr;
 use ::tonic::transport::Server as RPCServer;
 
-use ::mongodb::options::ClientOptions as MongoDBCliOpt;
-use ::mongodb::Client as DBCli;
+use ::config::Config;
+use ::config::DEFAULT_CONFIG_PATH;
+use ::rpc::historical::hist_chart_server::HistChartServer;
+
+use crate::service::Service;
 
 #[derive(Clap)]
 #[clap(author = "Hiroaki Yamamoto")]
 struct CmdArgs {
-  #[clap(short, long, default_value = "/etc/midas/historical.yml")]
+  #[clap(short, long, default_value = DEFAULT_CONFIG_PATH)]
   config: String,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
   let args: CmdArgs = CmdArgs::parse();
-  let cfg = Config::from_fpath(args.config)?;
+  let cfg = Config::from_fpath(Some(args.config))?;
   let logger: Logger;
   if cfg.debug {
     let (debug_logger, _) = build_debug();

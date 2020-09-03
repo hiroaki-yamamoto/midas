@@ -24,7 +24,11 @@ impl Config {
     return Ok(cfg);
   }
 
-  pub fn from_fpath(path: String) -> Result<Self, Box<dyn Error>> {
+  pub fn from_fpath(path: Option<String>) -> Result<Self, Box<dyn Error>> {
+    let path = match path {
+      None => String::from(super::constants::DEFAULT_CONFIG_PATH),
+      Some(p) => p,
+    };
     let f = File::open(path)?;
     return Self::from_stream(f);
   }
