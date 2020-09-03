@@ -64,7 +64,7 @@ jobs:
             ./backend/target/x86_64-unknown-linux-musl/release
       - store_artifacts:
           path: ./backend/target/x86_64-unknown-linux-musl/release/dist.txz
-          destination: dist
+          destination: dist.txz
       - slack/status
       - persist_to_workspace:
           root: .
@@ -81,6 +81,11 @@ jobs:
           at: .
       - setup_remote_docker:
           version: 19.03.12
+      - run:
+          name: "Install bash"
+          command: |
+            apk update
+            apk add --no-cache bash
       - run:
           name: Log into docker.pkg.github.com
           command: |
