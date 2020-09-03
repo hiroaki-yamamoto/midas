@@ -85,7 +85,7 @@ jobs:
           name: "Install bash"
           command: |
             apk update
-            apk add --no-cache bash
+            apk add --no-cache bash curl
       - run:
           name: Log into docker.pkg.github.com
           command: |
