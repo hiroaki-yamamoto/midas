@@ -44,14 +44,32 @@ jobs:
             - ./backend/target
             - ~/.rustup
           key: build-cache-{{ checksum "backend/Cargo.lock" }}
+      - run:
+          name: "Collect executable"
+          command: |
+            mkdir bin
+            mv \
+              $(file \
+                --mime-type *|\
+                grep application/x-pie-executable|\
+                sed -e 's@:[[:space:]]*application\/x-pie-executable@@g'\
+              ) \
+            bin
+          working_directory:
+            ./backend/target/x86_64-unknown-linux-musl/release
+      - run:
+          name: "Creating Distribution Archive"
+          command: tar cJvf dist.txz bin
+          working_directory:
+            ./backend/target/x86_64-unknown-linux-musl/release
       - store_artifacts:
-          path: ./backend/target/x86_64-unknown-linux-musl/release/historical
-          destination: historical
+          path: ./backend/target/x86_64-unknown-linux-musl/release/dist.txz
+          destination: dist
       - slack/status
       - persist_to_workspace:
           root: .
           paths:
-            - ./backend/target/x86_64-unknown-linux-musl/release/historical
+            - ./backend/target/x86_64-unknown-linux-musl/release/bin
             - ./backend/prod.dockerfile
   deploy-image:
     executor: docker-build
