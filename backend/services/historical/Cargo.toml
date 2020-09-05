@@ -22,9 +22,10 @@ mongodb = "1.1.1"
 crossbeam = "0.7.3"
 clap = "3.0.0-beta.1"
 serde_yaml = "0.8.13"
-tokio = {version = "0.2.22", features = ["macros", "rt-threaded"]}
+tokio = {version = "0.2.22", features = ["macros", "rt-threaded", "signal"]}
 slog = "2.5.2"
 slog-atomic = "3.0.0"
 async-stream = "0.3.0"
 futures = "0.3.5"
 num-traits = "0.2.12"
+libc = "0.2.76"

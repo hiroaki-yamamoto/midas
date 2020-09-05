@@ -9,5 +9,3 @@ export \
   OPENSSL_DIR=${HOME}/opt/openssl-musl/musl
 
 cargo build --target x86_64-unknown-linux-musl
-
-docker-compose build

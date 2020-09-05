@@ -20,6 +20,12 @@ services:
       dockerfile: devel.dockerfile
       args:
         - SERVICE=historical
+    command:
+      - -c
+      - /etc/midas/midas.yml
+    volumes:
+      - ./backend/etc:/etc/midas
+      - ./backend:/opt/code
     depends_on:
       - database
       - broker
@@ -29,6 +35,12 @@ services:
       dockerfile: devel.dockerfile
       args:
         - SERVICE=symbol
+    command:
+      - -c
+      - /etc/midas/midas.yml
+    volumes:
+      - ./backend/etc:/etc/midas
+      - ./backend:/opt/code
     depends_on:
       - database
   frontend:

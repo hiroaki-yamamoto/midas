@@ -1,7 +1,8 @@
-FROM scratch
+FROM alpine
 
 ARG SERVICE
 ENV SERVICE=${SERVICE}
 
-COPY ./target/x86_64-unknown-linux-musl/debug/${SERVICE} /app
-ENTRYPOINT [ "/app" ]
+WORKDIR /opt/code
+
+ENTRYPOINT [ "./run.sh" ]
