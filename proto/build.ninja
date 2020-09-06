@@ -22,6 +22,15 @@ build $frontOut/historical_pb.js: protoc historical.proto
   flags = $frontJSFlags
   outdir = $frontOut
 
+
+build $frontOut/symbol_pb.d.ts $frontOut/symbolServiceClientPb.ts: protoc symbol.proto
+  flags = $frontTypeScriptFlags
+  outdir = $frontOut
+
+build $frontOut/symbol_pb.js: protoc symbol.proto
+  flags = $frontJSFlags
+  outdir = $frontOut
+
 build $frontOut/entities_pb.d.ts: protoc entities.proto
   flags = $frontTypeScriptFlags
   outdir = $frontOut
