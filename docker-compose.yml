@@ -6,6 +6,10 @@ services:
       - "./db:/data/db"
   broker:
     image: nats
+  proxy:
+    image: envoyproxy/envoy-alpine
+    volumes:
+      - ./etc:/etc/midas
   express:
     image: mongo-express
     environment:
@@ -24,7 +28,7 @@ services:
       - -c
       - /etc/midas/midas.yml
     volumes:
-      - ./backend/etc:/etc/midas
+      - ./etc:/etc/midas
       - ./backend:/opt/code
     depends_on:
       - database
@@ -39,7 +43,7 @@ services:
       - -c
       - /etc/midas/midas.yml
     volumes:
-      - ./backend/etc:/etc/midas
+      - ./etc:/etc/midas
       - ./backend:/opt/code
     depends_on:
       - database
