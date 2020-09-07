@@ -19,6 +19,7 @@ services:
       - 50000:50000
       - 50001:50001
       - 50002:50002
+      - 50003:50003
   express:
     image: mongo-express
     environment:
@@ -62,5 +63,5 @@ services:
     volumes:
       - ./frontend:/opt/code
       - /opt/code/node_modules
-    ports:
-      - 8000:4200
+    # ports:
+    #   - 8000:4200

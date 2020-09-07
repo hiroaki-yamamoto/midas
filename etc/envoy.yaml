@@ -47,6 +47,29 @@ static_resources:
               http_filters:
                 - name: envoy.grpc_web
                 - name: envoy.router
+    - name: frontend
+      address:
+        socket_address: { address: '::', port_value: 50003, ipv4_compat: true }
+      filter_chains:
+        - filters:
+            name: envoy.filters.network.http_connection_manager
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+              upgrade_configs:
+                - upgrade_type: websocket
+              stat_prefix: ingress_http
+              route_config:
+                name: frontend_route
+                virtual_hosts:
+                  - name: frontend_service
+                    domains: ["*"]
+                    routes:
+                    - match:
+                        prefix: "/"
+                      route:
+                        cluster: frontend
+              http_filters:
+                - name: envoy.filters.http.router
   clusters:
     - name: historical_service
       connect_timeout: 0.25s
@@ -66,3 +89,11 @@ static_resources:
         - socket_address:
             address: symbol
             port_value: 50000
+    - name: frontend
+      connect_timeout: 0.25s
+      type: logical_dns
+      lb_policy: round_robin
+      hosts:
+        - socket_address:
+            address: frontend
+            port_value: 4200
