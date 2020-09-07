@@ -7,9 +7,20 @@ services:
   broker:
     image: nats
   proxy:
-    image: envoyproxy/envoy-alpine
+    image: envoyproxy/envoy-alpine:v1.15-latest
+    command:
+      - --allow-unknown-static-fields
+      - --ignore-unknown-dynamic-fields
+      - -c
+      - /etc/midas/envoy.yaml
     volumes:
       - ./etc:/etc/midas
+    environment:
+      ENVOY_UID: 0
+    ports:
+      - 50000:50000
+      - 50001:50001
+      - 50002:50002
   express:
     image: mongo-express
     environment:
