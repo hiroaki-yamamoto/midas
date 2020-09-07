@@ -9,8 +9,6 @@ services:
   proxy:
     image: envoyproxy/envoy-alpine:v1.15-latest
     command:
-      - --allow-unknown-static-fields
-      - --ignore-unknown-dynamic-fields
       - -c
       - /etc/midas/envoy.yaml
     volumes:
