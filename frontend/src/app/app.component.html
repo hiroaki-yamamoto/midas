@@ -1,9 +1,8 @@
 <mat-toolbar color="primary">
   Midas
   <ul>
-    <li><button mat-button i18n>Dashboard</button></li>
-    <li><button mat-button i18n>Bots</button></li>
-    <li><button mat-button i18n>Testbed</button></li>
+    <li><a mat-button i18n routerLink="/">Dashboard</a></li>
+    <li><a mat-button i18n (click)="openSyncSetting()">Sync</a></li>
   </ul>
 </mat-toolbar>
 <router-outlet></router-outlet>
