@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faSyncAlt, faHistory } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-sync',
@@ -8,6 +8,8 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 })
 export class SyncComponent implements OnInit {
   closeIcon = faTimes;
+  syncIcon = faSyncAlt;
+  histIcon = faHistory;
 
   constructor() { }
 

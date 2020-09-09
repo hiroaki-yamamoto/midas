@@ -12,7 +12,8 @@ export class AppComponent {
   constructor(private dialog: MatDialog) {}
   openSyncSetting() {
     this.dialog.open(SyncComponent, {
-      minWidth: '75vw',
+      minWidth: '30vw',
+      maxWidth: '60vw',
     });
   }
 }

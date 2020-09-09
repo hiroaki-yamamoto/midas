@@ -6,5 +6,38 @@
   </button>
 </div>
 <div mat-dialog-content>
-  Hello
+  <div fxLayout="row" fxLayoutAlign="center center">
+    <section>
+      <header><h3 i18n>Synchronize Symbol Data</h3></header>
+      <p i18n>
+        Before syncrhonizing Historical Data, Symbol data synchronization is
+        required. To synchronize the symbol data, click / tap "Sync Symbol Data"
+        button.
+      </p>
+    </section>
+    <div>
+      <button mat-raised-button color="primary" i18n>
+        <fa-icon [icon]="syncIcon" size="2x"></fa-icon><br>
+        Sync Symbol Data
+      </button>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div fxLayout="row" fxLayoutAlign="center center">
+    <section>
+      <header>
+        <h3 i18n>Synchronize Histoical Kline Data</h3>
+      </header>
+      <p i18n>
+        To synchronize historical kline data that is used for back testing,
+        click / tap "Sync Hist Kline Data" button.
+      </p>
+    </section>
+    <div>
+      <button mat-raised-button color="primary" i18n>
+        <fa-icon [icon]="histIcon" size="2x"></fa-icon><br>
+        Sync Hist Kline Data
+      </button>
+    </div>
+  </div>
 </div>
