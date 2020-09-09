@@ -1,14 +1,16 @@
-import * as jspb from "google-protobuf"
+import * as jspb from 'google-protobuf'
+
+
 
 export class SymbolInfo extends jspb.Message {
   getSymbol(): string;
-  setSymbol(value: string): void;
+  setSymbol(value: string): SymbolInfo;
 
   getBase(): string;
-  setBase(value: string): void;
+  setBase(value: string): SymbolInfo;
 
   getQuote(): string;
-  setQuote(value: string): void;
+  setQuote(value: string): SymbolInfo;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): SymbolInfo.AsObject;

@@ -1,23 +1,24 @@
-import * as jspb from "google-protobuf"
+import * as jspb from 'google-protobuf'
 
 import * as entities_pb from './entities_pb';
 import * as google_protobuf_empty_pb from 'google-protobuf/google/protobuf/empty_pb';
 
+
 export class HistChartProg extends jspb.Message {
   getSymbol(): string;
-  setSymbol(value: string): void;
+  setSymbol(value: string): HistChartProg;
 
   getNumSymbols(): number;
-  setNumSymbols(value: number): void;
+  setNumSymbols(value: number): HistChartProg;
 
   getCurSymbolNum(): number;
-  setCurSymbolNum(value: number): void;
+  setCurSymbolNum(value: number): HistChartProg;
 
   getNumObjects(): number;
-  setNumObjects(value: number): void;
+  setNumObjects(value: number): HistChartProg;
 
   getCurObjectNum(): number;
-  setCurObjectNum(value: number): void;
+  setCurObjectNum(value: number): HistChartProg;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): HistChartProg.AsObject;
@@ -39,12 +40,12 @@ export namespace HistChartProg {
 
 export class HistChartFetchReq extends jspb.Message {
   getExchange(): entities_pb.Exchanges;
-  setExchange(value: entities_pb.Exchanges): void;
+  setExchange(value: entities_pb.Exchanges): HistChartFetchReq;
 
   getSymbolsList(): Array<string>;
-  setSymbolsList(value: Array<string>): void;
-  clearSymbolsList(): void;
-  addSymbols(value: string, index?: number): void;
+  setSymbolsList(value: Array<string>): HistChartFetchReq;
+  clearSymbolsList(): HistChartFetchReq;
+  addSymbols(value: string, index?: number): HistChartFetchReq;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): HistChartFetchReq.AsObject;
@@ -63,9 +64,9 @@ export namespace HistChartFetchReq {
 
 export class StopRequest extends jspb.Message {
   getExchangesList(): Array<entities_pb.Exchanges>;
-  setExchangesList(value: Array<entities_pb.Exchanges>): void;
-  clearExchangesList(): void;
-  addExchanges(value: entities_pb.Exchanges, index?: number): void;
+  setExchangesList(value: Array<entities_pb.Exchanges>): StopRequest;
+  clearExchangesList(): StopRequest;
+  addExchanges(value: entities_pb.Exchanges, index?: number): StopRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): StopRequest.AsObject;

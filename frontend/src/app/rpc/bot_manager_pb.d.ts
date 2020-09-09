@@ -1,23 +1,25 @@
-import * as jspb from "google-protobuf"
+import * as jspb from 'google-protobuf'
+
+
 
 export class BotInfo extends jspb.Message {
   getId(): string;
-  setId(value: string): void;
+  setId(value: string): BotInfo;
 
   getStrategy(): Strategy;
-  setStrategy(value: Strategy): void;
+  setStrategy(value: Strategy): BotInfo;
 
   getName(): string;
-  setName(value: string): void;
+  setName(value: string): BotInfo;
 
   getBasecurrency(): string;
-  setBasecurrency(value: string): void;
+  setBasecurrency(value: string): BotInfo;
 
   getDesc(): string;
-  setDesc(value: string): void;
+  setDesc(value: string): BotInfo;
 
   getConfig(): string;
-  setConfig(value: string): void;
+  setConfig(value: string): BotInfo;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): BotInfo.AsObject;
@@ -40,22 +42,22 @@ export namespace BotInfo {
 
 export class CurrentPosition extends jspb.Message {
   getId(): string;
-  setId(value: string): void;
+  setId(value: string): CurrentPosition;
 
   getBotid(): string;
-  setBotid(value: string): void;
+  setBotid(value: string): CurrentPosition;
 
   getSymbol(): string;
-  setSymbol(value: string): void;
+  setSymbol(value: string): CurrentPosition;
 
   getTradingamount(): number;
-  setTradingamount(value: number): void;
+  setTradingamount(value: number): CurrentPosition;
 
   getProfitamount(): number;
-  setProfitamount(value: number): void;
+  setProfitamount(value: number): CurrentPosition;
 
   getProfitpercent(): number;
-  setProfitpercent(value: number): void;
+  setProfitpercent(value: number): CurrentPosition;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): CurrentPosition.AsObject;
@@ -78,8 +80,8 @@ export namespace CurrentPosition {
 
 export class BotInfoList extends jspb.Message {
   getBotsList(): Array<BotInfo>;
-  setBotsList(value: Array<BotInfo>): void;
-  clearBotsList(): void;
+  setBotsList(value: Array<BotInfo>): BotInfoList;
+  clearBotsList(): BotInfoList;
   addBots(value?: BotInfo, index?: number): BotInfo;
 
   serializeBinary(): Uint8Array;
@@ -98,10 +100,10 @@ export namespace BotInfoList {
 
 export class BotInfoListRequest extends jspb.Message {
   getOffset(): number;
-  setOffset(value: number): void;
+  setOffset(value: number): BotInfoListRequest;
 
   getLimit(): number;
-  setLimit(value: number): void;
+  setLimit(value: number): BotInfoListRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): BotInfoListRequest.AsObject;

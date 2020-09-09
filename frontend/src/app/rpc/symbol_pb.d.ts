@@ -1,11 +1,12 @@
-import * as jspb from "google-protobuf"
+import * as jspb from 'google-protobuf'
 
 import * as google_protobuf_empty_pb from 'google-protobuf/google/protobuf/empty_pb';
 import * as entities_pb from './entities_pb';
 
+
 export class RefreshRequest extends jspb.Message {
   getExchange(): entities_pb.Exchanges;
-  setExchange(value: entities_pb.Exchanges): void;
+  setExchange(value: entities_pb.Exchanges): RefreshRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): RefreshRequest.AsObject;
