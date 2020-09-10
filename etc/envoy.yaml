@@ -69,13 +69,10 @@ static_resources:
               .transport_sockets.tls.v3.DownstreamTlsContext"
             common_tls_context:
               tls_certificates:
-                - certificate_chain:
-                    filename: /etc/midas/tls/browser/localhost.crt
-                  private_key:
-                    filename: /etc/midas/tls/browser/localhost.key
+                - certificate_chain: { filename: /etc/midas/tls/browser/localhost.crt }
+                  private_key: { filename: /etc/midas/tls/browser/localhost.key }
               validation_context:
-                trusted_ca:
-                  filename: /etc/midas/tls/browser/root-ca.pem
+                trusted_ca: { filename: /etc/midas/tls/browser/root-ca.pem }
               alpn_protocols:
                 - h2,http/1.1
   clusters:
@@ -89,6 +86,17 @@ static_resources:
         - socket_address:
             address: historical
             port_value: 50000
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          '@type': "type.googleapis.com/\
+            envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext"
+          common_tls_context:
+            tls_certificates:
+              certificate_chain: { filename: /etc/midas/tls/svc/devel.crt }
+              private_key: { filename: /etc/midas/tls/svc/devel.key }
+            validation_context:
+              trusted_ca: { filename: /etc/midas/tls/svc/root-ca.pem }
     - name: symbol
       connect_timeout: 10s
       type: logical_dns
@@ -99,6 +107,17 @@ static_resources:
         - socket_address:
             address: symbol
             port_value: 50000
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          '@type': "type.googleapis.com/\
+            envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext"
+          common_tls_context:
+            tls_certificates:
+              certificate_chain: { filename: /etc/midas/tls/svc/devel.crt }
+              private_key: { filename: /etc/midas/tls/svc/devel.key }
+            validation_context:
+              trusted_ca: { filename: /etc/midas/tls/svc/root-ca.pem }
     - name: frontend
       connect_timeout: 10s
       type: logical_dns
