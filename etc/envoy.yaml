@@ -49,11 +49,11 @@ static_resources:
                   - name: route
                     domains: ["*"]
                     routes:
-                      - match: { prefix: "/historical" }
+                      - match: { prefix: "/historical/" }
                         route:
                           cluster: historical
                           prefix_rewrite: "/"
-                      - match: { prefix: "/symbol" }
+                      - match: { prefix: "/symbol/" }
                         route:
                           cluster: symbol
                           prefix_rewrite: "/"

@@ -29,12 +29,12 @@ export class SyncComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.zone.runOutsideAngular(() => {
-      this.histClient = new HistChartClient('/historical', );
+      this.histClient = new HistChartClient('historical', null, null);
       this.subscribeStream = this.histClient.subscribe(new Empty(), {});
       this.subscribeStream.on('data', (resp) => {
       });
 
-      this.symbolClient = new SymbolPromiseClient('/symbol');
+      this.symbolClient = new SymbolPromiseClient('symbol', null, null);
     })
   }
 
