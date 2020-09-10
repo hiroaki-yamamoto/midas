@@ -7,8 +7,11 @@ DEST=`dirname $0`/browser
 
 mkdir -p $DEST
 
-
-openssl genrsa -des3 -out $DEST/root.key 2048
+openssl ecparam \
+  -name prime256v1 \
+  -genkey \
+  -out $DEST/root.key
+# openssl genrsa -des3 -out $DEST/root.key 2048
 
 openssl req \
   -new -x509 \
@@ -17,7 +20,11 @@ openssl req \
   -subj '/C=JP/ST=Tokyo/L=Tokyo/O=AAAA Midas Root Authority/OU=IT/CN=localhost' \
   -out $DEST/root-ca.pem
 
-openssl genrsa -des3 -out $DEST/localhost.key 2048
+openssl ecparam \
+  -name prime256v1 \
+  -genkey \
+  -out $DEST/localhost.key
+# openssl genrsa -des3 -out $DEST/localhost.key 2048
 
 openssl req \
   -new \

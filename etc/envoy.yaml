@@ -73,8 +73,6 @@ static_resources:
                     filename: /etc/midas/tls/browser/localhost.crt
                   private_key:
                     filename: /etc/midas/tls/browser/localhost.key
-                  password:
-                    inline_string: localhost
               validation_context:
                 trusted_ca:
                   filename: /etc/midas/tls/browser/root-ca.pem

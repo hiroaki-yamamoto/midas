@@ -1,7 +1,31 @@
-use ::serde::Deserialize;
 use ::std::error::Error;
-use ::std::fs::File;
+use ::std::fs::{read_to_string, File};
 use ::std::io::Read;
+
+use ::serde::Deserialize;
+use ::tonic::transport::{Identity, ServerTlsConfig};
+
+use ::types::GenericResult;
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TLS {
+  #[serde(rename = "privateKey")]
+  pub prv_key: String,
+  pub cert: String,
+  #[serde(rename = "CARoot")]
+  pub client_ca_root: String,
+}
+
+impl TLS {
+  pub fn load(&self) -> GenericResult<ServerTlsConfig> {
+    let prv_key = read_to_string(&self.prv_key)?;
+    let cert = read_to_string(&self.cert)?;
+    let tlscfg =
+      ServerTlsConfig::new().identity(Identity::from_pem(prv_key, cert));
+    return Ok(tlscfg);
+  }
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -13,6 +37,7 @@ pub struct Config {
   pub broker_url: String,
   #[serde(default)]
   pub debug: bool,
+  pub tls: TLS,
 }
 
 impl Config {

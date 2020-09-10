@@ -43,6 +43,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
   let svc = HistChartServer::new(svc);
   info!(logger, "Opened the server on {}", host);
   RPCServer::builder()
+    .tls_config(cfg.tls.load()?)?
     .add_service(svc)
     .serve_with_shutdown(host, sig.recv().then(|_| async { () }))
     .await?;

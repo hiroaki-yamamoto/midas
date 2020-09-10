@@ -2,3 +2,7 @@ dbURL: mongodb://database
 brokerURL: nats://broker:4222
 host: '[::]:50000'
 debug: true
+tls:
+  privateKey: /etc/midas/tls/svc/devel.key
+  cert: /etc/midas/tls/svc/devel.crt
+  CARoot: /etc/midas/tls/svc/root-ca.pem

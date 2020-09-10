@@ -459,6 +459,8 @@ dependencies = [
  "clap",
  "serde",
  "serde_yaml",
+ "tonic",
+ "types",
 ]
 
 [[package]]
@@ -2944,6 +2946,7 @@ dependencies = [
  "prost",
  "prost-derive",
  "tokio",
+ "tokio-rustls 0.14.1",
  "tokio-util",
  "tower",
  "tower-balance",
