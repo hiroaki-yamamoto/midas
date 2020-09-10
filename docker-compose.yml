@@ -15,11 +15,13 @@ services:
       - ./etc:/etc/midas
     environment:
       ENVOY_UID: 0
+    depends_on:
+      - symbol
+      - historical
+      - frontend
     ports:
       - 50000:50000
       - 50001:50001
-      - 50002:50002
-      - 50003:50003
   express:
     image: mongo-express
     environment:
@@ -63,5 +65,3 @@ services:
     volumes:
       - ./frontend:/opt/code
       - /opt/code/node_modules
-    # ports:
-    #   - 8000:4200

@@ -5,7 +5,7 @@ admin:
 
 static_resources:
   listeners:
-    - name: historical
+    - name: server
       address:
         socket_address: { address: '::', port_value: 50000, ipv4_compat: true }
       filter_chains:
@@ -33,7 +33,7 @@ static_resources:
                       log_name: historical
                       grpc_service:
                         envoy_grpc:
-                          cluster_name: historical_service
+                          cluster_name: historical
                 - name: envoy.access_loggers.http_grpc
                   typed_config:
                     '@type': "type.googleapis.com/envoy.extensions\
@@ -42,7 +42,7 @@ static_resources:
                       log_name: symbol
                       grpc_service:
                         envoy_grpc:
-                          cluster_name: symbol_service
+                          cluster_name: symbol
               route_config:
                 name: route_cfg
                 virtual_hosts:
@@ -50,35 +50,59 @@ static_resources:
                     domains: ["*"]
                     routes:
                       - match: { prefix: "/historical" }
-                        route: { cluster: historical_service }
+                        route:
+                          cluster: historical
+                          prefix_rewrite: "/"
                       - match: { prefix: "/symbol" }
-                        route: { cluster: symbol_service }
+                        route:
+                          cluster: symbol
+                          prefix_rewrite: "/"
                       - match: { prefix: "/" }
                         route: { cluster: frontend }
               http_filters:
                 - name: envoy.grpc_web
                 - name: envoy.router
+        transport_socket:
+          name: envoy.transport_sockets.tls
+          typed_config:
+            '@type': "type.googleapis.com/envoy.extensions\
+              .transport_sockets.tls.v3.DownstreamTlsContext"
+            common_tls_context:
+              tls_certificates:
+                - certificate_chain:
+                    filename: /etc/midas/tls/browser/localhost.crt
+                  private_key:
+                    filename: /etc/midas/tls/browser/localhost.key
+                  password:
+                    inline_string: localhost
+              validation_context:
+                trusted_ca:
+                  filename: /etc/midas/tls/browser/root-ca.pem
+              alpn_protocols:
+                - h2,http/1.1
   clusters:
-    - name: historical_service
-      connect_timeout: 0.25s
+    - name: historical
+      connect_timeout: 10s
       type: logical_dns
-      http2_protocol_options: {}
+      http2_protocol_options:
+        allow_connect: true
       lb_policy: round_robin
       hosts:
         - socket_address:
             address: historical
             port_value: 50000
-    - name: symbol_service
-      connect_timeout: 0.25s
+    - name: symbol
+      connect_timeout: 10s
       type: logical_dns
-      http2_protocol_options: {}
+      http2_protocol_options:
+        allow_connect: true
       lb_policy: round_robin
       hosts:
         - socket_address:
             address: symbol
             port_value: 50000
     - name: frontend
-      connect_timeout: 0.25s
+      connect_timeout: 10s
       type: logical_dns
       lb_policy: round_robin
       hosts:
