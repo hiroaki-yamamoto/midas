@@ -6,60 +6,23 @@ set -e
 DEST=`dirname $0`/svc
 
 mkdir -p $DEST
-# openssl ecparam \
-#   -name prime256v1 \
-#   -genkey \
-#   -out $DEST/root.key
 
-# openssl genrsa -out $DEST/root.key 4096
-
-# openssl req \
-#   -new -x509 \
-#   -nodes \
-#   -key $DEST/root.key \
-#   -subj '/C=JP/ST=Tokyo/L=Tokyo/O=AAAA Midas Root Authority/OU=IT/CN=localhost' \
-#   -out $DEST/root-ca.pem
-
-# openssl ecparam \
-#   -name prime256v1 \
-#   -genkey \
-#   -out $DEST/devel.key
-
-# openssl genrsa -out $DEST/devel.key 4096
-
-# openssl req \
-#   -new \
-#   -nodes \
-#   -key $DEST/devel.key \
-#   -subj '/C=JP/ST=Tokyo/L=Tokyo/O=AAAA Midas Service Signing Request/OU=IT/CN=localhost' \
-#   -out $DEST/devel.csr
+openssl genrsa -out $DEST/root.key 4096
 
 openssl req \
-  -new \
-  -newkey rsa:2048 \
-  -x509 \
-  -sha256 \
-  -days 730 \
+  -new -x509 \
   -nodes \
-  -subj '/C=JP/ST=Tokyo/L=Tokyo/O=AAAA Midas Root Authorit/OU=IT/CN=localhost' \
-  -out $DEST/root-ca.pem \
-  -keyout $DEST/root.key
+  -key $DEST/root.key \
+  -subj '/C=JP/ST=Tokyo/L=Tokyo/O=AAAA Midas Root Authority/OU=IT/CN=localhost' \
+  -out $DEST/root-ca.pem
 
-openssl req \
-  -new \
-  -newkey rsa:2048 \
-  -x509 \
-  -sha256 \
-  -days 730 \
-  -nodes \
-  -subj '/C=JP/ST=Tokyo/L=Tokyo/O=AAAA Midas Signing Service/OU=IT/CN=localhost' \
-  -keyout $DEST/devel.key
+openssl genrsa -out $DEST/devel.key 4096
 
 openssl req \
   -new \
   -nodes \
   -key $DEST/devel.key \
-  -subj '/C=JP/ST=Tokyo/L=Tokyo/O=AAAA Midas Signing Service/OU=IT/CN=localhost' \
+  -subj '/C=JP/ST=Tokyo/L=Tokyo/O=AAAA Midas Signning Service/OU=IT/CN=localhost' \
   -out $DEST/devel.csr
 
 openssl x509 \

@@ -22,7 +22,7 @@ impl TLS {
     let prv_key = read_to_string(&self.prv_key)?;
     let cert = read_to_string(&self.cert)?;
     let tlscfg =
-      ServerTlsConfig::new().identity(Identity::from_pem(prv_key, cert));
+      ServerTlsConfig::new().identity(Identity::from_pem(cert, prv_key));
     return Ok(tlscfg);
   }
 }
