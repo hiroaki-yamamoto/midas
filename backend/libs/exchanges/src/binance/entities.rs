@@ -35,11 +35,11 @@ pub struct Symbol {
   pub symbol: String,
   pub status: String,
   pub base_asset: String,
-  pub base_asset_precision: u64,
-  pub base_commission_precision: u64,
-  pub quote_commission_precision: u64,
+  pub base_asset_precision: i64,
+  pub base_commission_precision: i64,
+  pub quote_commission_precision: i64,
   pub quote_asset: String,
-  pub quote_precision: u64,
+  pub quote_precision: i64,
   pub order_types: Vec<String>,
   pub oco_allowed: bool,
   pub iceberg_allowed: bool,
@@ -88,13 +88,13 @@ pub enum Filters {
     avg_price_mins: Option<f64>,
   },
   #[serde(rename = "ICEBERG_PARTS", rename_all = "camelCase")]
-  IcebergParts { limit: Option<u16> },
+  IcebergParts { limit: Option<i32> },
   #[serde(rename = "MAX_NUM_ORDERS", rename_all = "camelCase")]
-  MaxNumOrders { limit: Option<u16> },
+  MaxNumOrders { limit: Option<i32> },
   #[serde(rename = "MAX_NUM_ALGO_ORDERS", rename_all = "camelCase")]
-  MaxNumAlgoOrders { max_num_algo_orders: Option<u16> },
+  MaxNumAlgoOrders { max_num_algo_orders: Option<i32> },
   #[serde(rename = "MAX_NUM_ICEBERG_ORDERS", rename_all = "camelCase")]
-  MaxNumIcebergOrders { max_num_iceberg_orders: u16 },
+  MaxNumIcebergOrders { max_num_iceberg_orders: i32 },
   #[serde(rename = "MAX_POSITION", rename_all = "camelCase")]
   MaxPosition { max_position: String },
   #[serde(rename = "MARKET_LOT_SIZE", rename_all = "camelCase")]
