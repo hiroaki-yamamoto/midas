@@ -1,9 +1,13 @@
+mod entities;
+
 use ::std::error::Error;
 use ::std::result::Result as StdResult;
-use ::tonic::Status;
+use ::tonic::Status as TonicStatus;
 use ::url::{ParseError, Url};
 
-pub type Result<T> = StdResult<T, Status>;
+pub use self::entities::Status;
+
+pub type Result<T> = StdResult<T, TonicStatus>;
 pub type ParseURLResult = StdResult<Url, ParseError>;
 pub type GenericResult<T> = StdResult<T, Box<dyn Error>>;
 pub type SendableErrorResult<T> = StdResult<T, Box<dyn Error + Send>>;
@@ -22,7 +26,9 @@ macro_rules! ret_on_err {
 macro_rules! rpc_ret_on_err {
   ($status_code: expr, $result: expr) => {
     match $result {
-      Err(err) => return Err(Status::new($status_code, format!("{}", err))),
+      Err(err) => {
+        return Err(::tonic::Status::new($status_code, format!("{}", err)))
+      }
       Ok(v) => v,
     }
   };

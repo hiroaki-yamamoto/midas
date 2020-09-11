@@ -8,7 +8,7 @@ use ::nats::Connection as NatsCon;
 use ::num_traits::FromPrimitive;
 use ::rmp_serde::from_slice as read_msgpack;
 use ::slog::{error, o, Logger};
-use ::tonic::{async_trait, Code, Request, Response, Status};
+use ::tonic::{async_trait, Code, Request, Response};
 
 use ::exchanges::{binance, HistoryFetcher};
 use ::rpc::entities::Exchanges;
@@ -19,7 +19,7 @@ use ::types::{rpc_ret_on_err, GenericResult, Result};
 
 use super::manager::ExchangeManager;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Service {
   logger: Logger,
   binance: binance::HistoryFetcher,
