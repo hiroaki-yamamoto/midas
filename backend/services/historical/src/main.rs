@@ -10,8 +10,7 @@ use ::futures::{join, FutureExt};
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::options::ClientOptions as MongoDBCliOpt;
 use ::mongodb::Client as DBCli;
-use ::slog::info;
-use ::slog::Logger;
+use ::slog::{info, warn, Logger};
 use ::slog_builder::{build_debug, build_json};
 use ::tokio::signal::unix as signal;
 use ::tonic::transport::Server as RPCServer;
@@ -54,13 +53,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
     .bind_with_graceful_shutdown(ws_host, async move {
       ws_sig.recv().await;
     });
+  let ws_svr = ws_svr.then(|_| async {
+    warn!(logger, "Websocket Server is shutting down! Bye! Bye!");
+  });
 
   let svc = HistChartServer::new(svc);
   info!(logger, "Opened GRPC server on {}", host);
   let rpc_svr = RPCServer::builder()
     .tls_config(cfg.tls.load()?)?
     .add_service(svc)
-    .serve_with_shutdown(host, sig.recv().then(|_| async { () }));
+    .serve_with_shutdown(host, sig.recv().then(|_| async { () }))
+    .then(|_| async {
+      warn!(logger, "GRPC Server is shutting down! Bye! Bye!");
+    });
   let _ = join!(ws_svr, rpc_svr);
   return Ok(());
 }

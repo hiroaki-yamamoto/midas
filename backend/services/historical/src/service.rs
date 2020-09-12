@@ -1,16 +1,14 @@
 use ::std::pin::Pin;
-
-use ::futures::Stream;
+use ::std::result::Result as StdResult;
 
 use ::futures::future::join_all;
-use ::futures::StreamExt;
+use ::futures::{SinkExt, Stream, StreamExt};
 use ::mongodb::Database;
 use ::nats::Connection as NatsCon;
 use ::num_traits::FromPrimitive;
 use ::rmp_serde::from_slice as read_msgpack;
 use ::serde_json::to_string as jsonify;
 use ::slog::{error, o, Logger};
-use ::tokio::sync::mpsc;
 use ::tonic::{async_trait, Code, Request, Response};
 use ::warp::ws::{Message, WebSocket, Ws};
 
@@ -61,40 +59,46 @@ impl Service {
       .and(::warp::ws())
       .map(move |ws: Ws| {
         let ws_svc = ws_svc.clone();
-        return ws.on_upgrade(|sock: WebSocket| async move {
+        return ws.on_upgrade(|mut sock: WebSocket| async move {
           let subsc = ws_svc.subscribe(Request::new(())).await;
-          let (ret_tx, _) = sock.split();
-          let (tx, rx) = mpsc::unbounded_channel();
-          let _ = rx.forward(ret_tx);
           match subsc {
             Err(e) => {
-              let _ = tx.send(Ok(Message::close_with(
+              let _ = sock.send(Message::close_with(
                 1011 as u16,
                 format!(
                   "Got an error while trying to subscribe the channel: {}",
                   e
                 ),
-              )));
+              ));
+              let _ = sock.flush();
             }
             Ok(resp) => {
-              let mut stream = resp.into_inner();
-              while let Some(v) = stream.next().await {
-                match v {
-                  Err(e) => {
-                    let st = Status::from_tonic_status(&e);
-                    let _ = tx.send(Ok(Message::text(jsonify(&st).unwrap_or(
-                      String::from("Failed to serialize the error"),
-                    ))));
-                  }
-                  Ok(d) => {
-                    let _ = tx.send(Ok(Message::text(jsonify(&d).unwrap_or(
-                      String::from("Failed to serialize the progress data."),
-                    ))));
-                  }
-                }
-              }
+              let mut stream: Pin<
+                Box<dyn Stream<Item = StdResult<Message, ::warp::Error>>>,
+              > = Box::pin(
+                resp
+                  .into_inner()
+                  .map(|r| {
+                    return r
+                      .map(|d| {
+                        return jsonify(&d).unwrap_or(String::from(
+                          "Failed to serialize the progress data.",
+                        ));
+                      })
+                      .map_err(|e| {
+                        let st = Status::from_tonic_status(&e);
+                        return jsonify(&st).unwrap_or(String::from(
+                          "Failed to serialize the error",
+                        ));
+                      })
+                      .unwrap_or_else(|e| e);
+                  })
+                  .map(|txt| Ok(Message::text(txt))),
+              );
+              let _ = sock.send_all(&mut stream);
             }
           };
+          let _ = sock.close();
         });
       })
       .boxed();
