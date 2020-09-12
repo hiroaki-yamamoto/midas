@@ -6,24 +6,18 @@ use ::std::error::Error;
 use ::std::net::SocketAddr;
 
 use ::clap::Clap;
-use ::futures::{join, FutureExt, StreamExt};
+use ::futures::{join, FutureExt};
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::options::ClientOptions as MongoDBCliOpt;
 use ::mongodb::Client as DBCli;
-use ::serde_json::to_string as jsonify;
 use ::slog::info;
 use ::slog::Logger;
 use ::slog_builder::{build_debug, build_json};
 use ::tokio::signal::unix as signal;
-use ::tokio::sync::mpsc;
 use ::tonic::transport::Server as RPCServer;
-use ::tonic::Request;
-use ::warp::ws::{Message, WebSocket, Ws};
-use ::warp::Filter;
 
 use ::config::{CmdArgs, Config};
-use ::rpc::historical::hist_chart_server::{HistChart, HistChartServer};
-use ::types::Status;
+use ::rpc::historical::hist_chart_server::HistChartServer;
 
 use crate::service::Service;
 
@@ -45,49 +39,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     .database("midas");
   let host: SocketAddr = cfg.host.parse()?;
   let svc = Service::new(&logger, &db, broker.clone())?;
-  let ws_svc = svc.clone();
-  let ws_route =
-    ::warp::path("subscribe")
-      .and(::warp::ws())
-      .map(move |ws: Ws| {
-        println!("Client accessed");
-        let ws_svc = ws_svc.clone();
-        return ws.on_upgrade(|sock: WebSocket| async move {
-          let subsc = ws_svc.subscribe(Request::new(())).await;
-          let (ret_tx, _) = sock.split();
-          let (tx, rx) = mpsc::unbounded_channel();
-          let _ = rx.forward(ret_tx);
-          match subsc {
-            Err(e) => {
-              let _ = tx.send(Ok(Message::close_with(
-                1011 as u16,
-                format!(
-                  "Got an error while trying to subscribe the channel: {}",
-                  e
-                ),
-              )));
-            }
-            Ok(resp) => {
-              let mut stream = resp.into_inner();
-              while let Some(v) = stream.next().await {
-                match v {
-                  Err(e) => {
-                    let st = Status::from_tonic_status(&e);
-                    let _ = tx.send(Ok(Message::text(jsonify(&st).unwrap_or(
-                      String::from("Failed to serialize the error"),
-                    ))));
-                  }
-                  Ok(d) => {
-                    let _ = tx.send(Ok(Message::text(jsonify(&d).unwrap_or(
-                      String::from("Failed to serialize the progress data."),
-                    ))));
-                  }
-                }
-              }
-            }
-          };
-        });
-      });
+  let ws_route = svc.get_websocket_route();
 
   let mut sig = signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT))?;
   let mut ws_sig =

@@ -3,19 +3,25 @@ use ::std::pin::Pin;
 use ::futures::Stream;
 
 use ::futures::future::join_all;
+use ::futures::StreamExt;
 use ::mongodb::Database;
 use ::nats::Connection as NatsCon;
 use ::num_traits::FromPrimitive;
 use ::rmp_serde::from_slice as read_msgpack;
+use ::serde_json::to_string as jsonify;
 use ::slog::{error, o, Logger};
+use ::tokio::sync::mpsc;
 use ::tonic::{async_trait, Code, Request, Response};
+use ::warp::ws::{Message, WebSocket, Ws};
 
 use ::exchanges::{binance, HistoryFetcher};
 use ::rpc::entities::Exchanges;
 use ::rpc::historical::{
   hist_chart_server::HistChart, HistChartFetchReq, HistChartProg, StopRequest,
 };
-use ::types::{rpc_ret_on_err, GenericResult, Result};
+use ::types::{rpc_ret_on_err, GenericResult, Result, Status};
+use ::warp::filters::BoxedFilter;
+use ::warp::{Filter, Reply};
 
 use super::manager::ExchangeManager;
 
@@ -47,6 +53,51 @@ impl Service {
       )?,
       nats,
     });
+  }
+
+  pub fn get_websocket_route(&self) -> BoxedFilter<(impl Reply,)> {
+    let ws_svc = self.clone();
+    return ::warp::path("subscribe")
+      .and(::warp::ws())
+      .map(move |ws: Ws| {
+        let ws_svc = ws_svc.clone();
+        return ws.on_upgrade(|sock: WebSocket| async move {
+          let subsc = ws_svc.subscribe(Request::new(())).await;
+          let (ret_tx, _) = sock.split();
+          let (tx, rx) = mpsc::unbounded_channel();
+          let _ = rx.forward(ret_tx);
+          match subsc {
+            Err(e) => {
+              let _ = tx.send(Ok(Message::close_with(
+                1011 as u16,
+                format!(
+                  "Got an error while trying to subscribe the channel: {}",
+                  e
+                ),
+              )));
+            }
+            Ok(resp) => {
+              let mut stream = resp.into_inner();
+              while let Some(v) = stream.next().await {
+                match v {
+                  Err(e) => {
+                    let st = Status::from_tonic_status(&e);
+                    let _ = tx.send(Ok(Message::text(jsonify(&st).unwrap_or(
+                      String::from("Failed to serialize the error"),
+                    ))));
+                  }
+                  Ok(d) => {
+                    let _ = tx.send(Ok(Message::text(jsonify(&d).unwrap_or(
+                      String::from("Failed to serialize the progress data."),
+                    ))));
+                  }
+                }
+              }
+            }
+          };
+        });
+      })
+      .boxed();
   }
 }
 
