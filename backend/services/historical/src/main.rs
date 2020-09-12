@@ -50,6 +50,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     ::warp::path("subscribe")
       .and(::warp::ws())
       .map(move |ws: Ws| {
+        println!("Client accessed");
         let ws_svc = ws_svc.clone();
         return ws.on_upgrade(|sock: WebSocket| async move {
           let subsc = ws_svc.subscribe(Request::new(())).await;
@@ -94,8 +95,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
   let mut ws_host = host.clone();
   ws_host.set_port(ws_host.port() + 1);
   info!(logger, "Opened Websocket server on {}", ws_host);
-  let (_, ws_svr) =
-    ::warp::serve(ws_route).bind_with_graceful_shutdown(ws_host, async move {
+  let (_, ws_svr) = ::warp::serve(ws_route)
+    .tls()
+    .cert_path(&cfg.tls.cert)
+    .key_path(&cfg.tls.prv_key)
+    .bind_with_graceful_shutdown(ws_host, async move {
       ws_sig.recv().await;
     });
 

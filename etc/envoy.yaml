@@ -49,6 +49,10 @@ static_resources:
                   - name: route
                     domains: ["*"]
                     routes:
+                      - match: { prefix: "/historical/stream/" }
+                        route:
+                          cluster: historical_stream
+                          prefix_rewrite: "/"
                       - match: { prefix: "/historical/" }
                         route:
                           cluster: historical
@@ -76,6 +80,25 @@ static_resources:
               alpn_protocols:
                 - h2,http/1.1
   clusters:
+    - name: historical_stream
+      connect_timeout: 10s
+      type: logical_dns
+      lb_policy: round_robin
+      hosts:
+        - socket_address:
+            address: historical
+            port_value: 50001
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          '@type': "type.googleapis.com/\
+            envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext"
+          common_tls_context:
+            tls_certificates:
+              certificate_chain: { filename: /etc/midas/tls/svc/devel.crt }
+              private_key: { filename: /etc/midas/tls/svc/devel.key }
+            validation_context:
+              trusted_ca: { filename: /etc/midas/tls/svc/root-ca.pem }
     - name: historical
       connect_timeout: 10s
       type: logical_dns

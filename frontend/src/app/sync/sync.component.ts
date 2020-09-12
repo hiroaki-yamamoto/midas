@@ -21,7 +21,7 @@ export class SyncComponent implements OnInit, OnDestroy {
   histIcon = faHistory;
 
   private histClient: HistChartClient;
-  private subscribeStream: ClientReadableStream<HistChartProg>;
+  private histStreamClient: WebSocket;
 
   private symbolClient: SymbolPromiseClient;
 
@@ -30,18 +30,21 @@ export class SyncComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.zone.runOutsideAngular(() => {
       this.histClient = new HistChartClient('historical', null, null);
-      this.subscribeStream = this.histClient.subscribe(new Empty(), {});
-      this.subscribeStream.on('data', (resp) => {
-      });
-
       this.symbolClient = new SymbolPromiseClient('symbol', null, null);
+      let loc = window.location;
+      const streamURI =
+        `${((loc.protocol === 'https:') ? 'wss' : 'ws')}://${loc.host}/historical/stream/subscribe`;
+      this.histStreamClient = new WebSocket(streamURI);
+      this.histStreamClient.addEventListener('error', (ev) => {
+        console.log(ev);
+      });
     })
   }
 
   ngOnDestroy(): void {
     this.zone.runOutsideAngular(() => {
-      this.subscribeStream.cancel;
-      this.subscribeStream = undefined;
+      this.histStreamClient.close();
+      this.histStreamClient = undefined;
     });
   }
 
