@@ -16,7 +16,9 @@
       </p>
     </section>
     <div>
-      <button mat-raised-button color="primary" i18n (click)="fetchSymbol()">
+      <button mat-raised-button
+        color="primary" i18n (click)="fetchSymbol()"
+        [disabled]="!symbolButtonEnabled">
         <fa-icon [icon]="syncIcon" size="2x"></fa-icon><br>
         Sync Symbol Data
       </button>
