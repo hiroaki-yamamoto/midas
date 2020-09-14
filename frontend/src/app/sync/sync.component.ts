@@ -3,7 +3,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { faTimes, faSyncAlt, faHistory } from '@fortawesome/free-solid-svg-icons';
 
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
-import { ClientReadableStream } from 'grpc-web';
 
 import { Exchanges } from '../rpc/entities_pb';
 import { HistChartClient } from '../rpc/historical_grpc_web_pb';
@@ -11,6 +10,10 @@ import { HistChartProg } from '../rpc/historical_pb';
 import { SymbolPromiseClient } from '../rpc/symbol_grpc_web_pb';
 import { RefreshRequest as SymbolRefreshRequest } from '../rpc/symbol_pb';
 
+import {
+  IconSnackBarComponent,
+  NotificationLevel
+} from '../icon-snackbar/icon-snackbar.component';
 import { MidasWebSocket } from '../websocket';
 
 @Component({
@@ -52,7 +55,12 @@ export class SyncComponent implements OnInit, OnDestroy {
     this.symbolClient.refresh(req).then(
       () => {},
       (e) => {
-        this.tooltip.open(e.toString(), 'Close')
+        this.tooltip.openFromComponent(IconSnackBarComponent, {
+          data: {
+            level: NotificationLevel.Error,
+            message: e.message,
+          },
+        });
         console.error(e);
       }
     ).finally(() => {this.symbolButtonEnabled = true;});

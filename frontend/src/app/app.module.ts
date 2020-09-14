@@ -13,13 +13,16 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 import * as am4core from '@amcharts/amcharts4/core';
 import am4themes_animated from '@amcharts/amcharts4/themes/animated';
-import { SyncComponent } from './sync/sync.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+
+import { SyncComponent } from './sync/sync.component';
+import { IconSnackBarComponent } from './icon-snackbar/icon-snackbar.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    SyncComponent
+    SyncComponent,
+    IconSnackBarComponent,
   ],
   imports: [
     BrowserModule,
