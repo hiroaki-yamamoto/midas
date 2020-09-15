@@ -1,12 +1,12 @@
 use ::crossbeam::channel::{Receiver, Sender};
-use ::mongodb::bson::{to_bson, Array, Bson, Document};
+use ::mongodb::bson::{to_bson, Document};
 use ::mongodb::Collection;
 use ::slog::{error, Logger};
 
 use ::rpc::historical::HistChartProg;
 use ::types::SendableErrorResult;
 
-use super::entities::{Kline, KlineResultsWithSymbol};
+use super::entities::KlineResultsWithSymbol;
 
 #[derive(Debug, Clone)]
 pub struct HistoryRecorder {
@@ -43,21 +43,14 @@ impl HistoryRecorder {
             }
             Ok(ok) => {
               let raw_klines = ok.klines;
-              let empty = Array::new();
-              let succeeded_klines: Vec<Kline> = raw_klines
+              let klines: Vec<Document> = raw_klines
                 .into_iter()
                 .filter_map(|item| item.ok())
+                .filter_map(|item| to_bson(&item).ok())
+                .filter_map(|item| item.as_document().cloned())
                 .map(|item| item.clone())
                 .collect();
-              let klines: Vec<Document> = to_bson(&succeeded_klines)
-                .unwrap_or(Bson::Array(Array::new()))
-                .as_array()
-                .unwrap_or(&empty)
-                .into_iter()
-                .filter_map(|item| item.as_document())
-                .map(|item| item.clone())
-                .collect();
-              let db_insert = me.col.insert_many(klines.into_iter(), None);
+              let db_insert = me.col.insert_many(klines, None);
               let _ = prog_ch.send(Ok(HistChartProg {
                 symbol: ok.symbol,
                 num_symbols: ok.num_symbols,
