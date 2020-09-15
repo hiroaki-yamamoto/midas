@@ -14,7 +14,7 @@ import {
   IconSnackBarComponent,
   NotificationLevel
 } from '../icon-snackbar/icon-snackbar.component';
-import { MidasWebSocket } from '../websocket';
+import { MidasSocket } from '../websocket';
 
 @Component({
   selector: 'app-sync',
@@ -37,7 +37,7 @@ export class SyncComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.histClient = new HistChartClient('historical', null, null);
     this.symbolClient = new SymbolPromiseClient('symbol', null, null);
-    this.histStreamClient = new MidasWebSocket('/historical/stream/subscribe');
+    this.histStreamClient = new MidasSocket('/historical/stream/subscribe');
     this.histStreamClient.addEventListener('error', (ev) => {
       console.log(ev);
     });
