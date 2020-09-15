@@ -40,7 +40,9 @@
             <h4 i18n>Object Process Status</h4>
           </header>
           <div fxLayout="row" fxLayoutAlign="center center" class="progress">
-            <mat-progress-bar></mat-progress-bar>
+            <mat-progress-bar
+              [value]="histChartProg.cur_object_num / histChartProg.num_objects * 100">
+            </mat-progress-bar>
             <div>(
               <strong>
                 {{ histChartProg.cur_object_num }} /
@@ -54,7 +56,9 @@
             <h4 i18n>Symbol Processing Status (Current: {{ histChartProg.symbol }})</h4>
           </header>
           <div fxLayout="row" fxLayoutAlign="center center" class="progress">
-            <mat-progress-bar></mat-progress-bar>
+            <mat-progress-bar
+              [value]="histChartProg.cur_symbol_num / histChartProg.num_symbols * 100">
+            </mat-progress-bar>
             <div>(
               <strong>
                 {{ histChartProg.cur_symbol_num }} /

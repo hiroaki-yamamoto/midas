@@ -1,3 +1,5 @@
+use ::futures::future::FutureExt;
+
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::crossbeam::channel::{bounded, Receiver, Sender};
@@ -150,6 +152,7 @@ impl HistoryFetcher {
     ::tokio::spawn(async move {
       while let Err(_) = stop.try_recv() {
         let param_option = param_rec.recv();
+        let prog_send = prog_send.clone();
         match param_option {
           Ok(param) => {
             let num_obj = (param.end_time - param.start_time).num_minutes();
@@ -160,16 +163,18 @@ impl HistoryFetcher {
               })));
               continue;
             }
-            let _ = prog_send.send(
-              me.fetch(
-                param.symbol.clone(),
-                param.num_symbols,
-                param.entire_data_len,
-                param.start_time,
-                Some(param.end_time),
-              )
-              .await,
-            );
+            me.fetch(
+              param.symbol.clone(),
+              param.num_symbols,
+              param.entire_data_len,
+              param.start_time,
+              Some(param.end_time),
+            )
+            .then(|item| async move {
+              let _ =
+                ::tokio::task::block_in_place(move || prog_send.send(item));
+            })
+            .await;
           }
           Err(err) => {
             error!(
