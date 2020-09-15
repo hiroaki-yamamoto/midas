@@ -23,6 +23,8 @@ use ::warp::{Filter, Reply};
 
 use super::manager::ExchangeManager;
 
+use super::entities::KlineFetchStatus;
+
 #[derive(Debug, Clone)]
 pub struct Service {
   logger: Logger,
@@ -73,29 +75,48 @@ impl Service {
               let _ = sock.flush();
             }
             Ok(resp) => {
-              let mut stream: Pin<
-                Box<dyn Stream<Item = StdResult<Message, ::warp::Error>>>,
-              > = Box::pin(
-                resp
-                  .into_inner()
-                  .map(|r| {
-                    return r
-                      .map(|d| {
-                        return jsonify(&d).unwrap_or(String::from(
-                          "Failed to serialize the progress data.",
-                        ));
-                      })
-                      .map_err(|e| {
-                        let st = Status::from_tonic_status(&e);
-                        return jsonify(&st).unwrap_or(String::from(
-                          "Failed to serialize the error",
-                        ));
-                      })
-                      .unwrap_or_else(|e| e);
-                  })
-                  .map(|txt| Ok(Message::text(txt))),
-              );
-              let _ = sock.send_all(&mut stream);
+              // let mut stream: Pin<Box<dyn Stream<Item = Message>>> = Box::pin(
+              //   resp
+              //     .into_inner()
+              //     .map(|r| {
+              //       return r
+              //         .map(|d| {
+              //           return jsonify(&d).unwrap_or(String::from(
+              //             "Failed to serialize the progress data.",
+              //           ));
+              //         })
+              //         .map_err(|e| {
+              //           let st = Status::from_tonic_status(&e);
+              //           return jsonify(&st).unwrap_or(String::from(
+              //             "Failed to serialize the error",
+              //           ));
+              //         })
+              //         .unwrap_or_else(|e| e);
+              //     })
+              //     .map(|txt| Message::text(txt)),
+              // );
+              let mut stream = resp
+                .into_inner()
+                .map(|r| {
+                  return r
+                    .map(|d| {
+                      return jsonify(&d).unwrap_or(String::from(
+                        "Failed to serialize the progress data.",
+                      ));
+                    })
+                    .map_err(|e| {
+                      let st = Status::from_tonic_status(&e);
+                      return jsonify(&st).unwrap_or(String::from(
+                        "Failed to serialize the error",
+                      ));
+                    })
+                    .unwrap_or_else(|e| e);
+                })
+                .map(|txt| Message::text(txt));
+              while let Some(item) = stream.next().await {
+                let _ = sock.send(item).await;
+                let _ = sock.flush();
+              }
             }
           };
           let _ = sock.close();
@@ -150,7 +171,10 @@ impl HistChart for Service {
             );
             continue;
           },
-          Ok(v) => v,
+          Ok(v) => match v {
+            KlineFetchStatus::WIP(p) => p,
+            _ => {continue;}
+          },
         };
         yield prog;
       }

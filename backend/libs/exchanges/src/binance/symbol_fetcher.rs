@@ -30,15 +30,15 @@ impl SymbolFetcher {
     let cur = ret_on_err!(self.col.find(filter, None).await);
     let mut docs: Vec<MongoResult<Document>> = cur.collect().await;
     docs.retain(|doc| doc.is_ok());
-    let mut symbols: Vec<BsonDeResult<Symbol>> = docs
+    let symbols: Vec<BsonDeResult<Symbol>> = docs
       .iter()
       .map(|doc_res| {
         let doc = doc_res.clone().unwrap();
         let item: BsonDeResult<Symbol> = from_bson(Bson::Document(doc));
         return item;
       })
+      .filter(|item| item.is_ok())
       .collect();
-    symbols.retain(|item| item.is_ok());
     let ret = symbols
       .into_iter()
       .map(|item| item.unwrap().as_symbol_info())

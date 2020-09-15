@@ -7,11 +7,9 @@ import {
   faSkullCrossbones,
 } from '@fortawesome/free-solid-svg-icons';
 
-import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
-
 import { Exchanges } from '../rpc/entities_pb';
+import { HistChartFetchReq } from '../rpc/historical_pb';
 import { HistChartClient } from '../rpc/historical_grpc_web_pb';
-import { HistChartProg } from '../rpc/historical_pb';
 import { SymbolPromiseClient } from '../rpc/symbol_grpc_web_pb';
 import { RefreshRequest as SymbolRefreshRequest } from '../rpc/symbol_pb';
 
@@ -19,6 +17,14 @@ import {
   IconSnackBarComponent
 } from '../icon-snackbar/icon-snackbar.component';
 import { MidasSocket } from '../websocket';
+
+interface HistChartProg {
+  symbol: string;
+  num_symbols: number;
+  cur_symbol_num: number;
+  num_objects: number;
+  cur_object_num: number;
+}
 
 @Component({
   selector: 'app-sync',
@@ -30,6 +36,7 @@ export class SyncComponent implements OnInit, OnDestroy {
   syncIcon = faSyncAlt;
   histIcon = faHistory;
   symbolButtonEnabled = true;
+  histChartProg: HistChartProg = undefined;
 
   private histClient: HistChartClient;
   private histStreamClient: WebSocket;
@@ -42,6 +49,9 @@ export class SyncComponent implements OnInit, OnDestroy {
     this.histClient = new HistChartClient('historical', null, null);
     this.symbolClient = new SymbolPromiseClient('symbol', null, null);
     this.histStreamClient = new MidasSocket('/historical/stream/subscribe');
+    this.histStreamClient.addEventListener('message', (ev) => {
+      this.histChartProg = JSON.parse(ev.data);
+    });
     this.histStreamClient.addEventListener('error', (ev) => {
       console.log(ev);
     });
@@ -69,5 +79,12 @@ export class SyncComponent implements OnInit, OnDestroy {
         console.error(e);
       }
     ).finally(() => {this.symbolButtonEnabled = true;});
+  }
+
+  fetchHistoricalData() {
+    const req = new HistChartFetchReq();
+    req.setExchange(Exchanges.BINANCE);
+    req.setSymbolsList(['all']);
+    this.histClient.sync(req, {}, () => {});
   }
 }

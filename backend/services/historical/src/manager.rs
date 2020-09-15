@@ -1,5 +1,4 @@
 use ::std::collections::HashMap;
-use ::std::thread;
 
 use ::nats::{Connection as NatsConnection, Subscription as NatsSubsc};
 
@@ -48,40 +47,38 @@ where
       .new(o!("scope" => "refresh_historical_klines.thread"));
     let nats_con = self.nats.clone();
     let name = self.name.clone();
-    thread::spawn(move || {
-      ::tokio::spawn(async move {
-        let mut hist_fetch_prog = HashMap::new();
-        loop {
-          let prog = match prog.recv() {
-            Err(_) => break,
-            Ok(v) => match v {
-              Err(e) => {
-                error!(
-                  logger_in_thread,
-                  "Got an error when getting progress: {}", e
-                );
-                continue;
-              }
-              Ok(k) => k,
-            },
-          };
-          let result = match hist_fetch_prog.get_mut(&prog.symbol) {
-            None => {
-              hist_fetch_prog.insert(prog.symbol.clone(), prog.clone());
-              &prog
+    ::tokio::spawn(async move {
+      let mut hist_fetch_prog = HashMap::new();
+      loop {
+        let prog = match prog.recv() {
+          Err(_) => break,
+          Ok(v) => match v {
+            Err(e) => {
+              error!(
+                logger_in_thread,
+                "Got an error when getting progress: {}", e
+              );
+              continue;
             }
-            Some(v) => {
-              v.cur_symbol_num += prog.cur_symbol_num;
-              v.cur_object_num += prog.cur_object_num;
-              v
-            }
-          };
-          let result = KlineFetchStatus::WIP(result.to_owned());
-          nats_broadcast_status(&logger_in_thread, &nats_con, &name, &result);
-        }
-        let result = KlineFetchStatus::Completed;
+            Ok(k) => k,
+          },
+        };
+        let result = match hist_fetch_prog.get_mut(&prog.symbol) {
+          None => {
+            hist_fetch_prog.insert(prog.symbol.clone(), prog.clone());
+            &prog
+          }
+          Some(v) => {
+            v.cur_symbol_num += prog.cur_symbol_num;
+            v.cur_object_num += prog.cur_object_num;
+            v
+          }
+        };
+        let result = KlineFetchStatus::WIP(result.to_owned());
         nats_broadcast_status(&logger_in_thread, &nats_con, &name, &result);
-      });
+      }
+      let result = KlineFetchStatus::Completed;
+      nats_broadcast_status(&logger_in_thread, &nats_con, &name, &result);
     });
     return Ok(());
   }

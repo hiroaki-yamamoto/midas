@@ -34,9 +34,41 @@
         To synchronize historical kline data that is used for back testing,
         click / tap "Sync Hist Kline Data" button.
       </p>
+      <div *ngIf="histChartProg">
+        <section>
+          <header>
+            <h4 i18n>Object Process Status</h4>
+          </header>
+          <div fxLayout="row" fxLayoutAlign="center center" class="progress">
+            <mat-progress-bar></mat-progress-bar>
+            <div>(
+              <strong>
+                {{ histChartProg.cur_object_num }} /
+                {{ histChartProg.num_objects }}
+              </strong>
+            )</div>
+          </div>
+        </section>
+        <section>
+          <header>
+            <h4 i18n>Symbol Processing Status (Current: {{ histChartProg.symbol }})</h4>
+          </header>
+          <div fxLayout="row" fxLayoutAlign="center center" class="progress">
+            <mat-progress-bar></mat-progress-bar>
+            <div>(
+              <strong>
+                {{ histChartProg.cur_symbol_num }} /
+                {{ histChartProg.num_symbols }}
+              </strong>
+            )</div>
+          </div>
+        </section>
+      </div>
     </section>
     <div>
-      <button mat-raised-button color="primary" i18n>
+      <button mat-raised-button color="primary" i18n
+        (click)="fetchHistoricalData()"
+        [disabled]="histChartProg">
         <fa-icon [icon]="histIcon" size="2x"></fa-icon><br>
         Sync Hist Kline Data
       </button>

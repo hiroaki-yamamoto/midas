@@ -1,5 +1,3 @@
-use ::std::thread;
-
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::crossbeam::channel::{bounded, Receiver, Sender};
@@ -149,41 +147,39 @@ impl HistoryFetcher {
     let (prog_send, prog_rec) =
       bounded::<SendableErrorResult<KlineResultsWithSymbol>>(CHAN_BUF_SIZE);
     let me = self.clone();
-    thread::spawn(move || {
-      ::tokio::spawn(async move {
-        while let Err(_) = stop.try_recv() {
-          let param_option = param_rec.recv();
-          match param_option {
-            Ok(param) => {
-              let num_obj = (param.end_time - param.start_time).num_minutes();
-              if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
-                let _ = prog_send.send(Err(Box::new(NumObjectError {
-                  field: String::from("Duration between start and end date"),
-                  num_object: NUM_OBJECTS_TO_FETCH,
-                })));
-                continue;
-              }
-              let _ = prog_send.send(
-                me.fetch(
-                  param.symbol.clone(),
-                  param.num_symbols,
-                  param.entire_data_len,
-                  param.start_time,
-                  Some(param.end_time),
-                )
-                .await,
-              );
-            }
-            Err(err) => {
-              error!(
-                me.logger,
-                "Got an error while reading param ch. Err: {}", err
-              );
+    ::tokio::spawn(async move {
+      while let Err(_) = stop.try_recv() {
+        let param_option = param_rec.recv();
+        match param_option {
+          Ok(param) => {
+            let num_obj = (param.end_time - param.start_time).num_minutes();
+            if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
+              let _ = prog_send.send(Err(Box::new(NumObjectError {
+                field: String::from("Duration between start and end date"),
+                num_object: NUM_OBJECTS_TO_FETCH,
+              })));
               continue;
             }
+            let _ = prog_send.send(
+              me.fetch(
+                param.symbol.clone(),
+                param.num_symbols,
+                param.entire_data_len,
+                param.start_time,
+                Some(param.end_time),
+              )
+              .await,
+            );
+          }
+          Err(err) => {
+            error!(
+              me.logger,
+              "Got an error while reading param ch. Err: {}", err
+            );
+            continue;
           }
         }
-      });
+      }
     });
     return (param_send, prog_rec);
   }
@@ -250,64 +246,60 @@ impl HistoryFetcherTrait for HistoryFetcher {
     let res_send_in_thread = res_send.clone();
     let ctrl_subsc = ret_on_err!(self.broker.subscribe("binance.kline.ctrl"));
     let req_thread_logger = self.logger.new(o!("scope" => "Request Thread"));
-    thread::spawn(move || {
-      ::tokio::spawn(async move {
-        for symbol in symbols {
-          let start_at =
-            match me.get_first_trade_date(symbol.symbol.clone()).await {
-              Err(e) => {
-                let _ = res_send_in_thread.send(Err(e));
-                break;
-              }
-              Ok(v) => v,
-            };
-          let mut entire_data_len = (end_at.clone() - start_at).num_minutes();
-          let entire_data_len_rem =
-            entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
-          entire_data_len /= 1000;
-          if entire_data_len_rem > 0 {
-            entire_data_len += 1;
-          }
-          let mut sec_end_date = end_at.clone();
-          while sec_end_date > start_at {
-            match ctrl_subsc.try_next() {
-              Some(msg) => {
-                match from_msgpack::<KlineCtrl>(&msg.data[..]) {
-                  Err(err) => {
-                    warn!(
-                      req_thread_logger,
-                      "Received Control Message, but failed to parse it: {}",
-                      err
-                    );
-                  }
-                  Ok(v) => match (v) {
-                    KlineCtrl::Stop => {
-                      let _ = stop_send.send(());
-                      return;
-                    }
-                  },
-                };
-              }
-              None => {}
+    ::tokio::spawn(async move {
+      for symbol in symbols {
+        let start_at =
+          match me.get_first_trade_date(symbol.symbol.clone()).await {
+            Err(e) => {
+              let _ = res_send_in_thread.send(Err(e));
+              break;
             }
-            let mut sec_start_date =
-              sec_end_date - Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
-            if sec_start_date < start_at {
-              sec_start_date = start_at;
-            }
-            let index: usize = thread_rng().gen_range(0, senders.len());
-            let sender = &mut senders[index];
-            let _ = sender.send(HistFetcherParam {
-              symbol: symbol.symbol.clone(),
-              num_symbols: symbols_len as i64,
-              entire_data_len,
-              start_time: sec_start_date.clone(),
-              end_time: sec_end_date,
-            });
-            sec_end_date = sec_start_date.clone();
-          }
+            Ok(v) => v,
+          };
+        let mut entire_data_len = (end_at.clone() - start_at).num_minutes();
+        let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
+        entire_data_len /= 1000;
+        if entire_data_len_rem > 0 {
+          entire_data_len += 1;
         }
-      });
+        let mut sec_end_date = end_at.clone();
+        while sec_end_date > start_at {
+          match ctrl_subsc.try_next() {
+            Some(msg) => {
+              match from_msgpack::<KlineCtrl>(&msg.data[..]) {
+                Err(err) => {
+                  warn!(
+                    req_thread_logger,
+                    "Received Control Message, but failed to parse it: {}", err
+                  );
+                }
+                Ok(v) => match (v) {
+                  KlineCtrl::Stop => {
+                    let _ = stop_send.send(());
+                    return;
+                  }
+                },
+              };
+            }
+            None => {}
+          }
+          let mut sec_start_date =
+            sec_end_date - Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
+          if sec_start_date < start_at {
+            sec_start_date = start_at;
+          }
+          let index: usize = thread_rng().gen_range(0, senders.len());
+          let sender = &mut senders[index];
+          let _ = sender.send(HistFetcherParam {
+            symbol: symbol.symbol.clone(),
+            num_symbols: symbols_len as i64,
+            entire_data_len,
+            start_time: sec_start_date.clone(),
+            end_time: sec_end_date,
+          });
+          sec_end_date = sec_start_date.clone();
+        }
+      }
     });
     return Ok(res_recv);
   }
