@@ -1,6 +1,11 @@
 <div fxLayout="row" fxLayoutAlign="center center">
-  <div><fa-icon [icon]="icon"></fa-icon></div>
+  <div><fa-icon [icon]="data.icon" size="2x" [fixedWidth]="true"></fa-icon></div>
   <div fxFlex>
     {{ data.message }}
+  </div>
+  <div *ngIf="data.actionTxt">
+    <button mat-button color="accent" (click)="snackbar.dismiss()">
+      {{ data.actionTxt }}
+    </button>
   </div>
 </div>

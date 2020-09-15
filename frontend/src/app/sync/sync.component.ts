@@ -1,6 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { faTimes, faSyncAlt, faHistory } from '@fortawesome/free-solid-svg-icons';
+import {
+  faTimes,
+  faSyncAlt,
+  faHistory,
+  faSkullCrossbones,
+} from '@fortawesome/free-solid-svg-icons';
 
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 
@@ -11,8 +16,7 @@ import { SymbolPromiseClient } from '../rpc/symbol_grpc_web_pb';
 import { RefreshRequest as SymbolRefreshRequest } from '../rpc/symbol_pb';
 
 import {
-  IconSnackBarComponent,
-  NotificationLevel
+  IconSnackBarComponent
 } from '../icon-snackbar/icon-snackbar.component';
 import { MidasSocket } from '../websocket';
 
@@ -57,7 +61,8 @@ export class SyncComponent implements OnInit, OnDestroy {
       (e) => {
         this.tooltip.openFromComponent(IconSnackBarComponent, {
           data: {
-            level: NotificationLevel.Error,
+            icon: faSkullCrossbones,
+            actionTxt: 'Dismiss',
             message: e.message,
           },
         });
