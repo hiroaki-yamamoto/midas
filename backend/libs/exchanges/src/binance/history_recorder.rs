@@ -1,7 +1,7 @@
 use ::crossbeam::channel::{Receiver, Sender};
 use ::mongodb::bson::{to_bson, Array, Bson, Document};
 use ::mongodb::Collection;
-use ::slog::{error, info, Logger};
+use ::slog::{error, Logger};
 
 use ::rpc::historical::HistChartProg;
 use ::types::SendableErrorResult;

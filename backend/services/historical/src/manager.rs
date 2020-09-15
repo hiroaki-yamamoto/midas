@@ -65,11 +65,12 @@ where
         };
         let result = match hist_fetch_prog.get_mut(&prog.symbol) {
           None => {
-            hist_fetch_prog.insert(prog.symbol.clone(), prog.clone());
+            let mut prog_clone = prog.clone();
+            prog_clone.cur_symbol_num = (hist_fetch_prog.len() + 1) as i64;
+            hist_fetch_prog.insert(prog.symbol.clone(), prog_clone);
             &prog
           }
           Some(v) => {
-            v.cur_symbol_num += prog.cur_symbol_num;
             v.cur_object_num += prog.cur_object_num;
             v
           }

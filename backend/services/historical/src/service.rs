@@ -1,5 +1,4 @@
 use ::std::pin::Pin;
-use ::std::result::Result as StdResult;
 
 use ::futures::future::join_all;
 use ::futures::{SinkExt, Stream, StreamExt};
