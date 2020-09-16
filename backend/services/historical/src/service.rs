@@ -64,36 +64,18 @@ impl Service {
           let subsc = ws_svc.subscribe(Request::new(())).await;
           match subsc {
             Err(e) => {
-              let _ = sock.send(Message::close_with(
-                1011 as u16,
-                format!(
-                  "Got an error while trying to subscribe the channel: {}",
-                  e
-                ),
-              ));
+              let _ = sock
+                .send(Message::close_with(
+                  1011 as u16,
+                  format!(
+                    "Got an error while trying to subscribe the channel: {}",
+                    e
+                  ),
+                ))
+                .await;
               let _ = sock.flush();
             }
             Ok(resp) => {
-              // let mut stream: Pin<Box<dyn Stream<Item = Message>>> = Box::pin(
-              //   resp
-              //     .into_inner()
-              //     .map(|r| {
-              //       return r
-              //         .map(|d| {
-              //           return jsonify(&d).unwrap_or(String::from(
-              //             "Failed to serialize the progress data.",
-              //           ));
-              //         })
-              //         .map_err(|e| {
-              //           let st = Status::from_tonic_status(&e);
-              //           return jsonify(&st).unwrap_or(String::from(
-              //             "Failed to serialize the error",
-              //           ));
-              //         })
-              //         .unwrap_or_else(|e| e);
-              //     })
-              //     .map(|txt| Message::text(txt)),
-              // );
               let mut stream = resp
                 .into_inner()
                 .map(|r| {
@@ -114,11 +96,11 @@ impl Service {
                 .map(|txt| Message::text(txt));
               while let Some(item) = stream.next().await {
                 let _ = sock.send(item).await;
-                let _ = sock.flush();
+                let _ = sock.flush().await;
               }
             }
           };
-          let _ = sock.close();
+          let _ = sock.close().await;
         });
       })
       .boxed();
@@ -177,6 +159,7 @@ impl HistChart for Service {
         };
         yield prog;
       }
+      let _ = subscriber.unsubscribe();
     };
     return Ok(Response::new(Box::pin(out) as Self::subscribeStream));
   }
@@ -190,7 +173,7 @@ impl HistChart for Service {
     for exc in req.exchanges {
       match FromPrimitive::from_i32(exc) {
         Some(Exchanges::Binance) => {
-          stop_vec.push(self.binance.clone().stop());
+          stop_vec.push(self.binance.stop());
         }
         _ => {
           continue;

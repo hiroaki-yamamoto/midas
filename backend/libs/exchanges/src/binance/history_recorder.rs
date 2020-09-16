@@ -63,6 +63,7 @@ impl HistoryRecorder {
           },
         }
       }
+      drop(prog_ch);
     });
   }
 }

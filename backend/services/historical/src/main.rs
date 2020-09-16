@@ -14,9 +14,12 @@ use ::slog::{info, warn, Logger};
 use ::slog_builder::{build_debug, build_json};
 use ::tokio::signal::unix as signal;
 use ::tonic::transport::Server as RPCServer;
+use ::tonic::Request;
 
 use ::config::{CmdArgs, Config};
-use ::rpc::historical::hist_chart_server::HistChartServer;
+use ::rpc::entities::Exchanges;
+use ::rpc::historical::hist_chart_server::{HistChart, HistChartServer};
+use ::rpc::historical::StopRequest;
 
 use crate::service::Service;
 
@@ -57,12 +60,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
     warn!(logger, "Websocket Server is shutting down! Bye! Bye!");
   });
 
+  let svc_clone = svc.clone();
   let svc = HistChartServer::new(svc);
   info!(logger, "Opened GRPC server on {}", host);
   let rpc_svr = RPCServer::builder()
     .tls_config(cfg.tls.load()?)?
     .add_service(svc)
-    .serve_with_shutdown(host, sig.recv().then(|_| async { () }))
+    .serve_with_shutdown(
+      host,
+      sig.recv().then(|_| async move {
+        let _ = svc_clone
+          .stop(Request::new(StopRequest {
+            exchanges: vec![Exchanges::Binance as i32],
+          }))
+          .await;
+      }),
+    )
     .then(|_| async {
       warn!(logger, "GRPC Server is shutting down! Bye! Bye!");
     });

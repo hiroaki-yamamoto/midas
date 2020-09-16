@@ -49,19 +49,16 @@ where
     let name = self.name.clone();
     ::tokio::spawn(async move {
       let mut hist_fetch_prog = HashMap::new();
-      loop {
-        let prog = match prog.recv() {
-          Err(_) => break,
-          Ok(v) => match v {
-            Err(e) => {
-              error!(
-                logger_in_thread,
-                "Got an error when getting progress: {}", e
-              );
-              continue;
-            }
-            Ok(k) => k,
-          },
+      while let Ok(prog) = prog.recv() {
+        let prog = match prog {
+          Err(e) => {
+            error!(
+              logger_in_thread,
+              "Got an error when getting progress: {}", e
+            );
+            continue;
+          }
+          Ok(k) => k,
         };
         let result = match hist_fetch_prog.get_mut(&prog.symbol) {
           None => {

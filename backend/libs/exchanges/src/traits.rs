@@ -9,7 +9,7 @@ pub trait HistoryFetcher {
     &self,
     symbols: Vec<String>,
   ) -> SendableErrorResult<Receiver<SendableErrorResult<HistChartProg>>>;
-  async fn stop(self) -> SendableErrorResult<()>;
+  async fn stop(&self) -> SendableErrorResult<()>;
 }
 
 #[async_trait]

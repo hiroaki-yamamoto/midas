@@ -309,7 +309,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
     return Ok(res_recv);
   }
 
-  async fn stop(self) -> SendableErrorResult<()> {
+  async fn stop(&self) -> SendableErrorResult<()> {
     let msg = ret_on_err!(to_msgpack(&KlineCtrl::Stop));
     ret_on_err!(block_in_place(move || {
       self.broker.publish("binance.kline.ctrl", &msg[..])
