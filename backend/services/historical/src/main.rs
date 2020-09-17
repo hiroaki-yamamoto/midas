@@ -14,12 +14,9 @@ use ::slog::{info, warn, Logger};
 use ::slog_builder::{build_debug, build_json};
 use ::tokio::signal::unix as signal;
 use ::tonic::transport::Server as RPCServer;
-use ::tonic::Request;
 
 use ::config::{CmdArgs, Config};
-use ::rpc::entities::Exchanges;
-use ::rpc::historical::hist_chart_server::{HistChart, HistChartServer};
-use ::rpc::historical::StopRequest;
+use ::rpc::historical::hist_chart_server::HistChartServer;
 
 use crate::service::Service;
 
@@ -69,11 +66,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     .serve_with_shutdown(
       host,
       sig.recv().then(|_| async move {
-        let _ = svc_clone
-          .stop(Request::new(StopRequest {
-            exchanges: vec![Exchanges::Binance as i32],
-          }))
-          .await;
+        let _ = svc_clone.graceful_shutdown().await;
       }),
     )
     .then(|_| async {

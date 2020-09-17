@@ -6,6 +6,7 @@ use ::mongodb::Database;
 use ::nats::Connection as NatsCon;
 use ::num_traits::FromPrimitive;
 use ::rmp_serde::from_slice as read_msgpack;
+use ::rmp_serde::to_vec as to_msgpack;
 use ::serde_json::to_string as jsonify;
 use ::slog::{error, o, Logger};
 use ::tonic::{async_trait, Code, Request, Response};
@@ -22,7 +23,7 @@ use ::warp::{Filter, Reply};
 
 use super::manager::ExchangeManager;
 
-use super::entities::KlineFetchStatus;
+use super::entities::{KlineFetchStatus, ServiceControlSignal};
 
 #[derive(Debug, Clone)]
 pub struct Service {
@@ -104,6 +105,22 @@ impl Service {
         });
       })
       .boxed();
+  }
+  pub async fn graceful_shutdown(&self) -> GenericResult<()> {
+    tokio::task::block_in_place(|| -> GenericResult<()> {
+      let msg = match to_msgpack(&ServiceControlSignal::Shutdown) {
+        Err(e) => return Err(Box::new(e)),
+        Ok(v) => v,
+      };
+      self.nats.publish("historical_svc.ctrl", msg)?;
+      return Ok(());
+    })?;
+    let _ = self
+      .stop(Request::new(StopRequest {
+        exchanges: vec![Exchanges::Binance as i32],
+      }))
+      .await?;
+    return Ok(());
   }
 }
 

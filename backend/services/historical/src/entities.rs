@@ -9,3 +9,9 @@ pub enum KlineFetchStatus {
   WIP(HistChartProg),
   Completed,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum ServiceControlSignal {
+  Shutdown,
+}
