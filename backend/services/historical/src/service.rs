@@ -3,7 +3,7 @@ use ::std::pin::Pin;
 use ::futures::future::join_all;
 use ::futures::{SinkExt, Stream, StreamExt};
 use ::mongodb::Database;
-use ::nats::Connection as NatsCon;
+use ::nats::{Connection as NatsCon, Subscription as NatsSubsc};
 use ::num_traits::FromPrimitive;
 use ::rmp_serde::from_slice as read_msgpack;
 use ::rmp_serde::to_vec as to_msgpack;
@@ -121,6 +121,13 @@ impl Service {
       }))
       .await?;
     return Ok(());
+  }
+
+  fn subscribe_ctrl(&self) -> GenericResult<NatsSubsc> {
+    return match self.nats.subscribe("historical_svc.ctrl") {
+      Err(e) => Err(Box::new(e)),
+      Ok(v) => Ok(v),
+    };
   }
 }
 
