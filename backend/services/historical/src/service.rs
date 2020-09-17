@@ -165,25 +165,49 @@ impl HistChart for Service {
     );
     let subscriber = rpc_ret_on_err!(Code::Internal, manager.subscribe());
     let stream_logger = self.logger.new(o!("scope" => "Stream Logger"));
+    let ctrl_subscriber =
+      rpc_ret_on_err!(Code::Internal, self.subscribe_ctrl());
     let out = ::async_stream::try_stream! {
-      while let Some(msg) = subscriber.next() {
-        let prog: HistChartProg = match read_msgpack(&msg.data[..]) {
-          Err(e) => {
-            error!(
-              stream_logger,
-              "Got an error while deserializing HistFetch Prog. {}",
-              e
-            );
-            continue;
+      loop {
+        match ctrl_subscriber.try_next() {
+          Some(msg) => {
+            match read_msgpack(&msg.data[..]) {
+              Err(_) => {},
+              Ok(o) => {
+                match o {
+                  ServiceControlSignal::Shutdown => {
+                    let _ = ctrl_subscriber.unsubscribe();
+                    break;
+                  },
+                }
+              },
+            }
           },
-          Ok(v) => match v {
-            KlineFetchStatus::WIP(p) => p,
-            _ => {continue;}
+          None => {}
+        }
+        match subscriber.next() {
+          None => {},
+          Some(msg) => {
+            let prog: HistChartProg = match read_msgpack(&msg.data[..]) {
+              Err(e) => {
+                error!(
+                  stream_logger,
+                  "Got an error while deserializing HistFetch Prog. {}",
+                  e
+                );
+                continue;
+              },
+              Ok(v) => match v {
+                KlineFetchStatus::WIP(p) => p,
+                _ => {continue;}
+              },
+            };
+            yield prog;
           },
-        };
-        yield prog;
+        }
       }
       let _ = subscriber.unsubscribe();
+      error!(stream_logger, "Shutting down...");
     };
     return Ok(Response::new(Box::pin(out) as Self::subscribeStream));
   }
