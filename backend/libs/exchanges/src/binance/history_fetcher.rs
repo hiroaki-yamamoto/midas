@@ -281,6 +281,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
                 Ok(v) => match (v) {
                   KlineCtrl::Stop => {
                     let _ = stop_send.send(());
+                    let _ = ctrl_subsc.close();
                     return;
                   }
                 },

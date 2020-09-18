@@ -63,12 +63,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
   let rpc_svr = RPCServer::builder()
     .tls_config(cfg.tls.load()?)?
     .add_service(svc)
-    .serve_with_shutdown(
-      host,
-      sig.recv().then(|_| async move {
-        let _ = svc_clone.graceful_shutdown().await;
-      }),
-    )
+    .serve_with_shutdown(host, async move {
+      sig
+        .recv()
+        .then(|_| async move {
+          let _ = svc_clone.graceful_shutdown().await;
+        })
+        .await;
+    })
     .then(|_| async {
       warn!(logger, "GRPC Server is shutting down! Bye! Bye!");
     });

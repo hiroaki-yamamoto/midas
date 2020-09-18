@@ -1,4 +1,5 @@
 use ::std::pin::Pin;
+use ::std::time::Duration;
 
 use ::futures::future::join_all;
 use ::futures::{SinkExt, Stream, StreamExt};
@@ -17,7 +18,9 @@ use ::rpc::entities::Exchanges;
 use ::rpc::historical::{
   hist_chart_server::HistChart, HistChartFetchReq, HistChartProg, StopRequest,
 };
-use ::types::{rpc_ret_on_err, GenericResult, Result, Status};
+use ::types::{
+  rpc_ret_on_err, GenericResult, Result, SendableErrorResult, Status,
+};
 use ::warp::filters::BoxedFilter;
 use ::warp::{Filter, Reply};
 
@@ -123,7 +126,7 @@ impl Service {
     return Ok(());
   }
 
-  fn subscribe_ctrl(&self) -> GenericResult<NatsSubsc> {
+  fn subscribe_ctrl(&self) -> SendableErrorResult<NatsSubsc> {
     return match self.nats.subscribe("historical_svc.ctrl") {
       Err(e) => Err(Box::new(e)),
       Ok(v) => Ok(v),
@@ -169,26 +172,18 @@ impl HistChart for Service {
       rpc_ret_on_err!(Code::Internal, self.subscribe_ctrl());
     let out = ::async_stream::try_stream! {
       loop {
-        match ctrl_subscriber.try_next() {
-          Some(msg) => {
-            match read_msgpack(&msg.data[..]) {
-              Err(_) => {},
-              Ok(o) => {
-                match o {
-                  ServiceControlSignal::Shutdown => {
-                    let _ = ctrl_subscriber.unsubscribe();
-                    break;
-                  },
-                }
+        if let Some(msg)  = ctrl_subscriber.try_next() {
+          if let Ok(o) = read_msgpack(&msg.data[..]) {
+            match o {
+              ServiceControlSignal::Shutdown => {
+                let _ = ctrl_subscriber.close();
+                break;
               },
             }
-          },
-          None => {}
+          }
         }
-        match subscriber.next() {
-          None => {},
-          Some(msg) => {
-            let prog: HistChartProg = match read_msgpack(&msg.data[..]) {
+        if let Ok(msg) = subscriber.next_timeout(Duration::from_micros(1)) {
+          let prog: HistChartProg = match read_msgpack(&msg.data[..]) {
               Err(e) => {
                 error!(
                   stream_logger,
@@ -203,11 +198,9 @@ impl HistChart for Service {
               },
             };
             yield prog;
-          },
         }
       }
       let _ = subscriber.unsubscribe();
-      error!(stream_logger, "Shutting down...");
     };
     return Ok(Response::new(Box::pin(out) as Self::subscribeStream));
   }
