@@ -1,4 +1,5 @@
 use ::futures::future::FutureExt;
+use ::std::time::Duration as StdDuration;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
@@ -16,7 +17,7 @@ use ::config::{
 use ::mongodb::bson::{doc, Document};
 use ::mongodb::Collection;
 use ::rpc::historical::HistChartProg;
-use ::slog::{error, o, warn, Logger};
+use ::slog::{o, warn, Logger};
 use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use crate::entities::KlineCtrl;
@@ -149,39 +150,29 @@ impl HistoryFetcher {
       bounded::<SendableErrorResult<KlineResultsWithSymbol>>(CHAN_BUF_SIZE);
     let me = self.clone();
     ::tokio::spawn(async move {
-      while let Err(_) = stop.try_recv() {
-        let param_option = param_rec.recv();
+      while let Err(_) = stop.recv_timeout(StdDuration::from_nanos(1)) {
         let prog_send = &prog_send;
-        match param_option {
-          Ok(param) => {
-            let num_obj = (param.end_time - param.start_time).num_minutes();
-            if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
-              let _ = prog_send.send(Err(Box::new(NumObjectError {
-                field: String::from("Duration between start and end date"),
-                num_object: NUM_OBJECTS_TO_FETCH,
-              })));
-              continue;
-            }
-            me.fetch(
-              param.symbol.clone(),
-              param.num_symbols,
-              param.entire_data_len,
-              param.start_time,
-              Some(param.end_time),
-            )
-            .then(|item| async move {
-              let _ =
-                ::tokio::task::block_in_place(move || prog_send.send(item));
-            })
-            .await;
-          }
-          Err(err) => {
-            error!(
-              me.logger,
-              "Got an error while reading param ch. Err: {}", err
-            );
+        let param_option = param_rec.try_recv();
+        if let Ok(param) = param_option {
+          let num_obj = (param.end_time - param.start_time).num_minutes();
+          if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
+            let _ = prog_send.send(Err(Box::new(NumObjectError {
+              field: String::from("Duration between start and end date"),
+              num_object: NUM_OBJECTS_TO_FETCH,
+            })));
             continue;
           }
+          me.fetch(
+            param.symbol.clone(),
+            param.num_symbols,
+            param.entire_data_len,
+            param.start_time,
+            Some(param.end_time),
+          )
+          .then(|item| async move {
+            let _ = ::tokio::task::block_in_place(move || prog_send.send(item));
+          })
+          .await;
         }
       }
     });

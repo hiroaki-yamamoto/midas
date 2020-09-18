@@ -182,7 +182,7 @@ impl HistChart for Service {
             }
           }
         }
-        if let Ok(msg) = subscriber.next_timeout(Duration::from_micros(1)) {
+        if let Ok(msg) = subscriber.next_timeout(Duration::from_nanos(1)) {
           let prog: HistChartProg = match read_msgpack(&msg.data[..]) {
               Err(e) => {
                 error!(
