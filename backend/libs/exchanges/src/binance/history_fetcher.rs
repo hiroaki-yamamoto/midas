@@ -4,7 +4,6 @@ use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::crossbeam::channel::{bounded, Receiver, Sender};
 use ::nats::Connection;
-use ::rand::{thread_rng, Rng};
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
 use ::tokio::task::block_in_place;
@@ -152,7 +151,7 @@ impl HistoryFetcher {
     ::tokio::spawn(async move {
       while let Err(_) = stop.try_recv() {
         let param_option = param_rec.recv();
-        let prog_send = prog_send.clone();
+        let prog_send = &prog_send;
         match param_option {
           Ok(param) => {
             let num_obj = (param.end_time - param.start_time).num_minutes();
@@ -246,12 +245,12 @@ impl HistoryFetcherTrait for HistoryFetcher {
     }
     let symbols = self.symbol_fetcher.get(query).await?;
     let symbols_len = symbols.len();
-    let end_at = Utc::now();
     let me = self.clone();
     let res_send_in_thread = res_send.clone();
     let ctrl_subsc = ret_on_err!(self.broker.subscribe("binance.kline.ctrl"));
     let req_thread_logger = self.logger.new(o!("scope" => "Request Thread"));
     ::tokio::spawn(async move {
+      let end_at = Utc::now();
       for symbol in symbols {
         let start_at =
           match me.get_first_trade_date(symbol.symbol.clone()).await {
@@ -261,13 +260,14 @@ impl HistoryFetcherTrait for HistoryFetcher {
             }
             Ok(v) => v,
           };
-        let mut entire_data_len = (end_at.clone() - start_at).num_minutes();
+        let mut entire_data_len = (end_at - start_at).num_minutes();
         let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
         entire_data_len /= 1000;
         if entire_data_len_rem > 0 {
           entire_data_len += 1;
         }
-        let mut sec_end_date = end_at.clone();
+        let mut sec_end_date = end_at;
+        let mut index = 0;
         while sec_end_date > start_at {
           match ctrl_subsc.try_next() {
             Some(msg) => {
@@ -294,8 +294,8 @@ impl HistoryFetcherTrait for HistoryFetcher {
           if sec_start_date < start_at {
             sec_start_date = start_at;
           }
-          let index: usize = thread_rng().gen_range(0, senders.len());
-          let sender = &mut senders[index];
+          let index_to_choice = index % senders.len();
+          let sender = &mut senders[index_to_choice];
           let _ = sender.send(HistFetcherParam {
             symbol: symbol.symbol.clone(),
             num_symbols: symbols_len as i64,
@@ -304,6 +304,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
             end_time: sec_end_date,
           });
           sec_end_date = sec_start_date.clone();
+          index += 1;
         }
       }
     });

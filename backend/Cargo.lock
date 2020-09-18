@@ -755,7 +755,6 @@ dependencies = [
  "futures",
  "mongodb",
  "nats",
- "rand 0.7.3",
  "reqwest",
  "rmp-serde",
  "rpc",
