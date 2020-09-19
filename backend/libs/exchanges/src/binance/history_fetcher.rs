@@ -6,14 +6,15 @@ use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::nats::Connection;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
+use ::tokio::sync::broadcast;
 use ::tokio::sync::mpsc;
-use ::tokio::sync::watch;
 use ::tokio::task::block_in_place;
 use ::tokio::time as task_time;
 use ::url::Url;
 
 use ::config::{
-  DEFAULT_RECONNECT_INTERVAL, NUM_CONC_TASKS, NUM_OBJECTS_TO_FETCH,
+  CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_CONC_TASKS,
+  NUM_OBJECTS_TO_FETCH,
 };
 use ::mongodb::bson::{doc, Document};
 use ::mongodb::Collection;
@@ -56,10 +57,7 @@ impl HistoryFetcher {
     return Ok(Self {
       num_reconnect: num_reconnect.unwrap_or(20),
       endpoint: (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()?,
-      recorder: HistoryRecorder::new(
-        col,
-        logger.new(o!("scope" => "History Recorder")),
-      ),
+      recorder: HistoryRecorder::new(col),
       logger,
       broker,
       symbol_fetcher,
@@ -141,7 +139,7 @@ impl HistoryFetcher {
 
   pub fn spawn(
     &self,
-    mut stop: watch::Receiver<()>,
+    mut stop: broadcast::Receiver<()>,
   ) -> (
     mpsc::UnboundedSender<HistFetcherParam>,
     mpsc::UnboundedReceiver<SendableErrorResult<KlineResultsWithSymbol>>,
@@ -225,18 +223,18 @@ impl HistoryFetcherTrait for HistoryFetcher {
     }
     let (res_send, res_recv) =
       mpsc::unbounded_channel::<SendableErrorResult<HistChartProg>>();
-    let (stop_send, stop_recv) = watch::channel(());
+    let (stop_send, _) = broadcast::channel(CHAN_BUF_SIZE);
     let mut senders = vec![];
     let mut recvers = vec![];
     for _ in 0..NUM_CONC_TASKS {
-      let (param, res) = self.spawn(stop_recv.clone());
+      let (param, res) = self.spawn(stop_send.subscribe());
       senders.push(param);
       recvers.push(res);
     }
     for recv_ch in recvers {
       self
         .recorder
-        .spawn(stop_recv.clone(), recv_ch, res_send.clone());
+        .spawn(stop_send.subscribe(), recv_ch, res_send.clone());
     }
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
@@ -279,7 +277,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
                 }
                 Ok(v) => match (v) {
                   KlineCtrl::Stop => {
-                    let _ = stop_send.broadcast(());
+                    let _ = stop_send.send(());
                     let _ = ctrl_subsc.close();
                     return;
                   }

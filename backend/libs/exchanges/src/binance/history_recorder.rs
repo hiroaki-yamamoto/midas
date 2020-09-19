@@ -2,8 +2,7 @@ use ::std::time::Duration;
 
 use ::mongodb::bson::to_bson;
 use ::mongodb::Collection;
-use ::slog::Logger;
-use ::tokio::sync::{mpsc, watch};
+use ::tokio::sync::{broadcast, mpsc};
 use ::tokio::time;
 
 use ::rpc::historical::HistChartProg;
@@ -14,17 +13,16 @@ use super::entities::KlineResultsWithSymbol;
 #[derive(Debug, Clone)]
 pub struct HistoryRecorder {
   col: Collection,
-  log: Logger,
 }
 
 impl HistoryRecorder {
-  pub fn new(col: Collection, log: Logger) -> Self {
-    return Self { col, log };
+  pub fn new(col: Collection) -> Self {
+    return Self { col };
   }
 
   pub fn spawn(
     &self,
-    mut stop: watch::Receiver<()>,
+    mut stop: broadcast::Receiver<()>,
     mut value_ch: mpsc::UnboundedReceiver<
       SendableErrorResult<KlineResultsWithSymbol>,
     >,
