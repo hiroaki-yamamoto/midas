@@ -41,7 +41,7 @@ where
     &self,
     symbols: Vec<String>,
   ) -> SendableErrorResult<()> {
-    let prog = self.history_fetcher.refresh(symbols).await?;
+    let mut prog = self.history_fetcher.refresh(symbols).await?;
     let logger_in_thread = self
       .logger
       .new(o!("scope" => "refresh_historical_klines.thread"));
@@ -49,7 +49,7 @@ where
     let name = self.name.clone();
     ::tokio::spawn(async move {
       let mut hist_fetch_prog = HashMap::new();
-      while let Ok(prog) = prog.recv() {
+      while let Some(prog) = prog.recv().await {
         let prog = match prog {
           Err(e) => {
             error!(

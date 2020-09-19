@@ -3,16 +3,17 @@ use ::std::time::Duration as StdDuration;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use ::crossbeam::channel::{bounded, Receiver, Sender};
 use ::nats::Connection;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
+use ::tokio::sync::mpsc;
+use ::tokio::sync::watch;
 use ::tokio::task::block_in_place;
+use ::tokio::time as task_time;
 use ::url::Url;
 
 use ::config::{
-  CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_CONC_TASKS,
-  NUM_OBJECTS_TO_FETCH,
+  DEFAULT_RECONNECT_INTERVAL, NUM_CONC_TASKS, NUM_OBJECTS_TO_FETCH,
 };
 use ::mongodb::bson::{doc, Document};
 use ::mongodb::Collection;
@@ -140,17 +141,20 @@ impl HistoryFetcher {
 
   pub fn spawn(
     &self,
-    stop: Receiver<()>,
+    mut stop: watch::Receiver<()>,
   ) -> (
-    Sender<HistFetcherParam>,
-    Receiver<SendableErrorResult<KlineResultsWithSymbol>>,
+    mpsc::UnboundedSender<HistFetcherParam>,
+    mpsc::UnboundedReceiver<SendableErrorResult<KlineResultsWithSymbol>>,
   ) {
-    let (param_send, param_rec) = bounded::<HistFetcherParam>(CHAN_BUF_SIZE);
+    let (param_send, mut param_rec) =
+      mpsc::unbounded_channel::<HistFetcherParam>();
     let (prog_send, prog_rec) =
-      bounded::<SendableErrorResult<KlineResultsWithSymbol>>(CHAN_BUF_SIZE);
+      mpsc::unbounded_channel::<SendableErrorResult<KlineResultsWithSymbol>>();
     let me = self.clone();
     ::tokio::spawn(async move {
-      while let Err(_) = stop.recv_timeout(StdDuration::from_nanos(1)) {
+      while let Err(_) =
+        task_time::timeout(StdDuration::from_nanos(1), stop.recv()).await
+      {
         let prog_send = &prog_send;
         let param_option = param_rec.try_recv();
         if let Ok(param) = param_option {
@@ -170,7 +174,9 @@ impl HistoryFetcher {
             Some(param.end_time),
           )
           .then(|item| async move {
-            let _ = ::tokio::task::block_in_place(move || prog_send.send(item));
+            block_in_place(move || {
+              let _ = prog_send.send(item);
+            });
           })
           .await;
         }
@@ -209,15 +215,17 @@ impl HistoryFetcherTrait for HistoryFetcher {
   async fn refresh(
     &self,
     symbol: Vec<String>,
-  ) -> SendableErrorResult<Receiver<SendableErrorResult<HistChartProg>>> {
+  ) -> SendableErrorResult<
+    mpsc::UnboundedReceiver<SendableErrorResult<HistChartProg>>,
+  > {
     if symbol.len() < 1 {
       return Err(Box::new(EmptyError {
         field: String::from("symbol"),
       }));
     }
     let (res_send, res_recv) =
-      bounded::<SendableErrorResult<HistChartProg>>(CHAN_BUF_SIZE);
-    let (stop_send, stop_recv) = bounded(0);
+      mpsc::unbounded_channel::<SendableErrorResult<HistChartProg>>();
+    let (stop_send, stop_recv) = watch::channel(());
     let mut senders = vec![];
     let mut recvers = vec![];
     for _ in 0..NUM_CONC_TASKS {
@@ -271,7 +279,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
                 }
                 Ok(v) => match (v) {
                   KlineCtrl::Stop => {
-                    let _ = stop_send.send(());
+                    let _ = stop_send.broadcast(());
                     let _ = ctrl_subsc.close();
                     return;
                   }

@@ -1,9 +1,10 @@
 use ::std::time::Duration;
 
-use ::crossbeam::channel::{Receiver, Sender};
 use ::mongodb::bson::to_bson;
 use ::mongodb::Collection;
 use ::slog::Logger;
+use ::tokio::sync::{mpsc, watch};
+use ::tokio::time;
 
 use ::rpc::historical::HistChartProg;
 use ::types::SendableErrorResult;
@@ -23,15 +24,18 @@ impl HistoryRecorder {
 
   pub fn spawn(
     &self,
-    stop: Receiver<()>,
-    value_ch: Receiver<SendableErrorResult<KlineResultsWithSymbol>>,
-    prog_ch: Sender<SendableErrorResult<HistChartProg>>,
+    mut stop: watch::Receiver<()>,
+    mut value_ch: mpsc::UnboundedReceiver<
+      SendableErrorResult<KlineResultsWithSymbol>,
+    >,
+    prog_ch: mpsc::UnboundedSender<SendableErrorResult<HistChartProg>>,
   ) {
     let col = self.col.clone();
     ::tokio::spawn(async move {
-      while let Err(_) = stop.try_recv() {
-        if let Ok(kline_reuslt) = value_ch.recv_timeout(Duration::from_nanos(1))
-        {
+      while let Err(_) =
+        time::timeout(Duration::from_nanos(1), stop.recv()).await
+      {
+        if let Some(kline_reuslt) = value_ch.recv().await {
           match kline_reuslt {
             Err(err) => {
               let _ = prog_ch.send(Err(err));
@@ -46,9 +50,7 @@ impl HistoryRecorder {
                 num_objects: ok.entire_data_len,
                 cur_object_num: 1,
               };
-              ::tokio::task::block_in_place(|| {
-                let _ = prog_ch.send(Ok(prog));
-              });
+              let _ = prog_ch.send(Ok(prog));
               let klines = raw_klines
                 .into_iter()
                 .filter_map(|item| item.ok())
