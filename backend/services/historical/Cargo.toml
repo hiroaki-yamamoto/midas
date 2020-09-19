@@ -19,7 +19,7 @@ serde = {version = "1.0.116", features = ["derive"]}
 rmp-serde = "0.14.4"
 nats = "0.8.0"
 mongodb = "1.1.1"
-clap = "3.0.0-beta.1"
+clap = "3.0.0-beta.2"
 serde_yaml = "0.8.13"
 tokio = {version = "0.2.22", features = ["macros", "rt-threaded", "signal"]}
 slog = "2.5.2"
