@@ -1,15 +1,14 @@
 use ::futures::future::FutureExt;
-use ::std::time::Duration as StdDuration;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::nats::Connection;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
+use ::tokio::select;
 use ::tokio::sync::broadcast;
 use ::tokio::sync::mpsc;
 use ::tokio::task::block_in_place;
-use ::tokio::time as task_time;
 use ::url::Url;
 
 use ::config::{
@@ -150,33 +149,33 @@ impl HistoryFetcher {
       mpsc::unbounded_channel::<SendableErrorResult<KlineResultsWithSymbol>>();
     let me = self.clone();
     ::tokio::spawn(async move {
-      while let Err(_) =
-        task_time::timeout(StdDuration::from_nanos(1), stop.recv()).await
-      {
+      loop {
         let prog_send = &prog_send;
-        let param_option = param_rec.try_recv();
-        if let Ok(param) = param_option {
-          let num_obj = (param.end_time - param.start_time).num_minutes();
-          if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
-            let _ = prog_send.send(Err(Box::new(NumObjectError {
-              field: String::from("Duration between start and end date"),
-              num_object: NUM_OBJECTS_TO_FETCH,
-            })));
-            continue;
+        select! {
+          _ = stop.recv() => {break;},
+          param_option_result = param_rec.recv() => {
+            if let Some(param) = param_option_result {
+              let num_obj = (param.end_time - param.start_time).num_minutes();
+              if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
+                let _ = prog_send.send(Err(Box::new(NumObjectError {
+                  field: String::from("Duration between start and end date"),
+                  num_object: NUM_OBJECTS_TO_FETCH,
+                })));
+                continue;
+              }
+              me.fetch(
+                param.symbol.clone(),
+                param.num_symbols,
+                param.entire_data_len,
+                param.start_time,
+                Some(param.end_time),
+              )
+              .then(|item| async move {
+                let _ = prog_send.send(item);
+              })
+              .await;
+            }
           }
-          me.fetch(
-            param.symbol.clone(),
-            param.num_symbols,
-            param.entire_data_len,
-            param.start_time,
-            Some(param.end_time),
-          )
-          .then(|item| async move {
-            block_in_place(move || {
-              let _ = prog_send.send(item);
-            });
-          })
-          .await;
         }
       }
     });

@@ -10,6 +10,7 @@ use ::rmp_serde::from_slice as read_msgpack;
 use ::rmp_serde::to_vec as to_msgpack;
 use ::serde_json::to_string as jsonify;
 use ::slog::{error, o, Logger};
+use ::tokio::select;
 use ::tonic::{async_trait, Code, Request, Response};
 use ::warp::ws::{Message, WebSocket, Ws};
 
@@ -172,6 +173,39 @@ impl HistChart for Service {
       rpc_ret_on_err!(Code::Internal, self.subscribe_ctrl());
     let out = ::async_stream::try_stream! {
       loop {
+        // select! {
+        //   msg_opt = ctrl_subscriber.next() => {
+        //     if let Some(msg) = msg_opt {
+        //       if let Ok(o) = read_msgpack(&msg.data[..]) {
+        //         match o {
+        //           ServiceControlSignal::Shutdown => {
+        //             let _ = ctrl_subscriber.close();
+        //             break;
+        //           },
+        //         }
+        //       }
+        //     }
+        //   },
+        //   msg_result = subscriber.next() => {
+        //     if let Ok(msg) = msg_result {
+        //       let prog: HistChartProg = match read_msgpack(&msg.data[..]) {
+        //         Err(e) => {
+        //           error!(
+        //             stream_logger,
+        //             "Got an error while deserializing HistFetch Prog. {}",
+        //             e
+        //           );
+        //           continue;
+        //         },
+        //         Ok(v) => match v {
+        //           KlineFetchStatus::WIP(p) => p,
+        //           _ => {continue;}
+        //         },
+        //       };
+        //       yield prog;
+        //     }
+        //   }
+        // }
         if let Some(msg)  = ctrl_subscriber.try_next() {
           if let Ok(o) = read_msgpack(&msg.data[..]) {
             match o {
