@@ -93,7 +93,7 @@ impl HistoryFetcher {
         if let Some(Ok(signal)) = stream.next().await {
           match signal {
             KlineCtrl::Stop => {
-              stop_sender_thread.send(());
+              let _ = stop_sender_thread.send(());
             }
           }
         }
@@ -261,18 +261,19 @@ impl HistoryFetcherTrait for HistoryFetcher {
     }
     let (res_send, res_recv) =
       mpsc::unbounded_channel::<SendableErrorResult<HistChartProg>>();
-    let (stop_send, _) = broadcast::channel(CHAN_BUF_SIZE);
     let mut senders = vec![];
     let mut recvers = vec![];
     for _ in 0..NUM_CONC_TASKS {
-      let (param, res) = self.spawn(stop_send.subscribe());
+      let (param, res) = self.spawn(self.stop_signal.subscribe());
       senders.push(param);
       recvers.push(res);
     }
     for recv_ch in recvers {
-      self
-        .recorder
-        .spawn(stop_send.subscribe(), recv_ch, res_send.clone());
+      self.recorder.spawn(
+        self.stop_signal.subscribe(),
+        recv_ch,
+        res_send.clone(),
+      );
     }
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {

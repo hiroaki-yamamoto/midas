@@ -1,38 +1,41 @@
 use ::std::collections::HashMap;
 
+use ::futures::join;
+
 use ::nats::asynk::{Connection as NatsConnection, Subscription as NatsSubsc};
 
 use ::exchanges::HistoryFetcher;
 use ::rmp_serde::to_vec;
+use ::rpc::entities::Exchanges;
 use ::slog::{error, o, Logger};
-use ::types::{GenericResult, SendableErrorResult};
+use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use crate::entities::KlineFetchStatus;
 
-#[derive(Debug)]
-pub(crate) struct ExchangeManager<'nats, T>
+#[derive(Debug, Clone)]
+pub(crate) struct ExchangeManager<T>
 where
   T: HistoryFetcher + Send,
 {
-  pub name: String,
-  pub history_fetcher: &'nats T,
-  nats: &'nats NatsConnection,
+  pub history_fetcher: T,
+  exchange: Exchanges,
+  nats: NatsConnection,
   logger: Logger,
 }
 
-impl<'nats, T> ExchangeManager<'nats, T>
+impl<T> ExchangeManager<T>
 where
   T: HistoryFetcher + Send,
 {
   pub fn new(
-    name: String,
-    history_fetcher: &'nats T,
-    nats: &'nats NatsConnection,
+    exchange: Exchanges,
+    history_fetcher: T,
+    nats: NatsConnection,
     logger: Logger,
   ) -> Self {
     return Self {
       history_fetcher,
-      name,
+      exchange,
       nats,
       logger,
     };
@@ -46,7 +49,7 @@ where
       .logger
       .new(o!("scope" => "refresh_historical_klines.thread"));
     let nats_con = self.nats.clone();
-    let name = self.name.clone();
+    let exchange = self.exchange;
     ::tokio::spawn(async move {
       let mut hist_fetch_prog = HashMap::new();
       while let Some(prog) = prog.recv().await {
@@ -72,28 +75,38 @@ where
             v
           }
         };
-        let result = KlineFetchStatus::WIP(result.to_owned());
-        nats_broadcast_status(&logger_in_thread, &nats_con, &name, &result);
+        let result = KlineFetchStatus::Progress {
+          exchange,
+          progress: result.to_owned(),
+        };
+        nats_broadcast_status(&logger_in_thread, &nats_con, &result).await;
       }
-      let result = KlineFetchStatus::Completed;
-      nats_broadcast_status(&logger_in_thread, &nats_con, &name, &result);
     });
     return Ok(());
   }
 
   pub async fn subscribe(&self) -> GenericResult<NatsSubsc> {
-    let channel = format!("{}.kline.progress", self.name);
-    return match self.nats.subscribe(&channel).await {
+    return match self.nats.subscribe("kline.progress").await {
       Err(err) => Err(Box::new(err)),
       Ok(v) => Ok(v),
     };
+  }
+
+  pub async fn stop(&self) -> SendableErrorResult<()> {
+    let status = KlineFetchStatus::Stop;
+    let msg = ret_on_err!(to_vec(&status));
+    let stop_progress = self.nats.publish("kline.progress", &msg[..]);
+    let stop_hist_fetch = self.history_fetcher.stop();
+    let (stop_progress, stop_hist_fetch) =
+      join!(stop_progress, stop_hist_fetch);
+    let _ = stop_progress.or(stop_hist_fetch)?;
+    return Ok(());
   }
 }
 
 async fn nats_broadcast_status(
   log: &Logger,
   con: &NatsConnection,
-  name: &str,
   status: &KlineFetchStatus,
 ) {
   let msg = match to_vec(status) {
@@ -102,17 +115,14 @@ async fn nats_broadcast_status(
       error!(
         log,
         "Failed to generate a message to broadcast history fetch
-                progress: {}, status: {:?}",
+        progress: {}, status: {:?}",
         err,
         status,
       );
       return;
     }
   };
-  match con
-    .publish(&format!("{}.kline.progress", name), &msg[..])
-    .await
-  {
+  match con.publish("kline.progress", &msg[..]).await {
     Err(err) => {
       error!(
         log,

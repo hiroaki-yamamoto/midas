@@ -33,11 +33,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     logger = prd_logger;
   }
   info!(logger, "Historical Kline Service");
-  let broker = ::nats::connect(&cfg.broker_url)?;
+  let broker = ::nats::asynk::connect(&cfg.broker_url).await?;
   let db = DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await?)?
     .database("midas");
   let host: SocketAddr = cfg.host.parse()?;
-  let svc = Service::new(&logger, &db, broker.clone())?;
+  let svc = Service::new(&logger, &db, broker.clone()).await?;
   let ws_route = svc.get_websocket_route();
 
   let mut sig = signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT))?;

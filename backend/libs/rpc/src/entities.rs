@@ -11,7 +11,10 @@ pub struct SymbolInfo {
   Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
 )]
 #[repr(i32)]
-#[derive(::num_derive::FromPrimitive)]
+#[derive(
+  ::num_derive::FromPrimitive, ::serde::Serialize, ::serde::Deserialize,
+)]
+#[serde(tag = "exchange")]
 pub enum Exchanges {
   Binance = 0,
 }

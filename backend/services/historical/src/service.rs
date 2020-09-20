@@ -1,40 +1,35 @@
+use ::std::fmt::Debug;
 use ::std::pin::Pin;
-use ::std::time::Duration;
 
 use ::futures::future::join_all;
-use ::futures::{join, SinkExt, Stream};
+use ::futures::{SinkExt, Stream};
 use ::mongodb::Database;
-use ::nats::asynk::{Connection as NatsCon, Subscription as NatsSubsc};
+use ::nats::asynk::Connection as NatsCon;
 use ::num_traits::FromPrimitive;
 use ::rmp_serde::from_slice as read_msgpack;
-use ::rmp_serde::to_vec as to_msgpack;
 use ::serde_json::to_string as jsonify;
 use ::slog::{error, o, Logger};
-use ::tokio::select;
 use ::tokio::stream::StreamExt as TonicStreamExt;
 use ::tonic::{async_trait, Code, Request, Response};
 use ::warp::ws::{Message, WebSocket, Ws};
 
-use ::exchanges::{binance, HistoryFetcher};
+use ::exchanges::binance;
 use ::rpc::entities::Exchanges;
 use ::rpc::historical::{
   hist_chart_server::HistChart, HistChartFetchReq, HistChartProg, StopRequest,
 };
-use ::types::{
-  rpc_ret_on_err, GenericResult, Result, SendableErrorResult, Status,
-};
+use ::types::{rpc_ret_on_err, GenericResult, Result, Status};
 use ::warp::filters::BoxedFilter;
 use ::warp::{Filter, Reply};
 
 use super::manager::ExchangeManager;
 
-use super::entities::{KlineFetchStatus, ServiceControlSignal};
+use super::entities::KlineFetchStatus;
 
 #[derive(Debug, Clone)]
 pub struct Service {
   logger: Logger,
-  binance: binance::HistoryFetcher,
-  nats: NatsCon,
+  binance: ExchangeManager<binance::HistoryFetcher>,
 }
 
 impl Service {
@@ -44,21 +39,28 @@ impl Service {
     nats: NatsCon,
   ) -> GenericResult<Self> {
     let log = log.new(o!("scope" => "History Fetch RPC Service"));
-    return Ok(Self {
-      logger: log.clone(),
-      binance: binance::HistoryFetcher::new(
-        None,
-        db.collection("binance.history"),
-        log.new(o!("exchange" => "Binance", "scope" => "HistoryFetch")),
-        nats.clone(),
-        binance::SymbolFetcher::new(
-          log.new(o!("exchange" => "Binance", "scope" => "SymbolFetch")),
-          db.collection("binance.symbol"),
-        ),
-      )
-      .await?,
+    let binance = binance::HistoryFetcher::new(
+      None,
+      db.collection("binance.history"),
+      log.new(o!("exchange" => "Binance", "scope" => "HistoryFetch")),
+      nats.clone(),
+      binance::SymbolFetcher::new(
+        log.new(o!("exchange" => "Binance", "scope" => "SymbolFetch")),
+        db.collection("binance.symbol"),
+      ),
+    )
+    .await?;
+    let binance = ExchangeManager::new(
+      Exchanges::Binance,
+      binance,
       nats,
-    });
+      log.new(o!("scope" => "Binance Exchange Manager")),
+    );
+    let ret = Self {
+      logger: log.clone(),
+      binance,
+    };
+    return Ok(ret);
   }
 
   pub fn get_websocket_route(&self) -> BoxedFilter<(impl Reply,)> {
@@ -113,25 +115,12 @@ impl Service {
       .boxed();
   }
   pub async fn graceful_shutdown(&self) -> GenericResult<()> {
-    let msg = match to_msgpack(&ServiceControlSignal::Shutdown) {
-      Err(e) => return Err(Box::new(e)),
-      Ok(v) => v,
-    };
-    let svc_signal = self.nats.publish("historical_svc.ctrl", msg);
-    let fetcher_signal = self.stop(Request::new(StopRequest {
-      exchanges: vec![Exchanges::Binance as i32],
-    }));
-    let (svc_res, fetcher_res) = join!(svc_signal, fetcher_signal);
-    let _ = svc_res?;
-    let _ = fetcher_res?;
+    let _ = self
+      .stop(Request::new(StopRequest {
+        exchanges: vec![Exchanges::Binance as i32],
+      }))
+      .await?;
     return Ok(());
-  }
-
-  async fn subscribe_ctrl(&self) -> SendableErrorResult<NatsSubsc> {
-    return match self.nats.subscribe("historical_svc.ctrl").await {
-      Err(e) => Err(Box::new(e)),
-      Ok(v) => Ok(v),
-    };
   }
 }
 
@@ -142,15 +131,9 @@ impl HistChart for Service {
     req: Request<HistChartFetchReq>,
   ) -> Result<Response<()>> {
     let req = req.into_inner();
-    let manager = ExchangeManager::new(
-      String::from("binance"),
-      &self.binance,
-      &self.nats,
-      self.logger.new(o!("scope" => "Binance Exchange Manager")),
-    );
     rpc_ret_on_err!(
       Code::Internal,
-      manager.refresh_historical_klines(req.symbols).await
+      self.binance.refresh_historical_klines(req.symbols).await
     );
     return Ok(Response::new(()));
   }
@@ -161,54 +144,28 @@ impl HistChart for Service {
     &self,
     _: tonic::Request<()>,
   ) -> Result<tonic::Response<Self::subscribeStream>> {
-    let manager = ExchangeManager::new(
-      String::from("binance"),
-      &self.binance,
-      &self.nats,
-      self.logger.new(o!("scope" => "Binance Exchange Manager")),
-    );
     let stream_logger = self.logger.new(o!("scope" => "Stream Logger"));
     let mut subscriber =
-      rpc_ret_on_err!(Code::Internal, manager.subscribe().await);
-    let mut ctrl_subscriber =
-      rpc_ret_on_err!(Code::Internal, self.subscribe_ctrl().await);
+      rpc_ret_on_err!(Code::Internal, self.binance.subscribe().await);
     let out = ::async_stream::try_stream! {
-      loop {
-        let mut must_yield = false;
-        let prog = select! {
-          msg_opt = ctrl_subscriber.next() => {
-            must_yield = false;
-            if let Some(msg) = msg_opt {
-              if let Ok(o) = read_msgpack(&msg.data[..]) {
-                match o {
-                  ServiceControlSignal::Shutdown => {
-                    let _ = ctrl_subscriber.unsubscribe();
-                    break;
-                  },
-                }
-              }
+      while let Some(msg) = subscriber.next().await {
+        match read_msgpack(&msg.data[..]) {
+          Err(e) => {
+            error!(
+              stream_logger,
+              "Got an error while deserializing HistFetch Prog. {}",
+              e
+            );
+            continue;
+          },
+          Ok(v) => {
+            match v {
+              KlineFetchStatus::Progress{exchange: _, progress} => {yield progress;},
+              KlineFetchStatus::Stop => {break;},
+              // _ => {continue;}
             }
           },
-          msg_opt = subscriber.next() => {
-            if let Some(msg) = msg_opt {
-              return match read_msgpack(&msg.data[..]) {
-                Err(e) => {
-                  error!(
-                    stream_logger,
-                    "Got an error while deserializing HistFetch Prog. {}",
-                    e
-                  );
-                  continue;
-                },
-                Ok(v) => match v {
-                  KlineFetchStatus::WIP(p) => p,
-                  _ => {continue;}
-                },
-              };
-            }
-          }
         };
-        yield prog;
       }
       let _ = subscriber.unsubscribe();
     };
