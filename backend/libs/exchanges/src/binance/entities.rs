@@ -135,23 +135,17 @@ impl Kline {
   ) -> SendableErrorResult<Self> {
     return Ok(Kline {
       symbol,
-      open_time: (cast_datetime("open_time", payload[0].clone())?).into(),
-      open_price: cast_f64("open_price", payload[1].clone())?,
-      high_price: cast_f64("high_price", payload[2].clone())?,
-      low_price: cast_f64("low_price", payload[3].clone())?,
-      close_price: cast_f64("close_price", payload[4].clone())?,
-      volume: cast_f64("volume", payload[5].clone())?,
-      close_time: (cast_datetime("close_time", payload[6].clone())?).into(),
-      quote_volume: cast_f64("quote_volume", payload[7].clone())?,
-      num_trades: cast_i64("num_trades", payload[8].clone())?,
-      taker_buy_base_volume: cast_f64(
-        "taker_buy_base_volume",
-        payload[9].clone(),
-      )?,
-      taker_buy_quote_volume: cast_f64(
-        "taker_buy_quote_volume",
-        payload[10].clone(),
-      )?,
+      open_time: (cast_datetime("open_time", &payload[0])?).into(),
+      open_price: cast_f64("open_price", &payload[1])?,
+      high_price: cast_f64("high_price", &payload[2])?,
+      low_price: cast_f64("low_price", &payload[3])?,
+      close_price: cast_f64("close_price", &payload[4])?,
+      volume: cast_f64("volume", &payload[5])?,
+      close_time: (cast_datetime("close_time", &payload[6])?).into(),
+      quote_volume: cast_f64("quote_volume", &payload[7])?,
+      num_trades: cast_i64("num_trades", &payload[8])?,
+      taker_buy_base_volume: cast_f64("taker_buy_base_volume", &payload[9])?,
+      taker_buy_quote_volume: cast_f64("taker_buy_quote_volume", &payload[10])?,
     });
   }
 }
