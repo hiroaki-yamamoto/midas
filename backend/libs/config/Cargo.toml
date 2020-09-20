@@ -11,5 +11,5 @@ types = { path = "../types" }
 
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8.13"
-clap = "3.0.0-beta.1"
+clap = "3.0.0-beta.2"
 tonic = { version = "0.3.1", features = ["transport", "tls"] }
