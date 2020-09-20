@@ -10,3 +10,4 @@ edition = "2018"
 tonic = "0.3.1"
 url = "2.1.1"
 serde = "1.0.116"
+tokio = {version = "0.2.22", features = ["stream"]}

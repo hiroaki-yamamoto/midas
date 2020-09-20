@@ -1,5 +1,3 @@
-use ::std::error::Error;
-
 use ::chrono::{DateTime as ChronoDateTime, Utc};
 use ::mongodb::bson::DateTime as MongoDateTime;
 use ::rpc::entities::SymbolInfo;
@@ -158,7 +156,7 @@ impl Kline {
   }
 }
 
-pub type KlineResults = Vec<Result<Kline, Box<dyn Error + Send>>>;
+pub type KlineResults = Vec<SendableErrorResult<Kline>>;
 
 pub struct KlineResultsWithSymbol {
   pub symbol: String,

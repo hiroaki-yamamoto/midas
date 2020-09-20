@@ -2,15 +2,16 @@ use ::std::pin::Pin;
 use ::std::time::Duration;
 
 use ::futures::future::join_all;
-use ::futures::{SinkExt, Stream, StreamExt};
+use ::futures::{join, SinkExt, Stream};
 use ::mongodb::Database;
-use ::nats::{Connection as NatsCon, Subscription as NatsSubsc};
+use ::nats::asynk::{Connection as NatsCon, Subscription as NatsSubsc};
 use ::num_traits::FromPrimitive;
 use ::rmp_serde::from_slice as read_msgpack;
 use ::rmp_serde::to_vec as to_msgpack;
 use ::serde_json::to_string as jsonify;
 use ::slog::{error, o, Logger};
 use ::tokio::select;
+use ::tokio::stream::StreamExt as TonicStreamExt;
 use ::tonic::{async_trait, Code, Request, Response};
 use ::warp::ws::{Message, WebSocket, Ws};
 
@@ -37,7 +38,7 @@ pub struct Service {
 }
 
 impl Service {
-  pub fn new(
+  pub async fn new(
     log: &Logger,
     db: &Database,
     nats: NatsCon,
@@ -54,7 +55,8 @@ impl Service {
           log.new(o!("exchange" => "Binance", "scope" => "SymbolFetch")),
           db.collection("binance.symbol"),
         ),
-      )?,
+      )
+      .await?,
       nats,
     });
   }
@@ -111,24 +113,22 @@ impl Service {
       .boxed();
   }
   pub async fn graceful_shutdown(&self) -> GenericResult<()> {
-    tokio::task::block_in_place(|| -> GenericResult<()> {
-      let msg = match to_msgpack(&ServiceControlSignal::Shutdown) {
-        Err(e) => return Err(Box::new(e)),
-        Ok(v) => v,
-      };
-      self.nats.publish("historical_svc.ctrl", msg)?;
-      return Ok(());
-    })?;
-    let _ = self
-      .stop(Request::new(StopRequest {
-        exchanges: vec![Exchanges::Binance as i32],
-      }))
-      .await?;
+    let msg = match to_msgpack(&ServiceControlSignal::Shutdown) {
+      Err(e) => return Err(Box::new(e)),
+      Ok(v) => v,
+    };
+    let svc_signal = self.nats.publish("historical_svc.ctrl", msg);
+    let fetcher_signal = self.stop(Request::new(StopRequest {
+      exchanges: vec![Exchanges::Binance as i32],
+    }));
+    let (svc_res, fetcher_res) = join!(svc_signal, fetcher_signal);
+    let _ = svc_res?;
+    let _ = fetcher_res?;
     return Ok(());
   }
 
-  fn subscribe_ctrl(&self) -> SendableErrorResult<NatsSubsc> {
-    return match self.nats.subscribe("historical_svc.ctrl") {
+  async fn subscribe_ctrl(&self) -> SendableErrorResult<NatsSubsc> {
+    return match self.nats.subscribe("historical_svc.ctrl").await {
       Err(e) => Err(Box::new(e)),
       Ok(v) => Ok(v),
     };
@@ -167,72 +167,48 @@ impl HistChart for Service {
       &self.nats,
       self.logger.new(o!("scope" => "Binance Exchange Manager")),
     );
-    let subscriber = rpc_ret_on_err!(Code::Internal, manager.subscribe());
     let stream_logger = self.logger.new(o!("scope" => "Stream Logger"));
-    let ctrl_subscriber =
-      rpc_ret_on_err!(Code::Internal, self.subscribe_ctrl());
+    let mut subscriber =
+      rpc_ret_on_err!(Code::Internal, manager.subscribe().await);
+    let mut ctrl_subscriber =
+      rpc_ret_on_err!(Code::Internal, self.subscribe_ctrl().await);
     let out = ::async_stream::try_stream! {
       loop {
-        // select! {
-        //   msg_opt = ctrl_subscriber.next() => {
-        //     if let Some(msg) = msg_opt {
-        //       if let Ok(o) = read_msgpack(&msg.data[..]) {
-        //         match o {
-        //           ServiceControlSignal::Shutdown => {
-        //             let _ = ctrl_subscriber.close();
-        //             break;
-        //           },
-        //         }
-        //       }
-        //     }
-        //   },
-        //   msg_result = subscriber.next() => {
-        //     if let Ok(msg) = msg_result {
-        //       let prog: HistChartProg = match read_msgpack(&msg.data[..]) {
-        //         Err(e) => {
-        //           error!(
-        //             stream_logger,
-        //             "Got an error while deserializing HistFetch Prog. {}",
-        //             e
-        //           );
-        //           continue;
-        //         },
-        //         Ok(v) => match v {
-        //           KlineFetchStatus::WIP(p) => p,
-        //           _ => {continue;}
-        //         },
-        //       };
-        //       yield prog;
-        //     }
-        //   }
-        // }
-        if let Some(msg)  = ctrl_subscriber.try_next() {
-          if let Ok(o) = read_msgpack(&msg.data[..]) {
-            match o {
-              ServiceControlSignal::Shutdown => {
-                let _ = ctrl_subscriber.close();
-                break;
-              },
+        let mut must_yield = false;
+        let prog = select! {
+          msg_opt = ctrl_subscriber.next() => {
+            must_yield = false;
+            if let Some(msg) = msg_opt {
+              if let Ok(o) = read_msgpack(&msg.data[..]) {
+                match o {
+                  ServiceControlSignal::Shutdown => {
+                    let _ = ctrl_subscriber.unsubscribe();
+                    break;
+                  },
+                }
+              }
+            }
+          },
+          msg_opt = subscriber.next() => {
+            if let Some(msg) = msg_opt {
+              return match read_msgpack(&msg.data[..]) {
+                Err(e) => {
+                  error!(
+                    stream_logger,
+                    "Got an error while deserializing HistFetch Prog. {}",
+                    e
+                  );
+                  continue;
+                },
+                Ok(v) => match v {
+                  KlineFetchStatus::WIP(p) => p,
+                  _ => {continue;}
+                },
+              };
             }
           }
-        }
-        if let Ok(msg) = subscriber.next_timeout(Duration::from_nanos(1)) {
-          let prog: HistChartProg = match read_msgpack(&msg.data[..]) {
-              Err(e) => {
-                error!(
-                  stream_logger,
-                  "Got an error while deserializing HistFetch Prog. {}",
-                  e
-                );
-                continue;
-              },
-              Ok(v) => match v {
-                KlineFetchStatus::WIP(p) => p,
-                _ => {continue;}
-              },
-            };
-            yield prog;
-        }
+        };
+        yield prog;
       }
       let _ = subscriber.unsubscribe();
     };

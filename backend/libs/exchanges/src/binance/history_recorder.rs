@@ -7,16 +7,52 @@ use ::tokio::task::block_in_place;
 use ::rpc::historical::HistChartProg;
 use ::types::SendableErrorResult;
 
-use super::entities::KlineResultsWithSymbol;
+use super::entities::{KlineResults, KlineResultsWithSymbol};
 
 #[derive(Debug, Clone)]
 pub struct HistoryRecorder {
   col: Collection,
+  senders: Vec<mpsc::UnboundedSender<KlineResults>>,
 }
 
 impl HistoryRecorder {
-  pub fn new(col: Collection) -> Self {
-    return Self { col };
+  fn spawn_record(&mut self, mut stop: broadcast::Receiver<()>) {
+    let (sender, mut recver) = mpsc::unbounded_channel::<KlineResults>();
+    let col = self.col.clone();
+    ::tokio::spawn(async move {
+      loop {
+        select! {
+          _ = stop.recv() => {break;},
+          raw_klines = recver.recv() => {
+            let raw_klines = match raw_klines {
+              Some(v) => v,
+              None => {break;}
+            };
+            let klines = block_in_place(move || {
+              return raw_klines
+                .into_iter()
+                .filter_map(|item| item.ok())
+                .filter_map(|item| to_bson(&item).ok())
+                .filter_map(|item| item.as_document().cloned())
+                .map(|item| item.clone());
+            });
+            let _ = col.insert_many(klines, None).await;
+          },
+        }
+      }
+    });
+    self.senders.push(sender);
+  }
+
+  pub fn new(col: Collection, stop_sender: &broadcast::Sender<()>) -> Self {
+    let mut ret = Self {
+      col,
+      senders: vec![],
+    };
+    for _ in 0..::num_cpus::get() {
+      ret.spawn_record(stop_sender.subscribe());
+    }
+    return ret;
   }
 
   pub fn spawn(
@@ -27,8 +63,9 @@ impl HistoryRecorder {
     >,
     prog_ch: mpsc::UnboundedSender<SendableErrorResult<HistChartProg>>,
   ) {
-    let col = self.col.clone();
+    let senders = self.senders.clone();
     ::tokio::spawn(async move {
+      let mut counter: usize = 0;
       loop {
         select! {
           _ = stop.recv() => {break;},
@@ -49,15 +86,8 @@ impl HistoryRecorder {
                     cur_object_num: 1,
                   };
                   let _ = prog_ch.send(Ok(prog));
-                  let klines = block_in_place(move || {
-                    return raw_klines
-                      .into_iter()
-                      .filter_map(|item| item.ok())
-                      .filter_map(|item| to_bson(&item).ok())
-                      .filter_map(|item| item.as_document().cloned())
-                      .map(|item| item.clone());
-                  });
-                  let _ = col.insert_many(klines, None).await;
+                  let _ = senders[counter].send(raw_klines);
+                  counter = (counter + 1) % senders.len()
                 }
               }
             }

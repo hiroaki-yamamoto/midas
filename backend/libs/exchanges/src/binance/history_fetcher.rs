@@ -1,14 +1,16 @@
+use ::std::fmt::Debug;
+
 use ::futures::future::FutureExt;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use ::nats::Connection;
+use ::nats::asynk::Connection;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
 use ::tokio::select;
+use ::tokio::stream::StreamExt as TokioStreamExt;
 use ::tokio::sync::broadcast;
 use ::tokio::sync::mpsc;
-use ::tokio::task::block_in_place;
 use ::url::Url;
 
 use ::config::{
@@ -18,7 +20,7 @@ use ::config::{
 use ::mongodb::bson::{doc, Document};
 use ::mongodb::Collection;
 use ::rpc::historical::HistChartProg;
-use ::slog::{o, warn, Logger};
+use ::slog::{crit, warn, Logger};
 use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use crate::entities::KlineCtrl;
@@ -43,24 +45,61 @@ pub struct HistoryFetcher {
   endpoint: Url,
   broker: Connection,
   symbol_fetcher: SymbolFetcher,
+  stop_signal: broadcast::Sender<()>,
 }
 
 impl HistoryFetcher {
-  pub fn new(
+  pub async fn new(
     num_reconnect: Option<i8>,
     col: Collection,
     logger: Logger,
     broker: Connection,
     symbol_fetcher: SymbolFetcher,
   ) -> GenericResult<Self> {
+    let stop_signal =
+      Self::subscribe_kline_ctrl(logger.clone(), broker.clone()).await;
     return Ok(Self {
       num_reconnect: num_reconnect.unwrap_or(20),
       endpoint: (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()?,
-      recorder: HistoryRecorder::new(col),
+      recorder: HistoryRecorder::new(col, &stop_signal),
       logger,
       broker,
       symbol_fetcher,
+      stop_signal: stop_signal.clone(),
     });
+  }
+
+  async fn subscribe_kline_ctrl(
+    logger: Logger,
+    broker: Connection,
+  ) -> broadcast::Sender<()> {
+    let (stop_sender, _) = broadcast::channel(CHAN_BUF_SIZE);
+    let stop_sender_thread = stop_sender.clone();
+    ::tokio::spawn(async move {
+      let stream = match broker.subscribe("binance.kline.ctrl").await {
+        Err(e) => {
+          crit!(
+            logger,
+            "Failed to subscribe Binance Kline Control Signal channel: {}",
+            e
+          );
+          return;
+        }
+        Ok(v) => v,
+      };
+      let mut stream =
+        stream.map(|msg| from_msgpack::<KlineCtrl>(&msg.data[..]));
+      loop {
+        if let Some(Ok(signal)) = stream.next().await {
+          match signal {
+            KlineCtrl::Stop => {
+              stop_sender_thread.send(());
+            }
+          }
+        }
+      }
+    });
+    return stop_sender;
   }
 
   pub async fn fetch(
@@ -243,8 +282,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
     let symbols_len = symbols.len();
     let me = self.clone();
     let res_send_in_thread = res_send.clone();
-    let ctrl_subsc = ret_on_err!(self.broker.subscribe("binance.kline.ctrl"));
-    let req_thread_logger = self.logger.new(o!("scope" => "Request Thread"));
+    let mut stop = self.stop_signal.subscribe();
     ::tokio::spawn(async move {
       let end_at = Utc::now();
       for symbol in symbols {
@@ -265,25 +303,8 @@ impl HistoryFetcherTrait for HistoryFetcher {
         let mut sec_end_date = end_at;
         let mut index = 0;
         while sec_end_date > start_at {
-          match ctrl_subsc.try_next() {
-            Some(msg) => {
-              match from_msgpack::<KlineCtrl>(&msg.data[..]) {
-                Err(err) => {
-                  warn!(
-                    req_thread_logger,
-                    "Received Control Message, but failed to parse it: {}", err
-                  );
-                }
-                Ok(v) => match (v) {
-                  KlineCtrl::Stop => {
-                    let _ = stop_send.send(());
-                    let _ = ctrl_subsc.close();
-                    return;
-                  }
-                },
-              };
-            }
-            None => {}
+          if let Ok(_) = stop.try_recv() {
+            return;
           }
           let mut sec_start_date =
             sec_end_date - Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
@@ -309,9 +330,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
 
   async fn stop(&self) -> SendableErrorResult<()> {
     let msg = ret_on_err!(to_msgpack(&KlineCtrl::Stop));
-    ret_on_err!(block_in_place(move || {
-      self.broker.publish("binance.kline.ctrl", &msg[..])
-    }));
+    ret_on_err!(self.broker.publish("binance.kline.ctrl", &msg[..]).await);
     return Ok(());
   }
 }

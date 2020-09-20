@@ -1,6 +1,6 @@
 use ::std::collections::HashMap;
 
-use ::nats::{Connection as NatsConnection, Subscription as NatsSubsc};
+use ::nats::asynk::{Connection as NatsConnection, Subscription as NatsSubsc};
 
 use ::exchanges::HistoryFetcher;
 use ::rmp_serde::to_vec;
@@ -81,16 +81,16 @@ where
     return Ok(());
   }
 
-  pub fn subscribe(&self) -> GenericResult<NatsSubsc> {
+  pub async fn subscribe(&self) -> GenericResult<NatsSubsc> {
     let channel = format!("{}.kline.progress", self.name);
-    return match self.nats.subscribe(&channel) {
+    return match self.nats.subscribe(&channel).await {
       Err(err) => Err(Box::new(err)),
       Ok(v) => Ok(v),
     };
   }
 }
 
-fn nats_broadcast_status(
+async fn nats_broadcast_status(
   log: &Logger,
   con: &NatsConnection,
   name: &str,
@@ -109,7 +109,10 @@ fn nats_broadcast_status(
       return;
     }
   };
-  match con.publish(&format!("{}.kline.progress", name), &msg[..]) {
+  match con
+    .publish(&format!("{}.kline.progress", name), &msg[..])
+    .await
+  {
     Err(err) => {
       error!(
         log,
