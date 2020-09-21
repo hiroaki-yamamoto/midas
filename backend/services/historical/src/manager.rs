@@ -8,9 +8,7 @@ use ::exchanges::HistoryFetcher;
 use ::rmp_serde::to_vec;
 use ::rpc::entities::Exchanges;
 use ::slog::{error, o, Logger};
-use ::types::{
-  ret_on_err, GenericResult, HistChartProgReceiver, SendableErrorResult,
-};
+use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use crate::entities::KlineFetchStatus;
 
@@ -46,16 +44,15 @@ where
     &self,
     symbols: Vec<String>,
   ) -> SendableErrorResult<()> {
-    self.history_fetcher.refresh(symbols).await?;
+    let mut prog = self.history_fetcher.refresh(symbols).await?;
     let logger_in_thread = self
       .logger
       .new(o!("scope" => "refresh_historical_klines.thread"));
     let nats_con = self.nats.clone();
     let exchange = self.exchange;
-    let prog = self.clone();
     ::tokio::spawn(async move {
       let mut hist_fetch_prog = HashMap::new();
-      while let Some(prog) = prog.prog_receiver.recv().await {
+      while let Some(prog) = prog.recv().await {
         let prog = match prog {
           Err(e) => {
             error!(
