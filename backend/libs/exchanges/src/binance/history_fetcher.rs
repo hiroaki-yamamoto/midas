@@ -21,7 +21,9 @@ use ::mongodb::bson::{doc, Document};
 use ::mongodb::Collection;
 use ::rpc::historical::HistChartProg;
 use ::slog::{crit, warn, Logger};
-use ::types::{ret_on_err, GenericResult, SendableErrorResult};
+use ::types::{
+  ret_on_err, GenericResult, HistChartProgReceiver, SendableErrorResult,
+};
 
 use crate::entities::KlineCtrl;
 use crate::errors::{
@@ -46,6 +48,8 @@ pub struct HistoryFetcher {
   broker: Connection,
   symbol_fetcher: SymbolFetcher,
   stop_signal: broadcast::Sender<()>,
+  param_senders: Vec<mpsc::UnboundedSender<HistFetcherParam>>,
+  prog_send: mpsc::UnboundedSender<SendableErrorResult<HistChartProg>>,
 }
 
 impl HistoryFetcher {
@@ -55,10 +59,11 @@ impl HistoryFetcher {
     logger: Logger,
     broker: Connection,
     symbol_fetcher: SymbolFetcher,
-  ) -> GenericResult<Self> {
+  ) -> GenericResult<(HistoryFetcher, HistChartProgReceiver)> {
     let stop_signal =
       Self::subscribe_kline_ctrl(logger.clone(), broker.clone()).await;
-    return Ok(Self {
+    let (prog_send, prog_recv) = mpsc::unbounded_channel();
+    let mut me = Self {
       num_reconnect: num_reconnect.unwrap_or(20),
       endpoint: (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()?,
       recorder: HistoryRecorder::new(col, &stop_signal),
@@ -66,7 +71,23 @@ impl HistoryFetcher {
       broker,
       symbol_fetcher,
       stop_signal: stop_signal.clone(),
-    });
+      param_senders: vec![],
+      prog_send: prog_send,
+    };
+    let mut kline_recs = vec![];
+    for _ in 0..NUM_CONC_TASKS {
+      let (param, res) = me.spawn(me.stop_signal.subscribe());
+      me.param_senders.push(param);
+      kline_recs.push(res);
+    }
+    for recv_ch in kline_recs {
+      me.recorder.spawn(
+        me.stop_signal.subscribe(),
+        recv_ch,
+        me.prog_send.clone(),
+      );
+    }
+    return Ok((me, prog_recv));
   }
 
   async fn subscribe_kline_ctrl(
@@ -248,32 +269,11 @@ impl HistoryFetcher {
 
 #[async_trait]
 impl HistoryFetcherTrait for HistoryFetcher {
-  async fn refresh(
-    &self,
-    symbol: Vec<String>,
-  ) -> SendableErrorResult<
-    mpsc::UnboundedReceiver<SendableErrorResult<HistChartProg>>,
-  > {
+  async fn refresh(&self, symbol: Vec<String>) -> SendableErrorResult<()> {
     if symbol.len() < 1 {
       return Err(Box::new(EmptyError {
         field: String::from("symbol"),
       }));
-    }
-    let (res_send, res_recv) =
-      mpsc::unbounded_channel::<SendableErrorResult<HistChartProg>>();
-    let mut senders = vec![];
-    let mut recvers = vec![];
-    for _ in 0..NUM_CONC_TASKS {
-      let (param, res) = self.spawn(self.stop_signal.subscribe());
-      senders.push(param);
-      recvers.push(res);
-    }
-    for recv_ch in recvers {
-      self.recorder.spawn(
-        self.stop_signal.subscribe(),
-        recv_ch,
-        res_send.clone(),
-      );
     }
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
@@ -281,8 +281,8 @@ impl HistoryFetcherTrait for HistoryFetcher {
     }
     let symbols = self.symbol_fetcher.get(query).await?;
     let symbols_len = symbols.len();
-    let me = self.clone();
-    let res_send_in_thread = res_send.clone();
+    let mut me = self.clone();
+    let res_send_in_thread = self.prog_send.clone();
     let mut stop = self.stop_signal.subscribe();
     ::tokio::spawn(async move {
       let end_at = Utc::now();
@@ -312,7 +312,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
           if sec_start_date < start_at {
             sec_start_date = start_at;
           }
-          let sender = &mut senders[index];
+          let sender = &mut me.param_senders[index];
           let _ = sender.send(HistFetcherParam {
             symbol: symbol.symbol.clone(),
             num_symbols: symbols_len as i64,
@@ -321,11 +321,11 @@ impl HistoryFetcherTrait for HistoryFetcher {
             end_time: sec_end_date,
           });
           sec_end_date = sec_start_date.clone();
-          index = (index + 1) % senders.len();
+          index = (index + 1) % me.param_senders.len();
         }
       }
     });
-    return Ok(res_recv);
+    return Ok(());
   }
 
   async fn stop(&self) -> SendableErrorResult<()> {

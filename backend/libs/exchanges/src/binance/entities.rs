@@ -3,6 +3,7 @@ use ::mongodb::bson::DateTime as MongoDateTime;
 use ::rpc::entities::SymbolInfo;
 use ::serde::{Deserialize, Serialize};
 use ::serde_json::Value;
+use ::std::clone::Clone;
 use ::types::SendableErrorResult;
 
 use crate::casting::{cast_datetime, cast_f64, cast_i64};
@@ -152,6 +153,7 @@ impl Kline {
 
 pub type KlineResults = Vec<SendableErrorResult<Kline>>;
 
+#[derive(Debug)]
 pub struct KlineResultsWithSymbol {
   pub symbol: String,
   pub num_symbols: i64,
