@@ -312,8 +312,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
           if sec_start_date < start_at {
             sec_start_date = start_at;
           }
-          let index_to_choice = index % senders.len();
-          let sender = &mut senders[index_to_choice];
+          let sender = &mut senders[index];
           let _ = sender.send(HistFetcherParam {
             symbol: symbol.symbol.clone(),
             num_symbols: symbols_len as i64,
@@ -322,7 +321,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
             end_time: sec_end_date,
           });
           sec_end_date = sec_start_date.clone();
-          index += 1;
+          index = (index + 1) % senders.len();
         }
       }
     });
