@@ -9,8 +9,8 @@ use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
 use ::tokio::select;
 use ::tokio::stream::StreamExt as TokioStreamExt;
-use ::tokio::sync::broadcast;
-use ::tokio::sync::mpsc;
+use ::tokio::sync::{broadcast, mpsc};
+use ::tokio::time::delay_for;
 use ::url::Url;
 
 use ::config::{
@@ -156,13 +156,13 @@ impl HistoryFetcher {
           None => DEFAULT_RECONNECT_INTERVAL,
         };
         let retry_secs = Duration::seconds(retry_secs);
-        ::async_std::task::sleep(ret_on_err!(retry_secs.to_std())).await;
         warn!(
           self.logger,
           "Got code {}. Waiting for {} seconds...",
           rest_status.as_u16(),
           retry_secs.num_seconds(),
         );
+        delay_for(ret_on_err!(retry_secs.to_std())).await;
       } else {
         let text = ret_on_err!(resp.text().await);
         warn!(
