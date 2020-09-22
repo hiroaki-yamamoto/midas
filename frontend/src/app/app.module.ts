@@ -21,12 +21,14 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { SyncComponent } from './sync/sync.component';
 import { IconSnackBarComponent } from './icon-snackbar/icon-snackbar.component';
+import { SyncProgressComponent } from './sync-progress/sync-progress.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     SyncComponent,
     IconSnackBarComponent,
+    SyncProgressComponent,
   ],
   imports: [
     BrowserModule,

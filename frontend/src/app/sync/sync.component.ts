@@ -36,21 +36,24 @@ export class SyncComponent implements OnInit, OnDestroy {
   syncIcon = faSyncAlt;
   histIcon = faHistory;
   symbolButtonEnabled = true;
-  histChartProg: HistChartProg = undefined;
+  progList: Map<string, HistChartProg> = undefined;
 
   private histClient: HistChartClient;
   private histStreamClient: WebSocket;
 
   private symbolClient: SymbolPromiseClient;
 
-  constructor(private tooltip: MatSnackBar) { }
+  constructor(private tooltip: MatSnackBar) {
+    this.progList = new Map();
+  }
 
   ngOnInit(): void {
     this.histClient = new HistChartClient('historical', null, null);
     this.symbolClient = new SymbolPromiseClient('symbol', null, null);
     this.histStreamClient = new MidasSocket('/historical/stream/subscribe');
     this.histStreamClient.addEventListener('message', (ev) => {
-      this.histChartProg = JSON.parse(ev.data);
+      const obj = JSON.parse(ev.data) as HistChartProg;
+      this.progList = this.progList.set(obj.symbol, obj);
     });
     this.histStreamClient.addEventListener('error', (ev) => {
       console.log(ev);
