@@ -115,3 +115,20 @@ impl Error for NumObjectError {
 }
 
 unsafe impl Send for NumObjectError {}
+
+#[derive(Debug, Clone)]
+pub struct FirstTradeDateNotFound;
+
+impl Display for FirstTradeDateNotFound {
+  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
+    return write!(f, "Failed to find the first trade date.",);
+  }
+}
+
+impl Error for FirstTradeDateNotFound {
+  fn source(&self) -> Option<&(dyn Error + 'static)> {
+    None
+  }
+}
+
+unsafe impl Send for FirstTradeDateNotFound {}

@@ -223,26 +223,31 @@ impl HistoryFetcher {
 
   async fn get_first_trade_date(
     &self,
-    symbol: String,
+    symbol: &String,
   ) -> SendableErrorResult<DateTime<Utc>> {
-    let start = self
-      .fetch(
-        symbol.clone(),
-        1,
-        1,
-        DateTime::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
-        None,
-      )
-      .await?;
-    let mut start = start.klines;
-    start.retain(|item| item.is_ok());
-    if start.len() != 1 {
-      return Err(Box::new(DeterminationFailed::<()> {
-        field: String::from("Start Date"),
-        additional_data: None,
-      }));
+    match self.recorder.get_latest_trade_open_time(symbol).await {
+      Ok(d) => return Ok(d),
+      Err(_) => {
+        let start = self
+          .fetch(
+            symbol.clone(),
+            1,
+            1,
+            DateTime::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
+            None,
+          )
+          .await?;
+        let mut start = start.klines;
+        start.retain(|item| item.is_ok());
+        if start.len() != 1 {
+          return Err(Box::new(DeterminationFailed::<()> {
+            field: String::from("Start Date"),
+            additional_data: None,
+          }));
+        }
+        return Ok(start[0].as_ref().unwrap().open_time.into());
+      }
     }
-    return Ok(start[0].as_ref().unwrap().open_time.into());
   }
 }
 
@@ -287,14 +292,13 @@ impl HistoryFetcherTrait for HistoryFetcher {
     ::tokio::spawn(async move {
       let end_at = Utc::now();
       for symbol in symbols {
-        let start_at =
-          match me.get_first_trade_date(symbol.symbol.clone()).await {
-            Err(e) => {
-              let _ = res_send_in_thread.send(Err(e));
-              break;
-            }
-            Ok(v) => v,
-          };
+        let start_at = match me.get_first_trade_date(&symbol.symbol).await {
+          Err(e) => {
+            let _ = res_send_in_thread.send(Err(e));
+            break;
+          }
+          Ok(v) => v,
+        };
         let mut entire_data_len = (end_at - start_at).num_minutes();
         let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
         entire_data_len /= 1000;
