@@ -13,18 +13,13 @@ import { HistChartClient } from '../rpc/historical_grpc_web_pb';
 import { SymbolPromiseClient } from '../rpc/symbol_grpc_web_pb';
 import { RefreshRequest as SymbolRefreshRequest } from '../rpc/symbol_pb';
 
+import { IHistChartProg } from '../sync-progress/entities';
+import { ISymbol } from './entities'
+
 import {
   IconSnackBarComponent
 } from '../icon-snackbar/icon-snackbar.component';
 import { MidasSocket } from '../websocket';
-
-interface HistChartProg {
-  symbol: string;
-  num_symbols: number;
-  cur_symbol_num: number;
-  num_objects: number;
-  cur_object_num: number;
-}
 
 @Component({
   selector: 'app-sync',
@@ -36,7 +31,8 @@ export class SyncComponent implements OnInit, OnDestroy {
   syncIcon = faSyncAlt;
   histIcon = faHistory;
   symbolButtonEnabled = true;
-  progList: Map<string, HistChartProg> = undefined;
+  progList: Map<string, IHistChartProg>;
+  symbol: ISymbol;
 
   private histClient: HistChartClient;
   private histStreamClient: WebSocket;
@@ -45,6 +41,7 @@ export class SyncComponent implements OnInit, OnDestroy {
 
   constructor(private tooltip: MatSnackBar) {
     this.progList = new Map();
+    this.symbol = { num: 0, cur: 0 };
   }
 
   ngOnInit(): void {
@@ -52,8 +49,12 @@ export class SyncComponent implements OnInit, OnDestroy {
     this.symbolClient = new SymbolPromiseClient('symbol', null, null);
     this.histStreamClient = new MidasSocket('/historical/stream/subscribe');
     this.histStreamClient.addEventListener('message', (ev) => {
-      const obj = JSON.parse(ev.data) as HistChartProg;
-      this.progList = this.progList.set(obj.symbol, obj);
+      const obj = JSON.parse(ev.data) as IHistChartProg;
+      this.progList.set(obj.symbol, obj);
+      this.symbol.num = obj.num_symbols;
+      if (this.symbol.cur < obj.cur_symbol_num) {
+        this.symbol.cur = obj.cur_symbol_num;
+      }
     });
     this.histStreamClient.addEventListener('error', (ev) => {
       console.log(ev);
@@ -89,5 +90,10 @@ export class SyncComponent implements OnInit, OnDestroy {
     req.setExchange(Exchanges.BINANCE);
     req.setSymbolsList(['all']);
     this.histClient.sync(req, {}, () => {});
+  }
+
+  fetchProgressCompleted(ev: IHistChartProg) {
+    console.log(ev);
+    this.progList.delete(ev.symbol);
   }
 }

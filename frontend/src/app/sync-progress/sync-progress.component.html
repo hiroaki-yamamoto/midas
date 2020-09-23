@@ -1,11 +1,10 @@
-<div fxLayout="column" fxLayoutAlign="center start" class="progress" *ngFor="let prog of progList | keyvalue">
-  <mat-progress-bar [value]="prog.value.cur_object_num / prog.value.num_objects * 100">
+<div fxLayout="column" fxLayoutAlign="center start" class="progress">
+  <mat-progress-bar
+    [value]="progress.cur_object_num / progress.num_objects * 100"
+  >
   </mat-progress-bar>
   <div>
-    prog.key
-    <strong>
-      {{ prog.value.cur_object_num }} /
-      {{ prog.value.num_objects }}
-    </strong>
+    {{ progress.symbol }}
+    {{ progress.cur_object_num }} / {{ progress.num_objects }}
   </div>
 </div>
