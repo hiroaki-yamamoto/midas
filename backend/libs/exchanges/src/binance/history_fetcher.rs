@@ -305,16 +305,16 @@ impl HistoryFetcherTrait for HistoryFetcher {
         if entire_data_len_rem > 0 {
           entire_data_len += 1;
         }
-        let mut sec_end_date = end_at;
+        let mut sec_start_date = start_at;
         let mut index = 0;
-        while sec_end_date > start_at {
+        while sec_start_date < end_at {
           if let Ok(_) = stop.try_recv() {
             return;
           }
-          let mut sec_start_date =
-            sec_end_date - Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
-          if sec_start_date < start_at {
-            sec_start_date = start_at;
+          let mut sec_end_date =
+            sec_start_date + Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
+          if sec_end_date > end_at {
+            sec_end_date = end_at;
           }
           let sender = &mut senders[index];
           let _ = sender.send(HistFetcherParam {
@@ -324,7 +324,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
             start_time: sec_start_date.clone(),
             end_time: sec_end_date,
           });
-          sec_end_date = sec_start_date.clone();
+          sec_start_date = sec_end_date.clone();
           index = (index + 1) % senders.len();
         }
       }
