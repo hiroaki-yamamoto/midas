@@ -2,8 +2,11 @@ version: "3.8"
 services:
   database:
     image: mongo
+    environment:
+      MONGO_INITDB_DATABASE: midas
     volumes:
       - "./db:/data/db"
+      - "./etc/mongo/scripts:/docker-entrypoint-initdb.d"
   broker:
     image: nats
   proxy:
