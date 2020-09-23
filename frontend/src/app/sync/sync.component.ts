@@ -93,7 +93,6 @@ export class SyncComponent implements OnInit, OnDestroy {
   }
 
   fetchProgressCompleted(ev: IHistChartProg) {
-    console.log(ev);
     this.progList.delete(ev.symbol);
   }
 }
