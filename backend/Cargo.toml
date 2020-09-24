@@ -5,7 +5,6 @@ members = [
   "libs/slog_builder",
   "libs/rpc",
   "libs/types",
-  "libs/nats_msg",
   "services/historical",
   "services/symbol"
 ]

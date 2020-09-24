@@ -1548,17 +1548,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nats_msg"
-version = "0.1.0"
-dependencies = [
- "nats",
- "rmp-serde",
- "serde",
- "tokio",
- "types",
-]
-
-[[package]]
 name = "net2"
 version = "0.2.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
