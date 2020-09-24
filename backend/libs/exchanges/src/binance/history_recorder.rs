@@ -24,6 +24,18 @@ pub struct HistoryRecorder {
 }
 
 impl HistoryRecorder {
+  pub fn new(col: Collection, stop_sender: broadcast::Sender<()>) -> Self {
+    let mut ret = Self {
+      col,
+      senders: vec![],
+      stop: stop_sender,
+    };
+    for _ in 0..::num_cpus::get() {
+      ret.spawn_record();
+    }
+    return ret;
+  }
+
   fn spawn_record(&mut self) {
     let (sender, mut recver) = mpsc::unbounded_channel::<KlineResults>();
     let col = self.col.clone();
@@ -51,18 +63,6 @@ impl HistoryRecorder {
       }
     });
     self.senders.push(sender);
-  }
-
-  pub fn new(col: Collection, stop_sender: broadcast::Sender<()>) -> Self {
-    let mut ret = Self {
-      col,
-      senders: vec![],
-      stop: stop_sender,
-    };
-    for _ in 0..::num_cpus::get() {
-      ret.spawn_record();
-    }
-    return ret;
   }
 
   pub fn spawn(
