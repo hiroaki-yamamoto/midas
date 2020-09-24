@@ -1,6 +1,6 @@
 use ::std::fmt::Debug;
 
-use ::futures::future::FutureExt;
+use ::futures::future::{select as either, Either, FutureExt};
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
@@ -25,7 +25,8 @@ use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use crate::entities::KlineCtrl;
 use crate::errors::{
-  DeterminationFailed, EmptyError, MaximumAttemptExceeded, NumObjectError,
+  DeterminationFailed, EmptyError, GenericError, MaximumAttemptExceeded,
+  NumObjectError,
 };
 use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 
@@ -61,11 +62,11 @@ impl HistoryFetcher {
     return Ok(Self {
       num_reconnect: num_reconnect.unwrap_or(20),
       endpoint: (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()?,
-      recorder: HistoryRecorder::new(col, &stop_signal),
+      recorder: HistoryRecorder::new(col, stop_signal.clone()),
       logger,
       broker,
       symbol_fetcher,
-      stop_signal: stop_signal.clone(),
+      stop_signal,
     });
   }
 
@@ -146,7 +147,7 @@ impl HistoryFetcher {
       } else if rest_status == ::reqwest::StatusCode::IM_A_TEAPOT
         || rest_status == ::reqwest::StatusCode::TOO_MANY_REQUESTS
       {
-        let retry_secs: i64 = match resp.headers().get("retry-after") {
+        let mut retry_secs: i64 = match resp.headers().get("retry-after") {
           Some(t) => i64::from_str_radix(
             t.to_str()
               .unwrap_or(&DEFAULT_RECONNECT_INTERVAL.to_string()),
@@ -155,6 +156,9 @@ impl HistoryFetcher {
           .unwrap_or(DEFAULT_RECONNECT_INTERVAL),
           None => DEFAULT_RECONNECT_INTERVAL,
         };
+        if retry_secs <= 0 {
+          retry_secs = DEFAULT_RECONNECT_INTERVAL;
+        }
         let retry_secs = Duration::seconds(retry_secs);
         warn!(
           self.logger,
@@ -175,9 +179,8 @@ impl HistoryFetcher {
     return Err(Box::new(MaximumAttemptExceeded::default()));
   }
 
-  pub fn spawn(
+  pub fn spawn_fetcher(
     &self,
-    mut stop: broadcast::Receiver<()>,
   ) -> (
     mpsc::UnboundedSender<HistFetcherParam>,
     mpsc::UnboundedReceiver<SendableErrorResult<KlineResultsWithSymbol>>,
@@ -187,11 +190,12 @@ impl HistoryFetcher {
     let (prog_send, prog_rec) =
       mpsc::unbounded_channel::<SendableErrorResult<KlineResultsWithSymbol>>();
     let me = self.clone();
+    let mut stop_ch = me.stop_signal.subscribe();
     ::tokio::spawn(async move {
       loop {
         let prog_send = &prog_send;
         select! {
-          _ = stop.recv() => {break;},
+          _ = stop_ch.recv() => {break;},
           param_option_result = param_rec.recv() => {
             if let Some(param) = param_option_result {
               let num_obj = (param.end_time - param.start_time).num_minutes();
@@ -221,23 +225,91 @@ impl HistoryFetcher {
     return (param_send, prog_rec);
   }
 
+  async fn spawn_term_fetcher(
+    &self,
+    fetcher_ch: &Vec<mpsc::UnboundedSender<HistFetcherParam>>,
+    prog_ch: &mpsc::UnboundedSender<SendableErrorResult<HistChartProg>>,
+  ) -> mpsc::UnboundedSender<(String, i64)> {
+    let (sym_send, mut sym_recv) = mpsc::unbounded_channel();
+    let mut fetcher_ch = fetcher_ch.clone();
+    let me = self.clone();
+    let end_at = Utc::now();
+    let prog_ch = prog_ch.clone();
+    let mut stop_ch = me.stop_signal.subscribe();
+    tokio::spawn(async move {
+      let mut index = 0;
+      loop {
+        select! {
+          _ = stop_ch.recv() => { break },
+          Some((symbol, symbols_len)) = sym_recv.recv() => {
+            let start_at = match me.get_first_trade_date(
+              me.stop_signal.subscribe(), &symbol
+            ).await {
+              Err(e) => {
+                let _ = prog_ch.send(Err(e));
+                return;
+              }
+              Ok(v) => v,
+            };
+            let mut entire_data_len = (end_at - start_at).num_minutes();
+            let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
+            entire_data_len /= 1000;
+            if entire_data_len_rem > 0 {
+              entire_data_len += 1;
+            }
+            let mut sec_start_date = start_at;
+            let stop_ch = &mut stop_ch;
+            while sec_start_date < end_at {
+              if let Ok(_) = stop_ch.try_recv() {
+                return;
+              }
+              let mut sec_end_date =
+                sec_start_date + Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
+              if sec_end_date > end_at {
+                sec_end_date = end_at;
+              }
+              let sender = &mut fetcher_ch[index];
+              let _ = sender.send(HistFetcherParam {
+                symbol: symbol.clone(),
+                num_symbols: symbols_len as i64,
+                entire_data_len,
+                start_time: sec_start_date.clone(),
+                end_time: sec_end_date,
+              });
+              sec_start_date = sec_end_date.clone();
+              index = (index + 1) % fetcher_ch.len();
+            }
+          },
+          else => break,
+        }
+      }
+    });
+    return sym_send;
+  }
+
   async fn get_first_trade_date(
     &self,
+    mut stop_ch: broadcast::Receiver<()>,
     symbol: &String,
   ) -> SendableErrorResult<DateTime<Utc>> {
     match self.recorder.get_latest_trade_open_time(symbol).await {
       Ok(d) => return Ok(d),
       Err(_) => {
-        let start = self
-          .fetch(
-            symbol.clone(),
-            1,
-            1,
-            DateTime::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
-            None,
-          )
-          .await?;
-        let mut start = start.klines;
+        let start = self.fetch(
+          symbol.clone(),
+          1,
+          1,
+          DateTime::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
+          None,
+        );
+        let result =
+          match either(Box::pin(stop_ch.recv()), Box::pin(start)).await {
+            Either::Left((_, _)) => {
+              return Err(Box::new(GenericError::new("Timeout.")));
+            }
+            Either::Right((v, _)) => v,
+          }?;
+        let mut start = result.klines;
         start.retain(|item| item.is_ok());
         if start.len() != 1 {
           return Err(Box::new(DeterminationFailed::<()> {
@@ -268,17 +340,17 @@ impl HistoryFetcherTrait for HistoryFetcher {
       mpsc::unbounded_channel::<SendableErrorResult<HistChartProg>>();
     let mut senders = vec![];
     let mut recvers = vec![];
+    let mut term_senders = vec![];
     for _ in 0..NUM_CONC_TASKS {
-      let (param, res) = self.spawn(self.stop_signal.subscribe());
+      let (param, res) = self.spawn_fetcher();
       senders.push(param);
       recvers.push(res);
     }
     for recv_ch in recvers {
-      self.recorder.spawn(
-        self.stop_signal.subscribe(),
-        recv_ch,
-        res_send.clone(),
-      );
+      self.recorder.spawn(recv_ch, res_send.clone());
+    }
+    for _ in 0..num_cpus::get() {
+      term_senders.push(self.spawn_term_fetcher(&senders, &res_send).await);
     }
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
@@ -286,47 +358,11 @@ impl HistoryFetcherTrait for HistoryFetcher {
     }
     let symbols = self.symbol_fetcher.get(query).await?;
     let symbols_len = symbols.len();
-    let me = self.clone();
-    let res_send_in_thread = res_send.clone();
-    let mut stop = self.stop_signal.subscribe();
     ::tokio::spawn(async move {
-      let end_at = Utc::now();
+      let mut index = 0;
       for symbol in symbols {
-        let start_at = match me.get_first_trade_date(&symbol.symbol).await {
-          Err(e) => {
-            let _ = res_send_in_thread.send(Err(e));
-            break;
-          }
-          Ok(v) => v,
-        };
-        let mut entire_data_len = (end_at - start_at).num_minutes();
-        let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
-        entire_data_len /= 1000;
-        if entire_data_len_rem > 0 {
-          entire_data_len += 1;
-        }
-        let mut sec_start_date = start_at;
-        let mut index = 0;
-        while sec_start_date < end_at {
-          if let Ok(_) = stop.try_recv() {
-            return;
-          }
-          let mut sec_end_date =
-            sec_start_date + Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
-          if sec_end_date > end_at {
-            sec_end_date = end_at;
-          }
-          let sender = &mut senders[index];
-          let _ = sender.send(HistFetcherParam {
-            symbol: symbol.symbol.clone(),
-            num_symbols: symbols_len as i64,
-            entire_data_len,
-            start_time: sec_start_date.clone(),
-            end_time: sec_end_date,
-          });
-          sec_start_date = sec_end_date.clone();
-          index = (index + 1) % senders.len();
-        }
+        let _ = term_senders[index].send((symbol.symbol, symbols_len as i64));
+        index = (index + 1) % term_senders.len();
       }
     });
     return Ok(res_recv);

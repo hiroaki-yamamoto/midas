@@ -20,12 +20,14 @@ use super::entities::{KlineResults, KlineResultsWithSymbol};
 pub struct HistoryRecorder {
   col: Collection,
   senders: Vec<mpsc::UnboundedSender<KlineResults>>,
+  stop: broadcast::Sender<()>,
 }
 
 impl HistoryRecorder {
-  fn spawn_record(&mut self, mut stop: broadcast::Receiver<()>) {
+  fn spawn_record(&mut self) {
     let (sender, mut recver) = mpsc::unbounded_channel::<KlineResults>();
     let col = self.col.clone();
+    let mut stop = self.stop.subscribe();
     ::tokio::spawn(async move {
       loop {
         select! {
@@ -51,26 +53,27 @@ impl HistoryRecorder {
     self.senders.push(sender);
   }
 
-  pub fn new(col: Collection, stop_sender: &broadcast::Sender<()>) -> Self {
+  pub fn new(col: Collection, stop_sender: broadcast::Sender<()>) -> Self {
     let mut ret = Self {
       col,
       senders: vec![],
+      stop: stop_sender,
     };
     for _ in 0..::num_cpus::get() {
-      ret.spawn_record(stop_sender.subscribe());
+      ret.spawn_record();
     }
     return ret;
   }
 
   pub fn spawn(
     &self,
-    mut stop: broadcast::Receiver<()>,
     mut value_ch: mpsc::UnboundedReceiver<
       SendableErrorResult<KlineResultsWithSymbol>,
     >,
     prog_ch: mpsc::UnboundedSender<SendableErrorResult<HistChartProg>>,
   ) {
     let senders = self.senders.clone();
+    let mut stop = self.stop.subscribe();
     ::tokio::spawn(async move {
       let mut counter: usize = 0;
       loop {

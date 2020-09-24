@@ -132,3 +132,28 @@ impl Error for FirstTradeDateNotFound {
 }
 
 unsafe impl Send for FirstTradeDateNotFound {}
+
+#[derive(Debug, Clone)]
+pub struct GenericError<'t> {
+  msg: &'t str,
+}
+
+impl<'t> GenericError<'t> {
+  pub fn new(msg: &'t str) -> Self {
+    return Self { msg };
+  }
+}
+
+impl<'t> Display for GenericError<'t> {
+  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
+    return write!(f, "{}", self.msg);
+  }
+}
+
+impl<'t> Error for GenericError<'t> {
+  fn source(&self) -> Option<&(dyn Error + 'static)> {
+    None
+  }
+}
+
+unsafe impl<'t> Send for GenericError<'t> {}
