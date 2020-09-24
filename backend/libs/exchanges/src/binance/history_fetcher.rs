@@ -225,68 +225,6 @@ impl HistoryFetcher {
     return (param_send, prog_rec);
   }
 
-  async fn spawn_term_fetcher(
-    &self,
-    fetcher_ch: &Vec<mpsc::UnboundedSender<HistFetcherParam>>,
-    prog_ch: &mpsc::UnboundedSender<SendableErrorResult<HistChartProg>>,
-  ) -> mpsc::UnboundedSender<(String, i64)> {
-    let (sym_send, mut sym_recv) = mpsc::unbounded_channel();
-    let mut fetcher_ch = fetcher_ch.clone();
-    let me = self.clone();
-    let end_at = Utc::now();
-    let prog_ch = prog_ch.clone();
-    let mut stop_ch = me.stop_signal.subscribe();
-    tokio::spawn(async move {
-      let mut index = 0;
-      loop {
-        select! {
-          _ = stop_ch.recv() => { break },
-          Some((symbol, symbols_len)) = sym_recv.recv() => {
-            let start_at = match me.get_first_trade_date(
-              me.stop_signal.subscribe(), &symbol
-            ).await {
-              Err(e) => {
-                let _ = prog_ch.send(Err(e));
-                return;
-              }
-              Ok(v) => v,
-            };
-            let mut entire_data_len = (end_at - start_at).num_minutes();
-            let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
-            entire_data_len /= 1000;
-            if entire_data_len_rem > 0 {
-              entire_data_len += 1;
-            }
-            let mut sec_start_date = start_at;
-            let stop_ch = &mut stop_ch;
-            while sec_start_date < end_at {
-              if let Ok(_) = stop_ch.try_recv() {
-                return;
-              }
-              let mut sec_end_date =
-                sec_start_date + Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
-              if sec_end_date > end_at {
-                sec_end_date = end_at;
-              }
-              let sender = &mut fetcher_ch[index];
-              let _ = sender.send(HistFetcherParam {
-                symbol: symbol.clone(),
-                num_symbols: symbols_len as i64,
-                entire_data_len,
-                start_time: sec_start_date.clone(),
-                end_time: sec_end_date,
-              });
-              sec_start_date = sec_end_date.clone();
-              index = (index + 1) % fetcher_ch.len();
-            }
-          },
-          else => break,
-        }
-      }
-    });
-    return sym_send;
-  }
-
   async fn get_first_trade_date(
     &self,
     mut stop_ch: broadcast::Receiver<()>,
@@ -340,7 +278,6 @@ impl HistoryFetcherTrait for HistoryFetcher {
       mpsc::unbounded_channel::<SendableErrorResult<HistChartProg>>();
     let mut senders = vec![];
     let mut recvers = vec![];
-    let mut term_senders = vec![];
     for _ in 0..NUM_CONC_TASKS {
       let (param, res) = self.spawn_fetcher();
       senders.push(param);
@@ -349,20 +286,56 @@ impl HistoryFetcherTrait for HistoryFetcher {
     for recv_ch in recvers {
       self.recorder.spawn(recv_ch, res_send.clone());
     }
-    for _ in 0..num_cpus::get() {
-      term_senders.push(self.spawn_term_fetcher(&senders, &res_send).await);
-    }
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
       query = Some(doc! { "symbol": doc! { "$in": symbol } });
     }
     let symbols = self.symbol_fetcher.get(query).await?;
     let symbols_len = symbols.len();
+    let me = self.clone();
     ::tokio::spawn(async move {
+      let end_at = Utc::now();
       let mut index = 0;
+      let mut stop_ch = me.stop_signal.subscribe();
       for symbol in symbols {
-        let _ = term_senders[index].send((symbol.symbol, symbols_len as i64));
-        index = (index + 1) % term_senders.len();
+        let start_at = match me
+          .get_first_trade_date(me.stop_signal.subscribe(), &symbol.symbol)
+          .await
+        {
+          Err(e) => {
+            let _ = res_send.send(Err(e));
+            return;
+          }
+          Ok(v) => v,
+        };
+        let mut entire_data_len = (end_at - start_at).num_minutes();
+        let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
+        entire_data_len /= 1000;
+        if entire_data_len_rem > 0 {
+          entire_data_len += 1;
+        }
+        let mut sec_start_date = start_at;
+        let stop_ch = &mut stop_ch;
+        while sec_start_date < end_at {
+          if let Ok(_) = stop_ch.try_recv() {
+            return;
+          }
+          let mut sec_end_date =
+            sec_start_date + Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
+          if sec_end_date > end_at {
+            sec_end_date = end_at;
+          }
+          let sender = &mut senders[index];
+          let _ = sender.send(HistFetcherParam {
+            symbol: symbol.symbol.clone(),
+            num_symbols: symbols_len as i64,
+            entire_data_len,
+            start_time: sec_start_date.clone(),
+            end_time: sec_end_date,
+          });
+          sec_start_date = sec_end_date.clone();
+          index = (index + 1) % senders.len();
+        }
       }
     });
     return Ok(res_recv);
