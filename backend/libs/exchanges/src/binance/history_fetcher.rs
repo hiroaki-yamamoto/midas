@@ -235,13 +235,13 @@ impl HistoryFetcher {
     mut stop_ch: broadcast::Receiver<()>,
     symbols: Vec<String>,
   ) -> SendableErrorResult<HashMap<String, LatestTradeTime<DateTime<Utc>>>> {
-    let num_sym = symbols.len();
     let mut latest_kline =
       self.recorder.get_latest_trade_time(symbols.clone()).await?;
     let latest_kline_clone = latest_kline.clone();
     let to_fetch_binance = symbols
       .into_iter()
       .filter(move |symbol| !latest_kline_clone.contains_key(symbol));
+    let to_fetch_binance_len = to_fetch_binance.clone().count();
     let (stop_send, _) = broadcast::channel::<()>(CHAN_BUF_SIZE);
     let mut fetch_send = vec![];
     let mut fetch_recv = vec![];
@@ -266,26 +266,22 @@ impl HistoryFetcher {
         index = (index + 1) % fetch_send.len();
       }
     });
-    let mut index: usize = 0;
     let mut stream_map = StreamMap::new();
     let fetch_recv = fetch_recv.into_iter().enumerate();
     for (index, stream) in fetch_recv {
       stream_map.insert(index, stream);
     }
-    for (_, mut start) in stream_map.next().await {
-      let start = match start.klines.pop() {
-        None => {
-          continue;
-        }
-        Some(s) => s,
-      };
-      let start = start?;
-      let start: LatestTradeTime<DateTime<Utc>> = start.into();
-      latest_kline.insert(start.symbol.clone(), start);
-      index += 1;
-      if index >= num_sym {
-        stream_map.clear();
-        break;
+    for _ in 0..to_fetch_binance_len {
+      if let Some((_, mut start)) = stream_map.next().await {
+        let start = match start.klines.pop() {
+          None => {
+            continue;
+          }
+          Some(s) => s,
+        };
+        let start = start?;
+        let start: LatestTradeTime<DateTime<Utc>> = start.into();
+        latest_kline.insert(start.symbol.clone(), start);
       }
     }
     let _ = stop_send.send(());
