@@ -1,3 +1,5 @@
+use ::std::convert::AsRef;
+
 use ::chrono::{DateTime as ChronoDateTime, Utc};
 use ::mongodb::bson::DateTime as MongoDateTime;
 use ::rpc::entities::SymbolInfo;
@@ -103,13 +105,13 @@ pub enum Filters {
   },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HistFetcherParam {
   pub symbol: String,
   pub num_symbols: i64,
   pub entire_data_len: i64,
   pub start_time: ChronoDateTime<Utc>,
-  pub end_time: ChronoDateTime<Utc>,
+  pub end_time: Option<ChronoDateTime<Utc>>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -150,11 +152,56 @@ impl Kline {
   }
 }
 
+impl AsRef<Kline> for Kline {
+  fn as_ref(&self) -> &Self {
+    return self;
+  }
+}
+
 pub type KlineResults = Vec<SendableErrorResult<Kline>>;
 
+#[derive(Debug)]
 pub struct KlineResultsWithSymbol {
   pub symbol: String,
   pub num_symbols: i64,
   pub entire_data_len: i64,
   pub klines: KlineResults,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct LatestTradeTime<T> {
+  #[serde(rename = "_id")]
+  pub symbol: String,
+  pub open_time: T,
+  pub close_time: T,
+}
+
+impl<T> From<T> for LatestTradeTime<ChronoDateTime<Utc>>
+where
+  T: AsRef<Kline>,
+{
+  fn from(kline: T) -> Self {
+    let kline: &Kline = kline.as_ref();
+    let open = kline.open_time.naive_utc();
+    let close = kline.open_time.naive_utc();
+    return Self {
+      symbol: kline.symbol.clone(),
+      open_time: ChronoDateTime::from_utc(open, Utc),
+      close_time: ChronoDateTime::from_utc(close, Utc),
+    };
+  }
+}
+
+impl From<LatestTradeTime<MongoDateTime>>
+  for LatestTradeTime<ChronoDateTime<Utc>>
+{
+  fn from(mongo: LatestTradeTime<MongoDateTime>) -> Self {
+    let open = mongo.open_time.naive_utc();
+    let close = mongo.open_time.naive_utc();
+    return Self {
+      symbol: mongo.symbol,
+      open_time: ChronoDateTime::from_utc(open, Utc),
+      close_time: ChronoDateTime::from_utc(close, Utc),
+    };
+  }
 }

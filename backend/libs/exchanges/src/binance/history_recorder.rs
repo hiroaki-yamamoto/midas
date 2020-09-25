@@ -1,9 +1,8 @@
-use ::chrono::{
-  DateTime as ChronoDateTime, NaiveDateTime as ChronoNaiveDatetime, Utc,
-};
+use ::std::collections::hash_map::HashMap;
+
+use ::chrono::{DateTime as ChronoDateTime, Utc};
 use ::futures::StreamExt;
-use ::mongodb::bson::{doc, to_bson, Bson};
-use ::mongodb::options::FindOptions;
+use ::mongodb::bson::{doc, from_document, to_bson, DateTime as MongoDateTime};
 use ::mongodb::Collection;
 use ::tokio::select;
 use ::tokio::sync::{broadcast, mpsc};
@@ -12,9 +11,7 @@ use ::tokio::task::block_in_place;
 use ::rpc::historical::HistChartProg;
 use ::types::{ret_on_err, SendableErrorResult};
 
-use crate::errors::FirstTradeDateNotFound;
-
-use super::entities::{KlineResults, KlineResultsWithSymbol};
+use super::entities::{KlineResults, KlineResultsWithSymbol, LatestTradeTime};
 
 #[derive(Debug, Clone)]
 pub struct HistoryRecorder {
@@ -108,36 +105,41 @@ impl HistoryRecorder {
     });
   }
 
-  pub async fn get_latest_trade_open_time(
+  pub async fn get_latest_trade_time(
     &self,
-    symbol: &String,
-  ) -> SendableErrorResult<ChronoDateTime<Utc>> {
+    symbols: Vec<String>,
+  ) -> SendableErrorResult<HashMap<String, LatestTradeTime<ChronoDateTime<Utc>>>>
+  {
     let mut cur = ret_on_err!(
       self
         .col
-        .find(
-          doc! {"symbol": symbol},
-          FindOptions::builder()
-            .sort(doc! {
-              "open_time": -1
-            })
-            .limit(1)
-            .build(),
+        .aggregate(
+          vec![
+            doc! { "$match": doc! { "symbol": doc! { "$in": symbols } } },
+            doc! {
+              "$group": doc! {
+                "_id": "$symbol",
+                "open_time": doc! {
+                  "$max": "$open_time"
+                },
+                "close_time": doc! {
+                  "$max": "$close_time"
+                }
+              }
+            }
+          ],
+          None
         )
         .await
     );
-    if let Some(first) = cur.next().await {
-      let first = ret_on_err!(first);
-      if let Some(date) = first.get("open_time").and_then(Bson::as_datetime) {
-        let ts_sec = date.timestamp();
-        let ts_nano = date.timestamp_subsec_nanos();
-        let date: ChronoDateTime<Utc> = ChronoDateTime::from_utc(
-          ChronoNaiveDatetime::from_timestamp(ts_sec, ts_nano),
-          Utc,
-        );
-        return Ok(date);
-      }
+    let mut ret = HashMap::new();
+    while let Some(doc) = cur.next().await {
+      let doc = ret_on_err!(doc);
+      let latest: LatestTradeTime<MongoDateTime> =
+        ret_on_err!(from_document(doc));
+      let latest: LatestTradeTime<ChronoDateTime<Utc>> = latest.into();
+      ret.insert(latest.symbol.clone(), latest);
     }
-    return Err(Box::new(FirstTradeDateNotFound {}));
+    return Ok(ret);
   }
 }

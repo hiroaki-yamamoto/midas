@@ -1,6 +1,9 @@
+use ::std::collections::HashMap;
 use ::std::fmt::Debug;
 
-use ::futures::future::{select as either, Either, FutureExt};
+use ::futures::future::{
+  join_all, select as either, select_all, Either, FutureExt,
+};
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
@@ -8,7 +11,7 @@ use ::nats::asynk::Connection;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
 use ::tokio::select;
-use ::tokio::stream::StreamExt as TokioStreamExt;
+use ::tokio::stream::{StreamExt as TokioStreamExt, StreamMap};
 use ::tokio::sync::{broadcast, mpsc};
 use ::tokio::time::delay_for;
 use ::url::Url;
@@ -25,15 +28,14 @@ use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use crate::entities::KlineCtrl;
 use crate::errors::{
-  DeterminationFailed, EmptyError, GenericError, MaximumAttemptExceeded,
-  NumObjectError,
+  DeterminationFailed, EmptyError, MaximumAttemptExceeded, NumObjectError,
 };
 use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 
 use super::constants::REST_ENDPOINT;
 use super::entities::{
   BinancePayload, HistFetcherParam, HistQuery, Kline, KlineResults,
-  KlineResultsWithSymbol,
+  KlineResultsWithSymbol, LatestTradeTime,
 };
 use super::history_recorder::HistoryRecorder;
 use super::symbol_fetcher::SymbolFetcher;
@@ -181,83 +183,111 @@ impl HistoryFetcher {
 
   pub fn spawn_fetcher(
     &self,
+    stop_signal: Option<broadcast::Receiver<()>>,
   ) -> (
     mpsc::UnboundedSender<HistFetcherParam>,
     mpsc::UnboundedReceiver<SendableErrorResult<KlineResultsWithSymbol>>,
   ) {
     let (param_send, mut param_rec) =
       mpsc::unbounded_channel::<HistFetcherParam>();
-    let (prog_send, prog_rec) =
+    let (prog_send, prog_recv) =
       mpsc::unbounded_channel::<SendableErrorResult<KlineResultsWithSymbol>>();
     let me = self.clone();
-    let mut stop_ch = me.stop_signal.subscribe();
+    let mut stop_ch = stop_signal.unwrap_or(me.stop_signal.subscribe());
     ::tokio::spawn(async move {
       loop {
         let prog_send = &prog_send;
         select! {
           _ = stop_ch.recv() => {break;},
-          param_option_result = param_rec.recv() => {
-            if let Some(param) = param_option_result {
-              let num_obj = (param.end_time - param.start_time).num_minutes();
-              if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
-                let _ = prog_send.send(Err(Box::new(NumObjectError {
-                  field: String::from("Duration between start and end date"),
-                  num_object: NUM_OBJECTS_TO_FETCH,
-                })));
-                continue;
-              }
-              me.fetch(
-                param.symbol.clone(),
-                param.num_symbols,
-                param.entire_data_len,
-                param.start_time,
-                Some(param.end_time),
-              )
-              .then(|item| async move {
-                let _ = prog_send.send(item);
-              })
-              .await;
+          Some(param) = param_rec.recv() => {
+            let num_obj = match param.end_time {
+              None => 1,
+              Some(end_time) => (end_time - param.start_time).num_minutes()
+            };
+            if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
+              let _ = prog_send.send(Err(Box::new(NumObjectError {
+                field: String::from("Duration between start and end date"),
+                num_object: NUM_OBJECTS_TO_FETCH,
+              })));
+              continue;
             }
-          }
+            me.fetch(
+              param.symbol.clone(),
+              param.num_symbols,
+              param.entire_data_len,
+              param.start_time,
+              param.end_time,
+            )
+            .then(|item| async move {
+              let _ = prog_send.send(item);
+            })
+            .await;
+          },
+          else => {break;}
         }
       }
     });
-    return (param_send, prog_rec);
+    return (param_send, prog_recv);
   }
 
   async fn get_first_trade_date(
     &self,
     mut stop_ch: broadcast::Receiver<()>,
-    symbol: &String,
-  ) -> SendableErrorResult<DateTime<Utc>> {
-    match self.recorder.get_latest_trade_open_time(symbol).await {
-      Ok(d) => return Ok(d),
-      Err(_) => {
-        let start = self.fetch(
-          symbol.clone(),
-          1,
-          1,
-          DateTime::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
-          None,
-        );
-        let result =
-          match either(Box::pin(stop_ch.recv()), Box::pin(start)).await {
-            Either::Left((_, _)) => {
-              return Err(Box::new(GenericError::new("Timeout.")));
-            }
-            Either::Right((v, _)) => v,
-          }?;
-        let mut start = result.klines;
-        start.retain(|item| item.is_ok());
-        if start.len() != 1 {
-          return Err(Box::new(DeterminationFailed::<()> {
-            field: String::from("Start Date"),
-            additional_data: None,
-          }));
+    symbols: Vec<String>,
+  ) -> SendableErrorResult<HashMap<String, LatestTradeTime<DateTime<Utc>>>> {
+    let num_sym = symbols.len();
+    let mut latest_kline =
+      self.recorder.get_latest_trade_time(symbols.clone()).await?;
+    let latest_kline_clone = latest_kline.clone();
+    let to_fetch_binance = symbols
+      .into_iter()
+      .filter(move |symbol| latest_kline_clone.contains_key(symbol));
+    let (stop_send, _) = broadcast::channel::<()>(CHAN_BUF_SIZE);
+    let mut fetch_send = vec![];
+    let mut fetch_recv = vec![];
+    for _ in 0..NUM_CONC_TASKS {
+      let (param, res) = self.spawn_fetcher(Some(stop_send.subscribe()));
+      fetch_send.push(param);
+      fetch_recv.push(res.filter_map(|item| item.ok()));
+    }
+    tokio::spawn(async move {
+      let mut index = 0;
+      for symbol in to_fetch_binance {
+        let _ = fetch_send[index].send(HistFetcherParam {
+          symbol: symbol.clone(),
+          num_symbols: 1,
+          entire_data_len: 1,
+          start_time: DateTime::from_utc(
+            NaiveDateTime::from_timestamp(0, 0),
+            Utc,
+          ),
+          end_time: None,
+        });
+        index = (index + 1) % fetch_send.len();
+      }
+    });
+    let mut index: usize = 0;
+    let mut stream_map = StreamMap::new();
+    let fetch_recv = fetch_recv.into_iter().enumerate();
+    for (index, stream) in fetch_recv {
+      stream_map.insert(index, stream);
+    }
+    for (_, mut start) in stream_map.next().await {
+      let start = match start.klines.pop() {
+        None => {
+          continue;
         }
-        return Ok(start[0].as_ref().unwrap().open_time.into());
+        Some(s) => s,
+      };
+      let start = start?;
+      let start: LatestTradeTime<DateTime<Utc>> = start.into();
+      latest_kline.insert(start.symbol.clone(), start);
+      index += 1;
+      if index >= num_sym {
+        break;
       }
     }
+    return Ok(latest_kline);
   }
 }
 
@@ -279,7 +309,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
     let mut senders = vec![];
     let mut recvers = vec![];
     for _ in 0..NUM_CONC_TASKS {
-      let (param, res) = self.spawn_fetcher();
+      let (param, res) = self.spawn_fetcher(None);
       senders.push(param);
       recvers.push(res);
     }
@@ -297,17 +327,21 @@ impl HistoryFetcherTrait for HistoryFetcher {
       let end_at = Utc::now();
       let mut index = 0;
       let mut stop_ch = me.stop_signal.subscribe();
-      for symbol in symbols {
-        let start_at = match me
-          .get_first_trade_date(me.stop_signal.subscribe(), &symbol.symbol)
-          .await
-        {
-          Err(e) => {
-            let _ = res_send.send(Err(e));
-            return;
-          }
-          Ok(v) => v,
-        };
+      let trade_dates = match me
+        .get_first_trade_date(
+          me.stop_signal.subscribe(),
+          symbols.into_iter().map(|sym| sym.symbol).collect(),
+        )
+        .await
+      {
+        Err(e) => {
+          let _ = res_send.send(Err(e));
+          return;
+        }
+        Ok(v) => v,
+      };
+      for (symbol, dates) in trade_dates.into_iter() {
+        let start_at = dates.open_time;
         let mut entire_data_len = (end_at - start_at).num_minutes();
         let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
         entire_data_len /= 1000;
@@ -327,11 +361,11 @@ impl HistoryFetcherTrait for HistoryFetcher {
           }
           let sender = &mut senders[index];
           let _ = sender.send(HistFetcherParam {
-            symbol: symbol.symbol.clone(),
+            symbol: symbol.clone(),
             num_symbols: symbols_len as i64,
             entire_data_len,
             start_time: sec_start_date.clone(),
-            end_time: sec_end_date,
+            end_time: Some(sec_end_date),
           });
           sec_start_date = sec_end_date.clone();
           index = (index + 1) % senders.len();
