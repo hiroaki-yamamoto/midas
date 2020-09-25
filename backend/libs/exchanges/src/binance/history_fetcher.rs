@@ -241,7 +241,7 @@ impl HistoryFetcher {
     let latest_kline_clone = latest_kline.clone();
     let to_fetch_binance = symbols
       .into_iter()
-      .filter(move |symbol| latest_kline_clone.contains_key(symbol));
+      .filter(move |symbol| !latest_kline_clone.contains_key(symbol));
     let (stop_send, _) = broadcast::channel::<()>(CHAN_BUF_SIZE);
     let mut fetch_send = vec![];
     let mut fetch_recv = vec![];
@@ -284,9 +284,11 @@ impl HistoryFetcher {
       latest_kline.insert(start.symbol.clone(), start);
       index += 1;
       if index >= num_sym {
+        stream_map.clear();
         break;
       }
     }
+    let _ = stop_send.send(());
     return Ok(latest_kline);
   }
 }
