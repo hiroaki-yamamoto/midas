@@ -149,15 +149,13 @@ impl HistoryFetcher {
       } else if rest_status == ::reqwest::StatusCode::IM_A_TEAPOT
         || rest_status == ::reqwest::StatusCode::TOO_MANY_REQUESTS
       {
-        let mut retry_secs: i64 = match resp.headers().get("retry-after") {
-          Some(t) => i64::from_str_radix(
-            t.to_str()
-              .unwrap_or(&DEFAULT_RECONNECT_INTERVAL.to_string()),
-            10,
-          )
-          .unwrap_or(DEFAULT_RECONNECT_INTERVAL),
-          None => DEFAULT_RECONNECT_INTERVAL,
-        };
+        let mut retry_secs: i64 = resp
+          .headers()
+          .get("retry-after")
+          .map(|v| v.to_str().unwrap_or("0"))
+          .map(|v| i64::from_str_radix(v, 10))
+          .unwrap_or(Ok(DEFAULT_RECONNECT_INTERVAL))
+          .unwrap_or(DEFAULT_RECONNECT_INTERVAL);
         if retry_secs <= 0 {
           retry_secs = DEFAULT_RECONNECT_INTERVAL;
         }
