@@ -15,7 +15,7 @@ rpc = { path = "../rpc" }
 config = { path = "../config" }
 async-trait = "0.1.40"
 types = { path = "../types" }
-chrono = "0.4.15"
+chrono = "0.4.17"
 url = "2.1.1"
 serde_qs = "0.7.0"
 serde = "1.0.116"
