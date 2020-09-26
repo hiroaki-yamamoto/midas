@@ -232,11 +232,21 @@ impl HistoryFetcher {
 
   async fn get_first_trade_date(
     &self,
-    mut stop_ch: broadcast::Receiver<()>,
+    stop_ch: broadcast::Receiver<()>,
+    prog_ch: &mpsc::UnboundedSender<SendableErrorResult<HistChartProg>>,
     symbols: Vec<String>,
   ) -> SendableErrorResult<HashMap<String, LatestTradeTime<DateTime<Utc>>>> {
+    let symbols_len = symbols.len() as i64;
     let mut latest_kline =
       self.recorder.get_latest_trade_time(symbols.clone()).await?;
+    let _ = prog_ch.send(Ok(HistChartProg {
+      symbol: String::from("Currency Trade Date Fetch"),
+      num_symbols: symbols_len,
+      cur_symbol_num: 0,
+      num_objects: symbols_len,
+      cur_object_num: latest_kline.len() as i64,
+    }));
+    warn!(self.logger, "DB entities: {:?}", &latest_kline);
     let latest_kline_clone = latest_kline.clone();
     let to_fetch_binance = symbols
       .into_iter()
@@ -282,6 +292,13 @@ impl HistoryFetcher {
         let start = start?;
         let start: LatestTradeTime<DateTime<Utc>> = start.into();
         latest_kline.insert(start.symbol.clone(), start);
+        let _ = prog_ch.send(Ok(HistChartProg {
+          symbol: String::from("Currency Trade Date Fetch"),
+          num_symbols: symbols_len,
+          cur_symbol_num: 0,
+          num_objects: symbols_len,
+          cur_object_num: 1,
+        }));
       }
     }
     let _ = stop_send.send(());
@@ -328,6 +345,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
       let trade_dates = match me
         .get_first_trade_date(
           me.stop_signal.subscribe(),
+          &res_send,
           symbols.into_iter().map(|sym| sym.symbol).collect(),
         )
         .await
