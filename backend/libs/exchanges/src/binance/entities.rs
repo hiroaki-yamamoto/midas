@@ -105,16 +105,16 @@ pub enum Filters {
   },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HistFetcherParam {
   pub symbol: String,
   pub num_symbols: i64,
   pub entire_data_len: i64,
-  pub start_time: ChronoDateTime<Utc>,
-  pub end_time: Option<ChronoDateTime<Utc>>,
+  pub start_time: MongoDateTime,
+  pub end_time: Option<MongoDateTime>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Kline {
   pub symbol: String,
   pub open_time: MongoDateTime,
@@ -152,20 +152,12 @@ impl Kline {
   }
 }
 
+pub type Klines = Vec<Kline>;
+
 impl AsRef<Kline> for Kline {
   fn as_ref(&self) -> &Self {
     return self;
   }
-}
-
-pub type KlineResults = Vec<SendableErrorResult<Kline>>;
-
-#[derive(Debug)]
-pub struct KlineResultsWithSymbol {
-  pub symbol: String,
-  pub num_symbols: i64,
-  pub entire_data_len: i64,
-  pub klines: KlineResults,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

@@ -24,13 +24,14 @@ use ::slog::{crit, warn, Logger};
 use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use crate::entities::KlineCtrl;
-use crate::errors::{EmptyError, MaximumAttemptExceeded, NumObjectError};
+use crate::errors::{EmptyError, MaximumAttemptExceeded};
 use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 
-use super::constants::REST_ENDPOINT;
+use super::constants::{
+  HIST_FETCHER_PARAM_SUB_NAME, HIST_FETCHER_PROG_SUB_NAME, REST_ENDPOINT,
+};
 use super::entities::{
-  BinancePayload, HistFetcherParam, HistQuery, Kline, KlineResults,
-  KlineResultsWithSymbol, LatestTradeTime,
+  BinancePayload, HistFetcherParam, HistQuery, Kline, Klines, LatestTradeTime,
 };
 use super::history_recorder::HistoryRecorder;
 use super::symbol_fetcher::SymbolFetcher;
@@ -107,7 +108,7 @@ impl HistoryFetcher {
     entire_data_len: i64,
     start_at: DateTime<Utc>,
     end_at: Option<DateTime<Utc>>,
-  ) -> SendableErrorResult<KlineResultsWithSymbol> {
+  ) -> SendableErrorResult<Klines> {
     let limit = match end_at {
       Some(end_at) => Some((end_at - start_at).num_minutes()),
       None => None,
@@ -131,16 +132,21 @@ impl HistoryFetcher {
       let rest_status = resp.status();
       if rest_status.is_success() {
         let values = ret_on_err!(resp.json::<BinancePayload>().await);
-        let ret: KlineResults = values
+        let ret: Klines = values
           .iter()
-          .map(|item| Ok(Kline::new(pair.clone(), item)?))
+          .filter_map(|item| match Kline::new(pair.clone(), item) {
+            Err(err) => {
+              warn!(
+                self.logger,
+                "Failed to fetch Kline data: {}",
+                err; "symbol" => &pair
+              );
+              return None;
+            }
+            Ok(v) => Some(v),
+          })
           .collect();
-        return Ok(KlineResultsWithSymbol {
-          symbol: pair,
-          num_symbols,
-          entire_data_len,
-          klines: ret,
-        });
+        return Ok(ret);
       } else if rest_status == ::reqwest::StatusCode::IM_A_TEAPOT
         || rest_status == ::reqwest::StatusCode::TOO_MANY_REQUESTS
       {
@@ -174,50 +180,79 @@ impl HistoryFetcher {
     return Err(Box::new(MaximumAttemptExceeded::default()));
   }
 
-  pub fn spawn_fetcher(
-    &self,
-  ) -> (
-    mpsc::UnboundedSender<HistFetcherParam>,
-    mpsc::UnboundedReceiver<SendableErrorResult<KlineResultsWithSymbol>>,
-  ) {
-    let (param_send, mut param_rec) =
-      mpsc::unbounded_channel::<HistFetcherParam>();
-    let (prog_send, prog_recv) =
-      mpsc::unbounded_channel::<SendableErrorResult<KlineResultsWithSymbol>>();
+  pub async fn spawn_fetcher(&self) -> SendableErrorResult<()> {
     let me = self.clone();
+    let param_sub = ret_on_err!(
+      me.broker
+        .queue_subscribe(HIST_FETCHER_PARAM_SUB_NAME, "fetch.thread")
+        .await
+    )
+    .map(|item| (from_msgpack::<HistFetcherParam>(item.data.as_ref()), item));
     ::tokio::spawn(async move {
       loop {
-        let prog_send = &prog_send;
         select! {
-          Some(param) = param_rec.recv() => {
+          Some((param, msg)) = param_sub.next() => {
+            let param = match param {
+              Err(e) => {
+                warn!(me.logger, "Failed to parse the param msg: {}", e);
+                continue;
+              },
+              Ok(v) => v
+            };
             let num_obj = match param.end_time {
               None => 1,
-              Some(end_time) => (end_time - param.start_time).num_minutes()
+              Some(end_time) => (*end_time - *param.start_time).num_minutes()
             };
             if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
-              let _ = prog_send.send(Err(Box::new(NumObjectError {
-                field: String::from("Duration between start and end date"),
-                num_object: NUM_OBJECTS_TO_FETCH,
-              })));
+              warn!(
+                me.logger,
+                "Duration between the specified start and end time exceeds
+                  the maximum number of the objects to fetch.";
+                "symbol" => &param.symbol,
+                "start_time" => param.start_time.to_string(),
+                "end_time" => format!("{:?}", param.end_time),
+                "num_objects" => num_obj,
+                "maximum_number_objects" => NUM_OBJECTS_TO_FETCH,
+              );
               continue;
             }
-            me.fetch(
+            let resp = me.fetch(
               param.symbol.clone(),
               param.num_symbols,
               param.entire_data_len,
-              param.start_time,
-              param.end_time,
-            )
-            .then(|item| async move {
-              let _ = prog_send.send(item);
-            })
-            .await;
+              *param.start_time,
+              param.end_time.map(|d| *d),
+            ).await;
+            for item in resp {
+              let item = match item {
+                Err(e) => {
+                  warn!(me.logger, "Failed to fetch kline data: {}", e);
+                  return;
+                },
+                Ok(v) => v
+              };
+              let response_payload = match to_msgpack(&item) {
+                Err(e) => {
+                  warn!(
+                    me.logger,
+                    "Failed to serialize the payload for response: {}", e
+                  );
+                  return;
+                },
+                Ok(v) => v
+              }.as_slice();
+              if let Some(_) = msg.reply {
+                msg.respond(response_payload);
+              } else {
+                me.broker.publish(HIST_FETCHER_PROG_SUB_NAME, response_payload);
+              }
+            }
           },
           else => {break;}
         }
       }
     });
-    return (param_send, prog_recv);
+    return Ok(());
   }
 
   async fn get_first_trade_date(

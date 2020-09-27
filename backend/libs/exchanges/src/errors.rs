@@ -60,63 +60,6 @@ impl Error for EmptyError {
 unsafe impl Send for EmptyError {}
 
 #[derive(Debug, Clone)]
-pub struct DeterminationFailed<T>
-where
-  T: Debug + Clone + Copy,
-{
-  pub field: String,
-  pub additional_data: Option<T>,
-}
-
-impl<T> Display for DeterminationFailed<T>
-where
-  T: Debug + Clone + Copy,
-{
-  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-    return write!(
-      f,
-      "Determination of {} failed. Additional Data: {:?}",
-      self.field, self.additional_data
-    );
-  }
-}
-
-impl<T> Error for DeterminationFailed<T>
-where
-  T: Debug + Clone + Copy,
-{
-  fn source(&self) -> Option<&(dyn Error + 'static)> {
-    None
-  }
-}
-
-unsafe impl<T> Send for DeterminationFailed<T> where T: Debug + Clone + Copy {}
-
-#[derive(Debug, Clone)]
-pub struct NumObjectError {
-  pub field: String,
-  pub num_object: usize,
-}
-
-impl Display for NumObjectError {
-  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-    return write!(
-      f,
-      "{} should have {} objects at most.",
-      self.field, self.num_object
-    );
-  }
-}
-
-impl Error for NumObjectError {
-  fn source(&self) -> Option<&(dyn Error + 'static)> {
-    None
-  }
-}
-
-unsafe impl Send for NumObjectError {}
-
-#[derive(Debug, Clone)]
 pub struct GenericError<'t> {
   msg: &'t str,
 }
