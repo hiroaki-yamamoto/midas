@@ -1,9 +1,7 @@
 use ::std::collections::HashMap;
 use ::std::fmt::Debug;
 
-use ::futures::future::{
-  join_all, select as either, select_all, Either, FutureExt,
-};
+use ::futures::future::FutureExt;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
@@ -11,14 +9,13 @@ use ::nats::asynk::Connection;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
 use ::tokio::select;
-use ::tokio::stream::{StreamExt as TokioStreamExt, StreamMap};
+use ::tokio::stream::StreamExt as TokioStreamExt;
 use ::tokio::sync::{broadcast, mpsc};
 use ::tokio::time::delay_for;
 use ::url::Url;
 
 use ::config::{
-  CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_CONC_TASKS,
-  NUM_OBJECTS_TO_FETCH,
+  CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH,
 };
 use ::mongodb::bson::{doc, Document};
 use ::mongodb::Collection;
@@ -27,9 +24,7 @@ use ::slog::{crit, warn, Logger};
 use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use crate::entities::KlineCtrl;
-use crate::errors::{
-  DeterminationFailed, EmptyError, MaximumAttemptExceeded, NumObjectError,
-};
+use crate::errors::{EmptyError, MaximumAttemptExceeded, NumObjectError};
 use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 
 use super::constants::REST_ENDPOINT;
@@ -181,7 +176,6 @@ impl HistoryFetcher {
 
   pub fn spawn_fetcher(
     &self,
-    stop_signal: Option<broadcast::Receiver<()>>,
   ) -> (
     mpsc::UnboundedSender<HistFetcherParam>,
     mpsc::UnboundedReceiver<SendableErrorResult<KlineResultsWithSymbol>>,
@@ -191,12 +185,10 @@ impl HistoryFetcher {
     let (prog_send, prog_recv) =
       mpsc::unbounded_channel::<SendableErrorResult<KlineResultsWithSymbol>>();
     let me = self.clone();
-    let mut stop_ch = stop_signal.unwrap_or(me.stop_signal.subscribe());
     ::tokio::spawn(async move {
       loop {
         let prog_send = &prog_send;
         select! {
-          _ = stop_ch.recv() => {break;},
           Some(param) = param_rec.recv() => {
             let num_obj = match param.end_time {
               None => 1,
@@ -230,7 +222,6 @@ impl HistoryFetcher {
 
   async fn get_first_trade_date(
     &self,
-    stop_ch: broadcast::Receiver<()>,
     prog_ch: &mpsc::UnboundedSender<SendableErrorResult<HistChartProg>>,
     symbols: Vec<String>,
   ) -> SendableErrorResult<HashMap<String, LatestTradeTime<DateTime<Utc>>>> {
@@ -251,17 +242,11 @@ impl HistoryFetcher {
       .filter(move |symbol| !latest_kline_clone.contains_key(symbol));
     let to_fetch_binance_len = to_fetch_binance.clone().count();
     let (stop_send, _) = broadcast::channel::<()>(CHAN_BUF_SIZE);
-    let mut fetch_send = vec![];
-    let mut fetch_recv = vec![];
-    for _ in 0..NUM_CONC_TASKS {
-      let (param, res) = self.spawn_fetcher(Some(stop_send.subscribe()));
-      fetch_send.push(param);
-      fetch_recv.push(res.filter_map(|item| item.ok()));
-    }
+    let (fetch_send, mut fetch_recv) = self.spawn_fetcher();
     tokio::spawn(async move {
-      let mut index = 0;
+      let send = &fetch_send;
       for symbol in to_fetch_binance {
-        let _ = fetch_send[index].send(HistFetcherParam {
+        let _ = send.send(HistFetcherParam {
           symbol: symbol.clone(),
           num_symbols: 1,
           entire_data_len: 1,
@@ -271,16 +256,10 @@ impl HistoryFetcher {
           ),
           end_time: None,
         });
-        index = (index + 1) % fetch_send.len();
       }
     });
-    let mut stream_map = StreamMap::new();
-    let fetch_recv = fetch_recv.into_iter().enumerate();
-    for (index, stream) in fetch_recv {
-      stream_map.insert(index, stream);
-    }
     for _ in 0..to_fetch_binance_len {
-      if let Some((_, mut start)) = stream_map.next().await {
+      if let Some(Ok(mut start)) = fetch_recv.recv().await {
         let start = match start.klines.pop() {
           None => {
             continue;
@@ -319,16 +298,8 @@ impl HistoryFetcherTrait for HistoryFetcher {
     }
     let (res_send, res_recv) =
       mpsc::unbounded_channel::<SendableErrorResult<HistChartProg>>();
-    let mut senders = vec![];
-    let mut recvers = vec![];
-    for _ in 0..NUM_CONC_TASKS {
-      let (param, res) = self.spawn_fetcher(None);
-      senders.push(param);
-      recvers.push(res);
-    }
-    for recv_ch in recvers {
-      self.recorder.spawn(recv_ch, res_send.clone());
-    }
+    let (sender, recver) = self.spawn_fetcher();
+    self.recorder.spawn(recver, res_send.clone());
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
       query = Some(doc! { "symbol": doc! { "$in": symbol } });
@@ -338,11 +309,9 @@ impl HistoryFetcherTrait for HistoryFetcher {
     let me = self.clone();
     ::tokio::spawn(async move {
       let end_at = Utc::now();
-      let mut index = 0;
       let mut stop_ch = me.stop_signal.subscribe();
       let trade_dates = match me
         .get_first_trade_date(
-          me.stop_signal.subscribe(),
           &res_send,
           symbols.into_iter().map(|sym| sym.symbol).collect(),
         )
@@ -373,7 +342,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
           if sec_end_date > end_at {
             sec_end_date = end_at;
           }
-          let sender = &mut senders[index];
+          let sender = &sender;
           let _ = sender.send(HistFetcherParam {
             symbol: symbol.clone(),
             num_symbols: symbols_len as i64,
@@ -382,7 +351,6 @@ impl HistoryFetcherTrait for HistoryFetcher {
             end_time: Some(sec_end_date),
           });
           sec_start_date = sec_end_date.clone();
-          index = (index + 1) % senders.len();
         }
       }
     });
