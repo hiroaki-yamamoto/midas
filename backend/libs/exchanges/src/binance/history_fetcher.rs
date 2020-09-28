@@ -301,9 +301,10 @@ impl HistoryFetcher {
         }
         Ok(v) => v,
       };
-      resp_vec.push(
-        broker.request(HIST_FETCHER_PARAM_SUB_NAME, req_payload.as_slice()),
-      );
+      resp_vec.push(broker.request(
+        HIST_FETCHER_PARAM_SUB_NAME,
+        req_payload.as_slice().to_owned(),
+      ));
     }
     let first_klines = join_all(resp_vec)
       .map(|item| {
