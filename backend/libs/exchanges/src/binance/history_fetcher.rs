@@ -1,10 +1,9 @@
 use ::std::collections::HashMap;
 use ::std::fmt::Debug;
 
-use ::futures::future::FutureExt;
-
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
+use ::futures::future::{join_all, FutureExt};
 use ::nats::asynk::Connection;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
@@ -28,7 +27,7 @@ use crate::errors::{EmptyError, MaximumAttemptExceeded};
 use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 
 use super::constants::{
-  HIST_FETCHER_PARAM_SUB_NAME, HIST_FETCHER_PROG_SUB_NAME, REST_ENDPOINT,
+  HIST_FETCHER_FETCH_RESP_SUB_NAME, HIST_FETCHER_PARAM_SUB_NAME, REST_ENDPOINT,
 };
 use super::entities::{
   BinancePayload, HistFetcherParam, HistQuery, Kline, Klines, LatestTradeTime,
@@ -223,14 +222,14 @@ impl HistoryFetcher {
               *param.start_time,
               param.end_time.map(|d| *d),
             ).await;
+            let resp = match resp {
+              Err(e) => {
+                warn!(me.logger, "Failed to fetch kline data: {}", e);
+                continue;
+              },
+              Ok(v) => v
+            };
             for item in resp {
-              let item = match item {
-                Err(e) => {
-                  warn!(me.logger, "Failed to fetch kline data: {}", e);
-                  return;
-                },
-                Ok(v) => v
-              };
               let response_payload = match to_msgpack(&item) {
                 Err(e) => {
                   warn!(
@@ -244,7 +243,7 @@ impl HistoryFetcher {
               if let Some(_) = msg.reply {
                 msg.respond(response_payload);
               } else {
-                me.broker.publish(HIST_FETCHER_PROG_SUB_NAME, response_payload);
+                me.broker.publish(HIST_FETCHER_FETCH_RESP_SUB_NAME, response_payload);
               }
             }
           },
@@ -270,50 +269,55 @@ impl HistoryFetcher {
       num_objects: symbols_len,
       cur_object_num: latest_kline.len() as i64,
     }));
-    warn!(self.logger, "DB entities: {:?}", &latest_kline);
     let latest_kline_clone = latest_kline.clone();
     let to_fetch_binance = symbols
       .into_iter()
       .filter(move |symbol| !latest_kline_clone.contains_key(symbol));
     let to_fetch_binance_len = to_fetch_binance.clone().count();
-    let (stop_send, _) = broadcast::channel::<()>(CHAN_BUF_SIZE);
-    let (fetch_send, mut fetch_recv) = self.spawn_fetcher();
-    tokio::spawn(async move {
-      let send = &fetch_send;
-      for symbol in to_fetch_binance {
-        let _ = send.send(HistFetcherParam {
-          symbol: symbol.clone(),
-          num_symbols: 1,
-          entire_data_len: 1,
-          start_time: DateTime::from_utc(
-            NaiveDateTime::from_timestamp(0, 0),
-            Utc,
-          ),
-          end_time: None,
-        });
-      }
-    });
-    for _ in 0..to_fetch_binance_len {
-      if let Some(Ok(mut start)) = fetch_recv.recv().await {
-        let start = match start.klines.pop() {
-          None => {
-            continue;
-          }
-          Some(s) => s,
-        };
-        let start = start?;
-        let start: LatestTradeTime<DateTime<Utc>> = start.into();
-        latest_kline.insert(start.symbol.clone(), start);
-        let _ = prog_ch.send(Ok(HistChartProg {
-          symbol: String::from("Currency Trade Date Fetch"),
-          num_symbols: symbols_len,
-          cur_symbol_num: 0,
-          num_objects: symbols_len,
-          cur_object_num: 1,
-        }));
-      }
+    let broker = self.broker.clone();
+    let logger = self.logger.clone();
+    let mut resp_vec = vec![];
+    for symbol in to_fetch_binance {
+      let param = HistFetcherParam {
+        symbol: symbol.clone(),
+        num_symbols: 1,
+        entire_data_len: 1,
+        start_time: DateTime::from_utc(
+          NaiveDateTime::from_timestamp(0, 0),
+          Utc,
+        )
+        .into(),
+        end_time: None,
+      };
+      let req_payload = match to_msgpack(&param) {
+        Err(e) => {
+          crit!(
+            logger,
+            "Failed to serialize the request to fetch
+                the first trade date: {}",
+            e
+          );
+          continue;
+        }
+        Ok(v) => v,
+      };
+      resp_vec.push(
+        broker.request(HIST_FETCHER_PARAM_SUB_NAME, req_payload.as_slice()),
+      );
     }
-    let _ = stop_send.send(());
+    let first_klines = join_all(resp_vec)
+      .map(|item| {
+        item
+          .into_iter()
+          .filter_map(|v| v.ok())
+          .map(|v| from_msgpack::<Klines>(&v.data[..]))
+          .filter_map(|v| v.ok())
+          .filter_map(|mut v| v.pop())
+      })
+      .await;
+    for first_kline in first_klines {
+      latest_kline.insert(first_kline.symbol.clone(), first_kline.into());
+    }
     return Ok(latest_kline);
   }
 }
