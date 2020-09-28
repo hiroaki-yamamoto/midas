@@ -181,7 +181,7 @@ impl HistoryFetcher {
 
   pub async fn spawn_fetcher(&self) -> SendableErrorResult<()> {
     let me = self.clone();
-    let param_sub = ret_on_err!(
+    let mut param_sub = ret_on_err!(
       me.broker
         .queue_subscribe(HIST_FETCHER_PARAM_SUB_NAME, "fetch.thread")
         .await
@@ -215,13 +215,15 @@ impl HistoryFetcher {
               );
               continue;
             }
+            let start_time = *param.start_time;
             let resp = me.fetch(
               param.symbol.clone(),
               param.num_symbols,
               param.entire_data_len,
-              *param.start_time,
+              start_time,
               param.end_time.map(|d| *d),
-            ).await;
+            );
+            let resp = resp.await;
             let resp = match resp {
               Err(e) => {
                 warn!(me.logger, "Failed to fetch kline data: {}", e);
@@ -229,22 +231,22 @@ impl HistoryFetcher {
               },
               Ok(v) => v
             };
-            for item in resp {
-              let response_payload = match to_msgpack(&item) {
-                Err(e) => {
-                  warn!(
-                    me.logger,
-                    "Failed to serialize the payload for response: {}", e
-                  );
-                  return;
-                },
-                Ok(v) => v
-              }.as_slice();
-              if let Some(_) = msg.reply {
-                msg.respond(response_payload);
-              } else {
-                me.broker.publish(HIST_FETCHER_FETCH_RESP_SUB_NAME, response_payload);
-              }
+            let response_payload = match to_msgpack(&resp) {
+              Err(e) => {
+                warn!(
+                  me.logger,
+                  "Failed to serialize the payload for response: {}", e
+                );
+                return;
+              },
+              Ok(v) => v
+            };
+            if let Some(_) = msg.reply {
+              msg.respond(response_payload.as_slice().to_owned());
+            } else {
+              me.broker.publish(
+                HIST_FETCHER_FETCH_RESP_SUB_NAME,
+                response_payload.as_slice().to_owned());
             }
           },
           else => {break;}

@@ -4,6 +4,9 @@ use ::chrono::{DateTime as ChronoDateTime, Utc};
 use ::futures::StreamExt;
 use ::mongodb::bson::{doc, from_document, to_bson, DateTime as MongoDateTime};
 use ::mongodb::Collection;
+use ::nats::asynk::Connection as NatsConnection;
+use ::rmp_serde::from_slice as from_msgpack;
+use ::slog::{crit, Logger};
 use ::tokio::select;
 use ::tokio::sync::{broadcast, mpsc};
 use ::tokio::task::block_in_place;
@@ -11,21 +14,31 @@ use ::tokio::task::block_in_place;
 use ::rpc::historical::HistChartProg;
 use ::types::{ret_on_err, SendableErrorResult};
 
-use super::entities::{KlineResults, KlineResultsWithSymbol, LatestTradeTime};
+use super::constants::HIST_FETCHER_FETCH_RESP_SUB_NAME;
+use super::entities::{Klines, LatestTradeTime};
 
 #[derive(Debug, Clone)]
 pub struct HistoryRecorder {
   col: Collection,
-  senders: Vec<mpsc::UnboundedSender<KlineResults>>,
+  broker: NatsConnection,
+  logger: Logger,
+  senders: Vec<mpsc::UnboundedSender<Klines>>,
   stop: broadcast::Sender<()>,
 }
 
 impl HistoryRecorder {
-  pub fn new(col: Collection, stop_sender: broadcast::Sender<()>) -> Self {
+  pub fn new(
+    col: Collection,
+    stop_sender: broadcast::Sender<()>,
+    logger: Logger,
+    broker: NatsConnection,
+  ) -> Self {
     let mut ret = Self {
       col,
       senders: vec![],
       stop: stop_sender,
+      broker,
+      logger,
     };
     for _ in 0..::num_cpus::get() {
       ret.spawn_record();
@@ -34,7 +47,7 @@ impl HistoryRecorder {
   }
 
   fn spawn_record(&mut self) {
-    let (sender, mut recver) = mpsc::unbounded_channel::<KlineResults>();
+    let (sender, mut recver) = mpsc::unbounded_channel::<Klines>();
     let col = self.col.clone();
     let mut stop = self.stop.subscribe();
     ::tokio::spawn(async move {
@@ -49,7 +62,6 @@ impl HistoryRecorder {
             let klines = block_in_place(move || {
               return raw_klines
                 .into_iter()
-                .filter_map(|item| item.ok())
                 .filter_map(|item| to_bson(&item).ok())
                 .filter_map(|item| item.as_document().cloned())
                 .map(|item| item.clone());
@@ -62,13 +74,26 @@ impl HistoryRecorder {
     self.senders.push(sender);
   }
 
-  pub fn spawn(
+  pub async fn spawn(
     &self,
-    mut value_ch: mpsc::UnboundedReceiver<
-      SendableErrorResult<KlineResultsWithSymbol>,
-    >,
     prog_ch: mpsc::UnboundedSender<SendableErrorResult<HistChartProg>>,
   ) {
+    let value_sub = match self
+      .broker
+      .queue_subscribe(HIST_FETCHER_FETCH_RESP_SUB_NAME, "recorder")
+      .await
+    {
+      Err(e) => {
+        crit!(
+          self.logger,
+          "Failed to subscribe the response channel: {}",
+          e; "chan_name" => HIST_FETCHER_FETCH_RESP_SUB_NAME,
+        );
+        return;
+      }
+      Ok(v) => v,
+    }
+    .map(|item| {}); // TODO
     let senders = self.senders.clone();
     let mut stop = self.stop.subscribe();
     ::tokio::spawn(async move {
@@ -76,7 +101,7 @@ impl HistoryRecorder {
       loop {
         select! {
           _ = stop.recv() => {break;},
-          result = value_ch.recv() => {
+          result = value_sub.next() => {
             if let Some(kline_result) = result {
               match kline_result {
                 Err(err) => {
