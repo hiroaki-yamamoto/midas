@@ -1,12 +1,13 @@
 use ::std::collections::HashMap;
 
-use ::futures::join;
+use ::futures::{join, StreamExt};
 
 use ::nats::asynk::{Connection as NatsConnection, Subscription as NatsSubsc};
 
 use ::exchanges::HistoryFetcher;
-use ::rmp_serde::to_vec;
+use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::rpc::entities::Exchanges;
+use ::rpc::historical::HistChartProg;
 use ::slog::{error, o, Logger};
 use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
@@ -44,7 +45,14 @@ where
     &self,
     symbols: Vec<String>,
   ) -> SendableErrorResult<()> {
-    let mut prog = self.history_fetcher.refresh(symbols).await?;
+    let mut prog =
+      Box::pin(
+        self.history_fetcher.refresh(symbols).await?.filter_map(
+          |msg| async move {
+            from_msgpack::<HistChartProg>(msg.data.as_slice()).ok()
+          },
+        ),
+      );
     let logger_in_thread = self
       .logger
       .new(o!("scope" => "refresh_historical_klines.thread"));
@@ -52,17 +60,7 @@ where
     let exchange = self.exchange;
     ::tokio::spawn(async move {
       let mut hist_fetch_prog = HashMap::new();
-      while let Some(prog) = prog.recv().await {
-        let prog = match prog {
-          Err(e) => {
-            error!(
-              logger_in_thread,
-              "Got an error when getting progress: {}", e
-            );
-            continue;
-          }
-          Ok(k) => k,
-        };
+      while let Some(prog) = prog.next().await {
         let result = match hist_fetch_prog.get_mut(&prog.symbol) {
           None => {
             let mut prog_clone = prog.clone();
@@ -94,7 +92,7 @@ where
 
   pub async fn stop(&self) -> SendableErrorResult<()> {
     let status = KlineFetchStatus::Stop;
-    let msg = ret_on_err!(to_vec(&status));
+    let msg = ret_on_err!(to_msgpack(&status));
     let stop_progress = self.nats.publish("kline.progress", &msg[..]);
     let stop_hist_fetch = self.history_fetcher.stop();
     let (stop_progress, stop_hist_fetch) =
@@ -109,7 +107,7 @@ async fn nats_broadcast_status(
   con: &NatsConnection,
   status: &KlineFetchStatus,
 ) {
-  let msg = match to_vec(status) {
+  let msg = match to_msgpack(status) {
     Ok(v) => v,
     Err(err) => {
       error!(
