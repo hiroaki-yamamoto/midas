@@ -76,10 +76,7 @@ impl HistoryRecorder {
     self.senders.push(sender);
   }
 
-  pub async fn spawn(
-    &self,
-    prog_ch: mpsc::UnboundedSender<SendableErrorResult<HistChartProg>>,
-  ) {
+  pub async fn spawn(&self) {
     let value_sub = match self
       .broker
       .queue_subscribe(HIST_FETCHER_FETCH_RESP_SUB_NAME, "recorder")
@@ -125,7 +122,9 @@ impl HistoryRecorder {
             };
             let _ = senders[counter].send(klines.klines);
             counter = (counter + 1) % senders.len();
-            broker.publish(HIST_FETCHER_FETCH_PROG_SUB_NAME, prog_msg.as_slice()).await;
+            let _ = broker.publish(
+              HIST_FETCHER_FETCH_PROG_SUB_NAME, prog_msg.as_slice()
+            ).await;
           },
         }
       }

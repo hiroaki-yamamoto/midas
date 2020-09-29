@@ -114,6 +114,12 @@ pub struct HistFetcherParam {
   pub end_time: Option<MongoDateTime>,
 }
 
+impl AsRef<HistFetcherParam> for HistFetcherParam {
+  fn as_ref(&self) -> &Self {
+    return self;
+  }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Kline {
   pub symbol: String,

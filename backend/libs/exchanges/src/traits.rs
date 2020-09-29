@@ -1,6 +1,5 @@
 use ::async_trait::async_trait;
-use ::rpc::historical::HistChartProg;
-use ::tokio::sync::mpsc;
+use ::nats::asynk::Subscription;
 use ::types::SendableErrorResult;
 
 #[async_trait]
@@ -8,9 +7,7 @@ pub trait HistoryFetcher {
   async fn refresh(
     &self,
     symbols: Vec<String>,
-  ) -> SendableErrorResult<
-    mpsc::UnboundedReceiver<SendableErrorResult<HistChartProg>>,
-  >;
+  ) -> SendableErrorResult<Subscription>;
   async fn stop(&self) -> SendableErrorResult<()>;
 }
 

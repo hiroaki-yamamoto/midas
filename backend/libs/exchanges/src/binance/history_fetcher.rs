@@ -4,12 +4,12 @@ use ::std::fmt::Debug;
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::futures::future::{join_all, FutureExt};
-use ::nats::asynk::Connection;
+use ::nats::asynk::{Connection, Subscription};
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
 use ::tokio::select;
 use ::tokio::stream::StreamExt as TokioStreamExt;
-use ::tokio::sync::{broadcast, mpsc};
+use ::tokio::sync::broadcast;
 use ::tokio::time::delay_for;
 use ::url::Url;
 
@@ -19,7 +19,7 @@ use ::config::{
 use ::mongodb::bson::{doc, Document};
 use ::mongodb::Collection;
 use ::rpc::historical::HistChartProg;
-use ::slog::{crit, warn, Logger};
+use ::slog::{crit, o, warn, Logger};
 use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use crate::entities::KlineCtrl;
@@ -27,7 +27,8 @@ use crate::errors::{EmptyError, MaximumAttemptExceeded};
 use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 
 use super::constants::{
-  HIST_FETCHER_FETCH_RESP_SUB_NAME, HIST_FETCHER_PARAM_SUB_NAME, REST_ENDPOINT,
+  HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
+  HIST_FETCHER_PARAM_SUB_NAME, REST_ENDPOINT,
 };
 use super::entities::{
   BinancePayload, HistFetcherParam, HistQuery, Kline, Klines, KlinesWithInfo,
@@ -60,7 +61,12 @@ impl HistoryFetcher {
     return Ok(Self {
       num_reconnect: num_reconnect.unwrap_or(20),
       endpoint: (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()?,
-      recorder: HistoryRecorder::new(col, stop_signal.clone()),
+      recorder: HistoryRecorder::new(
+        col,
+        stop_signal.clone(),
+        logger.new(o!("scope" => "HistoryRecorder")),
+        broker.clone(),
+      ),
       logger,
       broker,
       symbol_fetcher,
@@ -104,8 +110,6 @@ impl HistoryFetcher {
   pub async fn fetch(
     &self,
     pair: String,
-    num_symbols: i64,
-    entire_data_len: i64,
     start_at: DateTime<Utc>,
     end_at: Option<DateTime<Utc>>,
   ) -> SendableErrorResult<Klines> {
@@ -219,8 +223,6 @@ impl HistoryFetcher {
             let start_time = *param.start_time;
             let resp = me.fetch(
               param.symbol.clone(),
-              param.num_symbols,
-              param.entire_data_len,
               start_time,
               param.end_time.map(|d| *d),
             );
@@ -248,11 +250,11 @@ impl HistoryFetcher {
               Ok(v) => v
             };
             if let Some(_) = msg.reply {
-              msg.respond(response_payload.as_slice().to_owned());
+              let _ = msg.respond(response_payload.as_slice().to_owned()).await;
             } else {
-              me.broker.publish(
+              let _ = me.broker.publish(
                 HIST_FETCHER_FETCH_RESP_SUB_NAME,
-                response_payload.as_slice().to_owned());
+                response_payload.as_slice().to_owned()).await;
             }
           },
           else => {break;}
@@ -264,24 +266,27 @@ impl HistoryFetcher {
 
   async fn get_first_trade_date(
     &self,
-    prog_ch: &mpsc::UnboundedSender<SendableErrorResult<HistChartProg>>,
     symbols: Vec<String>,
   ) -> SendableErrorResult<HashMap<String, LatestTradeTime<DateTime<Utc>>>> {
     let symbols_len = symbols.len() as i64;
     let mut latest_kline =
       self.recorder.get_latest_trade_time(symbols.clone()).await?;
-    let _ = prog_ch.send(Ok(HistChartProg {
+    let first_trade_date_prog = HistChartProg {
       symbol: String::from("Currency Trade Date Fetch"),
       num_symbols: symbols_len,
       cur_symbol_num: 0,
       num_objects: symbols_len,
       cur_object_num: latest_kline.len() as i64,
-    }));
+    };
+    let msg = ret_on_err!(to_msgpack(&first_trade_date_prog));
+    let _ = self
+      .broker
+      .publish(HIST_FETCHER_FETCH_PROG_SUB_NAME, msg.as_slice())
+      .await;
     let latest_kline_clone = latest_kline.clone();
     let to_fetch_binance = symbols
       .into_iter()
       .filter(move |symbol| !latest_kline_clone.contains_key(symbol));
-    let to_fetch_binance_len = to_fetch_binance.clone().count();
     let broker = self.broker.clone();
     let logger = self.logger.clone();
     let mut resp_vec = vec![];
@@ -336,18 +341,18 @@ impl HistoryFetcherTrait for HistoryFetcher {
   async fn refresh(
     &self,
     symbol: Vec<String>,
-  ) -> SendableErrorResult<
-    mpsc::UnboundedReceiver<SendableErrorResult<HistChartProg>>,
-  > {
+  ) -> SendableErrorResult<Subscription> {
     if symbol.len() < 1 {
       return Err(Box::new(EmptyError {
         field: String::from("symbol"),
       }));
     }
-    let (res_send, res_recv) =
-      mpsc::unbounded_channel::<SendableErrorResult<HistChartProg>>();
-    let (sender, recver) = self.spawn_fetcher();
-    self.recorder.spawn(recver, res_send.clone());
+    let prog_sub = ret_on_err!(
+      self
+        .broker
+        .subscribe(HIST_FETCHER_FETCH_PROG_SUB_NAME)
+        .await
+    );
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
       query = Some(doc! { "symbol": doc! { "$in": symbol } });
@@ -360,13 +365,12 @@ impl HistoryFetcherTrait for HistoryFetcher {
       let mut stop_ch = me.stop_signal.subscribe();
       let trade_dates = match me
         .get_first_trade_date(
-          &res_send,
           symbols.into_iter().map(|sym| sym.symbol).collect(),
         )
         .await
       {
         Err(e) => {
-          let _ = res_send.send(Err(e));
+          crit!(me.logger, "Failed to fetch the first trade date: {}", e);
           return;
         }
         Ok(v) => v,
@@ -379,7 +383,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
         if entire_data_len_rem > 0 {
           entire_data_len += 1;
         }
-        let mut sec_start_date = start_at;
+        let sec_start_date = start_at;
         let stop_ch = &mut stop_ch;
         while sec_start_date < end_at {
           if let Ok(_) = stop_ch.try_recv() {
@@ -390,19 +394,30 @@ impl HistoryFetcherTrait for HistoryFetcher {
           if sec_end_date > end_at {
             sec_end_date = end_at;
           }
-          let sender = &sender;
-          let _ = sender.send(HistFetcherParam {
-            symbol: symbol.clone(),
-            num_symbols: symbols_len as i64,
-            entire_data_len,
-            start_time: sec_start_date.clone(),
-            end_time: Some(sec_end_date),
-          });
-          sec_start_date = sec_end_date.clone();
+          let msg = match to_msgpack(
+            HistFetcherParam {
+              symbol: symbol.clone(),
+              num_symbols: symbols_len as i64,
+              entire_data_len,
+              start_time: sec_start_date.clone().into(),
+              end_time: Some(sec_end_date.into()),
+            }
+            .as_ref(),
+          ) {
+            Err(e) => {
+              warn!(me.logger, "Filed to encode HistFetcherParam: {}", e);
+              continue;
+            }
+            Ok(v) => v,
+          };
+          let _ = me
+            .broker
+            .publish(HIST_FETCHER_FETCH_RESP_SUB_NAME, msg)
+            .await;
         }
       }
     });
-    return Ok(res_recv);
+    return Ok(prog_sub);
   }
 
   async fn stop(&self) -> SendableErrorResult<()> {
