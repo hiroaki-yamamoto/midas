@@ -30,7 +30,8 @@ use super::constants::{
   HIST_FETCHER_FETCH_RESP_SUB_NAME, HIST_FETCHER_PARAM_SUB_NAME, REST_ENDPOINT,
 };
 use super::entities::{
-  BinancePayload, HistFetcherParam, HistQuery, Kline, Klines, LatestTradeTime,
+  BinancePayload, HistFetcherParam, HistQuery, Kline, Klines, KlinesWithInfo,
+  LatestTradeTime,
 };
 use super::history_recorder::HistoryRecorder;
 use super::symbol_fetcher::SymbolFetcher;
@@ -231,7 +232,12 @@ impl HistoryFetcher {
               },
               Ok(v) => v
             };
-            let response_payload = match to_msgpack(&resp) {
+            let response_payload = match to_msgpack(KlinesWithInfo{
+              klines: resp,
+              symbol: param.symbol.clone(),
+              num_symbols: param.num_symbols,
+              entire_data_len: param.entire_data_len
+            }.as_ref()) {
               Err(e) => {
                 warn!(
                   me.logger,

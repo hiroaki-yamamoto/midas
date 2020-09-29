@@ -160,6 +160,20 @@ impl AsRef<Kline> for Kline {
   }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct KlinesWithInfo {
+  pub symbol: String,
+  pub num_symbols: i64,
+  pub entire_data_len: i64,
+  pub klines: Klines,
+}
+
+impl AsRef<KlinesWithInfo> for KlinesWithInfo {
+  fn as_ref(&self) -> &Self {
+    return self;
+  }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LatestTradeTime<T> {
   #[serde(rename = "_id")]

@@ -5,8 +5,8 @@ use ::futures::StreamExt;
 use ::mongodb::bson::{doc, from_document, to_bson, DateTime as MongoDateTime};
 use ::mongodb::Collection;
 use ::nats::asynk::Connection as NatsConnection;
-use ::rmp_serde::from_slice as from_msgpack;
-use ::slog::{crit, Logger};
+use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
+use ::slog::{crit, error, Logger};
 use ::tokio::select;
 use ::tokio::sync::{broadcast, mpsc};
 use ::tokio::task::block_in_place;
@@ -14,8 +14,10 @@ use ::tokio::task::block_in_place;
 use ::rpc::historical::HistChartProg;
 use ::types::{ret_on_err, SendableErrorResult};
 
-use super::constants::HIST_FETCHER_FETCH_RESP_SUB_NAME;
-use super::entities::{Klines, LatestTradeTime};
+use super::constants::{
+  HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
+};
+use super::entities::{Klines, KlinesWithInfo, LatestTradeTime};
 
 #[derive(Debug, Clone)]
 pub struct HistoryRecorder {
@@ -93,40 +95,40 @@ impl HistoryRecorder {
       }
       Ok(v) => v,
     }
-    .map(|item| {}); // TODO
+    .filter_map(|item| async move {
+      return from_msgpack::<KlinesWithInfo>(item.data.as_slice()).ok();
+    });
+    let mut value_sub = Box::pin(value_sub);
     let senders = self.senders.clone();
     let mut stop = self.stop.subscribe();
+    let broker = self.broker.clone();
+    let logger = self.logger.clone();
     ::tokio::spawn(async move {
       let mut counter: usize = 0;
       loop {
         select! {
           _ = stop.recv() => {break;},
-          result = value_sub.next() => {
-            if let Some(kline_result) = result {
-              match kline_result {
-                Err(err) => {
-                  let _ = prog_ch.send(Err(err));
-                  continue;
-                }
-                Ok(ok) => {
-                  let raw_klines = ok.klines;
-                  let prog = HistChartProg {
-                    symbol: ok.symbol,
-                    num_symbols: ok.num_symbols,
-                    cur_symbol_num: 1,
-                    num_objects: ok.entire_data_len,
-                    cur_object_num: 1,
-                  };
-                  let _ = prog_ch.send(Ok(prog));
-                  let _ = senders[counter].send(raw_klines);
-                  counter = (counter + 1) % senders.len()
-                }
-              }
-            }
+          Some(klines) = value_sub.next() => {
+            let prog = HistChartProg {
+                symbol: klines.symbol,
+                num_symbols: klines.num_symbols,
+                cur_symbol_num: 1,
+                num_objects: klines.entire_data_len,
+                cur_object_num: 1,
+              };
+            let prog_msg = match to_msgpack(&prog) {
+              Err(e) => {
+                error!(logger, "Failed to encode the prog msg: {}", e);
+                return;
+              },
+              Ok(v) => v
+            };
+            let _ = senders[counter].send(klines.klines);
+            counter = (counter + 1) % senders.len();
+            broker.publish(HIST_FETCHER_FETCH_PROG_SUB_NAME, prog_msg.as_slice()).await;
           },
         }
       }
-      drop(prog_ch);
     });
   }
 
