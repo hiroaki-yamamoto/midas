@@ -1,5 +1,6 @@
 use ::std::collections::hash_map::HashMap;
 
+use ::async_trait::async_trait;
 use ::chrono::{DateTime as ChronoDateTime, Utc};
 use ::futures::StreamExt;
 use ::mongodb::bson::{doc, from_document, to_bson, DateTime as MongoDateTime};
@@ -18,6 +19,8 @@ use super::constants::{
   HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
 };
 use super::entities::{Klines, KlinesWithInfo, LatestTradeTime};
+
+use crate::traits::HistoryRecorder as HistRecTrait;
 
 #[derive(Debug, Clone)]
 pub struct HistoryRecorder {
@@ -76,7 +79,48 @@ impl HistoryRecorder {
     self.senders.push(sender);
   }
 
-  pub async fn spawn(&self) {
+  pub async fn get_latest_trade_time(
+    &self,
+    symbols: Vec<String>,
+  ) -> SendableErrorResult<HashMap<String, LatestTradeTime<ChronoDateTime<Utc>>>>
+  {
+    let mut cur = ret_on_err!(
+      self
+        .col
+        .aggregate(
+          vec![
+            doc! { "$match": doc! { "symbol": doc! { "$in": symbols } } },
+            doc! {
+              "$group": doc! {
+                "_id": "$symbol",
+                "open_time": doc! {
+                  "$max": "$open_time"
+                },
+                "close_time": doc! {
+                  "$max": "$close_time"
+                }
+              }
+            }
+          ],
+          None
+        )
+        .await
+    );
+    let mut ret = HashMap::new();
+    while let Some(doc) = cur.next().await {
+      let doc = ret_on_err!(doc);
+      let latest: LatestTradeTime<MongoDateTime> =
+        ret_on_err!(from_document(doc));
+      let latest: LatestTradeTime<ChronoDateTime<Utc>> = latest.into();
+      ret.insert(latest.symbol.clone(), latest);
+    }
+    return Ok(ret);
+  }
+}
+
+#[async_trait]
+impl HistRecTrait for HistoryRecorder {
+  async fn spawn(&self) {
     let value_sub = match self
       .broker
       .queue_subscribe(HIST_FETCHER_FETCH_RESP_SUB_NAME, "recorder")
@@ -129,43 +173,5 @@ impl HistoryRecorder {
         }
       }
     });
-  }
-
-  pub async fn get_latest_trade_time(
-    &self,
-    symbols: Vec<String>,
-  ) -> SendableErrorResult<HashMap<String, LatestTradeTime<ChronoDateTime<Utc>>>>
-  {
-    let mut cur = ret_on_err!(
-      self
-        .col
-        .aggregate(
-          vec![
-            doc! { "$match": doc! { "symbol": doc! { "$in": symbols } } },
-            doc! {
-              "$group": doc! {
-                "_id": "$symbol",
-                "open_time": doc! {
-                  "$max": "$open_time"
-                },
-                "close_time": doc! {
-                  "$max": "$close_time"
-                }
-              }
-            }
-          ],
-          None
-        )
-        .await
-    );
-    let mut ret = HashMap::new();
-    while let Some(doc) = cur.next().await {
-      let doc = ret_on_err!(doc);
-      let latest: LatestTradeTime<MongoDateTime> =
-        ret_on_err!(from_document(doc));
-      let latest: LatestTradeTime<ChronoDateTime<Utc>> = latest.into();
-      ret.insert(latest.symbol.clone(), latest);
-    }
-    return Ok(ret);
   }
 }

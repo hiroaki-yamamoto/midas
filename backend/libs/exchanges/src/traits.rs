@@ -9,9 +9,15 @@ pub trait HistoryFetcher {
     symbols: Vec<String>,
   ) -> SendableErrorResult<Subscription>;
   async fn stop(&self) -> SendableErrorResult<()>;
+  async fn spawn(&self) -> SendableErrorResult<()>;
 }
 
 #[async_trait]
 pub trait SymbolFetcher {
   async fn refresh(&self) -> SendableErrorResult<()>;
+}
+
+#[async_trait]
+pub trait HistoryRecorder {
+  async fn spawn(&self);
 }
