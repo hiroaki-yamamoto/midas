@@ -41,7 +41,6 @@ impl Service {
     let log = log.new(o!("scope" => "History Fetch RPC Service"));
     let binance = binance::HistoryFetcher::new(
       None,
-      db.collection("binance.history"),
       log.new(o!("exchange" => "Binance", "scope" => "HistoryFetch")),
       nats.clone(),
       binance::SymbolFetcher::new(

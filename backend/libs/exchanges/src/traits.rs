@@ -1,4 +1,5 @@
 use ::async_trait::async_trait;
+use ::chrono::{DateTime, Utc};
 use ::nats::asynk::Subscription;
 use ::types::SendableErrorResult;
 
@@ -20,4 +21,10 @@ pub trait SymbolFetcher {
 #[async_trait]
 pub trait HistoryRecorder {
   async fn spawn(&self);
+}
+
+pub(crate) trait TradeDateTime {
+  fn symbol(&self) -> String;
+  fn open_time(&self) -> DateTime<Utc>;
+  fn close_time(&self) -> DateTime<Utc>;
 }

@@ -8,6 +8,7 @@ use ::serde_json::Value;
 use ::types::SendableErrorResult;
 
 use crate::casting::{cast_datetime, cast_f64, cast_i64};
+use crate::traits::TradeDateTime;
 
 pub type BinancePayload = Vec<Vec<Value>>;
 
@@ -166,6 +167,18 @@ impl AsRef<Kline> for Kline {
   }
 }
 
+impl TradeDateTime for Kline {
+  fn open_time(&self) -> ChronoDateTime<Utc> {
+    return *self.open_time;
+  }
+  fn close_time(&self) -> ChronoDateTime<Utc> {
+    return *self.close_time;
+  }
+  fn symbol(&self) -> String {
+    return self.symbol.clone();
+  }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KlinesWithInfo {
   pub symbol: String,
@@ -188,19 +201,77 @@ pub struct LatestTradeTime<T> {
   pub close_time: T,
 }
 
-impl<T> From<T> for LatestTradeTime<ChronoDateTime<Utc>>
-where
-  T: AsRef<Kline>,
-{
-  fn from(kline: T) -> Self {
-    let kline: &Kline = kline.as_ref();
-    let open = kline.open_time.naive_utc();
-    let close = kline.open_time.naive_utc();
+impl LatestTradeTime<ChronoDateTime<Utc>> {
+  fn from<S>(from: S) -> Self
+  where
+    S: TradeDateTime,
+  {
     return Self {
-      symbol: kline.symbol.clone(),
-      open_time: ChronoDateTime::from_utc(open, Utc),
-      close_time: ChronoDateTime::from_utc(close, Utc),
+      symbol: from.symbol(),
+      open_time: from.open_time(),
+      close_time: from.close_time(),
     };
+  }
+}
+
+impl LatestTradeTime<MongoDateTime> {
+  fn from<T>(from: T) -> Self
+  where
+    T: TradeDateTime,
+  {
+    return Self {
+      symbol: from.symbol(),
+      open_time: from.open_time().into(),
+      close_time: from.close_time().into(),
+    };
+  }
+}
+
+impl TradeDateTime for LatestTradeTime<ChronoDateTime<Utc>> {
+  fn open_time(&self) -> ChronoDateTime<Utc> {
+    return self.open_time;
+  }
+  fn close_time(&self) -> ChronoDateTime<Utc> {
+    return self.close_time;
+  }
+  fn symbol(&self) -> String {
+    return self.symbol.clone();
+  }
+}
+
+impl TradeDateTime for LatestTradeTime<MongoDateTime> {
+  fn open_time(&self) -> ChronoDateTime<Utc> {
+    return *self.open_time;
+  }
+  fn close_time(&self) -> ChronoDateTime<Utc> {
+    return *self.close_time;
+  }
+  fn symbol(&self) -> String {
+    return self.symbol.clone();
+  }
+}
+
+impl From<Kline> for LatestTradeTime<ChronoDateTime<Utc>> {
+  fn from(kline: Kline) -> Self {
+    return Self::from(kline);
+  }
+}
+
+impl From<&Kline> for LatestTradeTime<ChronoDateTime<Utc>> {
+  fn from(kline: &Kline) -> Self {
+    return Self::from(kline.clone());
+  }
+}
+
+impl From<Kline> for LatestTradeTime<MongoDateTime> {
+  fn from(kline: Kline) -> Self {
+    return Self::from(kline);
+  }
+}
+
+impl From<&Kline> for LatestTradeTime<MongoDateTime> {
+  fn from(kline: &Kline) -> Self {
+    return Self::from(kline.clone());
   }
 }
 
@@ -208,12 +279,30 @@ impl From<LatestTradeTime<MongoDateTime>>
   for LatestTradeTime<ChronoDateTime<Utc>>
 {
   fn from(mongo: LatestTradeTime<MongoDateTime>) -> Self {
-    let open = mongo.open_time.naive_utc();
-    let close = mongo.open_time.naive_utc();
-    return Self {
-      symbol: mongo.symbol,
-      open_time: ChronoDateTime::from_utc(open, Utc),
-      close_time: ChronoDateTime::from_utc(close, Utc),
-    };
+    return Self::from(mongo);
+  }
+}
+
+impl From<&LatestTradeTime<MongoDateTime>>
+  for LatestTradeTime<ChronoDateTime<Utc>>
+{
+  fn from(mongo: &LatestTradeTime<MongoDateTime>) -> Self {
+    return Self::from(mongo.clone());
+  }
+}
+
+impl From<LatestTradeTime<ChronoDateTime<Utc>>>
+  for LatestTradeTime<MongoDateTime>
+{
+  fn from(chrono_based: LatestTradeTime<ChronoDateTime<Utc>>) -> Self {
+    return Self::from(chrono_based);
+  }
+}
+
+impl From<&LatestTradeTime<ChronoDateTime<Utc>>>
+  for LatestTradeTime<MongoDateTime>
+{
+  fn from(chrono_based: &LatestTradeTime<ChronoDateTime<Utc>>) -> Self {
+    return Self::from(chrono_based.clone());
   }
 }

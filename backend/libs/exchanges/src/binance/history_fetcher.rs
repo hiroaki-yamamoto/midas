@@ -1,9 +1,11 @@
 use ::std::collections::HashMap;
 use ::std::fmt::Debug;
+use ::std::iter::FromIterator;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::futures::future::{join_all, FutureExt};
+use ::mongodb::bson::DateTime as MongoDateTime;
 use ::nats::asynk::{Connection, Subscription};
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
@@ -17,9 +19,8 @@ use ::config::{
   CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH,
 };
 use ::mongodb::bson::{doc, Document};
-use ::mongodb::Collection;
 use ::rpc::historical::HistChartProg;
-use ::slog::{crit, o, warn, Logger};
+use ::slog::{crit, warn, Logger};
 use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use crate::entities::KlineCtrl;
@@ -28,19 +29,18 @@ use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 
 use super::constants::{
   HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
-  HIST_FETCHER_PARAM_SUB_NAME, REST_ENDPOINT,
+  HIST_FETCHER_PARAM_SUB_NAME, HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
+  REST_ENDPOINT,
 };
 use super::entities::{
   BinancePayload, HistFetcherParam, HistQuery, Kline, Klines, KlinesWithInfo,
   LatestTradeTime,
 };
-use super::history_recorder::HistoryRecorder;
 use super::symbol_fetcher::SymbolFetcher;
 
 #[derive(Debug, Clone)]
 pub struct HistoryFetcher {
   pub num_reconnect: i8,
-  recorder: HistoryRecorder,
   logger: Logger,
   endpoint: Url,
   broker: Connection,
@@ -51,7 +51,6 @@ pub struct HistoryFetcher {
 impl HistoryFetcher {
   pub async fn new(
     num_reconnect: Option<i8>,
-    col: Collection,
     logger: Logger,
     broker: Connection,
     symbol_fetcher: SymbolFetcher,
@@ -61,12 +60,6 @@ impl HistoryFetcher {
     return Ok(Self {
       num_reconnect: num_reconnect.unwrap_or(20),
       endpoint: (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()?,
-      recorder: HistoryRecorder::new(
-        col,
-        stop_signal.clone(),
-        logger.new(o!("scope" => "HistoryRecorder")),
-        broker.clone(),
-      ),
       logger,
       broker,
       symbol_fetcher,
@@ -189,8 +182,17 @@ impl HistoryFetcher {
     symbols: Vec<String>,
   ) -> SendableErrorResult<HashMap<String, LatestTradeTime<DateTime<Utc>>>> {
     let symbols_len = symbols.len() as i64;
-    let mut latest_kline =
-      self.recorder.get_latest_trade_time(symbols.clone()).await?;
+    let latest_kline = ret_on_err!(
+      self
+        .broker
+        .request(
+          HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
+          ret_on_err!(to_msgpack(&symbols)),
+        )
+        .await
+    );
+    let mut latest_kline: HashMap<String, LatestTradeTime<MongoDateTime>> =
+      ret_on_err!(from_msgpack(&latest_kline.data[..]));
     let first_trade_date_prog = HistChartProg {
       symbol: String::from("Currency Trade Date Fetch"),
       num_symbols: symbols_len,
@@ -252,7 +254,12 @@ impl HistoryFetcher {
     for first_kline in first_klines {
       latest_kline.insert(first_kline.symbol.clone(), first_kline.into());
     }
-    return Ok(latest_kline);
+    return Ok(HashMap::from_iter(latest_kline.iter().map(
+      move |(sym, trade_time)| {
+        let trade_time: LatestTradeTime<DateTime<Utc>> = trade_time.into();
+        return (sym.clone(), trade_time);
+      },
+    )));
   }
 }
 
@@ -405,13 +412,16 @@ impl HistoryFetcherTrait for HistoryFetcher {
               },
               Ok(v) => v
             };
-            if let Some(_) = msg.reply {
-              let _ = msg.respond(response_payload.as_slice().to_owned()).await;
-            } else {
-              let _ = me.broker.publish(
-                HIST_FETCHER_FETCH_RESP_SUB_NAME,
-                response_payload.as_slice().to_owned()).await;
-            }
+            match msg.reply {
+              Some(_) => {
+                let _ = msg.respond(response_payload.as_slice().to_owned()).await;
+              },
+              None => {
+                let _ = me.broker.publish(
+                  HIST_FETCHER_FETCH_RESP_SUB_NAME,
+                  response_payload.as_slice().to_owned()).await;
+              },
+            };
           },
           else => {break;}
         }

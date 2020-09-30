@@ -1096,6 +1096,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "historical-worker"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "config",
+ "exchanges",
+ "mongodb",
+ "nats",
+ "slog",
+ "slog_builder",
+ "tokio",
+ "types",
+]
+
+[[package]]
 name = "hmac"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

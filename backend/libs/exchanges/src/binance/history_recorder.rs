@@ -1,13 +1,12 @@
 use ::std::collections::hash_map::HashMap;
 
 use ::async_trait::async_trait;
-use ::chrono::{DateTime as ChronoDateTime, Utc};
 use ::futures::StreamExt;
 use ::mongodb::bson::{doc, from_document, to_bson, DateTime as MongoDateTime};
 use ::mongodb::Collection;
 use ::nats::asynk::Connection as NatsConnection;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
-use ::slog::{crit, error, Logger};
+use ::slog::{crit, error, warn, Logger};
 use ::tokio::select;
 use ::tokio::sync::{broadcast, mpsc};
 use ::tokio::task::block_in_place;
@@ -17,6 +16,7 @@ use ::types::{ret_on_err, SendableErrorResult};
 
 use super::constants::{
   HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
+  HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
 };
 use super::entities::{Klines, KlinesWithInfo, LatestTradeTime};
 
@@ -45,7 +45,7 @@ impl HistoryRecorder {
       broker,
       logger,
     };
-    for _ in 0..::num_cpus::get() {
+    for _ in 0..num_cpus::get() {
       ret.spawn_record();
     }
     return ret;
@@ -79,11 +79,10 @@ impl HistoryRecorder {
     self.senders.push(sender);
   }
 
-  pub async fn get_latest_trade_time(
+  async fn get_latest_trade_time(
     &self,
     symbols: Vec<String>,
-  ) -> SendableErrorResult<HashMap<String, LatestTradeTime<ChronoDateTime<Utc>>>>
-  {
+  ) -> SendableErrorResult<HashMap<String, LatestTradeTime<MongoDateTime>>> {
     let mut cur = ret_on_err!(
       self
         .col
@@ -111,16 +110,12 @@ impl HistoryRecorder {
       let doc = ret_on_err!(doc);
       let latest: LatestTradeTime<MongoDateTime> =
         ret_on_err!(from_document(doc));
-      let latest: LatestTradeTime<ChronoDateTime<Utc>> = latest.into();
       ret.insert(latest.symbol.clone(), latest);
     }
     return Ok(ret);
   }
-}
 
-#[async_trait]
-impl HistRecTrait for HistoryRecorder {
-  async fn spawn(&self) {
+  async fn spawn_fetch_response(&self) {
     let value_sub = match self
       .broker
       .queue_subscribe(HIST_FETCHER_FETCH_RESP_SUB_NAME, "recorder")
@@ -173,5 +168,72 @@ impl HistRecTrait for HistoryRecorder {
         }
       }
     });
+  }
+
+  async fn spawn_latest_trade_time_request(&self) {
+    let me = self.clone();
+    let mut stop = me.stop.subscribe();
+    let mut sub = Box::pin(
+      match me
+        .broker
+        .queue_subscribe(HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME, "recorder")
+        .await
+      {
+        Err(e) => {
+          error!(
+            me.logger,
+            "Failed to subscribe latest trade time channel: {}", e;
+            "fn" => "spawn_latest_trade_time_request"
+          );
+          return;
+        }
+        Ok(v) => v,
+      }
+      .map(|msg| {
+        return (from_msgpack::<Vec<String>>(&msg.data[..]), msg);
+      })
+      .filter_map(|(item, msg)| async move { Some((item.ok()?, msg)) }),
+    );
+    ::tokio::spawn(async move {
+      loop {
+        select! {
+          _ = stop.recv() => {break;}
+          Some((symbols, msg)) = sub.next() => {
+            let trade_dates = match me.get_latest_trade_time(symbols).await {
+              Err(e) => {
+                error!(me.logger, "Failed to get the latest trade time: {}", e);
+                continue;
+              },
+              Ok(v) => v
+            };
+            match msg.reply {
+              Some(_) => {
+                let resp = match to_msgpack(&trade_dates) {
+                  Err(e) => {
+                    error!(me.logger, "Failed to encode the response message: {}", e);
+                    continue;
+                  },
+                  Ok(v) => v
+                };
+                let _ = msg.respond(resp).await;
+              },
+              None => {
+                warn!(me.logger, "The request doesn't have reply subject.");
+                continue;
+              }
+            }
+          },
+          else => {break;}
+        }
+      }
+    });
+  }
+}
+
+#[async_trait]
+impl HistRecTrait for HistoryRecorder {
+  async fn spawn(&self) {
+    self.spawn_fetch_response().await;
+    self.spawn_latest_trade_time_request().await;
   }
 }
