@@ -38,7 +38,7 @@ services:
       context: ./backend
       dockerfile: devel.dockerfile
       args:
-        - SERVICE=historical
+        - SERVICE=historical_service
     command:
       - -c
       - /etc/midas/midas.yml
@@ -53,7 +53,7 @@ services:
       context: ./backend
       dockerfile: devel.dockerfile
       args:
-        - SERVICE=symbol
+        - SERVICE=symbol_service
     command:
       - -c
       - /etc/midas/midas.yml

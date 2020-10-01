@@ -125,7 +125,7 @@ workflows:
           filters:
             branches:
               only: master
-          service_name: historical
+          service_name: historical_service
       - deploy-image:
           name: "Symbol Service Deployment"
           requires:
@@ -133,4 +133,4 @@ workflows:
           filters:
             branches:
               only: master
-          service_name: symbol
+          service_name: symbol_service

@@ -1,5 +1,5 @@
 [package]
-name = "symbol"
+name = "symbol_service"
 version = "0.1.0"
 authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
 edition = "2018"

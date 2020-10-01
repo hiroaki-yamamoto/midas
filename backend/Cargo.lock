@@ -1069,7 +1069,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "644f9158b2f133fd50f5fb3242878846d9eb792e445c893805ff0e3824006e35"
 
 [[package]]
-name = "historical"
+name = "historical-workers"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "config",
+ "exchanges",
+ "mongodb",
+ "nats",
+ "slog",
+ "slog_builder",
+ "tokio",
+ "types",
+]
+
+[[package]]
+name = "historical_service"
 version = "0.1.0"
 dependencies = [
  "async-stream 0.3.0",
@@ -1093,21 +1108,6 @@ dependencies = [
  "tonic",
  "types",
  "warp",
-]
-
-[[package]]
-name = "historical-worker"
-version = "0.1.0"
-dependencies = [
- "clap",
- "config",
- "exchanges",
- "mongodb",
- "nats",
- "slog",
- "slog_builder",
- "tokio",
- "types",
 ]
 
 [[package]]
@@ -2739,7 +2739,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "symbol"
+name = "symbol_service"
 version = "0.1.0"
 dependencies = [
  "clap",
