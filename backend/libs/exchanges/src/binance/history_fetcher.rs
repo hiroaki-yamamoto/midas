@@ -355,78 +355,76 @@ impl HistoryFetcherTrait for HistoryFetcher {
         .await
     )
     .map(|item| (from_msgpack::<HistFetcherParam>(item.data.as_ref()), item));
-    ::tokio::spawn(async move {
-      loop {
-        select! {
-          Some((param, msg)) = param_sub.next() => {
-            let param = match param {
-              Err(e) => {
-                warn!(me.logger, "Failed to parse the param msg: {}", e);
-                continue;
-              },
-              Ok(v) => v
-            };
-            let num_obj = match param.end_time {
-              None => 1,
-              Some(end_time) => (*end_time - *param.start_time).num_minutes()
-            };
-            if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
+    loop {
+      select! {
+        Some((param, msg)) = param_sub.next() => {
+          let param = match param {
+            Err(e) => {
+              warn!(me.logger, "Failed to parse the param msg: {}", e);
+              continue;
+            },
+            Ok(v) => v
+          };
+          let num_obj = match param.end_time {
+            None => 1,
+            Some(end_time) => (*end_time - *param.start_time).num_minutes()
+          };
+          if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
+            warn!(
+              me.logger,
+              "Duration between the specified start and end time exceeds
+                the maximum number of the objects to fetch.";
+              "symbol" => &param.symbol,
+              "start_time" => param.start_time.to_string(),
+              "end_time" => format!("{:?}", param.end_time),
+              "num_objects" => num_obj,
+              "maximum_number_objects" => NUM_OBJECTS_TO_FETCH,
+            );
+            continue;
+          }
+          let start_time = *param.start_time;
+          let resp = me.fetch(
+            param.symbol.clone(),
+            start_time,
+            param.end_time.map(|d| *d),
+          );
+          let resp = resp.await;
+          let resp = match resp {
+            Err(e) => {
+              warn!(me.logger, "Failed to fetch kline data: {}", e);
+              continue;
+            },
+            Ok(v) => v
+          };
+          let response_payload = match to_msgpack(KlinesWithInfo{
+            klines: resp,
+            symbol: param.symbol.clone(),
+            num_symbols: param.num_symbols,
+            entire_data_len: param.entire_data_len
+          }.as_ref()) {
+            Err(e) => {
               warn!(
                 me.logger,
-                "Duration between the specified start and end time exceeds
-                  the maximum number of the objects to fetch.";
-                "symbol" => &param.symbol,
-                "start_time" => param.start_time.to_string(),
-                "end_time" => format!("{:?}", param.end_time),
-                "num_objects" => num_obj,
-                "maximum_number_objects" => NUM_OBJECTS_TO_FETCH,
+                "Failed to serialize the payload for response: {}", e
               );
               continue;
-            }
-            let start_time = *param.start_time;
-            let resp = me.fetch(
-              param.symbol.clone(),
-              start_time,
-              param.end_time.map(|d| *d),
-            );
-            let resp = resp.await;
-            let resp = match resp {
-              Err(e) => {
-                warn!(me.logger, "Failed to fetch kline data: {}", e);
-                continue;
-              },
-              Ok(v) => v
-            };
-            let response_payload = match to_msgpack(KlinesWithInfo{
-              klines: resp,
-              symbol: param.symbol.clone(),
-              num_symbols: param.num_symbols,
-              entire_data_len: param.entire_data_len
-            }.as_ref()) {
-              Err(e) => {
-                warn!(
-                  me.logger,
-                  "Failed to serialize the payload for response: {}", e
-                );
-                return;
-              },
-              Ok(v) => v
-            };
-            match msg.reply {
-              Some(_) => {
-                let _ = msg.respond(response_payload.as_slice().to_owned()).await;
-              },
-              None => {
-                let _ = me.broker.publish(
-                  HIST_FETCHER_FETCH_RESP_SUB_NAME,
-                  response_payload.as_slice().to_owned()).await;
-              },
-            };
-          },
-          else => {break;}
-        }
+            },
+            Ok(v) => v
+          };
+          match msg.reply {
+            Some(_) => {
+              let _ = msg.respond(response_payload.as_slice().to_owned()).await;
+            },
+            None => {
+              let _ = me.broker.publish(
+                HIST_FETCHER_FETCH_RESP_SUB_NAME,
+                response_payload.as_slice().to_owned()).await;
+            },
+          };
+        },
+        else => {break;}
       }
-    });
+    }
     return Ok(());
   }
 

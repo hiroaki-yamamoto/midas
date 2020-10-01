@@ -1075,6 +1075,8 @@ dependencies = [
  "clap",
  "config",
  "exchanges",
+ "futures",
+ "libc",
  "mongodb",
  "nats",
  "slog",

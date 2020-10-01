@@ -19,8 +19,8 @@ services:
     environment:
       ENVOY_UID: 0
     depends_on:
-      - symbol
-      - historical
+      - service.symbol
+      - service.historical
       - frontend
     ports:
       - 50000:50000
@@ -33,7 +33,7 @@ services:
       - 8081:8081
     depends_on:
       - database
-  historical:
+  service.historical:
     build:
       context: ./backend
       dockerfile: devel.dockerfile
@@ -48,7 +48,7 @@ services:
     depends_on:
       - database
       - broker
-  symbol:
+  service.symbol:
     build:
       context: ./backend
       dockerfile: devel.dockerfile
@@ -62,6 +62,22 @@ services:
       - ./backend:/opt/code
     depends_on:
       - database
+  worker.historical.fetch:
+    build:
+      context: ./backend
+      dockerfile: devel.dockerfile
+      args:
+        - SERVICE=historical_fetch_worker
+    command:
+      - -c
+      - /etc/midas/midas.yml
+    volumes:
+      - ./etc:/etc/midas
+      - ./backend:/opt/code
+    depends_on:
+      - database
+    deploy:
+      replicas: 17
   frontend:
     build:
       context: frontend

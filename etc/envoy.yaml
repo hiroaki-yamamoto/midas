@@ -86,7 +86,7 @@ static_resources:
       lb_policy: round_robin
       hosts:
         - socket_address:
-            address: historical
+            address: service.historical
             port_value: 50001
       transport_socket:
         name: envoy.transport_sockets.tls
@@ -107,7 +107,7 @@ static_resources:
       lb_policy: round_robin
       hosts:
         - socket_address:
-            address: historical
+            address: service.historical
             port_value: 50000
       transport_socket:
         name: envoy.transport_sockets.tls
