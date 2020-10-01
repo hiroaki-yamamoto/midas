@@ -3,7 +3,7 @@ use ::futures::stream::StreamExt;
 use ::mongodb::bson::{
   de::Result as BsonDeResult, doc, from_bson, to_bson, Array, Bson, Document,
 };
-use ::mongodb::{error::Result as MongoResult, Collection};
+use ::mongodb::{error::Result as MongoResult, Database};
 use ::rpc::entities::SymbolInfo;
 use ::slog::Logger;
 use ::types::{ret_on_err, SendableErrorResult};
@@ -13,21 +13,24 @@ use super::entities::{ExchangeInfo, Symbol};
 use crate::errors::StatusFailure;
 use crate::traits::SymbolFetcher as SymbolFetcherTrait;
 
+const SYMBOL_FETCHER_RECORD_COL_NAME: &'static str = "binance.symbol";
+
 #[derive(Debug, Clone)]
 pub struct SymbolFetcher {
-  col: Collection,
+  db: Database,
   log: Logger,
 }
 
 impl SymbolFetcher {
-  pub fn new(log: Logger, col: Collection) -> Self {
-    return Self { col, log };
+  pub fn new(log: Logger, db: Database) -> Self {
+    return Self { db, log };
   }
   pub async fn get(
     &self,
     filter: impl Into<Option<Document>> + Send,
   ) -> SendableErrorResult<Vec<SymbolInfo>> {
-    let cur = ret_on_err!(self.col.find(filter, None).await);
+    let col = self.db.collection(SYMBOL_FETCHER_RECORD_COL_NAME);
+    let cur = ret_on_err!(col.find(filter, None).await);
     let mut docs: Vec<MongoResult<Document>> = cur.collect().await;
     docs.retain(|doc| doc.is_ok());
     let symbols: Vec<BsonDeResult<Symbol>> = docs
@@ -50,13 +53,14 @@ impl SymbolFetcher {
 #[async_trait]
 impl SymbolFetcherTrait for SymbolFetcher {
   async fn refresh(&self) -> SendableErrorResult<()> {
+    let col = self.db.collection(SYMBOL_FETCHER_RECORD_COL_NAME);
     let mut url: url::Url = ret_on_err!(REST_ENDPOINT.parse());
     url = ret_on_err!(url.join("/api/v3/exchangeInfo"));
     let resp = ret_on_err!(reqwest::get(url.clone()).await);
     let resp_status = resp.status();
     if resp_status.is_success() {
       let info: ExchangeInfo = ret_on_err!(resp.json().await);
-      ret_on_err!(self.col.delete_many(doc! {}, None).await);
+      ret_on_err!(col.delete_many(doc! {}, None).await);
       let empty = Array::new();
       let serialized: Vec<Document> = ret_on_err!(to_bson(&info.symbols))
         .as_array()
@@ -65,7 +69,7 @@ impl SymbolFetcherTrait for SymbolFetcher {
         .filter_map(|item| item.as_document())
         .map(|item| item.clone())
         .collect();
-      ret_on_err!(self.col.insert_many(serialized.into_iter(), None).await);
+      ret_on_err!(col.insert_many(serialized.into_iter(), None).await);
       return Ok(());
     } else {
       return Err(Box::new(StatusFailure {

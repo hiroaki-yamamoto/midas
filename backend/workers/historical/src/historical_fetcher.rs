@@ -26,12 +26,14 @@ async fn main() -> GenericResult<()> {
   let broker = connect(&cfg.broker_url).await;
   let db = DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await?)?
     .database("midas");
-  // let fetchers: Vec<Box<dyn HistoryFetcher>> =
-  //   vec![BinanceHistoryFetcher::new(
+  // let fetchers: Vec<Box<dyn HistoryFetcher>> = vec![Box::new(
+  //   BinanceHistoryFetcher::new(
   //     None,
-  //     logger: Logger,
-  //     broker: Connection,
+  //     logger,
+  //     broker,
   //     symbol_fetcher: SymbolFetcher,
-  //   )];
+  //   )
+  //   .await?,
+  // )];
   return Ok(());
 }

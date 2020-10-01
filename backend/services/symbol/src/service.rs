@@ -18,7 +18,7 @@ impl Service {
     return Self {
       binance: binance::SymbolFetcher::new(
         log.new(o!("scope" => "BinanceSymbolFetcher")),
-        db.collection("binance.symbol"),
+        db.clone(),
       ),
     };
   }
