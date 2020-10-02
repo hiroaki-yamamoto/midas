@@ -4,7 +4,6 @@ use ::std::iter::FromIterator;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use ::futures::future::{join_all, FutureExt};
 use ::mongodb::bson::DateTime as MongoDateTime;
 use ::nats::asynk::{Connection, Subscription};
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
@@ -241,18 +240,28 @@ impl HistoryFetcher {
         req_payload.as_slice().to_owned(),
       ));
     }
-    let first_klines = join_all(resp_vec)
-      .map(|item| {
-        item
-          .into_iter()
-          .filter_map(|v| v.ok())
-          .map(|v| from_msgpack::<Klines>(&v.data[..]))
-          .filter_map(|v| v.ok())
-          .filter_map(|mut v| v.pop())
-      })
-      .await;
-    for first_kline in first_klines {
-      latest_kline.insert(first_kline.symbol.clone(), first_kline.into());
+    for resp in resp_vec {
+      let resp = resp
+        .await
+        .into_iter()
+        .filter_map(|v| from_msgpack::<Klines>(&v.data[..]).ok())
+        .filter_map(|mut v| v.pop());
+      for first_kline in resp {
+        warn!(self.logger, "{:?}", first_kline);
+        latest_kline.insert(first_kline.symbol.clone(), first_kline.into());
+        let prog = HistChartProg {
+          symbol: String::from("Currency Trade Date Fetch"),
+          num_symbols: symbols_len,
+          cur_symbol_num: 0,
+          num_objects: symbols_len,
+          cur_object_num: 1,
+        };
+        let msg = ret_on_err!(to_msgpack(&prog));
+        let _ = self
+          .broker
+          .publish(HIST_FETCHER_FETCH_PROG_SUB_NAME, &msg[..])
+          .await;
+      }
     }
     return Ok(HashMap::from_iter(latest_kline.iter().map(
       move |(sym, trade_time)| {
@@ -337,10 +346,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
             }
             Ok(v) => v,
           };
-          let _ = me
-            .broker
-            .publish(HIST_FETCHER_FETCH_RESP_SUB_NAME, msg)
-            .await;
+          let _ = me.broker.publish(HIST_FETCHER_PARAM_SUB_NAME, msg).await;
         }
       }
     });

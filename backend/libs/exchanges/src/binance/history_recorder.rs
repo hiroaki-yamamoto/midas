@@ -130,34 +130,32 @@ impl HistoryRecorder {
     let senders = self.senders.clone();
     let broker = self.broker.clone();
     let logger = self.logger.clone();
-    ::tokio::spawn(async move {
-      let mut counter: usize = 0;
-      loop {
-        select! {
-          Some(klines) = value_sub.next() => {
-            let prog = HistChartProg {
-                symbol: klines.symbol,
-                num_symbols: klines.num_symbols,
-                cur_symbol_num: 1,
-                num_objects: klines.entire_data_len,
-                cur_object_num: 1,
-              };
-            let prog_msg = match to_msgpack(&prog) {
-              Err(e) => {
-                error!(logger, "Failed to encode the prog msg: {}", e);
-                return;
-              },
-              Ok(v) => v
+    let mut counter: usize = 0;
+    loop {
+      select! {
+        Some(klines) = value_sub.next() => {
+          let prog = HistChartProg {
+              symbol: klines.symbol,
+              num_symbols: klines.num_symbols,
+              cur_symbol_num: 1,
+              num_objects: klines.entire_data_len,
+              cur_object_num: 1,
             };
-            let _ = senders[counter].send(klines.klines);
-            counter = (counter + 1) % senders.len();
-            let _ = broker.publish(
-              HIST_FETCHER_FETCH_PROG_SUB_NAME, prog_msg.as_slice()
-            ).await;
-          },
-        }
+          let prog_msg = match to_msgpack(&prog) {
+            Err(e) => {
+              error!(logger, "Failed to encode the prog msg: {}", e);
+              return;
+            },
+            Ok(v) => v
+          };
+          let _ = senders[counter].send(klines.klines);
+          counter = (counter + 1) % senders.len();
+          let _ = broker.publish(
+            HIST_FETCHER_FETCH_PROG_SUB_NAME, prog_msg.as_slice()
+          ).await;
+        },
       }
-    });
+    }
   }
 
   async fn spawn_latest_trade_time_request(&self) {
@@ -183,38 +181,36 @@ impl HistoryRecorder {
       })
       .filter_map(|(item, msg)| async move { Some((item.ok()?, msg)) }),
     );
-    ::tokio::spawn(async move {
-      loop {
-        select! {
-          Some((symbols, msg)) = sub.next() => {
-            let trade_dates = match me.get_latest_trade_time(symbols).await {
-              Err(e) => {
-                error!(me.logger, "Failed to get the latest trade time: {}", e);
-                continue;
-              },
-              Ok(v) => v
-            };
-            match msg.reply {
-              Some(_) => {
-                let resp = match to_msgpack(&trade_dates) {
-                  Err(e) => {
-                    error!(me.logger, "Failed to encode the response message: {}", e);
-                    continue;
-                  },
-                  Ok(v) => v
-                };
-                let _ = msg.respond(resp).await;
-              },
-              None => {
-                warn!(me.logger, "The request doesn't have reply subject.");
-                continue;
-              }
+    loop {
+      select! {
+        Some((symbols, msg)) = sub.next() => {
+          let trade_dates = match me.get_latest_trade_time(symbols).await {
+            Err(e) => {
+              error!(me.logger, "Failed to get the latest trade time: {}", e);
+              continue;
+            },
+            Ok(v) => v
+          };
+          match msg.reply {
+            Some(_) => {
+              let resp = match to_msgpack(&trade_dates) {
+                Err(e) => {
+                  error!(me.logger, "Failed to encode the response message: {}", e);
+                  continue;
+                },
+                Ok(v) => v
+              };
+              let _ = msg.respond(resp).await;
+            },
+            None => {
+              warn!(me.logger, "The request doesn't have reply subject.");
+              continue;
             }
-          },
-          else => {break;}
-        }
+          }
+        },
+        else => {break;}
       }
-    });
+    }
   }
 }
 
