@@ -78,6 +78,22 @@ services:
       - database
     deploy:
       replicas: 17
+  worker.historical.record:
+    build:
+      context: ./backend
+      dockerfile: devel.dockerfile
+      args:
+        - SERVICE=historical_record_worker
+    command:
+      - -c
+      - /etc/midas/midas.yml
+    volumes:
+      - ./etc:/etc/midas
+      - ./backend:/opt/code
+    depends_on:
+      - database
+    deploy:
+      replicas: 17
   frontend:
     build:
       context: frontend
