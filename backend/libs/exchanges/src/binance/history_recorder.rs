@@ -51,11 +51,7 @@ impl HistoryRecorder {
     ::tokio::spawn(async move {
       loop {
         select! {
-          raw_klines = recver.recv() => {
-            let raw_klines = match raw_klines {
-              Some(v) => v,
-              None => {break;}
-            };
+          Some(raw_klines) = recver.recv() => {
             let klines = block_in_place(move || {
               return raw_klines
                 .into_iter()
@@ -65,6 +61,7 @@ impl HistoryRecorder {
             });
             let _ = col.insert_many(klines, None).await;
           },
+          else => {break;}
         }
       }
     });
@@ -154,6 +151,7 @@ impl HistoryRecorder {
             HIST_FETCHER_FETCH_PROG_SUB_NAME, prog_msg.as_slice()
           ).await;
         },
+        else => {break;}
       }
     }
   }

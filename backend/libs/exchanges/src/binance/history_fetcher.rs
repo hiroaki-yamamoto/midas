@@ -318,7 +318,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
         if entire_data_len_rem > 0 {
           entire_data_len += 1;
         }
-        let sec_start_date = start_at;
+        let mut sec_start_date = start_at;
         let stop_ch = &mut stop_ch;
         while sec_start_date < end_at {
           if let Ok(_) = stop_ch.try_recv() {
@@ -346,6 +346,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
             Ok(v) => v,
           };
           let _ = me.broker.publish(HIST_FETCHER_PARAM_SUB_NAME, msg).await;
+          sec_start_date = sec_end_date.clone();
         }
       }
     });
