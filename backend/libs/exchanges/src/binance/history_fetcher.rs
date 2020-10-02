@@ -244,10 +244,9 @@ impl HistoryFetcher {
       let resp = resp
         .await
         .into_iter()
-        .filter_map(|v| from_msgpack::<Klines>(&v.data[..]).ok())
-        .filter_map(|mut v| v.pop());
+        .filter_map(|v| from_msgpack::<KlinesWithInfo>(&v.data[..]).ok())
+        .filter_map(|mut v| v.klines.pop());
       for first_kline in resp {
-        warn!(self.logger, "{:?}", first_kline);
         latest_kline.insert(first_kline.symbol.clone(), first_kline.into());
         let prog = HistChartProg {
           symbol: String::from("Currency Trade Date Fetch"),
@@ -361,6 +360,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
         .await
     )
     .map(|item| (from_msgpack::<HistFetcherParam>(item.data.as_ref()), item));
+    let logger = self.logger.clone();
     loop {
       select! {
         Some((param, msg)) = param_sub.next() => {
@@ -419,12 +419,15 @@ impl HistoryFetcherTrait for HistoryFetcher {
           };
           match msg.reply {
             Some(_) => {
-              let _ = msg.respond(response_payload.as_slice().to_owned()).await;
+              if let Err(e) = msg.respond(&response_payload[..].to_owned()).await {
+                warn!(logger, "Failed to respond to the request: {}", e;
+                "subject" => msg.subject, "reply" => msg.reply);
+              }
             },
             None => {
               let _ = me.broker.publish(
                 HIST_FETCHER_FETCH_RESP_SUB_NAME,
-                response_payload.as_slice().to_owned()).await;
+                &response_payload[..].to_owned()).await;
             },
           };
         },
