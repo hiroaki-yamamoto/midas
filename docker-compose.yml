@@ -77,7 +77,7 @@ services:
     depends_on:
       - database
     deploy:
-      replicas: 17
+      replicas: 6
   worker.historical.record:
     build:
       context: ./backend
@@ -93,7 +93,7 @@ services:
     depends_on:
       - database
     deploy:
-      replicas: 17
+      replicas: 18
   frontend:
     build:
       context: frontend
