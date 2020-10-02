@@ -1,14 +1,15 @@
 use ::std::collections::hash_map::HashMap;
 
 use ::async_trait::async_trait;
+use ::futures::future::join;
 use ::futures::StreamExt;
 use ::mongodb::bson::{doc, from_document, to_bson, DateTime as MongoDateTime};
-use ::mongodb::Collection;
+use ::mongodb::{Collection, Database};
 use ::nats::asynk::Connection as NatsConnection;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::slog::{crit, error, warn, Logger};
 use ::tokio::select;
-use ::tokio::sync::{broadcast, mpsc};
+use ::tokio::sync::mpsc;
 use ::tokio::task::block_in_place;
 
 use ::rpc::historical::HistChartProg;
@@ -28,20 +29,13 @@ pub struct HistoryRecorder {
   broker: NatsConnection,
   logger: Logger,
   senders: Vec<mpsc::UnboundedSender<Klines>>,
-  stop: broadcast::Sender<()>,
 }
 
 impl HistoryRecorder {
-  pub fn new(
-    col: Collection,
-    stop_sender: broadcast::Sender<()>,
-    logger: Logger,
-    broker: NatsConnection,
-  ) -> Self {
+  pub fn new(db: Database, logger: Logger, broker: NatsConnection) -> Self {
     let mut ret = Self {
-      col,
+      col: db.collection("binance.klines"),
       senders: vec![],
-      stop: stop_sender,
       broker,
       logger,
     };
@@ -54,11 +48,9 @@ impl HistoryRecorder {
   fn spawn_record(&mut self) {
     let (sender, mut recver) = mpsc::unbounded_channel::<Klines>();
     let col = self.col.clone();
-    let mut stop = self.stop.subscribe();
     ::tokio::spawn(async move {
       loop {
         select! {
-          _ = stop.recv() => {break;},
           raw_klines = recver.recv() => {
             let raw_klines = match raw_klines {
               Some(v) => v,
@@ -136,14 +128,12 @@ impl HistoryRecorder {
     });
     let mut value_sub = Box::pin(value_sub);
     let senders = self.senders.clone();
-    let mut stop = self.stop.subscribe();
     let broker = self.broker.clone();
     let logger = self.logger.clone();
     ::tokio::spawn(async move {
       let mut counter: usize = 0;
       loop {
         select! {
-          _ = stop.recv() => {break;},
           Some(klines) = value_sub.next() => {
             let prog = HistChartProg {
                 symbol: klines.symbol,
@@ -172,7 +162,6 @@ impl HistoryRecorder {
 
   async fn spawn_latest_trade_time_request(&self) {
     let me = self.clone();
-    let mut stop = me.stop.subscribe();
     let mut sub = Box::pin(
       match me
         .broker
@@ -197,7 +186,6 @@ impl HistoryRecorder {
     ::tokio::spawn(async move {
       loop {
         select! {
-          _ = stop.recv() => {break;}
           Some((symbols, msg)) = sub.next() => {
             let trade_dates = match me.get_latest_trade_time(symbols).await {
               Err(e) => {
@@ -233,7 +221,10 @@ impl HistoryRecorder {
 #[async_trait]
 impl HistRecTrait for HistoryRecorder {
   async fn spawn(&self) {
-    self.spawn_fetch_response().await;
-    self.spawn_latest_trade_time_request().await;
+    join(
+      self.spawn_fetch_response(),
+      self.spawn_latest_trade_time_request(),
+    )
+    .await;
   }
 }
