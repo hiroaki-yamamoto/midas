@@ -22,8 +22,8 @@ libc = "0.2.77"
 
 [[bin]]
 name = "historical_fetch_worker"
-path = "src/historical_fetcher.rs"
+path = "src/main_fetcher.rs"
 
 [[bin]]
 name = "historical_record_worker"
-path = "src/historical_recorder.rs"
+path = "src/main_recorder.rs"
