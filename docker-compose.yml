@@ -76,8 +76,7 @@ services:
       - ./backend:/opt/code
     depends_on:
       - database
-    deploy:
-      replicas: 6
+      - broker
   worker.historical.record:
     build:
       context: ./backend
@@ -92,8 +91,7 @@ services:
       - ./backend:/opt/code
     depends_on:
       - database
-    deploy:
-      replicas: 18
+      - broker
   frontend:
     build:
       context: frontend
