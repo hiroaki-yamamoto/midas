@@ -1,7 +1,7 @@
 use ::std::collections::hash_map::HashMap;
 
 use ::async_trait::async_trait;
-use ::futures::future::join;
+use ::futures::future::{join3, join_all};
 use ::futures::StreamExt;
 use ::mongodb::bson::{doc, from_document, to_bson, DateTime as MongoDateTime};
 use ::mongodb::{Collection, Database};
@@ -28,44 +28,38 @@ pub struct HistoryRecorder {
   col: Collection,
   broker: NatsConnection,
   logger: Logger,
-  senders: Vec<mpsc::UnboundedSender<Klines>>,
 }
 
 impl HistoryRecorder {
   pub fn new(db: Database, logger: Logger, broker: NatsConnection) -> Self {
-    let mut ret = Self {
+    let ret = Self {
       col: db.collection("binance.klines"),
-      senders: vec![],
       broker,
       logger,
     };
-    for _ in 0..num_cpus::get() {
-      ret.spawn_record();
-    }
     return ret;
   }
 
-  fn spawn_record(&mut self) {
-    let (sender, mut recver) = mpsc::unbounded_channel::<Klines>();
+  async fn spawn_record(
+    &self,
+    mut kline_recv: mpsc::UnboundedReceiver<Klines>,
+  ) {
     let col = self.col.clone();
-    ::tokio::spawn(async move {
-      loop {
-        select! {
-          Some(raw_klines) = recver.recv() => {
-            let klines = block_in_place(move || {
-              return raw_klines
-                .into_iter()
-                .filter_map(|item| to_bson(&item).ok())
-                .filter_map(|item| item.as_document().cloned())
-                .map(|item| item.clone());
-            });
-            let _ = col.insert_many(klines, None).await;
-          },
-          else => {break;}
-        }
+    loop {
+      select! {
+        Some(raw_klines) = kline_recv.recv() => {
+          let klines = block_in_place(move || {
+            return raw_klines
+              .into_iter()
+              .filter_map(|item| to_bson(&item).ok())
+              .filter_map(|item| item.as_document().cloned())
+              .map(|item| item.clone());
+          });
+          let _ = col.insert_many(klines, None).await;
+        },
+        else => {break;}
       }
-    });
-    self.senders.push(sender);
+    }
   }
 
   async fn get_latest_trade_time(
@@ -104,7 +98,10 @@ impl HistoryRecorder {
     return Ok(ret);
   }
 
-  async fn spawn_fetch_response(&self) {
+  async fn spawn_fetch_response(
+    &self,
+    senders: Vec<mpsc::UnboundedSender<Klines>>,
+  ) {
     let value_sub = match self
       .broker
       .queue_subscribe(HIST_FETCHER_FETCH_RESP_SUB_NAME, "recorder")
@@ -124,7 +121,7 @@ impl HistoryRecorder {
       return from_msgpack::<KlinesWithInfo>(item.data.as_slice()).ok();
     });
     let mut value_sub = Box::pin(value_sub);
-    let senders = self.senders.clone();
+    let senders = senders.clone();
     let broker = self.broker.clone();
     let logger = self.logger.clone();
     let mut counter: usize = 0;
@@ -215,9 +212,18 @@ impl HistoryRecorder {
 #[async_trait]
 impl HistRecTrait for HistoryRecorder {
   async fn spawn(&self) {
-    join(
-      self.spawn_fetch_response(),
+    let mut record_workers = vec![];
+    let mut senders = vec![];
+    for _ in 0..num_cpus::get() {
+      let (kline_sender, kline_recvr) = mpsc::unbounded_channel();
+      senders.push(kline_sender);
+      let worker = self.spawn_record(kline_recvr);
+      record_workers.push(worker);
+    }
+    join3(
+      self.spawn_fetch_response(senders),
       self.spawn_latest_trade_time_request(),
+      join_all(record_workers),
     )
     .await;
   }
