@@ -7,6 +7,7 @@ use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::futures::future::{join_all, FutureExt};
 use ::mongodb::bson::DateTime as MongoDateTime;
 use ::nats::asynk::{Connection, Subscription};
+use ::rand::random;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
 use ::tokio::select;
@@ -173,6 +174,9 @@ impl HistoryFetcher {
         );
       }
       c += 1;
+      let wait_dur = Duration::nanoseconds((random::<i64>() + 1) % 1_000_000);
+      let wait_dur = ret_on_err!(wait_dur.to_std());
+      delay_for(wait_dur).await;
     }
     return Err(Box::new(MaximumAttemptExceeded::default()));
   }
