@@ -11,3 +11,4 @@ jobs:
       - uses: actions/delete-package-versions@v1
         with:
           package-name: historical
+          token: ${{ env.GH_PAT }}
