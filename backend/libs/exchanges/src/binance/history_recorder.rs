@@ -142,11 +142,11 @@ impl HistoryRecorder {
             },
             Ok(v) => v
           };
-          let _ = senders[counter].send(klines.klines);
-          counter = (counter + 1) % senders.len();
           let _ = broker.publish(
             HIST_FETCHER_FETCH_PROG_SUB_NAME, prog_msg.as_slice()
           ).await;
+          let _ = senders[counter].send(klines.klines);
+          counter = (counter + 1) % senders.len();
         },
         else => {break;}
       }

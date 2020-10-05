@@ -81,7 +81,7 @@ impl Service {
                   ),
                 ))
                 .await;
-              let _ = sock.flush();
+              let _ = sock.flush().await;
             }
             Ok(resp) => {
               let mut stream = resp
