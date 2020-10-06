@@ -1,4 +1,5 @@
 use ::mongodb::Database;
+use ::nats::asynk::Connection as Broker;
 use ::num_traits::FromPrimitive;
 use ::slog::{o, Logger};
 use ::tonic::{async_trait, Code, Request, Response, Status};
@@ -14,10 +15,11 @@ pub struct Service {
 }
 
 impl Service {
-  pub fn new(db: &Database, log: Logger) -> Self {
+  pub fn new(db: &Database, broker: Broker, log: Logger) -> Self {
     return Self {
       binance: binance::SymbolFetcher::new(
         log.new(o!("scope" => "BinanceSymbolFetcher")),
+        broker.clone(),
         db.clone(),
       ),
     };

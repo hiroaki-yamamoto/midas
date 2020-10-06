@@ -45,6 +45,7 @@ impl Service {
       nats.clone(),
       binance::SymbolFetcher::new(
         log.new(o!("exchange" => "Binance", "scope" => "SymbolFetch")),
+        nats.clone(),
         db.clone(),
       ),
     )

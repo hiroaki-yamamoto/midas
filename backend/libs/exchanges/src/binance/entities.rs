@@ -1,3 +1,4 @@
+use ::std::collections::HashSet;
 use ::std::convert::AsRef;
 
 use ::chrono::{DateTime as ChronoDateTime, Utc};
@@ -304,5 +305,26 @@ impl From<&LatestTradeTime<ChronoDateTime<Utc>>>
 {
   fn from(chrono_based: &LatestTradeTime<ChronoDateTime<Utc>>) -> Self {
     return Self::from(chrono_based.clone());
+  }
+}
+
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Serialize, Deserialize)]
+pub struct SymbolUpdateEvent {
+  pub to_add: Vec<String>,
+  pub to_remove: Vec<String>,
+}
+
+impl SymbolUpdateEvent {
+  pub fn new<S, T>(new: S, old: T) -> Self
+  where
+    S: IntoIterator<Item = String>,
+    T: IntoIterator<Item = String>,
+  {
+    let new: HashSet<String> = new.into_iter().collect();
+    let old: HashSet<String> = old.into_iter().collect();
+    return Self {
+      to_add: (&new - &old).into_iter().collect(),
+      to_remove: (&old - &new).into_iter().collect(),
+    };
   }
 }

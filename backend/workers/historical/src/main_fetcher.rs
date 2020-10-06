@@ -36,8 +36,12 @@ async fn main() -> GenericResult<()> {
     BinanceHistoryFetcher::new(
       None,
       logger.clone(),
-      broker,
-      BinanceSymbolFetcher::new(logger.new(o!("scope" => "SymbolFetcher")), db),
+      broker.clone(),
+      BinanceSymbolFetcher::new(
+        logger.new(o!("scope" => "SymbolFetcher")),
+        broker,
+        db,
+      ),
     )
     .await?,
   )];

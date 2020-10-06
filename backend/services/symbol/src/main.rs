@@ -6,6 +6,7 @@ use ::clap::Clap;
 use ::futures::FutureExt;
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::{options::ClientOptions as DBCliOpt, Client as DBCli};
+use ::nats::asynk::connect as connect_broker;
 use ::slog::{info, o, Logger};
 use ::tokio::signal::unix as signal;
 use ::tonic::transport::Server as RPCServer;
@@ -33,8 +34,10 @@ async fn main() -> GenericResult<()> {
   info!(logger, "Symbol Service");
   let db =
     DBCli::with_options(DBCliOpt::parse(&cfg.db_url).await?)?.database("midas");
+  let broker = connect_broker(&cfg.broker_url).await?;
   let host: SocketAddr = cfg.host.parse()?;
-  let svc = Service::new(&db, logger.new(o!("scope" => "SymbolService")));
+  let svc =
+    Service::new(&db, broker, logger.new(o!("scope" => "SymbolService")));
   let svc = SymbolServer::new(svc);
   info!(logger, "Opened the server on {}", host);
   RPCServer::builder()
