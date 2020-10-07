@@ -23,6 +23,12 @@ pub trait HistoryRecorder {
   async fn spawn(&self);
 }
 
+#[async_trait]
+pub trait PriceObserver {
+  async fn start(&self);
+  async fn stop(&self);
+}
+
 pub(crate) trait TradeDateTime {
   fn symbol(&self) -> String;
   fn open_time(&self) -> DateTime<Utc>;
