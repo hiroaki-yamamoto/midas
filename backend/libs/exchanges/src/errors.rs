@@ -1,6 +1,8 @@
 use ::std::error::Error;
 use ::std::fmt::{Debug, Display, Formatter, Result as FormatResult};
 
+use ::http::StatusCode;
+
 use ::url::Url;
 
 #[derive(Debug, Clone, Default)]
@@ -12,11 +14,7 @@ impl Display for MaximumAttemptExceeded {
   }
 }
 
-impl Error for MaximumAttemptExceeded {
-  fn source(&self) -> Option<&(dyn Error + 'static)> {
-    None
-  }
-}
+impl Error for MaximumAttemptExceeded {}
 
 unsafe impl Send for MaximumAttemptExceeded {}
 
@@ -32,11 +30,7 @@ impl Display for StatusFailure {
     return write!(f, "Status Failure: {}", self);
   }
 }
-impl Error for StatusFailure {
-  fn source(&self) -> Option<&(dyn Error + 'static)> {
-    None
-  }
-}
+impl Error for StatusFailure {}
 
 unsafe impl Send for StatusFailure {}
 
@@ -51,35 +45,25 @@ impl Display for EmptyError {
   }
 }
 
-impl Error for EmptyError {
-  fn source(&self) -> Option<&(dyn Error + 'static)> {
-    None
-  }
-}
+impl Error for EmptyError {}
 
 unsafe impl Send for EmptyError {}
 
 #[derive(Debug, Clone)]
-pub struct GenericError<'t> {
-  msg: &'t str,
+pub struct WebsocketError {
+  pub status: StatusCode,
 }
 
-impl<'t> GenericError<'t> {
-  pub fn new(msg: &'t str) -> Self {
-    return Self { msg };
-  }
-}
-
-impl<'t> Display for GenericError<'t> {
+impl Display for WebsocketError {
   fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-    return write!(f, "{}", self.msg);
+    return write!(
+      f,
+      "Websocket Error: {} {}",
+      self.status.as_u16(),
+      self.status.as_str()
+    );
   }
 }
 
-impl<'t> Error for GenericError<'t> {
-  fn source(&self) -> Option<&(dyn Error + 'static)> {
-    None
-  }
-}
-
-unsafe impl<'t> Send for GenericError<'t> {}
+impl Error for WebsocketError {}
+unsafe impl Send for WebsocketError {}

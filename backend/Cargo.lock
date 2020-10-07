@@ -734,6 +734,7 @@ dependencies = [
  "chrono",
  "config",
  "futures",
+ "http",
  "mongodb",
  "nats",
  "num_cpus",
@@ -746,6 +747,7 @@ dependencies = [
  "serde_qs",
  "slog",
  "tokio",
+ "tokio-tungstenite",
  "types",
  "url",
 ]

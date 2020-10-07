@@ -24,8 +24,8 @@ pub trait HistoryRecorder {
 }
 
 #[async_trait]
-pub trait PriceObserver {
-  async fn start(&self);
+pub trait TradeObserver {
+  async fn start(&self) -> SendableErrorResult<Subscription>;
   async fn stop(&self);
 }
 
