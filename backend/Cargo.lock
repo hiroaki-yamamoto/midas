@@ -730,6 +730,7 @@ checksum = "e1cd41440ae7e4734bbd42302f63eaba892afc93a3912dad84006247f0dedb0e"
 name = "exchanges"
 version = "0.1.0"
 dependencies = [
+ "async-stream 0.3.0",
  "async-trait",
  "chrono",
  "config",

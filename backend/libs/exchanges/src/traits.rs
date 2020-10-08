@@ -1,6 +1,9 @@
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Utc};
+use ::futures::stream::Stream;
 use ::nats::asynk::Subscription;
+use ::rpc::entities::SymbolInfo;
+
 use ::types::SendableErrorResult;
 
 #[async_trait]
@@ -15,7 +18,9 @@ pub trait HistoryFetcher {
 
 #[async_trait]
 pub trait SymbolFetcher {
+  type ListStream: Stream<Item = SymbolInfo> + Send + 'static;
   async fn refresh(&self) -> SendableErrorResult<()>;
+  async fn list(&self) -> SendableErrorResult<Self::ListStream>;
 }
 
 #[async_trait]

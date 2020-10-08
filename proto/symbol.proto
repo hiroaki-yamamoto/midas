@@ -9,7 +9,14 @@ import "entities.proto";
 message RefreshRequest {
   entities.Exchanges exchange = 1;
 }
+message ListRequest {
+  entities.Exchanges exchange = 1;
+}
+message ListResponse {
+  repeated entities.SymbolInfo symbols = 1;
+}
 
 service Symbol {
   rpc refresh(RefreshRequest) returns (google.protobuf.Empty);
+  rpc list(ListRequest) returns (ListResponse);
 }

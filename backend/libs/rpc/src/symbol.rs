@@ -3,6 +3,16 @@ pub struct RefreshRequest {
   #[prost(enumeration = "super::entities::Exchanges", tag = "1")]
   pub exchange: i32,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListRequest {
+  #[prost(enumeration = "super::entities::Exchanges", tag = "1")]
+  pub exchange: i32,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListResponse {
+  #[prost(message, repeated, tag = "1")]
+  pub symbols: ::std::vec::Vec<super::entities::SymbolInfo>,
+}
 #[doc = r" Generated server implementations."]
 pub mod symbol_server {
   #![allow(unused_variables, dead_code, missing_docs)]
@@ -14,6 +24,10 @@ pub mod symbol_server {
       &self,
       request: tonic::Request<super::RefreshRequest>,
     ) -> Result<tonic::Response<()>, tonic::Status>;
+    async fn list(
+      &self,
+      request: tonic::Request<super::ListRequest>,
+    ) -> Result<tonic::Response<super::ListResponse>, tonic::Status>;
   }
   #[derive(Debug)]
   pub struct SymbolServer<T: Symbol> {
@@ -76,6 +90,38 @@ pub mod symbol_server {
             let interceptor = inner.1.clone();
             let inner = inner.0;
             let method = refreshSvc(inner);
+            let codec = tonic::codec::ProstCodec::default();
+            let mut grpc = if let Some(interceptor) = interceptor {
+              tonic::server::Grpc::with_interceptor(codec, interceptor)
+            } else {
+              tonic::server::Grpc::new(codec)
+            };
+            let res = grpc.unary(method, req).await;
+            Ok(res)
+          };
+          Box::pin(fut)
+        }
+        "/symbol.Symbol/list" => {
+          #[allow(non_camel_case_types)]
+          struct listSvc<T: Symbol>(pub Arc<T>);
+          impl<T: Symbol> tonic::server::UnaryService<super::ListRequest> for listSvc<T> {
+            type Response = super::ListResponse;
+            type Future =
+              BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+            fn call(
+              &mut self,
+              request: tonic::Request<super::ListRequest>,
+            ) -> Self::Future {
+              let inner = self.0.clone();
+              let fut = async move { (*inner).list(request).await };
+              Box::pin(fut)
+            }
+          }
+          let inner = self.inner.clone();
+          let fut = async move {
+            let interceptor = inner.1.clone();
+            let inner = inner.0;
+            let method = listSvc(inner);
             let codec = tonic::codec::ProstCodec::default();
             let mut grpc = if let Some(interceptor) = interceptor {
               tonic::server::Grpc::with_interceptor(codec, interceptor)
