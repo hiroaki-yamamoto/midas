@@ -749,6 +749,7 @@ dependencies = [
  "slog",
  "tokio",
  "tokio-tungstenite",
+ "tonic",
  "types",
  "url",
 ]

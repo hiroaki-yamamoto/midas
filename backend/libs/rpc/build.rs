@@ -13,7 +13,7 @@ fn main() -> Result<(), Box<dyn Error>> {
   return match ::tonic_build::configure()
     .out_dir("./src")
     .build_server(true)
-    .build_client(false)
+    .build_client(true)
     .type_attribute(
       "historical.HistChartProg",
       "#[derive(::serde::Serialize, ::serde::Deserialize)]",

@@ -308,7 +308,7 @@ impl From<&LatestTradeTime<ChronoDateTime<Utc>>>
   }
 }
 
-#[derive(Debug, Clone, Hash, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SymbolUpdateEvent {
   pub to_add: Vec<String>,
   pub to_remove: Vec<String>,
@@ -327,4 +327,19 @@ impl SymbolUpdateEvent {
       to_remove: (&old - &new).into_iter().collect(),
     };
   }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct TradeSubRequestInner {
+  pub id: u32,
+  pub params: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(tag = "method")]
+pub(crate) enum TradeSubRequest {
+  #[serde(rename = "SUBSCRIBE")]
+  Subscribe(TradeSubRequestInner),
+  #[serde(rename = "UNSUBSCRIBE")]
+  Unsubscribe(TradeSubRequestInner),
 }

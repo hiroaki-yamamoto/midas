@@ -67,3 +67,15 @@ impl Display for WebsocketError {
 
 impl Error for WebsocketError {}
 unsafe impl Send for WebsocketError {}
+
+#[derive(Debug, Clone)]
+pub struct AlreadyStarted {}
+
+impl Display for AlreadyStarted {
+  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
+    return write!(f, "Already started");
+  }
+}
+
+impl Error for AlreadyStarted {}
+unsafe impl Send for AlreadyStarted {}
