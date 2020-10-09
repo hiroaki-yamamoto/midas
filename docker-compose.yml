@@ -48,6 +48,8 @@ services:
     depends_on:
       - database
       - broker
+      - worker.historical.fetch
+      - worker.historical.record
   service.symbol:
     build:
       context: ./backend
@@ -62,6 +64,7 @@ services:
       - ./backend:/opt/code
     depends_on:
       - database
+      - broker
   worker.historical.fetch:
     build:
       context: ./backend
