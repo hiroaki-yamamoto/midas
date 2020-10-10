@@ -90,7 +90,7 @@ jobs:
           name: "Install bash"
           command: |
             apk update
-            apk add --no-cache bash curl
+            apk add --no-cache bash curl jq
       - run:
           name: Log into docker.pkg.github.com
           command: |
