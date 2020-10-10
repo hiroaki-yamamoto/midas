@@ -9,14 +9,16 @@ import "entities.proto";
 message RefreshRequest {
   entities.Exchanges exchange = 1;
 }
-message ListRequest {
+message QueryRequest {
   entities.Exchanges exchange = 1;
+  string Status = 2;
+  repeated string symbols = 3;
 }
-message ListResponse {
+message QueryResponse {
   repeated entities.SymbolInfo symbols = 1;
 }
 
 service Symbol {
   rpc refresh(RefreshRequest) returns (google.protobuf.Empty);
-  rpc list(ListRequest) returns (ListResponse);
+  rpc query(QueryRequest) returns (QueryResponse);
 }

@@ -20,7 +20,11 @@ pub trait HistoryFetcher {
 pub trait SymbolFetcher {
   type ListStream: Stream<Item = SymbolInfo> + Send + 'static;
   async fn refresh(&self) -> SendableErrorResult<()>;
-  async fn list(&self) -> SendableErrorResult<Self::ListStream>;
+  async fn list(
+    &self,
+    status: Option<String>,
+    symbols: Option<Vec<String>>,
+  ) -> SendableErrorResult<Self::ListStream>;
 }
 
 #[async_trait]

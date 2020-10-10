@@ -8,7 +8,9 @@ use ::tonic::{async_trait, Code, Request, Response, Status};
 use ::exchanges::binance;
 use ::exchanges::{ListSymbolStream, SymbolFetcher};
 use ::rpc::entities::Exchanges;
-use ::rpc::symbol::{symbol_server::Symbol, ListResponse, RefreshRequest};
+use ::rpc::symbol::{
+  symbol_server::Symbol, QueryRequest, QueryResponse, RefreshRequest,
+};
 use ::types::{rpc_ret_on_err, Result};
 
 pub struct Service {
@@ -61,15 +63,26 @@ impl Symbol for Service {
     return Ok(Response::new(()));
   }
 
-  async fn list(
+  async fn query(
     &self,
-    request: tonic::Request<rpc::symbol::ListRequest>,
-  ) -> Result<tonic::Response<rpc::symbol::ListResponse>> {
+    request: tonic::Request<QueryRequest>,
+  ) -> Result<tonic::Response<QueryResponse>> {
     let request = request.into_inner();
     let fetcher =
       self.get_fetcher(FromPrimitive::from_i32(request.exchange))?;
-    let list_st = rpc_ret_on_err!(Code::Internal, fetcher.list().await);
+    let status = match request.status.trim() {
+      "" => None,
+      o => Some(String::from(o)),
+    };
+    let symbols: Option<Vec<String>>;
+    if request.symbols.len() > 0 {
+      symbols = Some(request.symbols);
+    } else {
+      symbols = None;
+    }
+    let list_st =
+      rpc_ret_on_err!(Code::Internal, fetcher.list(status, symbols).await);
     let ret = list_st.collect().await;
-    return Ok(Response::new(ListResponse { symbols: ret }));
+    return Ok(Response::new(QueryResponse { symbols: ret }));
   }
 }

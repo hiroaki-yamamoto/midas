@@ -130,8 +130,19 @@ impl SymbolFetcherTrait for SymbolFetcher {
   }
 
   type ListStream = ListSymbolStream;
-  async fn list(&self) -> SendableErrorResult<Self::ListStream> {
-    let cur = ret_on_err!(self.col.find(doc! {}, None).await);
+  async fn list(
+    &self,
+    status: Option<String>,
+    symbols: Option<Vec<String>>,
+  ) -> SendableErrorResult<Self::ListStream> {
+    let mut query = doc! {};
+    if let Some(status) = status {
+      query.insert("status", status);
+    }
+    if let Some(symbols) = symbols {
+      query.insert("symbol", doc! {"$in": symbols});
+    }
+    let cur = ret_on_err!(self.col.find(query, None).await);
     let cur = cur
       .filter_map(|doc| async { doc.ok() })
       .map(|doc| from_bson::<Symbol>(Bson::Document(doc)))

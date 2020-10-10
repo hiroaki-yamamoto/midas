@@ -4,12 +4,16 @@ pub struct RefreshRequest {
   pub exchange: i32,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ListRequest {
+pub struct QueryRequest {
   #[prost(enumeration = "super::entities::Exchanges", tag = "1")]
   pub exchange: i32,
+  #[prost(string, tag = "2")]
+  pub status: std::string::String,
+  #[prost(string, repeated, tag = "3")]
+  pub symbols: ::std::vec::Vec<std::string::String>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ListResponse {
+pub struct QueryResponse {
   #[prost(message, repeated, tag = "1")]
   pub symbols: ::std::vec::Vec<super::entities::SymbolInfo>,
 }
@@ -63,10 +67,10 @@ pub mod symbol_client {
       let path = http::uri::PathAndQuery::from_static("/symbol.Symbol/refresh");
       self.inner.unary(request.into_request(), path, codec).await
     }
-    pub async fn list(
+    pub async fn query(
       &mut self,
-      request: impl tonic::IntoRequest<super::ListRequest>,
-    ) -> Result<tonic::Response<super::ListResponse>, tonic::Status> {
+      request: impl tonic::IntoRequest<super::QueryRequest>,
+    ) -> Result<tonic::Response<super::QueryResponse>, tonic::Status> {
       self.inner.ready().await.map_err(|e| {
         tonic::Status::new(
           tonic::Code::Unknown,
@@ -74,7 +78,7 @@ pub mod symbol_client {
         )
       })?;
       let codec = tonic::codec::ProstCodec::default();
-      let path = http::uri::PathAndQuery::from_static("/symbol.Symbol/list");
+      let path = http::uri::PathAndQuery::from_static("/symbol.Symbol/query");
       self.inner.unary(request.into_request(), path, codec).await
     }
   }
@@ -102,10 +106,10 @@ pub mod symbol_server {
       &self,
       request: tonic::Request<super::RefreshRequest>,
     ) -> Result<tonic::Response<()>, tonic::Status>;
-    async fn list(
+    async fn query(
       &self,
-      request: tonic::Request<super::ListRequest>,
-    ) -> Result<tonic::Response<super::ListResponse>, tonic::Status>;
+      request: tonic::Request<super::QueryRequest>,
+    ) -> Result<tonic::Response<super::QueryResponse>, tonic::Status>;
   }
   #[derive(Debug)]
   pub struct SymbolServer<T: Symbol> {
@@ -179,19 +183,21 @@ pub mod symbol_server {
           };
           Box::pin(fut)
         }
-        "/symbol.Symbol/list" => {
+        "/symbol.Symbol/query" => {
           #[allow(non_camel_case_types)]
-          struct listSvc<T: Symbol>(pub Arc<T>);
-          impl<T: Symbol> tonic::server::UnaryService<super::ListRequest> for listSvc<T> {
-            type Response = super::ListResponse;
+          struct querySvc<T: Symbol>(pub Arc<T>);
+          impl<T: Symbol> tonic::server::UnaryService<super::QueryRequest>
+            for querySvc<T>
+          {
+            type Response = super::QueryResponse;
             type Future =
               BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
             fn call(
               &mut self,
-              request: tonic::Request<super::ListRequest>,
+              request: tonic::Request<super::QueryRequest>,
             ) -> Self::Future {
               let inner = self.0.clone();
-              let fut = async move { (*inner).list(request).await };
+              let fut = async move { (*inner).query(request).await };
               Box::pin(fut)
             }
           }
@@ -199,7 +205,7 @@ pub mod symbol_server {
           let fut = async move {
             let interceptor = inner.1.clone();
             let inner = inner.0;
-            let method = listSvc(inner);
+            let method = querySvc(inner);
             let codec = tonic::codec::ProstCodec::default();
             let mut grpc = if let Some(interceptor) = interceptor {
               tonic::server::Grpc::with_interceptor(codec, interceptor)

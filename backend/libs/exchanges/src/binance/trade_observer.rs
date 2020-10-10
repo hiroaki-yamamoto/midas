@@ -16,7 +16,7 @@ use ::tonic::Request;
 
 use ::rpc::entities::Exchanges;
 use ::rpc::symbol::symbol_client::SymbolClient;
-use ::rpc::symbol::ListRequest;
+use ::rpc::symbol::QueryRequest;
 use ::types::{ret_on_err, SendableErrorResult};
 
 use super::constants::{
@@ -44,8 +44,10 @@ impl TradeObserver {
   ) -> SendableErrorResult<Self> {
     let symbols = ret_on_err!(
       symbol_client
-        .list(Request::new(ListRequest {
+        .query(Request::new(QueryRequest {
           exchange: Exchanges::Binance as i32,
+          status: String::from("TRADING"),
+          symbols: vec![],
         }))
         .await
     )

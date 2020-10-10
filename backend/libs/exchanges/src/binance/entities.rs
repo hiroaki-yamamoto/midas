@@ -58,6 +58,7 @@ impl Symbol {
       symbol: self.symbol,
       base: self.base_asset,
       quote: self.quote_asset,
+      status: self.status,
     };
   }
 }

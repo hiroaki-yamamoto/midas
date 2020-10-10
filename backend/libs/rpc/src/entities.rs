@@ -3,8 +3,10 @@ pub struct SymbolInfo {
   #[prost(string, tag = "1")]
   pub symbol: std::string::String,
   #[prost(string, tag = "2")]
-  pub base: std::string::String,
+  pub status: std::string::String,
   #[prost(string, tag = "3")]
+  pub base: std::string::String,
+  #[prost(string, tag = "4")]
   pub quote: std::string::String,
 }
 #[derive(

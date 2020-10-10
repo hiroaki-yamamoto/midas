@@ -9,6 +9,7 @@ enum Exchanges {
 
 message SymbolInfo {
   string symbol = 1;
-  string base = 2;
-  string quote = 3;
+  string status = 2;
+  string base = 3;
+  string quote = 4;
 }
