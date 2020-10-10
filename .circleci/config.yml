@@ -66,11 +66,11 @@ jobs:
           path: ./backend/target/x86_64-unknown-linux-musl/release/dist.txz
           destination: dist.txz
       - slack/notify:
-          event: "pass"
-          template: "success_tagged_deploy_1"
-      - slack/notify:
           event: "fail"
           template: "basic_fail_1"
+      - slack/notify:
+          event: "pass"
+          template: "success_tagged_deploy_1"
       - persist_to_workspace:
           root: .
           paths:
@@ -111,11 +111,11 @@ jobs:
             docker push docker.pkg.github.com/hiroaki-yamamoto/midas/<<parameters.service_name>>
       - run: docker logout https://docker.pkg.github.com
       - slack/notify:
-          event: "pass"
-          template: "success_tagged_deploy_1"
-      - slack/notify:
           event: "fail"
           template: "basic_fail_1"
+      - slack/notify:
+          event: "pass"
+          template: "success_tagged_deploy_1"
 
 devel-filter: &devel-filter
   filters:
