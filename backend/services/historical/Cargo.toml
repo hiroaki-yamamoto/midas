@@ -25,8 +25,8 @@ tokio = {version = "0.2.22", features = ["macros", "rt-threaded", "signal"]}
 slog = "2.5.2"
 slog-atomic = "3.0.0"
 async-stream = "0.3.0"
-futures = "0.3.5"
+futures = "0.3.6"
 num-traits = "0.2.12"
-libc = "0.2.78"
+libc = "0.2.79"
 warp = { version = "0.2.5", features = ["tls"] }
 serde_json = "1.0.58"
