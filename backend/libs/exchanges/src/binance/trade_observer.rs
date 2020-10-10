@@ -1,10 +1,13 @@
 use ::async_trait::async_trait;
 use ::futures::sink::SinkExt;
+use ::futures::stream::StreamExt;
 use ::nats::asynk::{Connection as Broker, Subscription as NatsSub};
 use ::rand::random;
+use ::rmp_serde::from_slice as from_msgpack;
 use ::serde_json::to_vec as to_json;
 use ::slog::Logger;
 use ::tokio::net::TcpStream;
+use ::tokio::select;
 use ::tokio_tungstenite::{
   connect_async, tungstenite as wsocket, WebSocketStream,
 };
@@ -14,12 +17,16 @@ use ::tonic::Request;
 use ::rpc::entities::Exchanges;
 use ::rpc::symbol::symbol_client::SymbolClient;
 use ::rpc::symbol::ListRequest;
-use ::types::{ret_on_err, GenericResult, SendableErrorResult};
+use ::types::{ret_on_err, SendableErrorResult};
 
-use super::constants::{TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT};
-use super::entities::{TradeSubRequest, TradeSubRequestInner};
+use super::constants::{
+  SYMBOL_UPDATE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
+};
+use super::entities::{
+  SymbolUpdateEvent, TradeSubRequest, TradeSubRequestInner,
+};
 
-use crate::errors::{AlreadyStarted, WebsocketError};
+use crate::errors::WebsocketError;
 use crate::traits::TradeObserver as TradeObserverTrait;
 
 pub struct TradeObserver {
@@ -86,6 +93,26 @@ impl TradeObserver {
     let req = wsocket::Message::Text(payload);
     let _ = socket.send(req).await;
     let _ = socket.flush().await;
+    return Ok(());
+  }
+
+  async fn handle_event(&self) -> SendableErrorResult<()> {
+    let mut symbol_update =
+      ret_on_err!(self.broker.subscribe(SYMBOL_UPDATE_EVENT).await);
+    loop {
+      select! {
+        Some(msg) = symbol_update.next() => {
+          let event: SymbolUpdateEvent = match from_msgpack(&msg.data[..]) {
+            Err(e) => {
+              ::slog::warn!(self.logger, "Failed to read update event payload: {}", e);
+              continue;
+            },
+            Ok(o) => o
+          };
+        },
+        else => {break;}
+      }
+    }
     return Ok(());
   }
 }
