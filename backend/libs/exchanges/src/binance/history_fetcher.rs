@@ -35,7 +35,7 @@ use super::constants::{
 };
 use super::entities::{
   BinancePayload, HistFetcherParam, HistQuery, Kline, Klines, KlinesWithInfo,
-  LatestTradeTime,
+  TradeTime,
 };
 use super::symbol_fetcher::SymbolFetcher;
 
@@ -184,7 +184,7 @@ impl HistoryFetcher {
   async fn get_first_trade_date(
     &self,
     symbols: Vec<String>,
-  ) -> SendableErrorResult<HashMap<String, LatestTradeTime<DateTime<Utc>>>> {
+  ) -> SendableErrorResult<HashMap<String, TradeTime<DateTime<Utc>>>> {
     let symbols_len = symbols.len() as i64;
     let latest_kline = ret_on_err!(
       self
@@ -195,7 +195,7 @@ impl HistoryFetcher {
         )
         .await
     );
-    let mut latest_kline: HashMap<String, LatestTradeTime<MongoDateTime>> =
+    let mut latest_kline: HashMap<String, TradeTime<MongoDateTime>> =
       ret_on_err!(from_msgpack(&latest_kline.data[..]));
     let first_trade_date_prog = HistChartProg {
       symbol: String::from("Currency Trade Date Fetch"),
@@ -307,7 +307,7 @@ impl HistoryFetcher {
     }
     return Ok(HashMap::from_iter(latest_kline.iter().map(
       move |(sym, trade_time)| {
-        let trade_time: LatestTradeTime<DateTime<Utc>> = trade_time.into();
+        let trade_time: TradeTime<DateTime<Utc>> = trade_time.into();
         return (sym.clone(), trade_time);
       },
     )));

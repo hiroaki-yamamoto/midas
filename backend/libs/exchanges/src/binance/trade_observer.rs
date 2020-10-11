@@ -133,6 +133,19 @@ impl TradeObserver {
     return Ok(());
   }
 
+  async fn handle_websocket_message(
+    &self,
+    socket: &mut WebSocketStream<TcpStream>,
+    msg: &wsocket::Message,
+  ) {
+    // match msg {
+    //   wsocket::Message::Ping(txt) => {
+    //     socket.send(wsocket::Message::Pong(txt.to_owned()));
+    //   }
+    //   wsocket::Message::Binary(msg) => {}
+    // }
+  }
+
   async fn handle_event(
     &mut self,
     socket: &mut WebSocketStream<TcpStream>,
@@ -153,6 +166,9 @@ impl TradeObserver {
             ::slog::warn!(self.logger, "Got an error while updating symbol: {}", e);
           }
         },
+        Some(Ok(msg)) = socket.next() => {
+          self.handle_websocket_message(socket, &msg).await;
+        }
         else => {break;}
       }
     }

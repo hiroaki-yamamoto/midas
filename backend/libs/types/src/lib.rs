@@ -3,6 +3,7 @@ mod entities;
 use ::std::error::Error;
 use ::std::result::Result as StdResult;
 
+use ::chrono::{DateTime as ChronoDateTime, Utc};
 use ::tonic::Status as TonicStatus;
 use ::url::{ParseError, Url};
 
@@ -12,6 +13,7 @@ pub type Result<T> = StdResult<T, TonicStatus>;
 pub type ParseURLResult = StdResult<Url, ParseError>;
 pub type GenericResult<T> = StdResult<T, Box<dyn Error>>;
 pub type SendableErrorResult<T> = StdResult<T, Box<dyn Error + Send>>;
+pub type DateTime = ChronoDateTime<Utc>;
 
 #[macro_export]
 macro_rules! ret_on_err {

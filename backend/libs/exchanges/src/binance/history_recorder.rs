@@ -19,7 +19,7 @@ use super::constants::{
   HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
   HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
 };
-use super::entities::{Klines, KlinesWithInfo, LatestTradeTime};
+use super::entities::{Klines, KlinesWithInfo, TradeTime};
 
 use crate::traits::HistoryRecorder as HistRecTrait;
 
@@ -65,7 +65,7 @@ impl HistoryRecorder {
   async fn get_latest_trade_time(
     &self,
     symbols: Vec<String>,
-  ) -> SendableErrorResult<HashMap<String, LatestTradeTime<MongoDateTime>>> {
+  ) -> SendableErrorResult<HashMap<String, TradeTime<MongoDateTime>>> {
     let mut cur = ret_on_err!(
       self
         .col
@@ -91,8 +91,7 @@ impl HistoryRecorder {
     let mut ret = HashMap::new();
     while let Some(doc) = cur.next().await {
       let doc = ret_on_err!(doc);
-      let latest: LatestTradeTime<MongoDateTime> =
-        ret_on_err!(from_document(doc));
+      let latest: TradeTime<MongoDateTime> = ret_on_err!(from_document(doc));
       ret.insert(latest.symbol.clone(), latest);
     }
     return Ok(ret);
