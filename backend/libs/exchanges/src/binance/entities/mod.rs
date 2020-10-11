@@ -11,7 +11,7 @@ pub use self::history::{
 };
 pub use self::info::ExchangeInfo;
 pub use self::symbol::{Symbol, SymbolUpdateEvent};
-pub(crate) use self::trade::{TradeSubRequest, TradeSubRequestInner};
+pub(crate) use self::trade::{Trade, TradeSubRequest, TradeSubRequestInner};
 pub use self::trade_time::TradeTime;
 
 use ::serde_json::Value;
