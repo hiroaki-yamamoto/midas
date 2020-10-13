@@ -196,8 +196,7 @@ impl TradeObserver {
           Ok(v) => v,
         };
         let _ = self.broker.publish(TRADE_OBSERVER_SUB_NAME, &msg[..]).await;
-      }
-      // _ => {}
+      } // _ => {}
     }
   }
 
@@ -278,20 +277,19 @@ impl TradeObserver {
 
 #[async_trait]
 impl TradeObserverTrait for TradeObserver {
-  async fn start(&self) -> SendableErrorResult<NatsSub> {
+  async fn start(&self) -> SendableErrorResult<()> {
     let mut me = self.clone();
     let mut socket = me.connect().await?;
-    ::tokio::spawn(async move {
-      if let Err(e) = me.handle_event(&mut socket).await {
-        ::slog::error!(
-          me.logger,
-          "Failed to open the handler of the trade event: {}",
-          e,
-        );
-      };
-    });
-    let sub = ret_on_err!(self.broker.subscribe(TRADE_OBSERVER_SUB_NAME).await);
-    return Ok(sub);
+    if let Err(e) = me.handle_event(&mut socket).await {
+      ::slog::error!(
+        me.logger,
+        "Failed to open the handler of the trade event: {}",
+        e,
+      );
+    };
+    return Ok(());
   }
-  async fn stop(&self) {}
+  async fn subscribe(&self) -> ::std::io::Result<NatsSub> {
+    return self.broker.subscribe(TRADE_OBSERVER_SUB_NAME).await;
+  }
 }

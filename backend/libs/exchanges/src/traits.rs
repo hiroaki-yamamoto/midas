@@ -34,8 +34,8 @@ pub trait HistoryRecorder {
 
 #[async_trait]
 pub trait TradeObserver {
-  async fn start(&self) -> SendableErrorResult<Subscription>;
-  async fn stop(&self);
+  async fn start(&self) -> SendableErrorResult<()>;
+  async fn subscribe(&self) -> ::std::io::Result<Subscription>;
 }
 
 pub(crate) trait TradeDateTime {
