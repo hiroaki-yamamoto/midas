@@ -3,17 +3,20 @@ use ::futures::sink::SinkExt;
 use ::futures::stream::StreamExt;
 use ::nats::asynk::{Connection as Broker, Subscription as NatsSub};
 use ::rand::random;
-use ::rmp_serde::from_slice as from_msgpack;
-use ::serde_json::to_vec as to_json;
+use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
+use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
+use ::std::time::Duration;
 use ::tokio::net::TcpStream;
 use ::tokio::select;
+use ::tokio::time::interval;
 use ::tokio_tungstenite::{
   connect_async, tungstenite as wsocket, WebSocketStream,
 };
 use ::tonic::transport::Channel;
 use ::tonic::Request;
 
+use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::rpc::entities::Exchanges;
 use ::rpc::symbol::symbol_client::SymbolClient;
 use ::rpc::symbol::QueryRequest;
@@ -23,10 +26,10 @@ use super::constants::{
   SYMBOL_UPDATE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
 };
 use super::entities::{
-  SymbolUpdateEvent, TradeSubRequest, TradeSubRequestInner,
+  StreamEvent, SymbolUpdateEvent, Trade, TradeSubRequest, TradeSubRequestInner,
 };
 
-use crate::errors::WebsocketError;
+use crate::errors::{MaximumAttemptExceeded, WebsocketError};
 use crate::traits::TradeObserver as TradeObserverTrait;
 
 #[derive(Clone)]
@@ -99,6 +102,28 @@ impl TradeObserver {
     return Ok(());
   }
 
+  async fn connect(&self) -> SendableErrorResult<WebSocketStream<TcpStream>> {
+    let mut interval =
+      interval(Duration::from_secs(DEFAULT_RECONNECT_INTERVAL as u64));
+    for _ in 0..20 {
+      let mut socket = match self.init_socket().await {
+        Err(e) => {
+          ::slog::error!(
+            self.logger,
+            "Failed to subscribe trade stream: {}",
+            e
+          );
+          interval.tick().await;
+          continue;
+        }
+        Ok(v) => v,
+      };
+      let _ = self.init_subscription(&mut socket).await;
+      return Ok(socket);
+    }
+    return Err(Box::new(MaximumAttemptExceeded {}));
+  }
+
   async fn update_symbols(
     &mut self,
     socket: &mut WebSocketStream<TcpStream>,
@@ -133,17 +158,92 @@ impl TradeObserver {
     return Ok(());
   }
 
+  async fn handle_trade(&self, data: &[u8]) {
+    let event: StreamEvent = match from_json(data) {
+      Err(e) => {
+        ::slog::warn!(
+          self.logger,
+          "Failed to decode the payload: {}. Ignoring",
+          e
+        );
+        return;
+      }
+      Ok(v) => v,
+    };
+    match event {
+      StreamEvent::Trade(trade) => {
+        let trade: SendableErrorResult<Trade> = trade.into();
+        let trade: Trade = match trade {
+          Err(e) => {
+            ::slog::warn!(
+              self.logger,
+              "Failed to cast trade data: {}. Ignoring",
+              e
+            );
+            return;
+          }
+          Ok(v) => v,
+        };
+        let msg = match to_msgpack(&trade) {
+          Err(e) => {
+            ::slog::warn!(
+              self.logger,
+              "Failed to encode the trade data: {}",
+              e
+            );
+            return;
+          }
+          Ok(v) => v,
+        };
+        let _ = self.broker.publish(TRADE_OBSERVER_SUB_NAME, &msg[..]).await;
+      }
+      // _ => {}
+    }
+  }
+
   async fn handle_websocket_message(
     &self,
     socket: &mut WebSocketStream<TcpStream>,
     msg: &wsocket::Message,
   ) {
-    // match msg {
-    //   wsocket::Message::Ping(txt) => {
-    //     socket.send(wsocket::Message::Pong(txt.to_owned()));
-    //   }
-    //   wsocket::Message::Binary(msg) => {}
-    // }
+    match msg {
+      wsocket::Message::Ping(txt) => {
+        let _ = socket.send(wsocket::Message::Pong(txt.to_owned())).await;
+      }
+      wsocket::Message::Binary(msg) => {
+        self.handle_trade(&msg[..]).await;
+      }
+      wsocket::Message::Text(msg) => {
+        let msg = msg.to_owned().into_bytes();
+        self.handle_trade(&msg[..]).await;
+      }
+      wsocket::Message::Close(close_opt) => {
+        if let Some(close) = close_opt {
+          ::slog::warn!(
+            self.logger,
+            "Closing connection for a reason.";
+            "code" => format!("{}", close.code),
+            "reason" => format!("{}", close.reason),
+          );
+        } else {
+          ::slog::warn!(self.logger, "Closing connection...");
+        }
+        ::slog::info!(self.logger, "Reconnecting...");
+        *socket = match self.connect().await {
+          Err(e) => {
+            ::slog::error!(self.logger, "Failed to connect: {}", e);
+            return;
+          }
+          Ok(s) => s,
+        };
+      }
+      wsocket::Message::Pong(_) => {
+        ::slog::info!(
+          self.logger,
+          "Got Pong frame somehow... why?? Anyway, Ingoring."
+        );
+      }
+    }
   }
 
   async fn handle_event(
@@ -180,8 +280,7 @@ impl TradeObserver {
 impl TradeObserverTrait for TradeObserver {
   async fn start(&self) -> SendableErrorResult<NatsSub> {
     let mut me = self.clone();
-    let mut socket = me.init_socket().await?;
-    me.init_subscription(&mut socket).await?;
+    let mut socket = me.connect().await?;
     ::tokio::spawn(async move {
       if let Err(e) = me.handle_event(&mut socket).await {
         ::slog::error!(

@@ -1,3 +1,9 @@
-use super::Trade;
+use ::serde::{Deserialize, Serialize};
 
-pub(crate) enum StreamEvent {}
+use super::trade::TradeRaw;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "e")]
+pub(crate) enum StreamEvent {
+  Trade(TradeRaw),
+}

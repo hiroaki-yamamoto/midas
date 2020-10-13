@@ -1,8 +1,8 @@
-use ::std::error::Error;
-
 use ::mongodb::bson::DateTime as MongoDateTime;
 use ::serde::{Deserialize, Serialize};
 use ::serde_json::Value;
+
+use ::types::SendableErrorResult;
 
 use crate::casting::{cast_datetime, cast_f64};
 
@@ -71,7 +71,7 @@ pub(crate) struct Trade {
   pub trade_type: TradeType,
 }
 
-impl From<TradeRaw> for Result<Trade, Box<dyn Error + Send>> {
+impl From<TradeRaw> for SendableErrorResult<Trade> {
   fn from(data: TradeRaw) -> Self {
     return Ok(Trade {
       event_time: cast_datetime("event_time", &data.event_time)?.into(),
