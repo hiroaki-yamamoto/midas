@@ -7,5 +7,6 @@ members = [
   "libs/types",
   "services/historical",
   "services/symbol",
-  "workers/historical"
+  "workers/historical",
+  "workers/observer"
 ]

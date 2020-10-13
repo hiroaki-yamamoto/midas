@@ -95,6 +95,21 @@ services:
     depends_on:
       - database
       - broker
+  worker.trade.observer.binance:
+    build:
+      context: ./backend
+      dockerfile: devel.dockerfile
+      args:
+        - SERVICE=observer_worker
+    command:
+      - -c
+      - /etc/midas/midas.yml
+    volumes:
+      - ./etc:/etc/midas
+      - ./backend:/opt/code
+    depends_on:
+      - database
+      - broker
   frontend:
     build:
       context: frontend
