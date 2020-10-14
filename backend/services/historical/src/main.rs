@@ -61,7 +61,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
   let svc = HistChartServer::new(svc);
   info!(logger, "Opened GRPC server on {}", host);
   let rpc_svr = RPCServer::builder()
-    .tls_config(cfg.tls.load()?)?
+    .tls_config(cfg.tls.load_server()?)?
     .add_service(svc)
     .serve_with_shutdown(host, async move {
       sig

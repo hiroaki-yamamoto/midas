@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     )
     .type_attribute(
       "entities.Exchanges",
-      "#[derive(::num_derive::FromPrimitive, ::serde::Serialize, ::serde::Deserialize)]",
+      "#[derive(::num_derive::FromPrimitive, ::serde::Serialize, ::serde::Deserialize, ::clap::Clap)]",
     )
     .type_attribute("entities.Exchanges", "#[serde(tag = \"exchange\")]")
     .compile(&protos, &[String::from("../../../proto")])

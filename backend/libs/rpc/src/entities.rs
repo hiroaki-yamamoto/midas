@@ -14,7 +14,10 @@ pub struct SymbolInfo {
 )]
 #[repr(i32)]
 #[derive(
-  ::num_derive::FromPrimitive, ::serde::Serialize, ::serde::Deserialize,
+  ::num_derive::FromPrimitive,
+  ::serde::Serialize,
+  ::serde::Deserialize,
+  ::clap::Clap,
 )]
 #[serde(tag = "exchange")]
 pub enum Exchanges {

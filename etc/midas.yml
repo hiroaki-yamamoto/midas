@@ -5,4 +5,7 @@ debug: true
 tls:
   privateKey: /etc/midas/tls/svc/devel.key
   cert: /etc/midas/tls/svc/devel.crt
-  CARoot: /etc/midas/tls/svc/root-ca.pem
+  ca: /etc/midas/tls/svc/root-ca.pem
+serviceAddresses:
+  historical: https://service.historical:50000
+  symbol: https://service.symbol:50000

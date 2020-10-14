@@ -3,7 +3,9 @@ use ::std::fs::{read_to_string, File};
 use ::std::io::Read;
 
 use ::serde::Deserialize;
-use ::tonic::transport::{Identity, ServerTlsConfig};
+use ::tonic::transport::{
+  Certificate, ClientTlsConfig, Identity, ServerTlsConfig,
+};
 
 use ::types::GenericResult;
 
@@ -13,18 +15,29 @@ pub struct TLS {
   #[serde(rename = "privateKey")]
   pub prv_key: String,
   pub cert: String,
-  #[serde(rename = "CARoot")]
-  pub client_ca_root: String,
+  pub ca: String,
 }
 
 impl TLS {
-  pub fn load(&self) -> GenericResult<ServerTlsConfig> {
+  pub fn load_server(&self) -> GenericResult<ServerTlsConfig> {
     let prv_key = read_to_string(&self.prv_key)?;
     let cert = read_to_string(&self.cert)?;
     let tlscfg =
       ServerTlsConfig::new().identity(Identity::from_pem(cert, prv_key));
     return Ok(tlscfg);
   }
+
+  pub fn load_client(&self) -> GenericResult<ClientTlsConfig> {
+    let cert = read_to_string(&self.cert)?;
+    let cert = Certificate::from_pem(cert);
+    return Ok(ClientTlsConfig::new().ca_certificate(cert));
+  }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ServiceAddresses {
+  pub historical: String,
+  pub symbol: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -38,6 +51,7 @@ pub struct Config {
   #[serde(default)]
   pub debug: bool,
   pub tls: TLS,
+  pub service_addresses: ServiceAddresses,
 }
 
 impl Config {

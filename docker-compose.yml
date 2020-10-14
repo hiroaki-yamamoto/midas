@@ -104,6 +104,8 @@ services:
     command:
       - -c
       - /etc/midas/midas.yml
+      - -e
+      - binance
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code

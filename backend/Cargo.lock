@@ -733,6 +733,7 @@ dependencies = [
  "async-stream 0.3.0",
  "async-trait",
  "chrono",
+ "clap",
  "config",
  "futures",
  "http",
@@ -1656,6 +1657,17 @@ checksum = "1ab52be62400ca80aa00285d25253d7f7c437b7375c4de678f5405d3afe82ca5"
 [[package]]
 name = "observer_worker"
 version = "0.1.0"
+dependencies = [
+ "clap",
+ "config",
+ "exchanges",
+ "nats",
+ "rpc",
+ "slog",
+ "slog_builder",
+ "tokio",
+ "tonic",
+]
 
 [[package]]
 name = "once_cell"
@@ -2264,6 +2276,7 @@ dependencies = [
 name = "rpc"
 version = "0.1.0"
 dependencies = [
+ "clap",
  "glob",
  "num-derive",
  "num-traits",
