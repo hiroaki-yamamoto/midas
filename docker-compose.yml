@@ -19,8 +19,8 @@ services:
     environment:
       ENVOY_UID: 0
     depends_on:
-      - service.symbol
-      - service.historical
+      - symbol_service
+      - historical_service
       - frontend
     ports:
       - 50000:50000
@@ -33,7 +33,7 @@ services:
       - 8081:8081
     depends_on:
       - database
-  service.historical:
+  historical_service:
     build:
       context: ./backend
       dockerfile: devel.dockerfile
@@ -48,9 +48,9 @@ services:
     depends_on:
       - database
       - broker
-      - worker.historical.fetch
-      - worker.historical.record
-  service.symbol:
+      - historical_fetch_worker
+      - historical_record_worker
+  symbol_service:
     build:
       context: ./backend
       dockerfile: devel.dockerfile
@@ -65,7 +65,7 @@ services:
     depends_on:
       - database
       - broker
-  worker.historical.fetch:
+  historical_fetch_worker:
     build:
       context: ./backend
       dockerfile: devel.dockerfile
@@ -80,7 +80,7 @@ services:
     depends_on:
       - database
       - broker
-  worker.historical.record:
+  historical_record_worker:
     build:
       context: ./backend
       dockerfile: devel.dockerfile
@@ -95,7 +95,7 @@ services:
     depends_on:
       - database
       - broker
-  worker.trade.observer.binance:
+  binance_trade_observer_worker:
     build:
       context: ./backend
       dockerfile: devel.dockerfile
@@ -112,7 +112,7 @@ services:
     depends_on:
       - database
       - broker
-      - service.historical
+      - symbol_service
   frontend:
     build:
       context: frontend

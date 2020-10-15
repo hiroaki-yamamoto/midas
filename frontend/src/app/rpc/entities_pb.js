@@ -68,8 +68,9 @@ proto.entities.SymbolInfo.prototype.toObject = function(opt_includeInstance) {
 proto.entities.SymbolInfo.toObject = function(includeInstance, msg) {
   var f, obj = {
     symbol: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    base: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    quote: jspb.Message.getFieldWithDefault(msg, 3, "")
+    status: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    base: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    quote: jspb.Message.getFieldWithDefault(msg, 4, "")
   };
 
   if (includeInstance) {
@@ -112,9 +113,13 @@ proto.entities.SymbolInfo.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
-      msg.setBase(value);
+      msg.setStatus(value);
       break;
     case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setBase(value);
+      break;
+    case 4:
       var value = /** @type {string} */ (reader.readString());
       msg.setQuote(value);
       break;
@@ -154,17 +159,24 @@ proto.entities.SymbolInfo.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getBase();
+  f = message.getStatus();
   if (f.length > 0) {
     writer.writeString(
       2,
       f
     );
   }
-  f = message.getQuote();
+  f = message.getBase();
   if (f.length > 0) {
     writer.writeString(
       3,
+      f
+    );
+  }
+  f = message.getQuote();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
       f
     );
   }
@@ -190,10 +202,10 @@ proto.entities.SymbolInfo.prototype.setSymbol = function(value) {
 
 
 /**
- * optional string base = 2;
+ * optional string status = 2;
  * @return {string}
  */
-proto.entities.SymbolInfo.prototype.getBase = function() {
+proto.entities.SymbolInfo.prototype.getStatus = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
@@ -202,16 +214,16 @@ proto.entities.SymbolInfo.prototype.getBase = function() {
  * @param {string} value
  * @return {!proto.entities.SymbolInfo} returns this
  */
-proto.entities.SymbolInfo.prototype.setBase = function(value) {
+proto.entities.SymbolInfo.prototype.setStatus = function(value) {
   return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
 /**
- * optional string quote = 3;
+ * optional string base = 3;
  * @return {string}
  */
-proto.entities.SymbolInfo.prototype.getQuote = function() {
+proto.entities.SymbolInfo.prototype.getBase = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
@@ -220,8 +232,26 @@ proto.entities.SymbolInfo.prototype.getQuote = function() {
  * @param {string} value
  * @return {!proto.entities.SymbolInfo} returns this
  */
-proto.entities.SymbolInfo.prototype.setQuote = function(value) {
+proto.entities.SymbolInfo.prototype.setBase = function(value) {
   return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional string quote = 4;
+ * @return {string}
+ */
+proto.entities.SymbolInfo.prototype.getQuote = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.entities.SymbolInfo} returns this
+ */
+proto.entities.SymbolInfo.prototype.setQuote = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
 };
 
 

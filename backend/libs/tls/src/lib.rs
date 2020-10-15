@@ -13,7 +13,8 @@ use ::tonic_openssl::ALPN_H2_WIRE;
 use ::tower_util::BoxService;
 use ::types::GenericResult;
 
-pub fn init_tls_connection<A, B, C>(
+pub fn init_tls_connection<A, B>(
+  debug: bool,
   ca_path: A,
   dest_url: B,
 ) -> GenericResult<BoxService<Request<BoxBody>, Response<Body>, Error>>
@@ -24,14 +25,20 @@ where
 {
   let uri: Uri = dest_url.try_into()?;
   let ca = read_to_string(ca_path)?;
-  let ca = X509::from_pem(&ca.into_bytes()[..])?;
+  let ca = X509::from_pem(ca.as_bytes())?;
   let mut con = SslConnector::builder(SslMethod::tls())?;
   con.cert_store_mut().add_cert(ca)?;
   con.set_alpn_protos(ALPN_H2_WIRE)?;
 
   let mut http = HttpConnector::new();
   http.enforce_http(false);
-  let https = HttpsConnector::with_connector(http, con)?;
+  let mut https = HttpsConnector::with_connector(http, con)?;
+  if debug {
+    https.set_callback(|c, _| {
+      c.set_verify_hostname(false);
+      Ok(())
+    });
+  }
   let hyper = Client::builder().http2_only(true).build(https);
   let ret = tower::service_fn(move |mut req: Request<BoxBody>| {
     let uri = Uri::builder()

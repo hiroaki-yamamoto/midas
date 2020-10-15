@@ -10,16 +10,12 @@ use ::std::time::Duration;
 use ::tokio::net::TcpStream;
 use ::tokio::select;
 use ::tokio::time::interval;
+use ::tokio_native_tls::TlsStream;
 use ::tokio_tungstenite::{
-  connect_async, tungstenite as wsocket, WebSocketStream,
+  connect_async, stream::Stream, tungstenite as wsocket, WebSocketStream,
 };
-use ::tonic::transport::Channel;
-use ::tonic::Request;
 
 use ::config::DEFAULT_RECONNECT_INTERVAL;
-use ::rpc::entities::Exchanges;
-use ::rpc::symbol::symbol_client::SymbolClient;
-use ::rpc::symbol::QueryRequest;
 use ::types::{ret_on_err, SendableErrorResult};
 
 use super::constants::{
@@ -32,6 +28,8 @@ use super::entities::{
 use crate::errors::{MaximumAttemptExceeded, WebsocketError};
 use crate::traits::TradeObserver as TradeObserverTrait;
 
+type TLSWebSocket = WebSocketStream<Stream<TcpStream, TlsStream<TcpStream>>>;
+
 #[derive(Clone)]
 pub struct TradeObserver {
   id: u32,
@@ -41,37 +39,20 @@ pub struct TradeObserver {
 }
 
 impl TradeObserver {
-  pub async fn new(
+  pub fn new(
     broker: Broker,
     logger: Logger,
-    symbol_client: &mut SymbolClient<Channel>,
-  ) -> SendableErrorResult<Self> {
-    let symbols = ret_on_err!(
-      symbol_client
-        .query(Request::new(QueryRequest {
-          exchange: Exchanges::Binance as i32,
-          status: String::from("TRADING"),
-          symbols: vec![],
-        }))
-        .await
-    )
-    .into_inner()
-    .symbols
-    .into_iter()
-    .map(|item| item.symbol)
-    .collect();
-
-    return Ok(Self {
+    initial_symbols: Vec<String>,
+  ) -> Self {
+    return Self {
       id: random(),
       broker,
       logger,
-      symbols,
-    });
+      symbols: initial_symbols,
+    };
   }
 
-  async fn init_socket(
-    &self,
-  ) -> SendableErrorResult<WebSocketStream<TcpStream>> {
+  async fn init_socket(&self) -> SendableErrorResult<TLSWebSocket> {
     let (websocket, resp) = ret_on_err!(connect_async(WS_ENDPOINT).await);
     let status = resp.status();
     if !status.is_informational() {
@@ -82,7 +63,7 @@ impl TradeObserver {
 
   async fn init_subscription(
     &self,
-    socket: &mut WebSocketStream<TcpStream>,
+    socket: &mut TLSWebSocket,
   ) -> SendableErrorResult<()> {
     let mut inner = TradeSubRequestInner {
       id: self.id,
@@ -102,7 +83,7 @@ impl TradeObserver {
     return Ok(());
   }
 
-  async fn connect(&self) -> SendableErrorResult<WebSocketStream<TcpStream>> {
+  async fn connect(&self) -> SendableErrorResult<TLSWebSocket> {
     let mut interval =
       interval(Duration::from_secs(DEFAULT_RECONNECT_INTERVAL as u64));
     for _ in 0..20 {
@@ -126,7 +107,7 @@ impl TradeObserver {
 
   async fn update_symbols(
     &mut self,
-    socket: &mut WebSocketStream<TcpStream>,
+    socket: &mut TLSWebSocket,
     update_event: SymbolUpdateEvent,
   ) -> SendableErrorResult<()> {
     let mut sub_req_inner = TradeSubRequestInner {
@@ -202,7 +183,7 @@ impl TradeObserver {
 
   async fn handle_websocket_message(
     &self,
-    socket: &mut WebSocketStream<TcpStream>,
+    socket: &mut TLSWebSocket,
     msg: &wsocket::Message,
   ) {
     match msg {
@@ -247,7 +228,7 @@ impl TradeObserver {
 
   async fn handle_event(
     &mut self,
-    socket: &mut WebSocketStream<TcpStream>,
+    socket: &mut TLSWebSocket,
   ) -> SendableErrorResult<()> {
     let mut symbol_update =
       ret_on_err!(self.broker.subscribe(SYMBOL_UPDATE_EVENT).await);

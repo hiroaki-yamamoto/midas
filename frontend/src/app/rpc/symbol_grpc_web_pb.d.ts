@@ -16,6 +16,13 @@ export class SymbolClient {
                response: google_protobuf_empty_pb.Empty) => void
   ): grpcWeb.ClientReadableStream<google_protobuf_empty_pb.Empty>;
 
+  query(
+    request: symbol_pb.QueryRequest,
+    metadata: grpcWeb.Metadata | undefined,
+    callback: (err: grpcWeb.Error,
+               response: symbol_pb.QueryResponse) => void
+  ): grpcWeb.ClientReadableStream<symbol_pb.QueryResponse>;
+
 }
 
 export class SymbolPromiseClient {
@@ -27,6 +34,11 @@ export class SymbolPromiseClient {
     request: symbol_pb.RefreshRequest,
     metadata?: grpcWeb.Metadata
   ): Promise<google_protobuf_empty_pb.Empty>;
+
+  query(
+    request: symbol_pb.QueryRequest,
+    metadata?: grpcWeb.Metadata
+  ): Promise<symbol_pb.QueryResponse>;
 
 }
 

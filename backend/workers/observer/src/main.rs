@@ -1,14 +1,18 @@
 use ::clap::Clap;
+use ::futures::future::{select, Either};
+use ::libc::{SIGINT, SIGTERM};
 use ::nats::asynk::connect as new_broker;
 use ::slog::o;
-use ::tonic::transport::Channel;
-use ::url::Url;
+use ::tokio::signal::unix as signal;
+use ::tonic::Request;
 
 use ::config::{Config, DEFAULT_CONFIG_PATH};
 use ::exchanges::{binance, TradeObserver};
 use ::rpc::entities::Exchanges;
 use ::rpc::symbol::symbol_client::SymbolClient;
+use ::rpc::symbol::QueryRequest;
 use ::slog_builder::{build_debug, build_json};
+use ::tls::init_tls_connection;
 
 #[derive(Debug, Clap)]
 #[clap(author = "Hiroaki Yamamoto")]
@@ -29,31 +33,39 @@ async fn main() {
     false => build_json(),
   };
   let broker = new_broker(&config.broker_url).await.unwrap();
-  let parsed_symbol_url = Url::parse(&config.service_addresses.symbol).unwrap();
-  let tls = config
-    .tls
-    .load_client()
+  let tls = init_tls_connection(
+    config.debug,
+    config.tls.ca,
+    config.service_addresses.symbol,
+  )
+  .unwrap();
+  let mut symbol_client = SymbolClient::new(tls);
+  let symbols = symbol_client
+    .query(Request::new(QueryRequest {
+      exchange: Exchanges::Binance as i32,
+      status: String::from("TRADING"),
+      symbols: vec![],
+    }))
+    .await
     .unwrap()
-    .domain_name(parsed_symbol_url.domain().unwrap());
-  let channel =
-    Channel::from_shared(parsed_symbol_url.to_string().into_bytes())
-      .unwrap()
-      .tls_config(tls)
-      .unwrap()
-      .connect()
-      .await
-      .unwrap();
-  let mut symbol_client = SymbolClient::new(channel);
+    .into_inner()
+    .symbols
+    .into_iter()
+    .map(|item| item.symbol)
+    .collect();
   let exchange: Box<dyn TradeObserver> = match cmd_args.exchange {
-    Exchanges::Binance => Box::new(
-      binance::TradeObserver::new(
-        broker,
-        logger.new(o!("scope" => "Trade Observer")),
-        &mut symbol_client,
-      )
-      .await
-      .unwrap(),
-    ),
+    Exchanges::Binance => Box::new(binance::TradeObserver::new(
+      broker,
+      logger.new(o!("scope" => "Trade Observer")),
+      symbols,
+    )),
   };
-  let _ = exchange.start().await.unwrap();
+  let mut sig =
+    signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
+  let sig = Box::pin(sig.recv());
+  match select(exchange.start(), sig).await {
+    Either::Left((v, _)) => v,
+    Either::Right(_) => Ok(()),
+  }
+  .unwrap();
 }

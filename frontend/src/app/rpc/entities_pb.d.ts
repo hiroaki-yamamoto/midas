@@ -6,6 +6,9 @@ export class SymbolInfo extends jspb.Message {
   getSymbol(): string;
   setSymbol(value: string): SymbolInfo;
 
+  getStatus(): string;
+  setStatus(value: string): SymbolInfo;
+
   getBase(): string;
   setBase(value: string): SymbolInfo;
 
@@ -23,6 +26,7 @@ export class SymbolInfo extends jspb.Message {
 export namespace SymbolInfo {
   export type AsObject = {
     symbol: string,
+    status: string,
     base: string,
     quote: string,
   }

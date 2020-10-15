@@ -755,6 +755,7 @@ dependencies = [
  "serde_qs",
  "slog",
  "tokio",
+ "tokio-native-tls",
  "tokio-tungstenite",
  "tonic 0.3.1",
  "types",
@@ -1701,13 +1702,15 @@ dependencies = [
  "clap",
  "config",
  "exchanges",
+ "futures",
+ "libc",
  "nats",
  "rpc",
  "slog",
  "slog_builder",
+ "tls",
  "tokio",
  "tonic 0.3.1",
- "url",
 ]
 
 [[package]]
@@ -2999,6 +3002,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-native-tls"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd608593a919a8e05a7d1fc6df885e40f6a88d3a70a3a7eff23ff27964eda069"
+dependencies = [
+ "native-tls",
+ "tokio",
+]
+
+[[package]]
 name = "tokio-openssl"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3050,8 +3063,10 @@ checksum = "6d9e878ad426ca286e4dcae09cbd4e1973a7f8987d97570e2469703dd7f5720c"
 dependencies = [
  "futures-util",
  "log",
+ "native-tls",
  "pin-project",
  "tokio",
+ "tokio-native-tls",
  "tungstenite",
 ]
 
@@ -3435,6 +3450,7 @@ dependencies = [
  "httparse",
  "input_buffer",
  "log",
+ "native-tls",
  "rand 0.7.3",
  "sha-1 0.9.1",
  "url",

@@ -2,8 +2,8 @@ use ::async_trait::async_trait;
 use ::chrono::{DateTime, Utc};
 use ::futures::stream::Stream;
 use ::nats::asynk::Subscription;
-use ::rpc::entities::SymbolInfo;
 
+use ::rpc::entities::SymbolInfo;
 use ::types::SendableErrorResult;
 
 #[async_trait]

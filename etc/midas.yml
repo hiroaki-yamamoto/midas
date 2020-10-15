@@ -7,5 +7,5 @@ tls:
   cert: /etc/midas/tls/svc/devel.crt
   ca: /etc/midas/tls/svc/root-ca.pem
 serviceAddresses:
-  historical: https://service.historical:50000
-  symbol: https://service.symbol:50000
+  historical: https://historical_service:50000
+  symbol: https://symbol_service:50000
