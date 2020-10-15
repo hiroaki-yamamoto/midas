@@ -2,6 +2,7 @@ use ::clap::Clap;
 use ::nats::asynk::connect as new_broker;
 use ::slog::o;
 use ::tonic::transport::Channel;
+use ::url::Url;
 
 use ::config::{Config, DEFAULT_CONFIG_PATH};
 use ::exchanges::{binance, TradeObserver};
@@ -28,9 +29,14 @@ async fn main() {
     false => build_json(),
   };
   let broker = new_broker(&config.broker_url).await.unwrap();
-  let tls = config.tls.load_client().unwrap();
+  let parsed_symbol_url = Url::parse(&config.service_addresses.symbol).unwrap();
+  let tls = config
+    .tls
+    .load_client()
+    .unwrap()
+    .domain_name(parsed_symbol_url.domain().unwrap());
   let channel =
-    Channel::from_shared(config.service_addresses.symbol.into_bytes())
+    Channel::from_shared(parsed_symbol_url.to_string().into_bytes())
       .unwrap()
       .tls_config(tls)
       .unwrap()

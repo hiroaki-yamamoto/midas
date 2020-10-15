@@ -22,15 +22,17 @@ impl TLS {
   pub fn load_server(&self) -> GenericResult<ServerTlsConfig> {
     let prv_key = read_to_string(&self.prv_key)?;
     let cert = read_to_string(&self.cert)?;
-    let tlscfg =
-      ServerTlsConfig::new().identity(Identity::from_pem(cert, prv_key));
+    let ca = read_to_string(&self.cert)?;
+    let tlscfg = ServerTlsConfig::new()
+      .identity(Identity::from_pem(cert, prv_key))
+      .client_ca_root(Certificate::from_pem(ca));
     return Ok(tlscfg);
   }
 
   pub fn load_client(&self) -> GenericResult<ClientTlsConfig> {
-    let cert = read_to_string(&self.cert)?;
-    let cert = Certificate::from_pem(cert);
-    return Ok(ClientTlsConfig::new().ca_certificate(cert));
+    let ca = read_to_string(&self.ca)?;
+    let ca = Certificate::from_pem(ca);
+    return Ok(ClientTlsConfig::new().ca_certificate(ca));
   }
 }
 

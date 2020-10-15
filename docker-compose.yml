@@ -112,6 +112,7 @@ services:
     depends_on:
       - database
       - broker
+      - service.historical
   frontend:
     build:
       context: frontend
