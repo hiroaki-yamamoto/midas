@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: db-data
+spec:
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-data-claim
+spec:
+  accessModes:
+    - readWriteMany
+  volumeName: db-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: broker
+spec:
+  selector:
+    app: broker
+  # ports:
+  # - port: <Port>
+  #   targetPort: <Target Port>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broker
+  labels:
+    app: broker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: broker
+  template:
+    metadata:
+      labels:
+        app: broker
+    spec:
+      containers:
+        - name: broker
+          image: mongo
+          env:
+            - name: MONGO_INITDB_DATABASE
+              value: midas
+          volumeMounts:
+            - mountPath: "/data/db"
+              name: db-data
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+              claimName: db-data-claim
