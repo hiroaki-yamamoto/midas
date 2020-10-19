@@ -68,21 +68,7 @@ impl TradeObserver {
     if self.symbols.is_empty() {
       return Ok(());
     }
-    let mut inner = TradeSubRequestInner {
-      id: self.id,
-      params: vec![],
-    };
-    for symbol in &self.symbols {
-      inner
-        .params
-        .push(format!("{}@trade", symbol.to_lowercase()));
-    }
-    let req = TradeSubRequest::Subscribe(inner);
-    let payload = ret_on_err!(to_json(&req));
-    let payload = ret_on_err!(String::from_utf8(payload));
-    let req = wsocket::Message::Text(payload);
-    let _ = socket.send(req).await;
-    let _ = socket.flush().await;
+    let _ = self.subscribe(socket, self.symbols.to_owned()).await?;
     return Ok(());
   }
 
@@ -108,37 +94,64 @@ impl TradeObserver {
     return Err(Box::new(MaximumAttemptExceeded {}));
   }
 
+  async fn subscribe(
+    &self,
+    socket: &mut TLSWebSocket,
+    symbols: Vec<String>
+  ) -> SendableErrorResult<()> {
+    let symbols = symbols.into_iter()
+      .map(|symbol| format!("{}@trade", symbol.to_lowercase()));
+    let req = TradeSubRequestInner {
+      id: self.id,
+      params: symbols.collect()
+    };
+    let req = TradeSubRequest::Subscribe(req);
+    ::slog::debug!(self.logger, "Subscribe: {:?}", &req);
+    let req = ret_on_err!(to_json(&req));
+    let req = ret_on_err!(String::from_utf8(req));
+    let _ = socket.send(wsocket::Message::Text(req)).await;
+    let _ = socket.flush().await;
+    return Ok(());
+  }
+
+  async fn unsubscribe(
+    &self,
+    socket: &mut TLSWebSocket,
+    symbols: Vec<String>
+  ) -> SendableErrorResult<()> {
+    let symbols = symbols.into_iter()
+      .map(|symbol| format!("{}@trade", symbol.to_lowercase()));
+    let req = TradeSubRequestInner {
+      id: self.id,
+      params: symbols.collect()
+    };
+    let req = TradeSubRequest::Unsubscribe(req);
+    let req = ret_on_err!(to_json(&req));
+    let req = ret_on_err!(String::from_utf8(req));
+    let _ = socket.send(wsocket::Message::Text(req)).await;
+    let _ = socket.flush().await;
+    return Ok(());
+  }
+
   async fn update_symbols(
     &mut self,
     socket: &mut TLSWebSocket,
     update_event: SymbolUpdateEvent,
   ) -> SendableErrorResult<()> {
-    let mut sub_req_inner = TradeSubRequestInner {
-      id: self.id,
-      params: vec![],
-    };
-    let mut unsub_req_inner = sub_req_inner.clone();
-    for to_sub in &update_event.to_add {
-      sub_req_inner
-        .params
-        .push(format!("{}@trade", to_sub.to_lowercase()));
+    if !update_event.to_add.is_empty() {
+      self.symbols.extend(update_event.to_add.to_owned());
+      let _ = self.subscribe(socket, update_event.to_add).await;
     }
-    self.symbols.extend(update_event.to_add);
-    for to_unsub in &update_event.to_remove {
-      let sub_name = format!("{}@trade", to_unsub.to_lowercase());
-      unsub_req_inner.params.push(sub_name.clone());
-      let sym_position =
-        self.symbols.iter().position(move |name| name == &sub_name);
-      if let Some(pos) = sym_position {
-        self.symbols.remove(pos);
+    if !update_event.to_remove.is_empty() {
+      for to_unsub in &update_event.to_remove {
+        let sym_position =
+          self.symbols.iter().position(move |name| name == to_unsub);
+        if let Some(pos) = sym_position {
+          self.symbols.remove(pos);
+        }
       }
+      let _ = self.unsubscribe(socket, update_event.to_remove).await;
     }
-    let sub_req = TradeSubRequest::Subscribe(sub_req_inner);
-    let unsub_req = TradeSubRequest::Unsubscribe(unsub_req_inner);
-    let sub_payload = ret_on_err!(to_json(&sub_req));
-    let unsub_payload = ret_on_err!(to_json(&unsub_req));
-    let _ = socket.send(wsocket::Message::Binary(unsub_payload)).await;
-    let _ = socket.send(wsocket::Message::Binary(sub_payload)).await;
     return Ok(());
   }
 
@@ -150,6 +163,9 @@ impl TradeObserver {
           "Failed to decode the payload: {}. Ignoring",
           e
         );
+        let data = String::from_utf8(Vec::from(data))
+          .unwrap_or(String::from("[FAILED TO DECODE]"));
+        ::slog::debug!(self.logger, "Data: {}", data);
         return;
       }
       Ok(v) => v,
@@ -168,6 +184,7 @@ impl TradeObserver {
           }
           Ok(v) => v,
         };
+        ::slog::debug!(self.logger, "Trade: {:?}", trade);
         let msg = match to_msgpack(&trade) {
           Err(e) => {
             ::slog::warn!(

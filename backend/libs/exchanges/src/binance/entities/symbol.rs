@@ -57,4 +57,8 @@ impl SymbolUpdateEvent {
       to_remove: (&old - &new).into_iter().collect(),
     };
   }
+
+  pub fn has_diff(&self) -> bool {
+    return !self.to_add.is_empty() || !self.to_remove.is_empty();
+  }
 }

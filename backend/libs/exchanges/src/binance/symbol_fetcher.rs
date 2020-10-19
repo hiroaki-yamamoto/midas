@@ -73,6 +73,9 @@ impl SymbolFetcher {
   {
     let diff =
       SymbolUpdateEvent::new(new_symbols.into_iter(), old_symbols.into_iter());
+    if !diff.has_diff() {
+      return;
+    }
     let msg = match to_msgpack(&diff) {
       Err(e) => {
         ::slog::error!(

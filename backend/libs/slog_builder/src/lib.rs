@@ -1,5 +1,6 @@
 use ::slog::*;
 use ::slog_atomic::*;
+use ::slog_async::*;
 
 fn new_root_logger(
   drain: Box<dyn Drain<Err = Never, Ok = ()> + Send>,
@@ -16,10 +17,12 @@ fn new_root_logger(
 pub fn build_debug() -> (Logger, AtomicSwitchCtrl) {
   let dec = ::slog_term::TermDecorator::new().build();
   let drain = ::slog_term::FullFormat::new(dec).build().fuse();
+  let drain = Async::new(drain).chan_size(8192).build().fuse();
   return new_root_logger(Box::new(drain));
 }
 
 pub fn build_json() -> (Logger, AtomicSwitchCtrl) {
   let drain = ::slog_json::Json::new(::std::io::stdout()).build().fuse();
+  let drain = Async::new(drain).chan_size(8192).build().fuse();
   return new_root_logger(Box::new(drain));
 }

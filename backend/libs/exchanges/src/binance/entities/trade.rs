@@ -7,7 +7,7 @@ use ::types::SendableErrorResult;
 use crate::casting::{cast_datetime, cast_f64};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct TradeSubRequestInner {
+pub(crate) struct TradeSubRequestInner{
   pub id: u32,
   pub params: Vec<String>,
 }
