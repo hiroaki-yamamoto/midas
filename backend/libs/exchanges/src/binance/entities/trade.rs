@@ -8,7 +8,7 @@ use crate::casting::{cast_datetime, cast_f64};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct TradeSubRequestInner{
-  pub id: u32,
+  pub id: u64,
   pub params: Vec<String>,
 }
 
