@@ -68,11 +68,11 @@ impl SymbolFetcher {
 
   async fn publish_update_event<S, T>(&self, new_symbols: S, old_symbols: T)
   where
-    S: IntoIterator<Item = Symbol>,
-    T: IntoIterator<Item = Symbol>,
+    S: IntoIterator<Item = Symbol> + Clone,
+    T: IntoIterator<Item = Symbol> + Clone,
   {
     let diff =
-      SymbolUpdateEvent::new(new_symbols.into_iter(), old_symbols.into_iter());
+      SymbolUpdateEvent::new(new_symbols, old_symbols);
     if !diff.has_diff() {
       return;
     }

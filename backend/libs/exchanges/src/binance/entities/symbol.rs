@@ -47,17 +47,17 @@ pub struct SymbolUpdateEvent {
 impl SymbolUpdateEvent {
   pub fn new<S, T>(new: S, old: T) -> Self
   where
-    S: IntoIterator<Item = Symbol>,
-    T: IntoIterator<Item = Symbol>,
+    S: IntoIterator<Item = Symbol> + Clone,
+    T: IntoIterator<Item = Symbol> + Clone,
   {
-    let new_keys: HashSet<String> = new.into_iter().map(|item| item.symbol).collect();
-    let old_keys: HashSet<String> = old.into_iter().map(|item| item.symbol).collect();
+    let new_keys: HashSet<String> = new.clone().into_iter().map(|item| item.symbol).collect();
+    let old_keys: HashSet<String> = old.clone().into_iter().map(|item| item.symbol).collect();
 
     let to_add: Vec<String> = (&new_keys - &old_keys).into_iter().collect();
-    let to_add = new.into_iter().filter(move |item| { new_keys.contains(&item.symbol) } ).collect();
+    let to_add = new.into_iter().filter(move |item| { to_add.contains(&item.symbol) } ).collect();
 
     let to_remove: Vec<String> = (&old_keys - &new_keys).into_iter().collect();
-    let to_remove = old.into_iter().filter(move |item| { old_keys.contains(&item.symbol) }).collect();
+    let to_remove = old.into_iter().filter(move |item| { to_remove.contains(&item.symbol) }).collect();
     return Self {to_add,  to_remove};
   }
 
