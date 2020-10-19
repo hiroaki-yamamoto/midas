@@ -21,22 +21,30 @@ use super::constants::{
 };
 use super::entities::{Klines, KlinesWithInfo, TradeTime};
 
-use crate::traits::HistoryRecorder as HistRecTrait;
+use crate::traits::{HistoryRecorder as HistRecTrait, Recorder};
 
 #[derive(Debug, Clone)]
 pub struct HistoryRecorder {
   col: Collection,
+  db: Database,
   broker: NatsConnection,
   logger: Logger,
 }
 
+impl Recorder for HistoryRecorder {
+  fn get_database(&self) -> &Database {
+      return &self.db;
+  }
+  fn get_col_name(&self) -> &str {
+      return self.col.name();
+  }
+}
+
 impl HistoryRecorder {
-  pub fn new(db: Database, logger: Logger, broker: NatsConnection) -> Self {
-    let ret = Self {
-      col: db.collection("binance.klines"),
-      broker,
-      logger,
-    };
+  pub async fn new(db: Database, logger: Logger, broker: NatsConnection) -> Self {
+    let col = db.collection("binance.klines");
+    let ret = Self {db, col, broker, logger};
+    ret.update_indices(&["open_time", "close_time", "symbol"]).await;
     return ret;
   }
 

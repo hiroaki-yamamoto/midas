@@ -34,7 +34,7 @@ async fn main() -> GenericResult<()> {
       db,
       logger.new(o!("scope" => "history_fetcher")),
       broker,
-    ))];
+    ).await)];
   let fetchers = fetchers.iter().map(|fetcher| fetcher.spawn());
   let mut sig = signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT))?;
   let sig = Box::pin(sig.recv());
