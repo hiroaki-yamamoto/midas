@@ -2,6 +2,7 @@ version: "3.8"
 services:
   database:
     image: mongo
+    restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: midas
     volumes:
@@ -9,8 +10,10 @@ services:
       - "./etc/mongo/scripts:/docker-entrypoint-initdb.d"
   broker:
     image: nats-streaming:scratch
+    restart: unless-stopped
   proxy:
     image: envoyproxy/envoy-alpine:v1.16-latest
+    restart: unless-stopped
     command:
       - -c
       - /etc/midas/envoy.yaml
@@ -27,6 +30,7 @@ services:
       - 50001:50001
   express:
     image: mongo-express
+    restart: unless-stopped
     environment:
       ME_CONFIG_MONGODB_SERVER: database
     ports:
@@ -45,6 +49,7 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
+    restart: unless-stopped
     depends_on:
       - database
       - broker
@@ -62,6 +67,7 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
+    restart: unless-stopped
     depends_on:
       - database
       - broker
@@ -77,6 +83,7 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
+    restart: unless-stopped
     depends_on:
       - database
       - broker
@@ -92,6 +99,7 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
+    restart: unless-stopped
     depends_on:
       - database
       - broker
@@ -109,6 +117,7 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
+    restart: unless-stopped
     depends_on:
       - database
       - broker
@@ -116,6 +125,7 @@ services:
   frontend:
     build:
       context: frontend
+    restart: unless-stopped
     volumes:
       - ./frontend:/opt/code
       - /opt/code/node_modules

@@ -65,6 +65,9 @@ impl TradeObserver {
     &self,
     socket: &mut TLSWebSocket,
   ) -> SendableErrorResult<()> {
+    if self.symbols.is_empty() {
+      return Ok(());
+    }
     let mut inner = TradeSubRequestInner {
       id: self.id,
       params: vec![],
