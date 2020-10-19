@@ -68,8 +68,8 @@ impl SymbolFetcher {
 
   async fn publish_update_event<S, T>(&self, new_symbols: S, old_symbols: T)
   where
-    S: IntoIterator<Item = String>,
-    T: IntoIterator<Item = String>,
+    S: IntoIterator<Item = Symbol>,
+    T: IntoIterator<Item = Symbol>,
   {
     let diff =
       SymbolUpdateEvent::new(new_symbols.into_iter(), old_symbols.into_iter());
@@ -103,18 +103,16 @@ impl SymbolFetcherTrait for SymbolFetcher {
     let mut url: url::Url = ret_on_err!(REST_ENDPOINT.parse());
     url = ret_on_err!(url.join("/api/v3/exchangeInfo"));
     let resp = ret_on_err!(reqwest::get(url.clone()).await);
-    let old_symbols: Vec<String> =
+    let old_symbols: Vec<Symbol> =
       ret_on_err!(self.col.find(doc! {}, None).await)
         .filter_map(|res| async { res.ok() })
-        .filter_map(|doc| async move { doc.get("symbol").cloned() })
-        .filter_map(|sym| async move { sym.as_str().map(|s| String::from(s)) })
+        .filter_map(|doc| async move { from_bson::<Symbol>(Bson::Document(doc)).ok() })
         .collect()
         .await;
     let resp_status = resp.status();
     if resp_status.is_success() {
       let info: ExchangeInfo = ret_on_err!(resp.json().await);
-      let new_symbols =
-        info.symbols.clone().into_iter().map(|info| info.symbol);
+      let new_symbols = info.symbols.clone();
       let update_event = self.publish_update_event(new_symbols, old_symbols);
       ret_on_err!(self.col.delete_many(doc! {}, None).await);
       let empty = Array::new();

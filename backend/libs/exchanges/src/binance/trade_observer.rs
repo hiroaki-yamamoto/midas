@@ -68,7 +68,7 @@ impl TradeObserver {
     if self.symbols.is_empty() {
       return Ok(());
     }
-    let _ = self.subscribe(socket, self.symbols.to_owned()).await?;
+    let _ = self.subscribe(socket, &self.symbols).await?;
     return Ok(());
   }
 
@@ -97,7 +97,7 @@ impl TradeObserver {
   async fn subscribe(
     &self,
     socket: &mut TLSWebSocket,
-    symbols: Vec<String>
+    symbols: &Vec<String>
   ) -> SendableErrorResult<()> {
     let symbols = symbols.into_iter()
       .map(|symbol| format!("{}@trade", symbol.to_lowercase()));
@@ -117,7 +117,7 @@ impl TradeObserver {
   async fn unsubscribe(
     &self,
     socket: &mut TLSWebSocket,
-    symbols: Vec<String>
+    symbols: &Vec<String>
   ) -> SendableErrorResult<()> {
     let symbols = symbols.into_iter()
       .map(|symbol| format!("{}@trade", symbol.to_lowercase()));
@@ -138,19 +138,30 @@ impl TradeObserver {
     socket: &mut TLSWebSocket,
     update_event: SymbolUpdateEvent,
   ) -> SendableErrorResult<()> {
-    if !update_event.to_add.is_empty() {
-      self.symbols.extend(update_event.to_add.to_owned());
-      let _ = self.subscribe(socket, update_event.to_add).await;
+    let to_add: Vec<String> = update_event
+      .to_add
+      .into_iter()
+      .filter(|item| item.status == "TRADING")
+      .map(|item| item.symbol)
+      .collect();
+    let to_remove: Vec<String> = update_event.to_remove
+      .into_iter()
+      .filter(|item| item.status == "TRADING")
+      .map(|item| item.symbol)
+      .collect();
+    if !to_add.is_empty() {
+      let _ = self.subscribe(socket, &to_add).await;
+      self.symbols.extend(to_add);
     }
-    if !update_event.to_remove.is_empty() {
-      for to_unsub in &update_event.to_remove {
+    if !to_remove.is_empty() {
+      let _ = self.unsubscribe(socket, &to_remove).await;
+      for to_unsub in &to_remove {
         let sym_position =
           self.symbols.iter().position(move |name| name == to_unsub);
         if let Some(pos) = sym_position {
           self.symbols.remove(pos);
         }
       }
-      let _ = self.unsubscribe(socket, update_event.to_remove).await;
     }
     return Ok(());
   }
