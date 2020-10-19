@@ -15,7 +15,7 @@ use super::constants::{REST_ENDPOINT, SYMBOL_UPDATE_EVENT};
 use super::entities::{ExchangeInfo, Symbol, SymbolUpdateEvent};
 use crate::entities::ListSymbolStream;
 use crate::errors::StatusFailure;
-use crate::traits::SymbolFetcher as SymbolFetcherTrait;
+use crate::traits::{SymbolFetcher as SymbolFetcherTrait, Recorder};
 
 const SYMBOL_FETCHER_RECORD_COL_NAME: &'static str = "binance.symbol";
 
@@ -23,16 +23,25 @@ const SYMBOL_FETCHER_RECORD_COL_NAME: &'static str = "binance.symbol";
 pub struct SymbolFetcher {
   broker: Broker,
   col: Collection,
+  db: Database,
   log: Logger,
 }
 
+impl Recorder for SymbolFetcher {
+  fn get_database(&self) -> &Database {
+      return &self.db;
+  }
+  fn get_col_name(&self) -> &str {
+    return &self.col.name();
+  }
+}
+
 impl SymbolFetcher {
-  pub fn new(log: Logger, broker: Broker, db: Database) -> Self {
-    return Self {
-      broker,
-      col: db.collection(SYMBOL_FETCHER_RECORD_COL_NAME),
-      log,
-    };
+  pub async fn new(log: Logger, broker: Broker, db: Database) -> Self {
+    let col = db.collection(SYMBOL_FETCHER_RECORD_COL_NAME);
+    let ret = Self {broker, db, col, log};
+    ret.update_indices(&["symbol"]).await;
+    return ret;
   }
   pub async fn get(
     &self,

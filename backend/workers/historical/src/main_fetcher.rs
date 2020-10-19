@@ -41,7 +41,7 @@ async fn main() -> GenericResult<()> {
         logger.new(o!("scope" => "SymbolFetcher")),
         broker,
         db,
-      ),
+      ).await,
     )
     .await?,
   )];

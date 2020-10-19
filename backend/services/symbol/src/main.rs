@@ -37,7 +37,7 @@ async fn main() -> GenericResult<()> {
   let broker = connect_broker(&cfg.broker_url).await?;
   let host: SocketAddr = cfg.host.parse()?;
   let svc =
-    Service::new(&db, broker, logger.new(o!("scope" => "SymbolService")));
+    Service::new(&db, broker, logger.new(o!("scope" => "SymbolService"))).await;
   let svc = SymbolServer::new(svc);
   info!(logger, "Opened the server on {}", host);
   RPCServer::builder()

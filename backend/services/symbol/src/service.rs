@@ -18,13 +18,13 @@ pub struct Service {
 }
 
 impl Service {
-  pub fn new(db: &Database, broker: Broker, log: Logger) -> Self {
+  pub async fn new(db: &Database, broker: Broker, log: Logger) -> Self {
     return Self {
       binance: binance::SymbolFetcher::new(
         log.new(o!("scope" => "BinanceSymbolFetcher")),
         broker.clone(),
         db.clone(),
-      ),
+      ).await,
     };
   }
 

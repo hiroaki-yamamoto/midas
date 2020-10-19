@@ -47,7 +47,7 @@ impl Service {
         log.new(o!("exchange" => "Binance", "scope" => "SymbolFetch")),
         nats.clone(),
         db.clone(),
-      ),
+      ).await,
     )
     .await?;
     let binance = ExchangeManager::new(
