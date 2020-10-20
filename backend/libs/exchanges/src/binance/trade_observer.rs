@@ -17,14 +17,14 @@ use ::tokio_tungstenite::{
   connect_async, stream::Stream, tungstenite as wsocket, WebSocketStream,
 };
 
-use ::config::DEFAULT_RECONNECT_INTERVAL;
+use ::config::{DEFAULT_RECONNECT_INTERVAL};
 use ::types::{ret_on_err, SendableErrorResult};
 
 use super::constants::{
-  SYMBOL_UPDATE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
+  SYMBOL_ADD_EVENT, SYMBOL_REMOVE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
 };
 use super::entities::{
-  StreamEvent, SymbolUpdateEvent, Trade, TradeSubRequest, TradeSubRequestInner,
+  StreamEvent, Trade, TradeSubRequest, TradeSubRequestInner, Symbol
 };
 
 use crate::errors::{MaximumAttemptExceeded, WebsocketError};

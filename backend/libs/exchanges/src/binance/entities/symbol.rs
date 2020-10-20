@@ -1,5 +1,3 @@
-use ::std::collections::HashSet;
-
 use ::serde::{Deserialize, Serialize};
 
 use ::rpc::entities::SymbolInfo;
@@ -35,33 +33,5 @@ impl Symbol {
       quote: self.quote_asset,
       status: self.status,
     };
-  }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SymbolUpdateEvent {
-  pub to_add: Vec<Symbol>,
-  pub to_remove: Vec<Symbol>,
-}
-
-impl SymbolUpdateEvent {
-  pub fn new<S, T>(new: S, old: T) -> Self
-  where
-    S: IntoIterator<Item = Symbol> + Clone,
-    T: IntoIterator<Item = Symbol> + Clone,
-  {
-    let new_keys: HashSet<String> = new.clone().into_iter().map(|item| item.symbol).collect();
-    let old_keys: HashSet<String> = old.clone().into_iter().map(|item| item.symbol).collect();
-
-    let to_add: Vec<String> = (&new_keys - &old_keys).into_iter().collect();
-    let to_add = new.into_iter().filter(move |item| { to_add.contains(&item.symbol) } ).collect();
-
-    let to_remove: Vec<String> = (&old_keys - &new_keys).into_iter().collect();
-    let to_remove = old.into_iter().filter(move |item| { to_remove.contains(&item.symbol) }).collect();
-    return Self {to_add,  to_remove};
-  }
-
-  pub fn has_diff(&self) -> bool {
-    return !self.to_add.is_empty() || !self.to_remove.is_empty();
   }
 }

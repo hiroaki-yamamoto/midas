@@ -1,18 +1,19 @@
 use ::async_trait::async_trait;
-use ::futures::future::join;
+use ::futures::future::{join};
 use ::futures::stream::StreamExt;
 use ::mongodb::bson::{
   de::Result as BsonDeResult, doc, from_bson, to_bson, Array, Bson, Document,
 };
 use ::mongodb::{error::Result as MongoResult, Collection, Database};
 use ::nats::asynk::Connection as Broker;
-use ::rmp_serde::to_vec as to_msgpack;
 use ::rpc::entities::SymbolInfo;
 use ::slog::Logger;
 use ::types::{ret_on_err, SendableErrorResult};
 
-use super::constants::{REST_ENDPOINT, SYMBOL_UPDATE_EVENT};
-use super::entities::{ExchangeInfo, Symbol, SymbolUpdateEvent};
+use super::constants::{REST_ENDPOINT};
+use super::entities::{ExchangeInfo, Symbol};
+use super::managers::SymbolUpdateEventManager;
+
 use crate::entities::ListSymbolStream;
 use crate::errors::StatusFailure;
 use crate::traits::{SymbolFetcher as SymbolFetcherTrait, Recorder};
@@ -65,36 +66,6 @@ impl SymbolFetcher {
       .collect();
     return Ok(ret);
   }
-
-  async fn publish_update_event<S, T>(&self, new_symbols: S, old_symbols: T)
-  where
-    S: IntoIterator<Item = Symbol> + Clone,
-    T: IntoIterator<Item = Symbol> + Clone,
-  {
-    let diff =
-      SymbolUpdateEvent::new(new_symbols, old_symbols);
-    if !diff.has_diff() {
-      return;
-    }
-    let msg = match to_msgpack(&diff) {
-      Err(e) => {
-        ::slog::error!(
-          self.log,
-          "Failed to encode the payload for update event: {}",
-          e
-        );
-        return;
-      }
-      Ok(v) => v,
-    };
-    match self.broker.publish(SYMBOL_UPDATE_EVENT, &msg[..]).await {
-      Err(e) => {
-        ::slog::error!(self.log, "Failed to publish the update event: {}", e);
-        return;
-      }
-      Ok(_) => {}
-    }
-  }
 }
 
 #[async_trait]
@@ -113,7 +84,11 @@ impl SymbolFetcherTrait for SymbolFetcher {
     if resp_status.is_success() {
       let info: ExchangeInfo = ret_on_err!(resp.json().await);
       let new_symbols = info.symbols.clone();
-      let update_event = self.publish_update_event(new_symbols, old_symbols);
+      let update_event_manager = SymbolUpdateEventManager::new(
+        &self.log, &self.broker, new_symbols, old_symbols
+      );
+      let log = self.log.clone();
+      let update_event = update_event_manager.publish_changes();
       ret_on_err!(self.col.delete_many(doc! {}, None).await);
       let empty = Array::new();
       let serialized: Vec<Document> = ret_on_err!(to_bson(&info.symbols))
