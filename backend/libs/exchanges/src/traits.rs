@@ -65,7 +65,10 @@ pub trait HistoryRecorder {
 
 #[async_trait]
 pub trait TradeObserver {
-  async fn start(&self) -> SendableErrorResult<()>;
+  async fn start(
+    &self,
+    initial_symbols: Option<Vec<String>>
+  ) -> SendableErrorResult<()>;
   async fn subscribe(&self) -> ::std::io::Result<Subscription>;
 }
 

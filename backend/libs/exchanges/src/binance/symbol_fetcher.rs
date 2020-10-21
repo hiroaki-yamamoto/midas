@@ -87,7 +87,6 @@ impl SymbolFetcherTrait for SymbolFetcher {
       let update_event_manager = SymbolUpdateEventManager::new(
         &self.log, &self.broker, new_symbols, old_symbols
       );
-      let log = self.log.clone();
       let update_event = update_event_manager.publish_changes();
       ret_on_err!(self.col.delete_many(doc! {}, None).await);
       let empty = Array::new();

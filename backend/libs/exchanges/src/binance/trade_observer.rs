@@ -3,8 +3,8 @@ use ::std::collections::HashMap;
 use ::async_trait::async_trait;
 use ::futures::sink::SinkExt;
 use ::futures::stream::StreamExt;
+use ::futures::join;
 use ::nats::asynk::{Connection as Broker, Subscription as NatsSub};
-use ::rand::random;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
@@ -24,7 +24,8 @@ use super::constants::{
   SYMBOL_ADD_EVENT, SYMBOL_REMOVE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
 };
 use super::entities::{
-  StreamEvent, Trade, TradeSubRequest, TradeSubRequestInner, Symbol
+  StreamEvent, Trade, TradeSubRequest, TradeSubRequestInner, Symbol,
+  StreamResult,
 };
 
 use crate::errors::{MaximumAttemptExceeded, WebsocketError};
@@ -32,44 +33,51 @@ use crate::traits::TradeObserver as TradeObserverTrait;
 
 type TLSWebSocket = WebSocketStream<Stream<TcpStream, TlsStream<TcpStream>>>;
 
+const NUM_SESSION: usize = 10;
+
 #[derive(Clone)]
 pub struct TradeObserver {
   broker: Broker,
   logger: Logger,
-  symbols: HashMap<String, u64>,
+  symbols: Vec<Vec<String>>,
 }
 
 impl TradeObserver {
   pub fn new(
     broker: Broker,
     logger: Logger,
-    initial_symbols: Vec<String>,
   ) -> Self {
-    let mut me =  Self {
+    let me =  Self {
       broker,
       logger,
-      symbols: HashMap::new(),
+      symbols: vec![],
     };
-    for symbol in initial_symbols {
-      me.symbols.insert(symbol, me.generate_id());
-    }
     return me;
   }
 
-fn generate_id(&self) -> u64 {
-  let mut is_dupe = true;
-  let mut id: u64 = 0;
-  while is_dupe {
-    id = random();
-    match self.symbols.values().position(|item| *item == id) {
-      None => {
-        is_dupe = false;
-      }
-      Some(_) => {}
+  fn add_symbol(&mut self, symbol: &String) -> usize {
+    if self.symbols.len() < NUM_SESSION {
+      self.symbols.push(vec![symbol.clone()]);
+      return self.symbols.len() - 1;
     }
+    let (index, most_bored) = self.symbols
+      .iter_mut()
+      .enumerate()
+      .min_by_key(|(_, x)| x.len())
+      .unwrap();
+    most_bored.push(symbol.clone());
+    return index;
   }
-  return id;
-}
+
+  fn get_symbol_index(&self, symbol: &String) -> Option<(usize, usize)> {
+    for (index, symbols) in self.symbols.iter().enumerate() {
+      match symbols.iter().position(|s| s == symbol) {
+        None => {continue;},
+        Some(pos) => {return Some((index, pos))}
+      }
+    }
+    return None
+  }
 
   async fn init_socket(&self) -> SendableErrorResult<TLSWebSocket> {
     let (websocket, resp) = ret_on_err!(connect_async(WS_ENDPOINT).await);
@@ -80,18 +88,10 @@ fn generate_id(&self) -> u64 {
     return Ok(websocket);
   }
 
-  async fn init_subscription(
-    &self,
-    socket: &mut TLSWebSocket,
-  ) -> SendableErrorResult<()> {
-    if self.symbols.is_empty() {
-      return Ok(());
-    }
-    let _ = self.subscribe(socket, &self.symbols).await?;
-    return Ok(());
-  }
-
-  async fn connect(&self) -> SendableErrorResult<TLSWebSocket> {
+  async fn connect(
+    &mut self,
+    initial_symbols: Option<Vec<String>>
+  ) -> SendableErrorResult<TLSWebSocket> {
     let mut interval =
       interval(Duration::from_secs(DEFAULT_RECONNECT_INTERVAL as u64));
     for _ in 0..20 {
@@ -107,87 +107,83 @@ fn generate_id(&self) -> u64 {
         }
         Ok(v) => v,
       };
-      let _ = self.init_subscription(&mut socket).await;
+      let initial_symbols = match initial_symbols {
+        None => self.symbols.clone().into_iter().flatten().collect(),
+        Some(initial_symbols) => initial_symbols,
+      };
+      self.symbols.clear();
+      let _ = self.subscribe(&mut socket, initial_symbols).await;
       return Ok(socket);
     }
     return Err(Box::new(MaximumAttemptExceeded {}));
   }
 
   async fn subscribe(
-    &self,
+    &mut self,
     socket: &mut TLSWebSocket,
-    symbols: &HashMap<String, u64>
+    symbols: Vec<String>
   ) -> SendableErrorResult<()> {
-    for (symbol, id) in symbols.into_iter() {
-      let stream = format!("{}@trade", symbol.to_lowercase());
-      let req = TradeSubRequestInner {id: *id, params: vec![stream] };
+    let mut map: HashMap<usize, Vec<String>> = HashMap::new();
+    for symbol in symbols {
+      let index = self.add_symbol(&symbol);
+      match map.get_mut(&index) {
+        None => { map.insert(index, vec![symbol]); },
+        Some(a) => { a.push(symbol); }
+      }
+    }
+    let mut timer = interval(Duration::from_secs(1));
+    for (id, symbols) in map.into_iter() {
+      let params: Vec<String> = symbols
+        .into_iter()
+        .map(|item| format!("{}@trade", item.to_lowercase()))
+        .collect();
+      let id = id as u64;
+      let req = TradeSubRequestInner { id, params };
       let req = TradeSubRequest::Subscribe(req);
       ::slog::debug!(self.logger, "Subscribe: {:?}", &req);
       let req = ret_on_err!(to_json(&req));
       let req = ret_on_err!(String::from_utf8(req));
       let _ = socket.send(wsocket::Message::Text(req)).await;
       let _ = socket.flush().await;
+      let _ = timer.tick().await;
     }
     return Ok(());
   }
 
   async fn unsubscribe(
-    &self,
+    &mut self,
     socket: &mut TLSWebSocket,
-    symbols: &HashMap<String, u64>
+    symbols: Vec<String>
   ) -> SendableErrorResult<()> {
-    for (symbol, id) in symbols.into_iter() {
-      let stream = format!("{}@trade", symbol.to_lowercase());
-      let req = TradeSubRequestInner {id: *id, params: vec![stream] };
+    let mut map: HashMap<usize, Vec<String>> = HashMap::new();
+    for symbol in symbols {
+      match self.get_symbol_index(&symbol) {
+        None => {continue;},
+        Some((id, col_index)) => {
+          match map.get_mut(&id) {
+            None => { map.insert(id, vec![symbol]); },
+            Some(v) => { v.push(symbol); }
+          }
+          if let Some(a) = self.symbols.get_mut(id) {
+            a.remove(col_index);
+          }
+        }
+      };
+    }
+    let mut timer = interval(Duration::from_secs(1));
+    for (id, symbols) in map.into_iter() {
+      let params: Vec<String> = symbols
+        .into_iter()
+        .map(|item| format!("{}@trade", item.to_lowercase()))
+        .collect();
+      let req = TradeSubRequestInner { id: id as u64, params };
       let req = TradeSubRequest::Unsubscribe(req);
-      ::slog::debug!(self.logger, "Subscribe: {:?}", &req);
+      ::slog::debug!(self.logger, "Unsubscribe: {:?}", &req);
       let req = ret_on_err!(to_json(&req));
       let req = ret_on_err!(String::from_utf8(req));
       let _ = socket.send(wsocket::Message::Text(req)).await;
       let _ = socket.flush().await;
-    }
-    return Ok(());
-  }
-
-  async fn update_symbols(
-    &mut self,
-    socket: &mut TLSWebSocket,
-    update_event: SymbolUpdateEvent,
-  ) -> SendableErrorResult<()> {
-    let mut new_ids = vec![];
-    let to_add: HashMap<String, u64> = update_event
-      .to_add
-      .into_iter()
-      .filter(|item| item.status == "TRADING")
-      .map(|item| {
-        let mut id = self.generate_id();
-        while new_ids.contains(&id) {
-          id = self.generate_id();
-        }
-        new_ids.push(id);
-        return (item.symbol, id);
-      })
-      .collect();
-    let to_remove: HashMap<String, u64> = update_event.to_remove
-      .into_iter()
-      .filter(|item| item.status == "TRADING")
-      .filter_map(|item| {
-        let id = match self.symbols.get(&item.symbol) {
-          None => return None,
-          Some(id) => id
-        };
-        return Some((item.symbol, *id));
-      })
-      .collect();
-    if !to_add.is_empty() {
-      let _ = self.subscribe(socket, &to_add).await;
-      self.symbols.extend(to_add);
-    }
-    if !to_remove.is_empty() {
-      let _ = self.unsubscribe(socket, &to_remove).await;
-      for (to_unsub, _) in &to_remove {
-        self.symbols.remove(to_unsub);
-      }
+      let _ = timer.tick().await;
     }
     return Ok(());
   }
@@ -239,7 +235,7 @@ fn generate_id(&self) -> u64 {
   }
 
   async fn handle_websocket_message(
-    &self,
+    &mut self,
     socket: &mut TLSWebSocket,
     msg: &wsocket::Message,
   ) {
@@ -266,7 +262,7 @@ fn generate_id(&self) -> u64 {
           ::slog::warn!(self.logger, "Closing connection...");
         }
         ::slog::info!(self.logger, "Reconnecting...");
-        *socket = match self.connect().await {
+        *socket = match self.connect(None).await {
           Err(e) => {
             ::slog::error!(self.logger, "Failed to connect: {}", e);
             return;
@@ -287,20 +283,57 @@ fn generate_id(&self) -> u64 {
     &mut self,
     socket: &mut TLSWebSocket,
   ) -> SendableErrorResult<()> {
-    let mut symbol_update =
-      ret_on_err!(self.broker.subscribe(SYMBOL_UPDATE_EVENT).await);
+    let (symbol_add_event, symbol_remove_evnet) = join!(
+      self.broker.queue_subscribe(SYMBOL_ADD_EVENT, "trade_observer"),
+      self.broker.subscribe(SYMBOL_REMOVE_EVENT)
+    );
+    let (mut symbol_add_event, mut symbol_remove_evnet) =  (
+      ret_on_err!(symbol_add_event),
+      ret_on_err!(symbol_remove_evnet)
+    );
     loop {
       select! {
-        Some(msg) = symbol_update.next() => {
-          let event: SymbolUpdateEvent = match from_msgpack(&msg.data[..]) {
+        Some(msg) = symbol_add_event.next() => {
+          let symbol: Symbol = match from_msgpack(&msg.data[..]) {
             Err(e) => {
-              ::slog::warn!(self.logger, "Failed to read update event payload: {}", e);
+              ::slog::warn!(
+                self.logger,
+                "Failed to read symbol add event payload: {}",
+                e
+              );
               continue;
             },
             Ok(o) => o
           };
-          if let Err(e) = self.update_symbols(socket, event).await {
-            ::slog::warn!(self.logger, "Got an error while updating symbol: {}", e);
+          if symbol.status != "TRADING" {
+            continue;
+          }
+          if let Err(e) = self.subscribe(socket, vec![symbol.symbol]).await {
+            ::slog::warn!(
+              self.logger,
+              "Got an error while subscribing the symbol: {}",
+              e
+            );
+          }
+        },
+        Some(msg) = symbol_remove_evnet.next() => {
+          let symbol: Symbol = match from_msgpack(&msg.data[..]) {
+            Err(e) => {
+              ::slog::warn!(
+                self.logger,
+                "Failed to read symbol removal event payload: {}",
+                e
+              );
+              continue;
+            },
+            Ok(o) => o
+          };
+          if let Err(e) = self.unsubscribe(socket, vec![symbol.symbol]).await {
+            ::slog::warn!(
+              self.logger,
+              "Got an error while unsubscribing the symbol: {}",
+              e
+            );
           }
         },
         Some(Ok(msg)) = socket.next() => {
@@ -315,9 +348,9 @@ fn generate_id(&self) -> u64 {
 
 #[async_trait]
 impl TradeObserverTrait for TradeObserver {
-  async fn start(&self) -> SendableErrorResult<()> {
+  async fn start(&self, initial_symbols: Option<Vec<String>>) -> SendableErrorResult<()> {
     let mut me = self.clone();
-    let mut socket = me.connect().await?;
+    let mut socket = me.connect(initial_symbols).await?;
     if let Err(e) = me.handle_event(&mut socket).await {
       ::slog::error!(
         me.logger,

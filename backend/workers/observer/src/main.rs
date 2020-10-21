@@ -57,13 +57,12 @@ async fn main() {
     Exchanges::Binance => Box::new(binance::TradeObserver::new(
       broker,
       logger.new(o!("scope" => "Trade Observer")),
-      symbols,
     )),
   };
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let sig = Box::pin(sig.recv());
-  match select(exchange.start(), sig).await {
+  match select(exchange.start(Some(symbols)), sig).await {
     Either::Left((v, _)) => v,
     Either::Right(_) => Ok(()),
   }

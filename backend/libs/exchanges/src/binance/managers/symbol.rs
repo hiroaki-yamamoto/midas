@@ -33,10 +33,6 @@ impl<'s, 't> SymbolUpdateEventManager<'s, 't> {
     return Self {log, to_add,  to_remove, broker};
   }
 
-  pub fn has_diff(&self) -> bool {
-    return !self.to_add.is_empty() || !self.to_remove.is_empty();
-  }
-
   pub async fn publish_changes(&self) {
     let mut await_vec = vec![];
     for add_item in &self.to_add[..] {
