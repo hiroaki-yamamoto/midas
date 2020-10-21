@@ -1,9 +1,9 @@
 use ::std::collections::HashMap;
 
 use ::async_trait::async_trait;
+use ::futures::join;
 use ::futures::sink::SinkExt;
 use ::futures::stream::StreamExt;
-use ::futures::join;
 use ::nats::asynk::{Connection as Broker, Subscription as NatsSub};
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
@@ -17,15 +17,14 @@ use ::tokio_tungstenite::{
   connect_async, stream::Stream, tungstenite as wsocket, WebSocketStream,
 };
 
-use ::config::{DEFAULT_RECONNECT_INTERVAL};
+use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::types::{ret_on_err, SendableErrorResult};
 
 use super::constants::{
   SYMBOL_ADD_EVENT, SYMBOL_REMOVE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
 };
 use super::entities::{
-  StreamEvent, Trade, TradeSubRequest, TradeSubRequestInner, Symbol,
-  StreamResult,
+  StreamEvent, Symbol, Trade, TradeSubRequest, TradeSubRequestInner,
 };
 
 use crate::errors::{MaximumAttemptExceeded, WebsocketError};
@@ -43,11 +42,8 @@ pub struct TradeObserver {
 }
 
 impl TradeObserver {
-  pub fn new(
-    broker: Broker,
-    logger: Logger,
-  ) -> Self {
-    let me =  Self {
+  pub fn new(broker: Broker, logger: Logger) -> Self {
+    let me = Self {
       broker,
       logger,
       symbols: vec![],
@@ -60,7 +56,8 @@ impl TradeObserver {
       self.symbols.push(vec![symbol.clone()]);
       return self.symbols.len() - 1;
     }
-    let (index, most_bored) = self.symbols
+    let (index, most_bored) = self
+      .symbols
       .iter_mut()
       .enumerate()
       .min_by_key(|(_, x)| x.len())
@@ -72,11 +69,13 @@ impl TradeObserver {
   fn get_symbol_index(&self, symbol: &String) -> Option<(usize, usize)> {
     for (index, symbols) in self.symbols.iter().enumerate() {
       match symbols.iter().position(|s| s == symbol) {
-        None => {continue;},
-        Some(pos) => {return Some((index, pos))}
+        None => {
+          continue;
+        }
+        Some(pos) => return Some((index, pos)),
       }
     }
-    return None
+    return None;
   }
 
   async fn init_socket(&self) -> SendableErrorResult<TLSWebSocket> {
@@ -90,7 +89,7 @@ impl TradeObserver {
 
   async fn connect(
     &mut self,
-    initial_symbols: Option<Vec<String>>
+    initial_symbols: Option<Vec<String>>,
   ) -> SendableErrorResult<TLSWebSocket> {
     let mut interval =
       interval(Duration::from_secs(DEFAULT_RECONNECT_INTERVAL as u64));
@@ -121,14 +120,18 @@ impl TradeObserver {
   async fn subscribe(
     &mut self,
     socket: &mut TLSWebSocket,
-    symbols: Vec<String>
+    symbols: Vec<String>,
   ) -> SendableErrorResult<()> {
     let mut map: HashMap<usize, Vec<String>> = HashMap::new();
     for symbol in symbols {
       let index = self.add_symbol(&symbol);
       match map.get_mut(&index) {
-        None => { map.insert(index, vec![symbol]); },
-        Some(a) => { a.push(symbol); }
+        None => {
+          map.insert(index, vec![symbol]);
+        }
+        Some(a) => {
+          a.push(symbol);
+        }
       }
     }
     let mut timer = interval(Duration::from_secs(1));
@@ -153,16 +156,22 @@ impl TradeObserver {
   async fn unsubscribe(
     &mut self,
     socket: &mut TLSWebSocket,
-    symbols: Vec<String>
+    symbols: Vec<String>,
   ) -> SendableErrorResult<()> {
     let mut map: HashMap<usize, Vec<String>> = HashMap::new();
     for symbol in symbols {
       match self.get_symbol_index(&symbol) {
-        None => {continue;},
+        None => {
+          continue;
+        }
         Some((id, col_index)) => {
           match map.get_mut(&id) {
-            None => { map.insert(id, vec![symbol]); },
-            Some(v) => { v.push(symbol); }
+            None => {
+              map.insert(id, vec![symbol]);
+            }
+            Some(v) => {
+              v.push(symbol);
+            }
           }
           if let Some(a) = self.symbols.get_mut(id) {
             a.remove(col_index);
@@ -176,7 +185,10 @@ impl TradeObserver {
         .into_iter()
         .map(|item| format!("{}@trade", item.to_lowercase()))
         .collect();
-      let req = TradeSubRequestInner { id: id as u64, params };
+      let req = TradeSubRequestInner {
+        id: id as u64,
+        params,
+      };
       let req = TradeSubRequest::Unsubscribe(req);
       ::slog::debug!(self.logger, "Unsubscribe: {:?}", &req);
       let req = ret_on_err!(to_json(&req));
@@ -284,12 +296,14 @@ impl TradeObserver {
     socket: &mut TLSWebSocket,
   ) -> SendableErrorResult<()> {
     let (symbol_add_event, symbol_remove_evnet) = join!(
-      self.broker.queue_subscribe(SYMBOL_ADD_EVENT, "trade_observer"),
+      self
+        .broker
+        .queue_subscribe(SYMBOL_ADD_EVENT, "trade_observer"),
       self.broker.subscribe(SYMBOL_REMOVE_EVENT)
     );
-    let (mut symbol_add_event, mut symbol_remove_evnet) =  (
+    let (mut symbol_add_event, mut symbol_remove_evnet) = (
       ret_on_err!(symbol_add_event),
-      ret_on_err!(symbol_remove_evnet)
+      ret_on_err!(symbol_remove_evnet),
     );
     loop {
       select! {
@@ -348,7 +362,10 @@ impl TradeObserver {
 
 #[async_trait]
 impl TradeObserverTrait for TradeObserver {
-  async fn start(&self, initial_symbols: Option<Vec<String>>) -> SendableErrorResult<()> {
+  async fn start(
+    &self,
+    initial_symbols: Option<Vec<String>>,
+  ) -> SendableErrorResult<()> {
     let mut me = self.clone();
     let mut socket = me.connect(initial_symbols).await?;
     if let Err(e) = me.handle_event(&mut socket).await {
