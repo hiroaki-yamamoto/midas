@@ -1,27 +1,31 @@
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Utc};
 use ::futures::stream::Stream;
-use ::nats::asynk::Subscription;
-use ::mongodb::Database;
 use ::mongodb::bson::doc;
+use ::mongodb::Database;
+use ::nats::asynk::Subscription;
 
 use ::rpc::entities::SymbolInfo;
 use ::types::SendableErrorResult;
 
 #[async_trait]
-pub trait Recorder{
+pub trait Recorder {
   fn get_database(&self) -> &Database;
   fn get_col_name(&self) -> &str;
   async fn update_indices(&self, flds: &[&str]) {
     let col_name = self.get_col_name();
     let db = self.get_database();
-    let has_index = db.run_command(doc!{"listIndexes": &col_name}, None).await.map(
-      |item| {
+    let has_index = db
+      .run_command(doc! {"listIndexes": &col_name}, None)
+      .await
+      .map(|item| {
         return item
           .get_document("listIndexes")
           .unwrap_or(&doc! {"ok": false})
-          .get_bool("ok").unwrap_or(false);
-      }).unwrap_or(false);
+          .get_bool("ok")
+          .unwrap_or(false);
+      })
+      .unwrap_or(false);
     if !has_index {
       let mut indices = vec![];
       for fld_name in flds {
@@ -29,10 +33,15 @@ pub trait Recorder{
           *fld_name: 1,
         } })
       }
-      let _ = db.run_command(doc! {
-        "createIndexes": &col_name,
-        "indexes": indices
-      }, None).await;
+      let _ = db
+        .run_command(
+          doc! {
+            "createIndexes": &col_name,
+            "indexes": indices
+          },
+          None,
+        )
+        .await;
     }
   }
 }
@@ -67,7 +76,7 @@ pub trait HistoryRecorder {
 pub trait TradeObserver {
   async fn start(
     &self,
-    initial_symbols: Option<Vec<String>>
+    initial_symbols: Option<Vec<String>>,
   ) -> SendableErrorResult<()>;
   async fn subscribe(&self) -> ::std::io::Result<Subscription>;
 }

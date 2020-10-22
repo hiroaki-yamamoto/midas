@@ -20,10 +20,10 @@ use ::tokio_tungstenite::{
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::types::{ret_on_err, SendableErrorResult};
 
-use super::constants::{
+use super::super::constants::{
   SYMBOL_ADD_EVENT, SYMBOL_REMOVE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
 };
-use super::entities::{
+use super::super::entities::{
   StreamEvent, Symbol, Trade, TradeSubRequest, TradeSubRequestInner,
 };
 

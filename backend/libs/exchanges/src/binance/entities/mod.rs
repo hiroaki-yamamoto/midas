@@ -12,7 +12,7 @@ pub use self::history::{
 };
 pub use self::info::ExchangeInfo;
 pub(crate) use self::stream_event::StreamEvent;
-pub use self::symbol::{Symbol};
+pub use self::symbol::Symbol;
 pub(crate) use self::trade::{Trade, TradeSubRequest, TradeSubRequestInner};
 pub use self::trade_time::TradeTime;
 

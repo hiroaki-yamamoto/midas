@@ -21,6 +21,8 @@ struct CmdArgs {
   pub exchange: Exchanges,
   #[clap(short, long, default_value = DEFAULT_CONFIG_PATH)]
   pub config: String,
+  #[clap(short, long)]
+  pub master: bool,
 }
 
 #[::tokio::main]
