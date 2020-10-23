@@ -3,10 +3,10 @@ mod entities;
 mod history_fetcher;
 mod history_recorder;
 mod managers;
+mod observer;
 mod symbol_fetcher;
-mod trade;
 
 pub use history_fetcher::HistoryFetcher;
 pub use history_recorder::HistoryRecorder;
+pub use observer::TradeObserver;
 pub use symbol_fetcher::SymbolFetcher;
-pub use trade::TradeObserver;
