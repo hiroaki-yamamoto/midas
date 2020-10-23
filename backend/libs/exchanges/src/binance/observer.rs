@@ -354,6 +354,7 @@ impl TradeObserver {
               e
             );
           }
+          add_buf.clear();
           if del_buf.is_empty() {
             continue;
           }
@@ -364,6 +365,7 @@ impl TradeObserver {
               e
             );
           }
+          del_buf.clear();
         },
         Some(Ok(msg)) = socket.next() => {
           self.handle_websocket_message(socket, &msg).await;
