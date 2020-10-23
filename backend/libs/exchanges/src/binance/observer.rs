@@ -1,4 +1,5 @@
 use ::std::collections::HashMap;
+use ::std::time::Duration;
 
 use ::async_trait::async_trait;
 use ::futures::join;
@@ -8,10 +9,9 @@ use ::nats::asynk::{Connection as Broker, Subscription as NatsSub};
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
-use ::std::time::Duration;
 use ::tokio::net::TcpStream;
 use ::tokio::select;
-use ::tokio::time::interval;
+use ::tokio::time::{delay_for, interval};
 use ::tokio_native_tls::TlsStream;
 use ::tokio_tungstenite::{
   connect_async, stream::Stream, tungstenite as wsocket, WebSocketStream,
@@ -33,6 +33,7 @@ use crate::traits::TradeObserver as TradeObserverTrait;
 type TLSWebSocket = WebSocketStream<Stream<TcpStream, TlsStream<TcpStream>>>;
 
 const NUM_SESSION: usize = 10;
+const EVENT_DELAY: Duration = Duration::from_secs(1);
 
 #[derive(Clone)]
 pub struct TradeObserver {
@@ -111,7 +112,7 @@ impl TradeObserver {
         Some(initial_symbols) => initial_symbols,
       };
       self.symbols.clear();
-      let _ = self.subscribe(&mut socket, initial_symbols).await;
+      let _ = self.subscribe(&mut socket, &initial_symbols).await;
       return Ok(socket);
     }
     return Err(Box::new(MaximumAttemptExceeded {}));
@@ -120,11 +121,12 @@ impl TradeObserver {
   async fn subscribe(
     &mut self,
     socket: &mut TLSWebSocket,
-    symbols: Vec<String>,
+    symbols: &Vec<String>,
   ) -> SendableErrorResult<()> {
     let mut map: HashMap<usize, Vec<String>> = HashMap::new();
     for symbol in symbols {
-      let index = self.add_symbol(&symbol);
+      let index = self.add_symbol(symbol);
+      let symbol = symbol.clone();
       match map.get_mut(&index) {
         None => {
           map.insert(index, vec![symbol]);
@@ -156,7 +158,7 @@ impl TradeObserver {
   async fn unsubscribe(
     &mut self,
     socket: &mut TLSWebSocket,
-    symbols: Vec<String>,
+    symbols: &Vec<String>,
   ) -> SendableErrorResult<()> {
     let mut map: HashMap<usize, Vec<String>> = HashMap::new();
     for symbol in symbols {
@@ -165,6 +167,7 @@ impl TradeObserver {
           continue;
         }
         Some((id, col_index)) => {
+          let symbol = symbol.clone();
           match map.get_mut(&id) {
             None => {
               map.insert(id, vec![symbol]);
@@ -295,6 +298,7 @@ impl TradeObserver {
     &mut self,
     socket: &mut TLSWebSocket,
   ) -> SendableErrorResult<()> {
+    let (mut add_buf, mut del_buf) = (vec![], vec![]);
     let (symbol_add_event, symbol_remove_evnet) = join!(
       self
         .broker
@@ -306,6 +310,7 @@ impl TradeObserver {
       ret_on_err!(symbol_remove_evnet),
     );
     loop {
+      let event_delay = delay_for(EVENT_DELAY);
       select! {
         Some(msg) = symbol_add_event.next() => {
           let symbol: Symbol = match from_msgpack(&msg.data[..]) {
@@ -322,13 +327,7 @@ impl TradeObserver {
           if symbol.status != "TRADING" {
             continue;
           }
-          if let Err(e) = self.subscribe(socket, vec![symbol.symbol]).await {
-            ::slog::warn!(
-              self.logger,
-              "Got an error while subscribing the symbol: {}",
-              e
-            );
-          }
+          add_buf.push(symbol.symbol);
         },
         Some(msg) = symbol_remove_evnet.next() => {
           let symbol: Symbol = match from_msgpack(&msg.data[..]) {
@@ -342,7 +341,23 @@ impl TradeObserver {
             },
             Ok(o) => o
           };
-          if let Err(e) = self.unsubscribe(socket, vec![symbol.symbol]).await {
+          del_buf.push(symbol.symbol);
+        },
+        _ = event_delay => {
+          if add_buf.is_empty() {
+            continue;
+          }
+          if let Err(e) = self.subscribe(socket, &add_buf).await {
+            ::slog::warn!(
+              self.logger,
+              "Got an error while subscribing the symbol: {}",
+              e
+            );
+          }
+          if del_buf.is_empty() {
+            continue;
+          }
+          if let Err(e) = self.unsubscribe(socket, &del_buf).await {
             ::slog::warn!(
               self.logger,
               "Got an error while unsubscribing the symbol: {}",
