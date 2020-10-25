@@ -1,16 +1,18 @@
 use ::async_trait::async_trait;
-use ::futures::future::join;
+use ::futures::future::{join, join_all, Future};
 use ::futures::stream::StreamExt;
 use ::mongodb::bson::{
   de::Result as BsonDeResult, doc, from_bson, to_bson, Array, Bson, Document,
 };
 use ::mongodb::{error::Result as MongoResult, Collection, Database};
 use ::nats::asynk::Connection as Broker;
-use ::rpc::entities::SymbolInfo;
+use ::rmp_serde::to_vec as to_msgpack;
 use ::slog::Logger;
+
+use ::rpc::entities::SymbolInfo;
 use ::types::{ret_on_err, SendableErrorResult};
 
-use super::constants::REST_ENDPOINT;
+use super::constants::{REST_ENDPOINT, SYMBOL_FETCHER_INIT_EVENT};
 use super::entities::{ExchangeInfo, Symbol};
 use super::managers::SymbolUpdateEventManager;
 
@@ -49,6 +51,28 @@ impl SymbolFetcher {
     ret.update_indices(&["symbol"]).await;
     return ret;
   }
+
+  pub async fn publish_init_event(&self) {
+    let mut cur = match self.col.find(doc! {}, None).await {
+      Err(e) => {
+        ::slog::warn!(self.log, "Failed to read symbol data from db: {}", e);
+        return;
+      }
+      Ok(c) => c,
+    }
+    .filter_map(|doc| async { doc.ok() })
+    .map(|doc| from_bson::<Symbol>(Bson::Document(doc)))
+    .filter_map(|doc| async { doc.ok() })
+    .map(|doc| to_msgpack(&doc))
+    .filter_map(|data| async { data.ok() })
+    .boxed();
+    let mut pub_defer = vec![];
+    while let Some(data) = cur.next().await {
+      pub_defer.push(self.broker.publish(SYMBOL_FETCHER_INIT_EVENT, data));
+    }
+    join_all(pub_defer).await;
+  }
+
   pub async fn get(
     &self,
     filter: impl Into<Option<Document>> + Send,
