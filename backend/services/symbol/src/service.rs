@@ -24,7 +24,8 @@ impl Service {
         log.new(o!("scope" => "BinanceSymbolFetcher")),
         broker.clone(),
         db.clone(),
-      ).await,
+      )
+      .await,
     };
   }
 

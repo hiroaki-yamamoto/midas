@@ -1,5 +1,5 @@
 use ::async_trait::async_trait;
-use ::futures::future::{join};
+use ::futures::future::join;
 use ::futures::stream::StreamExt;
 use ::mongodb::bson::{
   de::Result as BsonDeResult, doc, from_bson, to_bson, Array, Bson, Document,
@@ -10,13 +10,13 @@ use ::rpc::entities::SymbolInfo;
 use ::slog::Logger;
 use ::types::{ret_on_err, SendableErrorResult};
 
-use super::constants::{REST_ENDPOINT};
+use super::constants::REST_ENDPOINT;
 use super::entities::{ExchangeInfo, Symbol};
 use super::managers::SymbolUpdateEventManager;
 
 use crate::entities::ListSymbolStream;
 use crate::errors::StatusFailure;
-use crate::traits::{SymbolFetcher as SymbolFetcherTrait, Recorder};
+use crate::traits::{Recorder, SymbolFetcher as SymbolFetcherTrait};
 
 const SYMBOL_FETCHER_RECORD_COL_NAME: &'static str = "binance.symbol";
 
@@ -30,7 +30,7 @@ pub struct SymbolFetcher {
 
 impl Recorder for SymbolFetcher {
   fn get_database(&self) -> &Database {
-      return &self.db;
+    return &self.db;
   }
   fn get_col_name(&self) -> &str {
     return &self.col.name();
@@ -40,7 +40,12 @@ impl Recorder for SymbolFetcher {
 impl SymbolFetcher {
   pub async fn new(log: Logger, broker: Broker, db: Database) -> Self {
     let col = db.collection(SYMBOL_FETCHER_RECORD_COL_NAME);
-    let ret = Self {broker, db, col, log};
+    let ret = Self {
+      broker,
+      db,
+      col,
+      log,
+    };
     ret.update_indices(&["symbol"]).await;
     return ret;
   }
@@ -77,7 +82,9 @@ impl SymbolFetcherTrait for SymbolFetcher {
     let old_symbols: Vec<Symbol> =
       ret_on_err!(self.col.find(doc! {}, None).await)
         .filter_map(|res| async { res.ok() })
-        .filter_map(|doc| async move { from_bson::<Symbol>(Bson::Document(doc)).ok() })
+        .filter_map(|doc| async move {
+          from_bson::<Symbol>(Bson::Document(doc)).ok()
+        })
         .collect()
         .await;
     let resp_status = resp.status();
@@ -85,7 +92,10 @@ impl SymbolFetcherTrait for SymbolFetcher {
       let info: ExchangeInfo = ret_on_err!(resp.json().await);
       let new_symbols = info.symbols.clone();
       let update_event_manager = SymbolUpdateEventManager::new(
-        &self.log, &self.broker, new_symbols, old_symbols
+        &self.log,
+        &self.broker,
+        new_symbols,
+        old_symbols,
       );
       let update_event = update_event_manager.publish_changes();
       ret_on_err!(self.col.delete_many(doc! {}, None).await);
