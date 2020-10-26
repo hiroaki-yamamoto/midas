@@ -71,6 +71,7 @@ services:
     depends_on:
       - database
       - broker
+      - binance_trade_observer_worker
   historical_fetch_worker:
     build:
       context: ./backend
@@ -121,7 +122,6 @@ services:
     depends_on:
       - database
       - broker
-      - symbol_service
   frontend:
     build:
       context: frontend

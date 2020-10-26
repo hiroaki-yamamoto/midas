@@ -31,12 +31,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "antidote"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34fde25430d87a9388dadbe6e34d7f72a462c8b43ac8d309b42b0a8505d7e2a5"
-
-[[package]]
 name = "anyhow"
 version = "1.0.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -515,7 +509,7 @@ dependencies = [
  "clap",
  "serde",
  "serde_yaml",
- "tonic 0.3.1",
+ "tonic",
  "types",
 ]
 
@@ -757,7 +751,7 @@ dependencies = [
  "tokio",
  "tokio-native-tls",
  "tokio-tungstenite",
- "tonic 0.3.1",
+ "tonic",
  "types",
  "url",
 ]
@@ -1120,7 +1114,7 @@ dependencies = [
  "slog-atomic",
  "slog_builder",
  "tokio",
- "tonic 0.3.1",
+ "tonic",
  "types",
  "warp",
 ]
@@ -1201,25 +1195,6 @@ dependencies = [
  "tower-service",
  "tracing",
  "want",
-]
-
-[[package]]
-name = "hyper-openssl"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90705b797966f4774ffbc5e4dbda9e5b95f2a49991a3187f753171cdd7db3c58"
-dependencies = [
- "antidote",
- "bytes",
- "http",
- "hyper",
- "linked_hash_set",
- "once_cell",
- "openssl",
- "openssl-sys",
- "tokio",
- "tokio-openssl",
- "tower-layer",
 ]
 
 [[package]]
@@ -1365,15 +1340,6 @@ name = "linked-hash-map"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8dd5a6d5999d9907cda8ed67bbd137d3af8085216c2ac62de5be860bd41f304a"
-
-[[package]]
-name = "linked_hash_set"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47186c6da4d81ca383c7c47c1bfc80f4b95f4720514d860a5407aaf4233f9588"
-dependencies = [
- "linked-hash-map",
-]
 
 [[package]]
 name = "lock_api"
@@ -1708,9 +1674,8 @@ dependencies = [
  "rpc",
  "slog",
  "slog_builder",
- "tls",
  "tokio",
- "tonic 0.3.1",
+ "tonic",
 ]
 
 [[package]]
@@ -2326,7 +2291,7 @@ dependencies = [
  "num-traits",
  "prost",
  "serde",
- "tonic 0.3.1",
+ "tonic",
  "tonic-build",
 ]
 
@@ -2822,7 +2787,7 @@ dependencies = [
  "slog",
  "slog_builder",
  "tokio",
- "tonic 0.3.1",
+ "tonic",
  "types",
 ]
 
@@ -2954,20 +2919,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "53953d2d3a5ad81d9f844a32f14ebb121f50b650cd59d0ee2a07cf13c617efed"
 
 [[package]]
-name = "tls"
-version = "0.1.0"
-dependencies = [
- "hyper",
- "hyper-openssl",
- "openssl",
- "tonic 0.3.1",
- "tonic-openssl",
- "tower",
- "tower-util",
- "types",
-]
-
-[[package]]
 name = "tokio"
 version = "0.2.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3008,16 +2959,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd608593a919a8e05a7d1fc6df885e40f6a88d3a70a3a7eff23ff27964eda069"
 dependencies = [
  "native-tls",
- "tokio",
-]
-
-[[package]]
-name = "tokio-openssl"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c4b08c5f4208e699ede3df2520aca2e82401b2de33f45e96696a074480be594"
-dependencies = [
- "openssl",
  "tokio",
 ]
 
@@ -3086,36 +3027,6 @@ dependencies = [
 
 [[package]]
 name = "tonic"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4afef9ce97ea39593992cf3fa00ff33b1ad5eb07665b31355df63a690e38c736"
-dependencies = [
- "async-stream 0.2.1",
- "async-trait",
- "base64 0.11.0",
- "bytes",
- "futures-core",
- "futures-util",
- "http",
- "http-body",
- "hyper",
- "percent-encoding",
- "pin-project",
- "prost",
- "prost-derive",
- "tokio",
- "tokio-util",
- "tower",
- "tower-balance",
- "tower-load",
- "tower-make",
- "tower-service",
- "tracing",
- "tracing-futures",
-]
-
-[[package]]
-name = "tonic"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "74a5d6e7439ecf910463667080de772a9c7ddf26bc9fb4f3252ac3862e43337d"
@@ -3155,20 +3066,6 @@ dependencies = [
  "prost-build",
  "quote 1.0.7",
  "syn 1.0.38",
-]
-
-[[package]]
-name = "tonic-openssl"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eeaafbdb7ae06087ec06e263e7a52f30faa3b580b69b0f853dd546236de0ac5a"
-dependencies = [
- "async-stream 0.2.1",
- "futures",
- "openssl",
- "tokio",
- "tokio-openssl",
- "tonic 0.2.1",
 ]
 
 [[package]]
@@ -3490,7 +3387,7 @@ dependencies = [
  "chrono",
  "serde",
  "tokio",
- "tonic 0.3.1",
+ "tonic",
  "url",
 ]
 

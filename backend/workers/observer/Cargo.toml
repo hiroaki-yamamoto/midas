@@ -11,7 +11,6 @@ exchanges = { path = "../../libs/exchanges" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 slog_builder = { path = "../../libs/slog_builder" }
-tls = { path = "../../libs/tls" }
 
 clap = "3.0.0-beta.2"
 tokio = {version = "0.2.22", features = ["signal", "rt-threaded", "macros"]}

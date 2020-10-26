@@ -12,7 +12,7 @@ use ::slog::Logger;
 use ::rpc::entities::SymbolInfo;
 use ::types::{ret_on_err, SendableErrorResult};
 
-use super::constants::{REST_ENDPOINT, SYMBOL_FETCHER_INIT_EVENT};
+use super::constants::{REST_ENDPOINT, SYMBOL_INIT_EVENT};
 use super::entities::{ExchangeInfo, Symbol};
 use super::managers::SymbolUpdateEventManager;
 
@@ -69,7 +69,7 @@ impl SymbolFetcher {
     .boxed();
     let mut pub_defer = vec![];
     while let Some(data) = cur.next().await {
-      pub_defer.push(self.broker.publish(SYMBOL_FETCHER_INIT_EVENT, data));
+      pub_defer.push(self.broker.publish(SYMBOL_INIT_EVENT, data));
     }
     join_all(pub_defer).await;
   }
