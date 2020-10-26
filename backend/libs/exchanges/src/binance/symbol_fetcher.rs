@@ -1,5 +1,5 @@
 use ::async_trait::async_trait;
-use ::futures::future::{join, join_all, Future};
+use ::futures::future::{join, join_all};
 use ::futures::stream::StreamExt;
 use ::mongodb::bson::{
   de::Result as BsonDeResult, doc, from_bson, to_bson, Array, Bson, Document,
@@ -49,6 +49,7 @@ impl SymbolFetcher {
       log,
     };
     ret.update_indices(&["symbol"]).await;
+    ret.publish_init_event().await;
     return ret;
   }
 
