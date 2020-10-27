@@ -332,11 +332,13 @@ impl TradeObserver {
       ret_on_err!(symbol_add_event),
       ret_on_err!(symbol_remove_evnet),
     );
+    let mut clear_sym_map_flag = false;
     loop {
       let event_delay = delay_for(EVENT_DELAY);
       select! {
         Some(msg) = symbol_init_event.next() => {
           if let Some(symb) = self.handle_add_symbol(&msg.data[..]) {
+            clear_sym_map_flag = true;
             add_buf.insert(symb);
           }
         },
@@ -360,6 +362,19 @@ impl TradeObserver {
           del_buf.insert(symbol.symbol);
         },
         _ = event_delay => {
+          if clear_sym_map_flag {
+            let symbols = self.symbols.to_owned().into_iter().flatten();
+            if let Err(e) = self.unsubscribe(socket, symbols).await {
+              ::slog::warn!(
+                self.logger,
+                "Got an error while unsubscribing the symbol (init): {}",
+                e
+              );
+            } else {
+              self.symbols.clear();
+            }
+            clear_sym_map_flag = false;
+          }
           if let Err(e) = self.subscribe(socket, add_buf.drain()).await {
             ::slog::warn!(
               self.logger,
