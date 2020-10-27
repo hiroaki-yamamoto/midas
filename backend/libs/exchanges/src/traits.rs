@@ -1,12 +1,14 @@
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Utc};
 use ::futures::stream::Stream;
-use ::mongodb::bson::doc;
+use ::mongodb::bson::{doc, oid::ObjectId};
 use ::mongodb::Database;
 use ::nats::asynk::Subscription;
 
 use ::rpc::entities::SymbolInfo;
-use ::types::SendableErrorResult;
+use ::types::{GenericResult, SendableErrorResult};
+
+use super::entities::OrderOption;
 
 #[async_trait]
 pub trait Recorder {
@@ -82,4 +84,17 @@ pub(crate) trait TradeDateTime {
   fn symbol(&self) -> String;
   fn open_time(&self) -> DateTime<Utc>;
   fn close_time(&self) -> DateTime<Utc>;
+}
+
+#[async_trait]
+pub trait Executor {
+  async fn create_order(
+    &self,
+    symbol: String,
+    qty: f64,
+    price: Option<f64>,
+    order_option: Option<OrderOption>,
+  ) -> GenericResult<ObjectId>;
+
+  async fn remove_order(&self, id: ObjectId) -> GenericResult<()>;
 }
