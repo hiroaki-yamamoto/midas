@@ -1,6 +1,7 @@
 use std::pin::Pin;
 
 use ::futures::stream::Stream;
+use ::num::pow::pow;
 use ::rpc::entities::SymbolInfo;
 use ::serde::{Deserialize, Serialize};
 
@@ -16,8 +17,12 @@ pub enum KlineCtrl {
 pub struct OrderOption {
   pub(crate) iceberg: bool,
   pub(crate) num_ladder: u8,
-  pub(crate) price_ratio: f64, // Note: this value should be between -100 to 100 (i.e. in percentage.).
-  pub(crate) qty_multiplyer: f64, // Note: Current qty = (previous qty) * qty_multiplyer
+  // Note: order_price[n] =
+  //   order_price[n - 1] * (price_ratio)^n,
+  //   where n in N & n > 0
+  pub(crate) price_ratio: f64,
+  // Note: base_asset_amount[n] = base_asset_amount[n-1] * amount_multiplyer
+  pub(crate) amount_multiplyer: f64,
 }
 
 impl Default for OrderOption {
@@ -26,7 +31,7 @@ impl Default for OrderOption {
       iceberg: false,
       num_ladder: 1,
       price_ratio: 0.0,
-      qty_multiplyer: 1.0,
+      amount_multiplyer: 1.0,
     };
   }
 }
@@ -47,8 +52,17 @@ impl OrderOption {
     self.price_ratio = price_ratio;
     return self;
   }
-  pub fn qty_multiplyer(&mut self, qty_multiplyer: f64) -> &mut Self {
-    self.qty_multiplyer = qty_multiplyer;
+  pub fn amount_multiplyer(&mut self, amount_multiplyer: f64) -> &mut Self {
+    self.amount_multiplyer = amount_multiplyer;
     return self;
+  }
+  pub fn calc_trading_amounts(&self, budget: f64) -> Vec<f64> {
+    let init_amount =
+      budget / pow(self.amount_multiplyer, self.num_ladder as usize);
+    let mut ret = vec![];
+    for i in 0..self.num_ladder {
+      ret.push(init_amount * pow(self.amount_multiplyer, i as usize));
+    }
+    return ret;
   }
 }
