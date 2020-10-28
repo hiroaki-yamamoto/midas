@@ -13,12 +13,22 @@ pub enum KlineCtrl {
   Stop,
 }
 
-#[derive(Default)]
 pub struct OrderOption {
   pub(crate) iceberg: bool,
   pub(crate) num_ladder: u8,
   pub(crate) price_ratio: f64, // Note: this value should be between -100 to 100 (i.e. in percentage.).
   pub(crate) qty_multiplyer: f64, // Note: Current qty = (previous qty) * qty_multiplyer
+}
+
+impl Default for OrderOption {
+  fn default() -> Self {
+    return Self {
+      iceberg: false,
+      num_ladder: 1,
+      price_ratio: 0.0,
+      qty_multiplyer: 1.0,
+    };
+  }
 }
 
 impl OrderOption {

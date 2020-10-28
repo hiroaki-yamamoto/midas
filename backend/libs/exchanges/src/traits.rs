@@ -91,8 +91,8 @@ pub trait Executor {
   async fn create_order(
     &self,
     symbol: String,
-    qty: f64,
     price: Option<f64>,
+    budget: f64,
     order_option: Option<OrderOption>,
   ) -> GenericResult<ObjectId>;
 
