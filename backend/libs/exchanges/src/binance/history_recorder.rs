@@ -2,8 +2,10 @@ use ::std::collections::hash_map::HashMap;
 
 use ::async_trait::async_trait;
 use ::futures::future::{join3, join_all};
-use ::futures::StreamExt;
-use ::mongodb::bson::{doc, from_document, to_bson, DateTime as MongoDateTime};
+use ::futures::{Stream, StreamExt};
+use ::mongodb::bson::{
+  doc, from_document, to_bson, DateTime as MongoDateTime, Document,
+};
 use ::mongodb::{Collection, Database};
 use ::nats::asynk::Connection as NatsConnection;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
@@ -13,13 +15,13 @@ use ::tokio::sync::mpsc;
 use ::tokio::task::block_in_place;
 
 use ::rpc::historical::HistChartProg;
-use ::types::{ret_on_err, SendableErrorResult};
+use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use super::constants::{
   HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
   HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
 };
-use super::entities::{Klines, KlinesWithInfo, TradeTime};
+use super::entities::{Kline, Klines, KlinesWithInfo, TradeTime};
 
 use crate::traits::{HistoryRecorder as HistRecTrait, Recorder};
 
@@ -33,18 +35,29 @@ pub struct HistoryRecorder {
 
 impl Recorder for HistoryRecorder {
   fn get_database(&self) -> &Database {
-      return &self.db;
+    return &self.db;
   }
   fn get_col_name(&self) -> &str {
-      return self.col.name();
+    return self.col.name();
   }
 }
 
 impl HistoryRecorder {
-  pub async fn new(db: Database, logger: Logger, broker: NatsConnection) -> Self {
+  pub async fn new(
+    db: Database,
+    logger: Logger,
+    broker: NatsConnection,
+  ) -> Self {
     let col = db.collection("binance.klines");
-    let ret = Self {db, col, broker, logger};
-    ret.update_indices(&["open_time", "close_time", "symbol"]).await;
+    let ret = Self {
+      db,
+      col,
+      broker,
+      logger,
+    };
+    ret
+      .update_indices(&["open_time", "close_time", "symbol"])
+      .await;
     return ret;
   }
 
@@ -213,6 +226,21 @@ impl HistoryRecorder {
         else => {break;}
       }
     }
+  }
+
+  pub(crate) async fn list(
+    &self,
+    query: impl Into<Option<Document>>,
+  ) -> GenericResult<impl Stream<Item = Kline>> {
+    return Ok(
+      self
+        .col
+        .find(query, None)
+        .await?
+        .filter_map(|item| async { item.ok() })
+        .map(|item| from_document::<Kline>(item))
+        .filter_map(|item| async { item.ok() }),
+    );
   }
 }
 

@@ -1,6 +1,7 @@
 use std::pin::Pin;
 
 use ::futures::stream::Stream;
+use ::mongodb::bson::oid::ObjectId;
 use ::num::pow::pow;
 use ::rpc::entities::SymbolInfo;
 use ::serde::{Deserialize, Serialize};
@@ -65,4 +66,13 @@ impl OrderOption {
     }
     return ret;
   }
+}
+
+#[derive(Debug, Clone)]
+pub struct ExecutionResult {
+  pub id: ObjectId,
+  pub price: f64,
+  pub qty: f64,
+  pub profit: f64,
+  pub profit_ratio: f64,
 }

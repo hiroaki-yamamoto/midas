@@ -8,7 +8,7 @@ use ::nats::asynk::Subscription;
 use ::rpc::entities::SymbolInfo;
 use ::types::{GenericResult, SendableErrorResult};
 
-use super::entities::OrderOption;
+use super::entities::{ExecutionResult, OrderOption};
 
 #[async_trait]
 pub trait Recorder {
@@ -96,5 +96,5 @@ pub trait Executor {
     order_option: Option<OrderOption>,
   ) -> GenericResult<ObjectId>;
 
-  async fn remove_order(&self, id: ObjectId) -> GenericResult<()>;
+  async fn remove_order(&self, id: ObjectId) -> GenericResult<ExecutionResult>;
 }
