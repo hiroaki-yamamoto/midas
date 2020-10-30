@@ -1,19 +1,33 @@
+use ::std::collections::HashMap;
 use ::std::pin::Pin;
 
-use super::super::history_recorder::HistoryRecorder;
+use ::async_stream::stream;
+use ::async_trait::async_trait;
 use ::futures::stream::{Stream, StreamExt};
-use ::futures::task::{Context, Poll};
+use ::mongodb::bson::oid::ObjectId;
 
 use ::types::GenericResult;
 
-use super::super::entities::Kline;
+use crate::binance::entities::Kline;
+use crate::binance::history_recorder::HistoryRecorder;
+use crate::entities::{ExecutionResult, OrderOption};
+use crate::traits::Executor as ExecutorTrait;
+
+#[derive(Debug, Clone)]
+struct Order {
+  symbol: String,
+  price: f64,
+  qty: f64,
+}
 
 pub struct Executor {
   spread: f64,
   maker_fee: f64,
   taker_fee: f64,
   cur_trade: Option<Kline>,
-  kline_stream: Pin<Box<dyn Stream<Item = Kline>>>,
+  orders: HashMap<ObjectId, Vec<Order>>,
+  positions: HashMap<ObjectId, Order>,
+  hist_recorder: HistoryRecorder,
 }
 
 impl Executor {
@@ -28,21 +42,40 @@ impl Executor {
       maker_fee,
       taker_fee,
       cur_trade: None,
-      kline_stream: history_recorder.list(None).await?.boxed(),
+      orders: HashMap::new(),
+      positions: HashMap::new(),
+      hist_recorder: history_recorder,
+    });
+  }
+
+  pub async fn open(
+    &mut self,
+  ) -> GenericResult<impl Stream<Item = Kline> + '_> {
+    let mut stream = self.hist_recorder.list(None).await?.boxed();
+    self.cur_trade = None;
+    return Ok(stream! {
+      while let Some(v) = stream.next().await {
+        self.cur_trade = Some(v.clone());
+        yield v;
+      }
+      self.cur_trade = None;
     });
   }
 }
 
-impl Stream for Executor {
-  type Item = Kline;
-  fn poll_next(
-    mut self: Pin<&mut Self>,
-    cx: &mut Context<'_>,
-  ) -> Poll<Option<Self::Item>> {
-    let ret = self.kline_stream.poll_next_unpin(cx);
-    if let Poll::Ready(d) = &ret {
-      self.cur_trade = d.to_owned();
-    }
-    return ret;
+#[async_trait]
+impl ExecutorTrait for Executor {
+  async fn create_order(
+    &self,
+    symbol: String,
+    price: Option<f64>,
+    budget: f64,
+    order_option: Option<OrderOption>,
+  ) -> GenericResult<ObjectId> {
+    let id = ObjectId::new();
+    return Ok(id);
+  }
+  async fn remove_order(&self, id: ObjectId) -> GenericResult<ExecutionResult> {
+    return Ok(ExecutionResult::default());
   }
 }

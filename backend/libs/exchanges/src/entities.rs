@@ -68,7 +68,7 @@ impl OrderOption {
   }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ExecutionResult {
   pub id: ObjectId,
   pub price: f64,
