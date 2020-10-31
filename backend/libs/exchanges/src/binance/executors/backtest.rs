@@ -10,6 +10,7 @@ use ::types::GenericResult;
 use crate::binance::entities::Kline;
 use crate::binance::history_recorder::HistoryRecorder;
 use crate::entities::{ExecutionResult, OrderOption};
+use crate::errors::ExecutionFailed;
 use crate::traits::Executor as ExecutorTrait;
 
 #[derive(Debug, Clone)]
@@ -71,6 +72,11 @@ impl ExecutorTrait for Executor {
     budget: f64,
     order_option: Option<OrderOption>,
   ) -> GenericResult<ObjectId> {
+    if self.cur_trade.is_none() {
+      return Err(Box::new(ExecutionFailed::new(
+        "Trade Stream seems to be closed.",
+      )));
+    }
     let id = ObjectId::new();
     return Ok(id);
   }
