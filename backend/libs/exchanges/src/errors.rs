@@ -85,8 +85,8 @@ impl ExecutionFailed {
 }
 
 impl Display for ExecutionFailed {
-  fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-    return write!(f, "Trade Execution Failed. Reason: ", self.reason);
+  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
+    return write!(f, "Trade Execution Failed. Reason: {}", self.reason);
   }
 }
 
