@@ -23,3 +23,21 @@ pub struct SymbolInfo {
 pub enum Exchanges {
   Binance = 0,
 }
+#[derive(
+  Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
+)]
+#[repr(i32)]
+#[derive(
+  ::num_derive::FromPrimitive,
+  ::serde::Serialize,
+  ::serde::Deserialize,
+  ::clap::Clap,
+)]
+pub enum BackTestPriceBase {
+  Close = 0,
+  Open = 1,
+  High = 2,
+  Low = 3,
+  OpenCloseMid = 4,
+  HighLowMid = 5,
+}

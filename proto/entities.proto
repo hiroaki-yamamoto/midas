@@ -7,6 +7,15 @@ enum Exchanges {
   Binance = 0;
 }
 
+enum BackTestPriceBase {
+  Close = 0;
+  Open = 1;
+  High = 2;
+  Low = 3;
+  OpenCloseMid = 4;
+  HighLowMid = 5;
+}
+
 message SymbolInfo {
   string symbol = 1;
   string status = 2;

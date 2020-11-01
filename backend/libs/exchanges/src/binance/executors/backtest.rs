@@ -5,9 +5,9 @@ use ::async_trait::async_trait;
 use ::futures::stream::{Stream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 
+use ::rpc::entities::BackTestPriceBase;
 use ::types::GenericResult;
 
-use crate::binance::entities::Kline;
 use crate::binance::history_recorder::HistoryRecorder;
 use crate::entities::{ExecutionResult, OrderOption};
 use crate::errors::ExecutionFailed;
@@ -20,11 +20,20 @@ struct Order {
   qty: f64,
 }
 
+#[derive(Debug, Clone)]
+pub struct Price {
+  symbol: String,
+  price: f64,
+  price_base: BackTestPriceBase,
+  asset_volume: f64,
+  base_volume: f64,
+}
+
 pub struct Executor {
   spread: f64,
   maker_fee: f64,
   taker_fee: f64,
-  cur_trade: Option<Kline>,
+  cur_trade: Option<Price>,
   orders: HashMap<ObjectId, Vec<Order>>,
   positions: HashMap<ObjectId, Order>,
   hist_recorder: HistoryRecorder,
@@ -50,8 +59,34 @@ impl Executor {
 
   pub async fn open(
     &mut self,
-  ) -> GenericResult<impl Stream<Item = Kline> + '_> {
-    let mut stream = self.hist_recorder.list(None).await?.boxed();
+    price_base: BackTestPriceBase,
+  ) -> GenericResult<impl Stream<Item = Price> + '_> {
+    let mut stream = self
+      .hist_recorder
+      .list(None)
+      .await?
+      .map(move |kline| {
+        let kline = &kline;
+        return Price {
+          symbol: kline.symbol.clone(),
+          price: match price_base {
+            BackTestPriceBase::Close => kline.close_price,
+            BackTestPriceBase::Open => kline.open_price,
+            BackTestPriceBase::High => kline.high_price,
+            BackTestPriceBase::Low => kline.low_price,
+            BackTestPriceBase::OpenCloseMid => {
+              (kline.close_price + kline.open_price) / 2.0
+            }
+            BackTestPriceBase::HighLowMid => {
+              (kline.high_price + kline.low_price) / 2.0
+            }
+          },
+          asset_volume: kline.volume,
+          base_volume: kline.quote_volume,
+          price_base,
+        };
+      })
+      .boxed();
     self.cur_trade = None;
     return Ok(stream! {
       while let Some(v) = stream.next().await {
@@ -78,6 +113,29 @@ impl ExecutorTrait for Executor {
       )));
     }
     let id = ObjectId::new();
+    let price = price.unwrap_or(self.cur_trade.unwrap().price);
+    let order = match order_option {
+      None => vec![Order {
+        symbol,
+        price,
+        qty: budget / price,
+      }],
+      Some(v) => {
+        let price_diff = price * v.price_ratio;
+        v.calc_trading_amounts(budget)
+          .into_iter()
+          .enumerate()
+          .map(|(index, amount)| {
+            let order_price = (price - price_diff) * ((index + 1) as f64);
+            Order {
+              symbol,
+              price: order_price.clone(),
+              qty: amount / order_price,
+            }
+          })
+          .collect()
+      }
+    };
     return Ok(id);
   }
   async fn remove_order(&self, id: ObjectId) -> GenericResult<ExecutionResult> {
