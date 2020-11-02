@@ -23,7 +23,8 @@ struct Order {
 #[derive(Debug, Clone)]
 pub struct Price {
   symbol: String,
-  price: f64,
+  ask: f64,
+  bid: f64,
   price_base: BackTestPriceBase,
   asset_volume: f64,
   base_volume: f64,
@@ -61,26 +62,29 @@ impl Executor {
     &mut self,
     price_base: BackTestPriceBase,
   ) -> GenericResult<impl Stream<Item = Price> + '_> {
+    let half_spread = self.spread / 2.0;
     let mut stream = self
       .hist_recorder
       .list(None)
       .await?
       .map(move |kline| {
         let kline = &kline;
+        let price = match price_base {
+          BackTestPriceBase::Close => kline.close_price,
+          BackTestPriceBase::Open => kline.open_price,
+          BackTestPriceBase::High => kline.high_price,
+          BackTestPriceBase::Low => kline.low_price,
+          BackTestPriceBase::OpenCloseMid => {
+            (kline.close_price + kline.open_price) / 2.0
+          }
+          BackTestPriceBase::HighLowMid => {
+            (kline.high_price + kline.low_price) / 2.0
+          }
+        };
         return Price {
           symbol: kline.symbol.clone(),
-          price: match price_base {
-            BackTestPriceBase::Close => kline.close_price,
-            BackTestPriceBase::Open => kline.open_price,
-            BackTestPriceBase::High => kline.high_price,
-            BackTestPriceBase::Low => kline.low_price,
-            BackTestPriceBase::OpenCloseMid => {
-              (kline.close_price + kline.open_price) / 2.0
-            }
-            BackTestPriceBase::HighLowMid => {
-              (kline.high_price + kline.low_price) / 2.0
-            }
-          },
+          ask: price + half_spread,
+          bid: price - half_spread,
           asset_volume: kline.volume,
           base_volume: kline.quote_volume,
           price_base,
@@ -113,10 +117,10 @@ impl ExecutorTrait for Executor {
       )));
     }
     let id = ObjectId::new();
-    let price = price.unwrap_or(self.cur_trade.unwrap().price);
+    let price = price.unwrap_or(self.cur_trade.as_ref().unwrap().ask);
     let order = match order_option {
       None => vec![Order {
-        symbol,
+        symbol: symbol.clone(),
         price,
         qty: budget / price,
       }],
@@ -128,7 +132,7 @@ impl ExecutorTrait for Executor {
           .map(|(index, amount)| {
             let order_price = (price - price_diff) * ((index + 1) as f64);
             Order {
-              symbol,
+              symbol: symbol.clone(),
               price: order_price.clone(),
               qty: amount / order_price,
             }
