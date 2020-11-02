@@ -13,7 +13,7 @@ use crate::entities::{ExecutionResult, OrderOption};
 use crate::errors::ExecutionFailed;
 use crate::traits::Executor as ExecutorTrait;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct Order {
   symbol: String,
   price: f64,
@@ -100,6 +100,40 @@ impl Executor {
       self.cur_trade = None;
     });
   }
+
+  fn execute_order(&mut self) -> GenericResult<()> {
+    if self.cur_trade.is_none() {
+      return Err(Box::new(ExecutionFailed::new(
+        "Trade Stream seems to be closed.",
+      )));
+    }
+    let cur_trade = self.cur_trade.clone().unwrap();
+    for (key, orders) in self.orders.iter_mut() {
+      let position = orders
+        .into_iter()
+        .filter(|order| order.price >= cur_trade.ask)
+        .fold(Order::default(), |mut acc, order| {
+          acc.symbol = order.symbol.clone();
+          // Moving average method to calculate the purchase cost.
+          acc.price = ((order.price * order.qty) + (acc.price * acc.qty))
+            / (order.qty + acc.qty);
+          acc.qty += order.qty;
+          return acc;
+        });
+      let remain = orders
+        .into_iter()
+        .filter(|order| order.price < cur_trade.ask);
+      match self.positions.get_mut(key) {
+        None => {
+          self.positions.insert(key.clone(), position);
+        }
+        Some(v) => {
+          // Needs to moving average caluculation.
+        }
+      }
+    }
+    return Ok(());
+  }
 }
 
 #[async_trait]
@@ -118,7 +152,7 @@ impl ExecutorTrait for Executor {
     }
     let id = ObjectId::new();
     let price = price.unwrap_or(self.cur_trade.as_ref().unwrap().ask);
-    let order = match order_option {
+    let orders = match order_option {
       None => vec![Order {
         symbol: symbol.clone(),
         price,
