@@ -145,23 +145,26 @@ impl Executor {
     let cur_trade = self.cur_trade.clone().unwrap();
     for (key, orders) in self.orders.iter_mut() {
       let position = orders
-        .into_iter()
-        .filter(|order| order.price >= cur_trade.ask)
+        .iter()
+        .filter(|&order| order.price >= cur_trade.ask)
         .fold(Order::default(), |mut acc, order| {
           acc += order;
           return acc;
         });
-      let remain = orders
-        .into_iter()
-        .filter(|order| order.price < cur_trade.ask);
+      let remain: Vec<Order> = orders
+        .iter()
+        .filter(|&order| order.price < cur_trade.ask)
+        .cloned()
+        .collect();
       match self.positions.get_mut(key) {
         None => {
           self.positions.insert(key.clone(), position);
         }
         Some(v) => {
-          v.price = (position.price * position.qty) + (v.price * v.qty)
+          *v += position;
         }
       }
+      *orders = remain;
     }
     return Ok(());
   }
