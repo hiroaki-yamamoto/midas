@@ -1,4 +1,5 @@
 use ::std::collections::HashMap;
+use ::std::convert::AsRef;
 
 use ::async_stream::stream;
 use ::async_trait::async_trait;
@@ -18,6 +19,40 @@ struct Order {
   symbol: String,
   price: f64,
   qty: f64,
+}
+
+impl AsRef<Self> for Order {
+  fn as_ref(&self) -> &Self {
+    return self;
+  }
+}
+
+impl<T> ::std::ops::Add<T> for Order
+where
+  T: AsRef<Self>,
+{
+  type Output = Self;
+  fn add(self, rhs: T) -> Self::Output {
+    let rhs = rhs.as_ref();
+    return Self {
+      symbol: self.symbol,
+      qty: self.qty + rhs.qty,
+      price: ((self.qty * self.price) + (rhs.qty * rhs.price))
+        / (self.qty + rhs.qty),
+    };
+  }
+}
+
+impl<T> ::std::ops::AddAssign<T> for Order
+where
+  T: AsRef<Self>,
+{
+  fn add_assign(&mut self, rhs: T) {
+    let rhs = rhs.as_ref();
+    self.price = (self.qty * self.price) + (rhs.qty * rhs.price);
+    self.price /= self.qty + rhs.qty;
+    self.qty += rhs.qty;
+  }
 }
 
 #[derive(Debug, Clone)]
@@ -113,11 +148,7 @@ impl Executor {
         .into_iter()
         .filter(|order| order.price >= cur_trade.ask)
         .fold(Order::default(), |mut acc, order| {
-          acc.symbol = order.symbol.clone();
-          // Moving average method to calculate the purchase cost.
-          acc.price = ((order.price * order.qty) + (acc.price * acc.qty))
-            / (order.qty + acc.qty);
-          acc.qty += order.qty;
+          acc += order;
           return acc;
         });
       let remain = orders
@@ -128,7 +159,7 @@ impl Executor {
           self.positions.insert(key.clone(), position);
         }
         Some(v) => {
-          // Needs to moving average caluculation.
+          v.price = (position.price * position.qty) + (v.price * v.qty)
         }
       }
     }
