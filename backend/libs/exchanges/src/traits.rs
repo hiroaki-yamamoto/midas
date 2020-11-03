@@ -89,12 +89,15 @@ pub(crate) trait TradeDateTime {
 #[async_trait]
 pub trait Executor {
   async fn create_order(
-    &self,
+    &mut self,
     symbol: String,
     price: Option<f64>,
     budget: f64,
     order_option: Option<OrderOption>,
   ) -> GenericResult<ObjectId>;
 
-  async fn remove_order(&self, id: ObjectId) -> GenericResult<ExecutionResult>;
+  async fn remove_order(
+    &mut self,
+    id: ObjectId,
+  ) -> GenericResult<ExecutionResult>;
 }

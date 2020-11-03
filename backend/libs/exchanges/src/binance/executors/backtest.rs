@@ -15,19 +15,18 @@ use crate::errors::ExecutionFailed;
 use crate::traits::Executor as ExecutorTrait;
 
 #[derive(Debug, Clone, Default)]
-struct Order {
-  symbol: String,
+struct OrderInner {
   price: f64,
   qty: f64,
 }
 
-impl AsRef<Self> for Order {
+impl AsRef<Self> for OrderInner {
   fn as_ref(&self) -> &Self {
     return self;
   }
 }
 
-impl<T> ::std::ops::Add<T> for Order
+impl<T> ::std::ops::Add<T> for OrderInner
 where
   T: AsRef<Self>,
 {
@@ -35,7 +34,6 @@ where
   fn add(self, rhs: T) -> Self::Output {
     let rhs = rhs.as_ref();
     return Self {
-      symbol: self.symbol,
       qty: self.qty + rhs.qty,
       price: ((self.qty * self.price) + (rhs.qty * rhs.price))
         / (self.qty + rhs.qty),
@@ -43,7 +41,7 @@ where
   }
 }
 
-impl<T> ::std::ops::AddAssign<T> for Order
+impl<T> ::std::ops::AddAssign<T> for OrderInner
 where
   T: AsRef<Self>,
 {
@@ -52,6 +50,18 @@ where
     self.price = (self.qty * self.price) + (rhs.qty * rhs.price);
     self.price /= self.qty + rhs.qty;
     self.qty += rhs.qty;
+  }
+}
+
+#[derive(Debug, Clone, Default)]
+struct Order {
+  pub symbol: String,
+  pub inner: Vec<OrderInner>,
+}
+
+impl Order {
+  fn new(symbol: String, inner: Vec<OrderInner>) -> Self {
+    return Self { symbol, inner };
   }
 }
 
@@ -70,8 +80,8 @@ pub struct Executor {
   maker_fee: f64,
   taker_fee: f64,
   cur_trade: Option<Price>,
-  orders: HashMap<ObjectId, Vec<Order>>,
-  positions: HashMap<ObjectId, Order>,
+  orders: HashMap<ObjectId, Order>,
+  positions: HashMap<ObjectId, OrderInner>,
   hist_recorder: HistoryRecorder,
 }
 
@@ -143,15 +153,20 @@ impl Executor {
       )));
     }
     let cur_trade = self.cur_trade.clone().unwrap();
-    for (key, orders) in self.orders.iter_mut() {
-      let position = orders
+    for (key, order) in self.orders.iter_mut() {
+      if order.symbol != cur_trade.symbol {
+        continue;
+      }
+      let position = order
+        .inner
         .iter()
         .filter(|&order| order.price >= cur_trade.ask)
-        .fold(Order::default(), |mut acc, order| {
+        .fold(OrderInner::default(), |mut acc, order| {
           acc += order;
           return acc;
         });
-      let remain: Vec<Order> = orders
+      let remain: Vec<OrderInner> = order
+        .inner
         .iter()
         .filter(|&order| order.price < cur_trade.ask)
         .cloned()
@@ -164,7 +179,7 @@ impl Executor {
           *v += position;
         }
       }
-      *orders = remain;
+      order.inner = remain;
     }
     return Ok(());
   }
@@ -173,7 +188,7 @@ impl Executor {
 #[async_trait]
 impl ExecutorTrait for Executor {
   async fn create_order(
-    &self,
+    &mut self,
     symbol: String,
     price: Option<f64>,
     budget: f64,
@@ -187,8 +202,7 @@ impl ExecutorTrait for Executor {
     let id = ObjectId::new();
     let price = price.unwrap_or(self.cur_trade.as_ref().unwrap().ask);
     let orders = match order_option {
-      None => vec![Order {
-        symbol: symbol.clone(),
+      None => vec![OrderInner {
         price,
         qty: budget / price,
       }],
@@ -199,8 +213,7 @@ impl ExecutorTrait for Executor {
           .enumerate()
           .map(|(index, amount)| {
             let order_price = (price - price_diff) * ((index + 1) as f64);
-            Order {
-              symbol: symbol.clone(),
+            OrderInner {
               price: order_price.clone(),
               qty: amount / order_price,
             }
@@ -208,9 +221,15 @@ impl ExecutorTrait for Executor {
           .collect()
       }
     };
+    let orders = Order::new(symbol, orders);
+    self.orders.insert(id.clone(), orders);
+    self.execute_order()?;
     return Ok(id);
   }
-  async fn remove_order(&self, id: ObjectId) -> GenericResult<ExecutionResult> {
+  async fn remove_order(
+    &mut self,
+    id: ObjectId,
+  ) -> GenericResult<ExecutionResult> {
     return Ok(ExecutionResult::default());
   }
 }
