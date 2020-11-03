@@ -11,7 +11,7 @@ use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
 use ::tokio::net::TcpStream;
 use ::tokio::select;
-use ::tokio::time::{delay_for, interval};
+use ::tokio::time::{interval, sleep};
 use ::tokio_native_tls::TlsStream;
 use ::tokio_tungstenite::{
   connect_async, stream::Stream, tungstenite as wsocket, WebSocketStream,
@@ -334,7 +334,7 @@ impl TradeObserver {
     );
     let mut clear_sym_map_flag = false;
     loop {
-      let event_delay = delay_for(EVENT_DELAY);
+      let event_delay = sleep(EVENT_DELAY);
       select! {
         Some(msg) = symbol_init_event.next() => {
           if let Some(symb) = self.handle_add_symbol(&msg.data[..]) {
