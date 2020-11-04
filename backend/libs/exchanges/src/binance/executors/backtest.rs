@@ -196,9 +196,7 @@ impl ExecutorTrait for Executor {
     order_option: Option<OrderOption>,
   ) -> GenericResult<ObjectId> {
     if self.cur_trade.is_none() {
-      return Err(Box::new(ExecutionFailed::new(
-        "Trade Stream seems to be closed.",
-      )));
+      return Err(Box::new(ExecutionFailed::new("Trade Stream is closed.")));
     }
     let id = ObjectId::new();
     let price = price.unwrap_or(self.cur_trade.as_ref().unwrap().ask);
@@ -231,6 +229,26 @@ impl ExecutorTrait for Executor {
     &mut self,
     id: ObjectId,
   ) -> GenericResult<ExecutionResult> {
-    return Ok(ExecutionResult::default());
+    if self.cur_trade.is_none() {
+      return Err(Box::new(ExecutionFailed::new("Trade stream is closed.")));
+    }
+    let cur_trade = self.cur_trade.clone().unwrap();
+    let price = cur_trade.bid;
+    self.orders.remove(&id);
+    let ret = match self.positions.get_mut(&id) {
+      None => ExecutionResult::default(),
+      Some(v) => {
+        let profit = price - v.price;
+        let profit_ratio = price / v.price;
+        ExecutionResult {
+          id,
+          price,
+          profit,
+          profit_ratio,
+          qty: v.qty,
+        }
+      }
+    };
+    return Ok(ret);
   }
 }
