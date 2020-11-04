@@ -75,6 +75,12 @@ pub struct Price {
   base_volume: f64,
 }
 
+#[derive(Clone, Debug)]
+enum ExecutionType {
+  Maker,
+  Taker,
+}
+
 pub struct Executor {
   spread: f64,
   maker_fee: f64,
@@ -140,14 +146,14 @@ impl Executor {
     return Ok(try_stream! {
       while let Some(v) = stream.next().await {
         self.cur_trade = Some(v.clone());
-        self.execute_order()?;
+        self.execute_order(ExecutionType::Maker)?;
         yield v;
       }
       self.cur_trade = None;
     });
   }
 
-  fn execute_order(&mut self) -> GenericResult<()> {
+  fn execute_order(&mut self, exe_type: ExecutionType) -> GenericResult<()> {
     if self.cur_trade.is_none() {
       return Err(Box::new(ExecutionFailed::new(
         "Trade Stream seems to be closed.",
@@ -158,11 +164,17 @@ impl Executor {
       if order.symbol != cur_trade.symbol {
         continue;
       }
+      let fee = match exe_type {
+        ExecutionType::Maker => self.maker_fee,
+        ExecutionType::Taker => self.taker_fee,
+      };
       let position = order
         .inner
         .iter()
         .filter(|&order| order.price >= cur_trade.ask)
         .fold(OrderInner::default(), |mut acc, order| {
+          let mut order = order.clone();
+          order.qty = order.qty * (1.0 - fee);
           acc += order;
           return acc;
         });
@@ -222,7 +234,7 @@ impl ExecutorTrait for Executor {
     };
     let orders = Order::new(symbol, orders);
     self.orders.insert(id.clone(), orders);
-    self.execute_order()?;
+    self.execute_order(ExecutionType::Taker)?;
     return Ok(id);
   }
   async fn remove_order(
@@ -235,11 +247,13 @@ impl ExecutorTrait for Executor {
     let cur_trade = self.cur_trade.clone().unwrap();
     let price = cur_trade.bid;
     self.orders.remove(&id);
+    let fee = self.taker_fee;
     let ret = match self.positions.get_mut(&id) {
       None => ExecutionResult::default(),
       Some(v) => {
-        let profit = price - v.price;
-        let profit_ratio = price / v.price;
+        let qty = v.qty * (1.0 - fee);
+        let profit = ((qty * price) - (v.qty * v.price)) / qty;
+        let profit_ratio = profit / v.price;
         ExecutionResult {
           id,
           price,
