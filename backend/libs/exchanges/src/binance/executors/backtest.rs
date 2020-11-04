@@ -1,7 +1,7 @@
 use ::std::collections::HashMap;
 use ::std::convert::AsRef;
 
-use ::async_stream::stream;
+use ::async_stream::try_stream;
 use ::async_trait::async_trait;
 use ::futures::stream::{Stream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
@@ -106,7 +106,7 @@ impl Executor {
   pub async fn open(
     &mut self,
     price_base: BackTestPriceBase,
-  ) -> GenericResult<impl Stream<Item = Price> + '_> {
+  ) -> GenericResult<impl Stream<Item = GenericResult<Price>> + '_> {
     let half_spread = self.spread / 2.0;
     let mut stream = self
       .hist_recorder
@@ -137,9 +137,10 @@ impl Executor {
       })
       .boxed();
     self.cur_trade = None;
-    return Ok(stream! {
+    return Ok(try_stream! {
       while let Some(v) = stream.next().await {
         self.cur_trade = Some(v.clone());
+        self.execute_order()?;
         yield v;
       }
       self.cur_trade = None;
