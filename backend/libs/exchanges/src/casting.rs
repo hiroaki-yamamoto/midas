@@ -12,8 +12,6 @@ pub(crate) struct ParseError {
   fld_name: String,
 }
 
-unsafe impl Send for ParseError {}
-
 impl ParseError {
   fn new(fld_name: &str) -> Self {
     return ParseError {

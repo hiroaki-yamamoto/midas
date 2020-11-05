@@ -16,8 +16,6 @@ impl Display for MaximumAttemptExceeded {
 
 impl Error for MaximumAttemptExceeded {}
 
-unsafe impl Send for MaximumAttemptExceeded {}
-
 #[derive(Debug, Clone)]
 pub struct StatusFailure {
   pub url: Url,
@@ -32,8 +30,6 @@ impl Display for StatusFailure {
 }
 impl Error for StatusFailure {}
 
-unsafe impl Send for StatusFailure {}
-
 #[derive(Debug, Clone)]
 pub struct EmptyError {
   pub field: String,
@@ -46,8 +42,6 @@ impl Display for EmptyError {
 }
 
 impl Error for EmptyError {}
-
-unsafe impl Send for EmptyError {}
 
 #[derive(Debug, Clone)]
 pub struct WebsocketError {
@@ -66,7 +60,6 @@ impl Display for WebsocketError {
 }
 
 impl Error for WebsocketError {}
-unsafe impl Send for WebsocketError {}
 
 #[derive(Debug, Clone)]
 pub struct ExecutionFailed {
