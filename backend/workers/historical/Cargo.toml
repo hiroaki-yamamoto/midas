@@ -13,7 +13,7 @@ slog_builder = { path = "../../libs/slog_builder" }
 types = { path = "../../libs/types" }
 
 slog = "2.5.2"
-tokio = { version = "0.3.3", features = ["rt", "rt-multi-thread", "macros", "signal"] }
+tokio = { version = "0.2.22", features = ["rt-threaded", "macros", "signal"] }
 nats = "0.8.3"
 clap = "3.0.0-beta.2"
 mongodb = "1.1.1"

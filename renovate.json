@@ -25,6 +25,20 @@
     {
       "packageNames": ["typescript"],
       "allowedVersions": "<4.0.0"
+    },
+    {
+      "packageNames": ["tokio"],
+      "allowedVersions": "<0.3.0"
+    },
+    {
+      "packageNames": ["tokio-tungstenite"],
+      "allowedVersions": "<0.12"
+    },
+    {
+      "packageNames": [
+        "tokio-native-tls"
+      ],
+      "allowedVersions": "<0.2"
     }
   ]
 }

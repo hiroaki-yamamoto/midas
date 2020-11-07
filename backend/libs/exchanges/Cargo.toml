@@ -8,8 +8,8 @@ edition = "2018"
 
 [dependencies]
 reqwest = {version = "0.10.8", features = ["json", "gzip", "brotli"]}
-tokio = {version = "0.3.3", features = [
-  "rt", "rt-multi-thread",
+tokio = {version = "0.2.22", features = [
+  "rt-threaded",
   "sync", "macros", "stream", "time", "net"
 ]}
 rpc = { path = "../rpc" }
@@ -28,10 +28,10 @@ nats = "0.8.3"
 rmp-serde = "0.14.4"
 num_cpus = "1.13.0"
 rand = "0.7.3"
-tokio-tungstenite = { git = "https://github.com/snapview/tokio-tungstenite.git", rev = "3c6d4280d77fdff3e25f68ad703d94e89f38dae2", features = ["tls"] }
+tokio-tungstenite = { version = "0.11.0", features = ["tls"] }
 http = "0.2.1"
 async-stream = "0.3.0"
 tonic = "0.3.1"
 clap = "3.0.0-beta.2"
-tokio-native-tls = "0.2.0"
+tokio-native-tls = "0.1"
 num = "0.3.1"

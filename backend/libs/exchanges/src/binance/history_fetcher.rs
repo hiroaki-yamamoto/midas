@@ -13,7 +13,7 @@ use ::serde_qs::to_string;
 use ::tokio::select;
 use ::tokio::stream::StreamExt as TokioStreamExt;
 use ::tokio::sync::broadcast;
-use ::tokio::time::sleep;
+use ::tokio::time::delay_for;
 use ::url::Url;
 
 use ::config::{
@@ -165,7 +165,7 @@ impl HistoryFetcher {
           rest_status.as_u16(),
           retry_secs.num_seconds(),
         );
-        sleep(ret_on_err!(retry_secs.to_std())).await;
+        delay_for(ret_on_err!(retry_secs.to_std())).await;
       } else {
         let text = ret_on_err!(resp.text().await);
         warn!(
@@ -176,7 +176,7 @@ impl HistoryFetcher {
       c += 1;
       let wait_dur = Duration::nanoseconds((random::<i64>() + 1) % 1_000_000);
       let wait_dur = ret_on_err!(wait_dur.to_std());
-      sleep(wait_dur).await;
+      delay_for(wait_dur).await;
     }
     return Err(Box::new(MaximumAttemptExceeded::default()));
   }

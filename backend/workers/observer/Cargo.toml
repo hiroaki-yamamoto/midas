@@ -13,7 +13,7 @@ config = { path = "../../libs/config" }
 slog_builder = { path = "../../libs/slog_builder" }
 
 clap = "3.0.0-beta.2"
-tokio = {version = "0.3.3", features = ["rt", "signal", "rt-multi-thread", "macros"]}
+tokio = {version = "0.2.22", features = ["signal", "rt-threaded", "macros"]}
 nats = "0.8.3"
 slog = "2.5.2"
 futures = "0.3.7"
