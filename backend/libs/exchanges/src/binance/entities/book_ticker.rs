@@ -6,7 +6,7 @@ use ::serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BookTicker<PT> {
   #[serde(rename = "u")]
-  id: u128,
+  id: u64,
   #[serde(rename = "s")]
   symbol: String,
   #[serde(rename = "b")]
