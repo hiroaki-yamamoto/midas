@@ -1,5 +1,4 @@
 use ::std::collections::HashMap;
-use ::std::convert::AsRef;
 
 use ::async_stream::try_stream;
 use ::async_trait::async_trait;
@@ -14,56 +13,7 @@ use crate::entities::{ExecutionResult, OrderOption};
 use crate::errors::ExecutionFailed;
 use crate::traits::Executor as ExecutorTrait;
 
-#[derive(Debug, Clone, Default)]
-struct OrderInner {
-  price: f64,
-  qty: f64,
-}
-
-impl AsRef<Self> for OrderInner {
-  fn as_ref(&self) -> &Self {
-    return self;
-  }
-}
-
-impl<T> ::std::ops::Add<T> for OrderInner
-where
-  T: AsRef<Self>,
-{
-  type Output = Self;
-  fn add(self, rhs: T) -> Self::Output {
-    let rhs = rhs.as_ref();
-    return Self {
-      qty: self.qty + rhs.qty,
-      price: ((self.qty * self.price) + (rhs.qty * rhs.price))
-        / (self.qty + rhs.qty),
-    };
-  }
-}
-
-impl<T> ::std::ops::AddAssign<T> for OrderInner
-where
-  T: AsRef<Self>,
-{
-  fn add_assign(&mut self, rhs: T) {
-    let rhs = rhs.as_ref();
-    self.price = (self.qty * self.price) + (rhs.qty * rhs.price);
-    self.price /= self.qty + rhs.qty;
-    self.qty += rhs.qty;
-  }
-}
-
-#[derive(Debug, Clone, Default)]
-struct Order {
-  pub symbol: String,
-  pub inner: Vec<OrderInner>,
-}
-
-impl Order {
-  fn new(symbol: String, inner: Vec<OrderInner>) -> Self {
-    return Self { symbol, inner };
-  }
-}
+use super::entities::{Order, OrderInner};
 
 #[derive(Debug, Clone)]
 pub struct Price {
