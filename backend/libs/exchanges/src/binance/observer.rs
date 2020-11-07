@@ -1,4 +1,5 @@
 use ::std::collections::{HashMap, HashSet};
+use ::std::convert::TryFrom;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
@@ -25,7 +26,7 @@ use super::constants::{
   TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
 };
 use super::entities::{
-  StreamEvent, Symbol, Trade, TradeSubRequest, TradeSubRequestInner,
+  BookTicker, SubscribeRequest, SubscribeRequestInner, Symbol,
 };
 
 use crate::errors::{MaximumAttemptExceeded, WebsocketError};
@@ -135,11 +136,11 @@ impl TradeObserver {
     for (id, symbols) in map.into_iter() {
       let params: Vec<String> = symbols
         .into_iter()
-        .map(|item| format!("{}@trade", item.to_lowercase()))
+        .map(|item| format!("{}@bookTicker", item.to_lowercase()))
         .collect();
       let id = id as u64;
-      let req = TradeSubRequestInner { id, params };
-      let req = TradeSubRequest::Subscribe(req);
+      let req = SubscribeRequestInner { id, params };
+      let req = SubscribeRequest::Subscribe(req);
       ::slog::debug!(self.logger, "Subscribe: {:?}", &req);
       let req = ret_on_err!(to_json(&req));
       let req = ret_on_err!(String::from_utf8(req));
@@ -184,13 +185,13 @@ impl TradeObserver {
     for (id, symbols) in map.into_iter() {
       let params: Vec<String> = symbols
         .into_iter()
-        .map(|item| format!("{}@trade", item.to_lowercase()))
+        .map(|item| format!("{}@bookTicker", item.to_lowercase()))
         .collect();
-      let req = TradeSubRequestInner {
+      let req = SubscribeRequestInner {
         id: id as u64,
         params,
       };
-      let req = TradeSubRequest::Unsubscribe(req);
+      let req = SubscribeRequest::Unsubscribe(req);
       ::slog::debug!(self.logger, "Unsubscribe: {:?}", &req);
       let req = ret_on_err!(to_json(&req));
       let req = ret_on_err!(String::from_utf8(req));
@@ -202,7 +203,7 @@ impl TradeObserver {
   }
 
   async fn handle_trade(&self, data: &[u8]) {
-    let event: StreamEvent = match from_json(data) {
+    let book: BookTicker<f64> = match from_json::<BookTicker<String>>(data) {
       Err(e) => {
         ::slog::warn!(
           self.logger,
@@ -214,37 +215,31 @@ impl TradeObserver {
         ::slog::debug!(self.logger, "Data: {}", data);
         return;
       }
+      Ok(v) => match BookTicker::<f64>::try_from(v) {
+        Err(e) => {
+          ::slog::warn!(
+            self.logger,
+            "Failed to cast the trade data: {}. Ignoring",
+            e
+          );
+          return;
+        }
+        Ok(v) => v,
+      },
+    };
+    ::slog::debug!(self.logger, "Book Update: {:?}", book);
+    let msg = match to_msgpack(&book) {
+      Err(e) => {
+        ::slog::warn!(
+          self.logger,
+          "Failed to encode the book update data: {}",
+          e
+        );
+        return;
+      }
       Ok(v) => v,
     };
-    match event {
-      StreamEvent::Trade(trade) => {
-        let trade: SendableErrorResult<Trade> = trade.into();
-        let trade: Trade = match trade {
-          Err(e) => {
-            ::slog::warn!(
-              self.logger,
-              "Failed to cast trade data: {}. Ignoring",
-              e
-            );
-            return;
-          }
-          Ok(v) => v,
-        };
-        ::slog::debug!(self.logger, "Trade: {:?}", trade);
-        let msg = match to_msgpack(&trade) {
-          Err(e) => {
-            ::slog::warn!(
-              self.logger,
-              "Failed to encode the trade data: {}",
-              e
-            );
-            return;
-          }
-          Ok(v) => v,
-        };
-        let _ = self.broker.publish(TRADE_OBSERVER_SUB_NAME, &msg[..]).await;
-      } // _ => {}
-    }
+    let _ = self.broker.publish(TRADE_OBSERVER_SUB_NAME, &msg[..]).await;
   }
 
   async fn handle_websocket_message(

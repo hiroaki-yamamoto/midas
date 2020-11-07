@@ -1748,7 +1748,6 @@ dependencies = [
  "slog",
  "slog_builder",
  "tokio 0.3.3",
- "tonic",
 ]
 
 [[package]]
