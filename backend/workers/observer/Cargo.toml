@@ -14,7 +14,7 @@ slog_builder = { path = "../../libs/slog_builder" }
 
 clap = "3.0.0-beta.2"
 tokio = {version = "0.3.3", features = ["signal", "rt-multi-thread", "macros"]}
-nats = "0.8.2"
+nats = "0.8.3"
 slog = "2.5.2"
 tonic = { version = "0.3.1", features = ["transport", "tls"] }
 futures = "0.3.7"

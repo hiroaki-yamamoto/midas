@@ -21,4 +21,4 @@ clap = "3.0.0-beta.2"
 tokio = {version = "0.3.3", features = ["macros", "rt-multi-thread", "signal"]}
 futures = "0.3.7"
 libc = "0.2.80"
-nats = "0.8.2"
+nats = "0.8.3"
