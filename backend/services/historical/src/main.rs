@@ -10,8 +10,7 @@ use ::futures::{join, FutureExt};
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::options::ClientOptions as MongoDBCliOpt;
 use ::mongodb::Client as DBCli;
-use ::slog::{info, warn, Logger};
-use ::slog_builder::{build_debug, build_json};
+use ::slog::{info, warn};
 use ::tokio::signal::unix as signal;
 use ::tonic::transport::Server as RPCServer;
 
@@ -24,14 +23,7 @@ use crate::service::Service;
 async fn main() -> Result<(), Box<dyn Error>> {
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config))?;
-  let logger: Logger;
-  if cfg.debug {
-    let (debug_logger, _) = build_debug();
-    logger = debug_logger;
-  } else {
-    let (prd_logger, _) = build_json();
-    logger = prd_logger;
-  }
+  let (logger, _) = cfg.build_slog();
   info!(logger, "Historical Kline Service");
   let broker = ::nats::asynk::connect(&cfg.broker_url).await?;
   let db = DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await?)?

@@ -7,13 +7,12 @@ use ::futures::FutureExt;
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::{options::ClientOptions as DBCliOpt, Client as DBCli};
 use ::nats::asynk::connect as connect_broker;
-use ::slog::{info, o, Logger};
+use ::slog::{info, o};
 use ::tokio::signal::unix as signal;
 use ::tonic::transport::Server as RPCServer;
 
 use ::config::{CmdArgs, Config};
 use ::rpc::symbol::symbol_server::SymbolServer;
-use ::slog_builder::{build_debug, build_json};
 use ::types::GenericResult;
 
 use self::service::Service;
@@ -23,14 +22,7 @@ async fn main() -> GenericResult<()> {
   let mut sig = signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT))?;
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config))?;
-  let logger: Logger;
-  if cfg.debug {
-    let (debug_logger, _) = build_debug();
-    logger = debug_logger;
-  } else {
-    let (prd_logger, _) = build_json();
-    logger = prd_logger;
-  }
+  let (logger, _) = cfg.build_slog();
   info!(logger, "Symbol Service");
   let db =
     DBCli::with_options(DBCliOpt::parse(&cfg.db_url).await?)?.database("midas");

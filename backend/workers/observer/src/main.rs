@@ -8,7 +8,6 @@ use ::tokio::signal::unix as signal;
 use ::config::{Config, DEFAULT_CONFIG_PATH};
 use ::exchanges::{binance, TradeObserver};
 use ::rpc::entities::Exchanges;
-use ::slog_builder::{build_debug, build_json};
 
 #[derive(Debug, Clap)]
 #[clap(author = "Hiroaki Yamamoto")]
@@ -24,10 +23,7 @@ async fn main() {
   let cmd_args: CmdArgs = CmdArgs::parse();
   let config = Config::from_fpath(Some(cmd_args.config)).unwrap();
 
-  let (logger, _) = match config.debug {
-    true => build_debug(),
-    false => build_json(),
-  };
+  let (logger, _) = config.build_slog();
   let broker = new_broker(&config.broker_url).await.unwrap();
   let exchange: Box<dyn TradeObserver> = match cmd_args.exchange {
     Exchanges::Binance => Box::new(binance::TradeObserver::new(

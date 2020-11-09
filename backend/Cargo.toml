@@ -6,8 +6,11 @@ members = [
   "libs/rpc",
   "libs/types",
   # "libs/tls",
+
   "services/historical",
   "services/symbol",
+  "services/observer",
+
   "workers/historical",
   "workers/observer"
 ]

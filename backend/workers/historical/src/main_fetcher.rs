@@ -4,7 +4,7 @@ use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::options::ClientOptions as MongoDBCliOpt;
 use ::mongodb::Client as DBCli;
 use ::nats::asynk::connect;
-use ::slog::{info, o, Logger};
+use ::slog::{info, o};
 use ::tokio::signal::unix as signal;
 
 use ::config::{CmdArgs, Config};
@@ -13,21 +13,13 @@ use ::exchanges::binance::{
   SymbolFetcher as BinanceSymbolFetcher,
 };
 use ::exchanges::HistoryFetcher;
-use ::slog_builder::{build_debug, build_json};
 use ::types::GenericResult;
 
 #[tokio::main]
 async fn main() -> GenericResult<()> {
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config))?;
-  let logger: Logger;
-  if cfg.debug {
-    let (debug_logger, _) = build_debug();
-    logger = debug_logger;
-  } else {
-    let (prd_logger, _) = build_json();
-    logger = prd_logger;
-  }
+  let (logger, _) = cfg.build_slog();
   info!(logger, "Kline fetch worker");
   let broker = connect(&cfg.broker_url).await?;
   let db = DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await?)?

@@ -7,8 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-
-slog_builder = { path = "../../libs/slog_builder" }
 types = { path = "../../libs/types" }
 exchanges = { path = "../../libs/exchanges" }
 rpc = { path = "../../libs/rpc" }

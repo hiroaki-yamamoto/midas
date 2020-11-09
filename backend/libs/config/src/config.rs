@@ -3,6 +3,9 @@ use ::std::fs::{read_to_string, File};
 use ::std::io::Read;
 
 use ::serde::Deserialize;
+use ::slog::Logger;
+use ::slog_atomic::AtomicSwitchCtrl;
+use ::slog_builder::{build_debug, build_json};
 use ::tonic::transport::{Identity, ServerTlsConfig};
 
 use ::types::GenericResult;
@@ -62,5 +65,13 @@ impl Config {
     };
     let f = File::open(path)?;
     return Self::from_stream(f);
+  }
+
+  pub fn build_slog(&self) -> (Logger, AtomicSwitchCtrl) {
+    if self.debug {
+      return build_debug();
+    } else {
+      return build_json();
+    }
   }
 }

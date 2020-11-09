@@ -500,6 +500,9 @@ dependencies = [
  "clap",
  "serde",
  "serde_yaml",
+ "slog",
+ "slog-atomic",
+ "slog_builder",
  "tonic",
  "types",
 ]
@@ -1086,7 +1089,6 @@ dependencies = [
  "mongodb",
  "nats",
  "slog",
- "slog_builder",
  "tokio",
  "types",
 ]
@@ -1111,7 +1113,6 @@ dependencies = [
  "serde_yaml",
  "slog",
  "slog-atomic",
- "slog_builder",
  "tokio",
  "tonic",
  "types",
@@ -1725,6 +1726,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ab52be62400ca80aa00285d25253d7f7c437b7375c4de678f5405d3afe82ca5"
 
 [[package]]
+name = "observer"
+version = "0.1.0"
+dependencies = [
+ "config",
+ "exchanges",
+ "futures",
+ "nats",
+ "warp",
+]
+
+[[package]]
 name = "observer_worker"
 version = "0.1.0"
 dependencies = [
@@ -1736,7 +1748,6 @@ dependencies = [
  "nats",
  "rpc",
  "slog",
- "slog_builder",
  "tokio",
 ]
 
@@ -2855,7 +2866,6 @@ dependencies = [
  "num-traits",
  "rpc",
  "slog",
- "slog_builder",
  "tokio",
  "tonic",
  "types",

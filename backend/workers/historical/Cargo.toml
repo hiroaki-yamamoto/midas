@@ -9,7 +9,6 @@ edition = "2018"
 [dependencies]
 config = { path = "../../libs/config" }
 exchanges = { path = "../../libs/exchanges" }
-slog_builder = { path = "../../libs/slog_builder" }
 types = { path = "../../libs/types" }
 
 slog = "2.5.2"
