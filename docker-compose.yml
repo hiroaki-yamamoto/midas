@@ -122,6 +122,21 @@ services:
     depends_on:
       - database
       - broker
+  trade_observer_service:
+    build:
+      context: ./backend
+      dockerfile: devel.dockerfile
+      args:
+        - SERVICE=observer_service
+    command:
+      - -c
+      - /etc/midas/midas.yml
+    volumes:
+      - ./etc:/etc/midas
+      - ./backend:/opt/code
+    restart: unless-stopped
+    depends_on:
+      - broker
   frontend:
     build:
       context: frontend

@@ -82,8 +82,16 @@ async fn main() {
     .bind_with_graceful_shutdown(host, async move {
       sig.recv().await;
     });
+  ::slog::info!(
+    &logger,
+    "Starting Trade Observer Websocket Server";
+    o!("addr" => host.to_string()),
+  );
   let ws_svr = ws_svr.then(|_| async {
-    ::slog::warn!(&logger, "GRPC Server is shutting down! Bye! Bye!");
+    ::slog::warn!(
+      &logger,
+      "Trade Observer Websocket Server is shutting down! Bye! Bye!"
+    );
   });
   ws_svr.await;
 }

@@ -151,10 +151,18 @@ workflows:
               only: master
           service_name: symbol_service
       - deploy-image:
-          name: "Trade Observer Deployment"
+          name: "Trade Observer Worker Deployment"
           requires:
             - build-backend
           filters:
             branches:
               only: master
           service_name: observer_worker
+      - deploy-image:
+          name: "Trade Observer Service Deployment"
+          requires:
+            - build-backend
+          filters:
+            branches:
+              only: master
+          service_name: observer_service
