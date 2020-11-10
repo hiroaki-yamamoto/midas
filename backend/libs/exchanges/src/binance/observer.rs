@@ -228,7 +228,6 @@ impl TradeObserver {
         Ok(v) => v,
       },
     };
-    ::slog::debug!(self.logger, "Book Update: {:?}", book);
     let msg = match to_msgpack(&book) {
       Err(e) => {
         ::slog::warn!(
