@@ -5,8 +5,8 @@ use ::std::time::Duration;
 use ::async_trait::async_trait;
 use ::futures::future::join3;
 use ::futures::sink::SinkExt;
-use ::futures::stream::StreamExt;
-use ::nats::asynk::{Connection as Broker, Subscription as NatsSub};
+use ::futures::stream::{BoxStream, StreamExt};
+use ::nats::asynk::Connection as Broker;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
@@ -29,6 +29,7 @@ use super::entities::{
   BookTicker, SubscribeRequest, SubscribeRequestInner, Symbol,
 };
 
+use crate::entities::BookTicker as CommonBookTicker;
 use crate::errors::{MaximumAttemptExceeded, WebsocketError};
 use crate::traits::TradeObserver as TradeObserverTrait;
 
@@ -409,7 +410,18 @@ impl TradeObserverTrait for TradeObserver {
     };
     return Ok(());
   }
-  async fn subscribe(&self) -> ::std::io::Result<NatsSub> {
-    return self.broker.subscribe(TRADE_OBSERVER_SUB_NAME).await;
+  async fn subscribe(
+    &self,
+  ) -> ::std::io::Result<BoxStream<'_, CommonBookTicker>> {
+    return Ok(
+      self
+        .broker
+        .subscribe(TRADE_OBSERVER_SUB_NAME)
+        .await?
+        .map(|msg| from_msgpack::<BookTicker<f64>>(&msg.data[..]))
+        .filter_map(|res| async { res.ok() })
+        .map(|item| item.into())
+        .boxed(),
+    );
   }
 }

@@ -14,6 +14,12 @@ impl Status {
       message: String::from(msg),
     };
   }
+  pub fn new_int(code: i32, msg: &str) -> Self {
+    return Self {
+      code,
+      message: String::from(msg),
+    };
+  }
   pub fn from_tonic_status(st: &TonicStatus) -> Self {
     return Self {
       code: st.code() as i32,

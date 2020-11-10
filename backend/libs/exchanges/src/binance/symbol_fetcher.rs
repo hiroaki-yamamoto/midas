@@ -148,7 +148,7 @@ impl SymbolFetcherTrait for SymbolFetcher {
     }
   }
 
-  type ListStream = ListSymbolStream;
+  type ListStream = ListSymbolStream<'static>;
   async fn list(
     &self,
     status: Option<String>,

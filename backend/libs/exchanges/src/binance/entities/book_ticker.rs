@@ -1,6 +1,8 @@
 use ::std::convert::TryFrom;
 use ::std::error::Error;
 
+use crate::entities::BookTicker as CommonBookTicker;
+use ::rpc::entities::Exchanges;
 use ::serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,5 +33,25 @@ impl TryFrom<BookTicker<String>> for BookTicker<f64> {
       ask_price: value.ask_price.parse()?,
       ask_qty: value.ask_qty.parse()?,
     });
+  }
+}
+
+impl From<&BookTicker<f64>> for CommonBookTicker {
+  fn from(value: &BookTicker<f64>) -> Self {
+    return Self {
+      exchange: Exchanges::Binance,
+      symbol: value.symbol.clone(),
+      id: value.id.to_string(),
+      bid_price: value.bid_price,
+      bid_qty: value.bid_qty,
+      ask_price: value.ask_price,
+      ask_qty: value.ask_qty,
+    };
+  }
+}
+
+impl From<BookTicker<f64>> for CommonBookTicker {
+  fn from(value: BookTicker<f64>) -> Self {
+    return (&value).into();
   }
 }

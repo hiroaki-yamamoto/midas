@@ -1,19 +1,4 @@
-use std::pin::Pin;
-
-use ::futures::stream::Stream;
-use ::mongodb::bson::oid::ObjectId;
 use ::num::pow::pow;
-use ::rpc::entities::SymbolInfo;
-use ::serde::{Deserialize, Serialize};
-
-pub type ListSymbolStream =
-  Pin<Box<dyn Stream<Item = SymbolInfo> + Send + 'static>>;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "status")]
-pub enum KlineCtrl {
-  Stop,
-}
 
 pub struct OrderOption {
   pub(crate) iceberg: bool,
@@ -66,13 +51,4 @@ impl OrderOption {
     }
     return ret;
   }
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct ExecutionResult {
-  pub id: ObjectId,
-  pub price: f64,
-  pub qty: f64,
-  pub profit: f64,
-  pub profit_ratio: f64,
 }

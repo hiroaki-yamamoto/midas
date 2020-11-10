@@ -1733,7 +1733,13 @@ dependencies = [
  "config",
  "exchanges",
  "futures",
+ "libc",
  "nats",
+ "rpc",
+ "serde_json",
+ "slog",
+ "tokio",
+ "types",
  "warp",
 ]
 

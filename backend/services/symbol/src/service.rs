@@ -32,9 +32,10 @@ impl Service {
   fn get_fetcher(
     &self,
     exchange: Option<Exchanges>,
-  ) -> Result<&(dyn SymbolFetcher<ListStream = ListSymbolStream> + Send + Sync)>
-  {
-    let fetcher: &(dyn SymbolFetcher<ListStream = ListSymbolStream>
+  ) -> Result<
+    &(dyn SymbolFetcher<ListStream = ListSymbolStream<'static>> + Send + Sync),
+  > {
+    let fetcher: &(dyn SymbolFetcher<ListStream = ListSymbolStream<'static>>
         + Send
         + Sync) = match exchange {
       Some(Exchanges::Binance) => {

@@ -1,6 +1,6 @@
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Utc};
-use ::futures::stream::Stream;
+use ::futures::stream::{BoxStream, Stream};
 use ::mongodb::bson::{doc, oid::ObjectId};
 use ::mongodb::Database;
 use ::nats::asynk::Subscription;
@@ -8,7 +8,7 @@ use ::nats::asynk::Subscription;
 use ::rpc::entities::SymbolInfo;
 use ::types::{GenericResult, SendableErrorResult};
 
-use super::entities::{ExecutionResult, OrderOption};
+use super::entities::{BookTicker, ExecutionResult, OrderOption};
 
 #[async_trait]
 pub trait Recorder {
@@ -77,7 +77,7 @@ pub trait HistoryRecorder {
 #[async_trait]
 pub trait TradeObserver {
   async fn start(&self) -> SendableErrorResult<()>;
-  async fn subscribe(&self) -> ::std::io::Result<Subscription>;
+  async fn subscribe(&self) -> ::std::io::Result<BoxStream<'_, BookTicker>>;
 }
 
 pub(crate) trait TradeDateTime {
