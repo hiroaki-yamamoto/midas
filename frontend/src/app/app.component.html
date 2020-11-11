@@ -3,6 +3,13 @@
   <ul>
     <li><a mat-button i18n routerLink="/">Dashboard</a></li>
     <li><a mat-button i18n (click)="openSyncSetting()">Sync</a></li>
+    <li><a mat-button i18n routerLink="/info">Info</a></li>
   </ul>
 </mat-toolbar>
-<router-outlet></router-outlet>
+<div fxLayout="row" class="router-body">
+  <div fxFlex="5vw"></div>
+  <div fxFlex>
+    <router-outlet></router-outlet>
+  </div>
+  <div fxFlex="5vw"></div>
+</div>
