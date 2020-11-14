@@ -10,5 +10,5 @@ edition = "2018"
 tonic = "0.3.1"
 url = "2.2.0"
 serde = "1.0.117"
-tokio = {version = "0.2.22", features = ["sync"]}
+tokio = {version = "0.2.23", features = ["sync"]}
 chrono = "0.4.19"
