@@ -40,7 +40,6 @@ async fn main() {
         "scope" => "Trade Observer Service"
       });
       return ws.on_upgrade(|mut socket: ::warp::ws::WebSocket| async move {
-        ::slog::info!(&logger, "hello");
         let exchange = match exchange {
           Err(e) => {
             let _ = socket.send(Message::close_with(1003 as u16, e)).await;
