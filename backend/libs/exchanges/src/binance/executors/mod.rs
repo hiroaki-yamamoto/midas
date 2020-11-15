@@ -1,6 +1,6 @@
 mod backtest;
 mod entities;
-mod frontest;
+mod front_test;
 
 pub use self::backtest::Executor as BackTestExecutor;
-pub use self::frontest::Executor as FrontTestExecutor;
+pub use self::front_test::Executor as FrontTestExecutor;

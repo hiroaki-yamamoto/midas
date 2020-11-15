@@ -24,6 +24,7 @@ services:
     depends_on:
       - symbol_service
       - historical_service
+      - trade_observer_service
       - frontend
     ports:
       - 50000:50000

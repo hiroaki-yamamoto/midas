@@ -36,7 +36,7 @@ export class TradeObserverService {
     };
   }
   public connect() {
-    const binanceBookTicker = new MidasSocket('/bookticker');
+    const binanceBookTicker = new MidasSocket('/bookticker/binance');
     binanceBookTicker.addEventListener('message', this.handle('binance'));
   }
 }

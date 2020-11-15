@@ -61,15 +61,15 @@ static_resources:
                         route:
                           cluster: symbol
                           prefix_rewrite: "/"
-                      - match: { prefix: "/" }
-                        route: { cluster: frontend }
-                      - match: { prefix: "/bookticker" }
+                      - match: { prefix: "/bookticker/" }
                         route:
                           cluster: trade_observer
                           prefix_rewrite: "/"
+                      - match: { prefix: "/" }
+                        route: { cluster: frontend }
               http_filters:
-                - name: envoy.grpc_web
-                - name: envoy.router
+                - name: envoy.filters.http.grpc_web
+                - name: envoy.filters.http.router
         transport_socket:
           name: envoy.transport_sockets.tls
           typed_config:
@@ -86,12 +86,17 @@ static_resources:
   clusters:
     - name: historical_stream
       connect_timeout: 10s
-      type: logical_dns
+      type: strict_dns
       lb_policy: round_robin
-      hosts:
-        - socket_address:
-            address: historical_service
-            port_value: 50001
+      load_assignment:
+        cluster_name: historical_stream
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: historical_service
+                      port_value: 50001
       transport_socket:
         name: envoy.transport_sockets.tls
         typed_config:
@@ -105,14 +110,19 @@ static_resources:
               trusted_ca: { filename: /etc/midas/tls/svc/root-ca.pem }
     - name: historical
       connect_timeout: 10s
-      type: logical_dns
+      type: strict_dns
       http2_protocol_options:
         allow_connect: true
       lb_policy: round_robin
-      hosts:
-        - socket_address:
-            address: historical_service
-            port_value: 50000
+      load_assignment:
+        cluster_name: historical
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: historical_service
+                      port_value: 50000
       transport_socket:
         name: envoy.transport_sockets.tls
         typed_config:
@@ -126,14 +136,19 @@ static_resources:
               trusted_ca: { filename: /etc/midas/tls/svc/root-ca.pem }
     - name: symbol
       connect_timeout: 10s
-      type: logical_dns
+      type: strict_dns
       http2_protocol_options:
         allow_connect: true
       lb_policy: round_robin
-      hosts:
-        - socket_address:
-            address: symbol_service
-            port_value: 50000
+      load_assignment:
+        cluster_name: symbol
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: symbol_service
+                      port_value: 50000
       transport_socket:
         name: envoy.transport_sockets.tls
         typed_config:
@@ -147,12 +162,17 @@ static_resources:
               trusted_ca: { filename: /etc/midas/tls/svc/root-ca.pem }
     - name: trade_observer
       connect_timeout: 10s
-      type: logical_dns
+      type: strict_dns
       lb_policy: round_robin
-      hosts:
-        - socket_address:
-            address: trade_observer_service
-            port_value: 50000
+      load_assignment:
+        cluster_name: trade_observer
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: trade_observer_service
+                      port_value: 50000
       transport_socket:
         name: envoy.transport_sockets.tls
         typed_config:
@@ -166,9 +186,14 @@ static_resources:
               trusted_ca: { filename: /etc/midas/tls/svc/root-ca.pem }
     - name: frontend
       connect_timeout: 10s
-      type: logical_dns
+      type: strict_dns
       lb_policy: round_robin
-      hosts:
-        - socket_address:
-            address: frontend
-            port_value: 4200
+      load_assignment:
+        cluster_name: frontend
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: frontend
+                      port_value: 50000

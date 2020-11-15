@@ -23,6 +23,7 @@ import { SyncComponent } from './sync/sync.component';
 import { IconSnackBarComponent } from './icon-snackbar/icon-snackbar.component';
 import { SyncProgressComponent } from './sync-progress/sync-progress.component';
 import { InfoComponent } from './info/info.component';
+import { TradeObserverService } from './trade-observer.service';
 
 @NgModule({
   declarations: [
@@ -51,7 +52,8 @@ import { InfoComponent } from './info/info.component';
   bootstrap: [AppComponent]
 })
 export class AppModule {
-  constructor() {
+  constructor(tradeObserver: TradeObserverService) {
     am4core.useTheme(am4themes_animated);
+    tradeObserver.connect();
   }
 }

@@ -11,7 +11,7 @@ impl Exchanges {
 impl ::std::str::FromStr for Exchanges {
   type Err = String;
   fn from_str(s: &str) -> Result<Self, Self::Err> {
-    let ret: Self = match s {
+    let ret: Self = match s.to_lowercase().as_str() {
       "binance" => Exchanges::Binance,
       _ => return Err(format!("Failed to parse the exchange argument: {}", s)),
     };
