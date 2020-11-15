@@ -23,13 +23,13 @@ export class TradeObserverService {
     this.data = {};
   }
   private handle(exchange: string): (ev: MessageEvent) => void {
-    return function(ev: MessageEvent) {
+    return (ev: MessageEvent) => {
       const obj = JSON.parse(ev.data) as BookTicker;
-      const index = this.data[exchange] && this.data[exchange].findIndex((el: BookTicker) => {
+      const index = (this.data[exchange]) ? this.data[exchange].findIndex((el: BookTicker) => {
         return el.symbol === obj.symbol;
-      }) || -1;
+      }): -1;
       if (index < 0) {
-        this.data[exchange].push(obj);
+        this.data[exchange] = [obj];
       } else {
         this.data[exchange][index] = obj;
       }

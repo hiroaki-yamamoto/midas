@@ -32,14 +32,15 @@ async fn main() {
   let broker = broker_con(cfg.broker_url.as_str()).await.unwrap();
   let (logger, _) = cfg.build_slog();
   let route_logger = logger.clone();
-  let route = warp::path::param::<String>().and(::warp::ws()).map(
-    move |exchange: String, ws: ::warp::ws::Ws| {
+  let route = ::warp::ws().and(warp::path::param()).map(
+    move |ws: ::warp::ws::Ws, exchange: String| {
       let exchange: Result<Exchanges, String> = exchange.parse();
       let broker = broker.clone();
       let logger = route_logger.new(o! {
         "scope" => "Trade Observer Service"
       });
       return ws.on_upgrade(|mut socket: ::warp::ws::WebSocket| async move {
+        ::slog::info!(&logger, "hello");
         let exchange = match exchange {
           Err(e) => {
             let _ = socket.send(Message::close_with(1003 as u16, e)).await;
