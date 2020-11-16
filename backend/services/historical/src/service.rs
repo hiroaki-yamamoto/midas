@@ -11,16 +11,14 @@ use ::rmp_serde::from_slice as read_msgpack;
 use ::serde_json::to_string as jsonify;
 use ::slog::{error, o, Logger};
 use ::tokio::stream::StreamExt as TonicStreamExt;
-use ::tonic::{async_trait, Code, Request, Response};
+use ::tonic::{Code, Request, Response};
 use ::warp::filters::BoxedFilter;
 use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
 
 use ::exchanges::binance;
 use ::rpc::entities::Exchanges;
-use ::rpc::historical::{
-  hist_chart_server::HistChart, HistChartFetchReq, HistChartProg, StopRequest,
-};
+use ::rpc::historical::{HistChartFetchReq, HistChartProg, StopRequest};
 use ::types::{
   rpc_ret_on_err, GenericResult, Result, SendableErrorResult, Status,
 };
@@ -28,6 +26,9 @@ use ::types::{
 use super::manager::ExchangeManager;
 
 use super::entities::KlineFetchStatus;
+
+type SubscribeStream =
+  Pin<Box<dyn Stream<Item = Result<HistChartProg>> + Send + Sync + 'static>>;
 
 #[derive(Debug, Clone)]
 pub struct Service {
@@ -127,6 +128,38 @@ impl Service {
       .boxed();
   }
 
+  async fn subscribe(
+    &self,
+    _: tonic::Request<()>,
+  ) -> Result<tonic::Response<SubscribeStream>> {
+    let stream_logger = self.logger.new(o!("scope" => "Stream Logger"));
+    let mut subscriber =
+      rpc_ret_on_err!(Code::Internal, self.binance.subscribe().await);
+    let out = ::async_stream::try_stream! {
+      while let Some(msg) = subscriber.next().await {
+        match read_msgpack(&msg.data[..]) {
+          Err(e) => {
+            error!(
+              stream_logger,
+              "Got an error while deserializing HistFetch Prog. {}",
+              e
+            );
+            continue;
+          },
+          Ok(v) => {
+            match v {
+              KlineFetchStatus::Progress{exchange: _, progress} => {yield progress;},
+              KlineFetchStatus::Stop => {break;},
+              // _ => {continue;}
+            }
+          },
+        };
+      }
+      let _ = subscriber.unsubscribe();
+    };
+    return Ok(Response::new(Box::pin(out) as SubscribeStream));
+  }
+
   fn empty_or_err(&self, res: SendableErrorResult<()>) -> impl Reply {
     return res.map_or_else(
       |e| -> Box<dyn Reply> {
@@ -199,76 +232,5 @@ impl Service {
       })
       .await?;
     return Ok(());
-  }
-}
-
-#[async_trait]
-impl HistChart for Service {
-  async fn sync(
-    &self,
-    req: Request<HistChartFetchReq>,
-  ) -> Result<Response<()>> {
-    let req = req.into_inner();
-    rpc_ret_on_err!(
-      Code::Internal,
-      self.binance.refresh_historical_klines(req.symbols).await
-    );
-    return Ok(Response::new(()));
-  }
-
-  type subscribeStream =
-    Pin<Box<dyn Stream<Item = Result<HistChartProg>> + Send + Sync + 'static>>;
-  async fn subscribe(
-    &self,
-    _: tonic::Request<()>,
-  ) -> Result<tonic::Response<Self::subscribeStream>> {
-    let stream_logger = self.logger.new(o!("scope" => "Stream Logger"));
-    let mut subscriber =
-      rpc_ret_on_err!(Code::Internal, self.binance.subscribe().await);
-    let out = ::async_stream::try_stream! {
-      while let Some(msg) = subscriber.next().await {
-        match read_msgpack(&msg.data[..]) {
-          Err(e) => {
-            error!(
-              stream_logger,
-              "Got an error while deserializing HistFetch Prog. {}",
-              e
-            );
-            continue;
-          },
-          Ok(v) => {
-            match v {
-              KlineFetchStatus::Progress{exchange: _, progress} => {yield progress;},
-              KlineFetchStatus::Stop => {break;},
-              // _ => {continue;}
-            }
-          },
-        };
-      }
-      let _ = subscriber.unsubscribe();
-    };
-    return Ok(Response::new(Box::pin(out) as Self::subscribeStream));
-  }
-
-  async fn stop(
-    &self,
-    request: tonic::Request<StopRequest>,
-  ) -> Result<tonic::Response<()>> {
-    let req = request.into_inner();
-    let mut stop_vec = vec![];
-    for exc in req.exchanges {
-      match FromPrimitive::from_i32(exc) {
-        Some(Exchanges::Binance) => {
-          stop_vec.push(self.binance.stop());
-        }
-        _ => {
-          continue;
-        }
-      }
-    }
-    for result in join_all(stop_vec).await {
-      rpc_ret_on_err!(Code::Internal, result);
-    }
-    return Ok(Response::new(()));
   }
 }
