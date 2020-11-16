@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
   let mut sig = signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT))?;
   let host = host.clone();
-  info!(logger, "Opened Websocket server on {}", host);
+  info!(logger, "Opened REST server on {}", host);
   let (_, ws_svr) = ::warp::serve(route)
     .tls()
     .cert_path(&cfg.tls.cert)
@@ -46,7 +46,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .await;
     });
   let svr = ws_svr.then(|_| async {
-    warn!(logger, "Websocket Server is shutting down! Bye! Bye!");
+    warn!(logger, "REST Server is shutting down! Bye! Bye!");
   });
   svr.await;
   return Ok(());
