@@ -13,14 +13,18 @@ pub struct HistChartProg {
   #[prost(int64, tag = "5")]
   pub cur_object_num: i64,
 }
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(
+  Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
+)]
 pub struct HistChartFetchReq {
   #[prost(enumeration = "super::entities::Exchanges", tag = "1")]
   pub exchange: i32,
   #[prost(string, repeated, tag = "2")]
   pub symbols: ::std::vec::Vec<std::string::String>,
 }
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(
+  Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
+)]
 pub struct StopRequest {
   #[prost(enumeration = "super::entities::Exchanges", repeated, tag = "1")]
   pub exchanges: ::std::vec::Vec<i32>,
