@@ -14,17 +14,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     .out_dir("./src")
     .build_server(true)
     .build_client(false)
-    .type_attribute(
-      "historical.HistChartProg",
-      "#[derive(::serde::Serialize, ::serde::Deserialize)]",
-    )
+    .type_attribute(".", "#[derive(::serde::Serialize, ::serde::Deserialize)]")
     .type_attribute(
       "entities.Exchanges",
-      "#[derive(::num_derive::FromPrimitive, ::serde::Serialize, ::serde::Deserialize, ::clap::Clap)]",
+      "#[derive(::num_derive::FromPrimitive, ::clap::Clap)]",
     )
     .type_attribute(
       "entities.BackTestPriceBase",
-      "#[derive(::num_derive::FromPrimitive, ::serde::Serialize, ::serde::Deserialize, ::clap::Clap)]",
+      "#[derive(::num_derive::FromPrimitive, ::clap::Clap)]",
     )
     .type_attribute("entities.Exchanges", "#[serde(tag = \"exchange\")]")
     .compile(&protos, &[String::from("../../../proto")])

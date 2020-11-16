@@ -45,8 +45,8 @@ export class SyncComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.histClient = new HistChartClient('historical', null, null);
-    this.symbolClient = new SymbolPromiseClient('symbol', null, null);
+    this.histClient = new HistChartClient('', null, null);
+    this.symbolClient = new SymbolPromiseClient('', null, null);
     this.histStreamClient = new MidasSocket('/historical/stream/subscribe');
     this.histStreamClient.addEventListener('message', (ev) => {
       const obj = JSON.parse(ev.data) as IHistChartProg;

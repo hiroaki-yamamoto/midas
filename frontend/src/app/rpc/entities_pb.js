@@ -12,6 +12,7 @@ var jspb = require('google-protobuf');
 var goog = jspb;
 var global = Function('return this')();
 
+goog.exportSymbol('proto.entities.BackTestPriceBase', null, global);
 goog.exportSymbol('proto.entities.Exchanges', null, global);
 goog.exportSymbol('proto.entities.SymbolInfo', null, global);
 /**
@@ -260,6 +261,18 @@ proto.entities.SymbolInfo.prototype.setQuote = function(value) {
  */
 proto.entities.Exchanges = {
   BINANCE: 0
+};
+
+/**
+ * @enum {number}
+ */
+proto.entities.BackTestPriceBase = {
+  CLOSE: 0,
+  OPEN: 1,
+  HIGH: 2,
+  LOW: 3,
+  OPENCLOSEMID: 4,
+  HIGHLOWMID: 5
 };
 
 goog.object.extend(exports, proto.entities);

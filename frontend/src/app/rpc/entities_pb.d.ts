@@ -35,3 +35,11 @@ export namespace SymbolInfo {
 export enum Exchanges { 
   BINANCE = 0,
 }
+export enum BackTestPriceBase { 
+  CLOSE = 0,
+  OPEN = 1,
+  HIGH = 2,
+  LOW = 3,
+  OPENCLOSEMID = 4,
+  HIGHLOWMID = 5,
+}

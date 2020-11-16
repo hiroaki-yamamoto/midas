@@ -1,4 +1,6 @@
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(
+  Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
+)]
 pub struct SymbolInfo {
   #[prost(string, tag = "1")]
   pub symbol: std::string::String,
@@ -14,9 +16,9 @@ pub struct SymbolInfo {
 )]
 #[repr(i32)]
 #[derive(
-  ::num_derive::FromPrimitive,
   ::serde::Serialize,
   ::serde::Deserialize,
+  ::num_derive::FromPrimitive,
   ::clap::Clap,
 )]
 #[serde(tag = "exchange")]
@@ -28,9 +30,9 @@ pub enum Exchanges {
 )]
 #[repr(i32)]
 #[derive(
-  ::num_derive::FromPrimitive,
   ::serde::Serialize,
   ::serde::Deserialize,
+  ::num_derive::FromPrimitive,
   ::clap::Clap,
 )]
 pub enum BackTestPriceBase {
