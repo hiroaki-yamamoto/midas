@@ -11,7 +11,7 @@ use ::rmp_serde::from_slice as read_msgpack;
 use ::serde_json::to_string as jsonify;
 use ::slog::{error, o, Logger};
 use ::tokio::stream::StreamExt as TonicStreamExt;
-use ::tonic::{Code, Request, Response};
+use ::tonic::{Code, Response};
 use ::warp::filters::BoxedFilter;
 use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
@@ -83,7 +83,7 @@ impl Service {
       .map(move |ws: Ws| {
         let ws_svc = ws_svc.clone();
         return ws.on_upgrade(|mut sock: WebSocket| async move {
-          let subsc = ws_svc.subscribe(Request::new(())).await;
+          let subsc = ws_svc.subscribe().await;
           match subsc {
             Err(e) => {
               let _ = sock
@@ -128,10 +128,7 @@ impl Service {
       .boxed();
   }
 
-  async fn subscribe(
-    &self,
-    _: tonic::Request<()>,
-  ) -> Result<tonic::Response<SubscribeStream>> {
+  async fn subscribe(&self) -> Result<tonic::Response<SubscribeStream>> {
     let stream_logger = self.logger.new(o!("scope" => "Stream Logger"));
     let mut subscriber =
       rpc_ret_on_err!(Code::Internal, self.binance.subscribe().await);
