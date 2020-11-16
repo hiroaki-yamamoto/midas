@@ -2,11 +2,11 @@ use ::std::error::Error;
 use ::std::fs::{read_to_string, File};
 use ::std::io::Read;
 
+use ::reqwest::{Certificate, Client, Identity};
 use ::serde::Deserialize;
 use ::slog::Logger;
 use ::slog_atomic::AtomicSwitchCtrl;
 use ::slog_builder::{build_debug, build_json};
-use ::tonic::transport::{Identity, ServerTlsConfig};
 
 use ::types::GenericResult;
 
@@ -20,12 +20,11 @@ pub struct TLS {
 }
 
 impl TLS {
-  pub fn load_server(&self) -> GenericResult<ServerTlsConfig> {
-    let prv_key = read_to_string(&self.prv_key)?;
-    let cert = read_to_string(&self.cert)?;
-    let tlscfg =
-      ServerTlsConfig::new().identity(Identity::from_pem(cert, prv_key));
-    return Ok(tlscfg);
+  pub fn build_tls(&self) -> GenericResult<(Identity, Certificate)> {
+    return Ok((
+      Identity::from_pem(read_to_string(&self.prv_key)?.as_bytes())?,
+      Certificate::from_pem(read_to_string(&self.cert)?.as_bytes())?,
+    ));
   }
 }
 
@@ -73,5 +72,15 @@ impl Config {
     } else {
       return build_json();
     }
+  }
+
+  pub fn build_rest_client(&self) -> GenericResult<Client> {
+    let (prv_key, root_cert) = self.tls.build_tls()?;
+    return Ok(
+      Client::builder()
+        .add_root_certificate(root_cert)
+        .identity(prv_key)
+        .build()?,
+    );
   }
 }
