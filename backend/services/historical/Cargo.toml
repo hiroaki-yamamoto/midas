@@ -12,7 +12,6 @@ exchanges = { path = "../../libs/exchanges" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 
-tonic = { version = "0.3.1", features = ["transport", "tls"] }
 serde = {version = "1.0.117", features = ["derive"]}
 rmp-serde = "0.14.4"
 nats = "0.8.3"
