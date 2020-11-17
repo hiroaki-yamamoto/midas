@@ -11,7 +11,6 @@ use ::rmp_serde::from_slice as read_msgpack;
 use ::serde_json::to_string as jsonify;
 use ::slog::{error, o, Logger};
 use ::tokio::stream::StreamExt as TonicStreamExt;
-use ::tonic::{Code, Response};
 use ::warp::filters::BoxedFilter;
 use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
@@ -19,16 +18,14 @@ use ::warp::{Filter, Reply};
 use ::exchanges::binance;
 use ::rpc::entities::Exchanges;
 use ::rpc::historical::{HistChartFetchReq, HistChartProg, StopRequest};
-use ::types::{
-  rpc_ret_on_err, GenericResult, Result, SendableErrorResult, Status,
-};
+use ::types::{GenericResult, SendableErrorResult, Status};
 
 use super::manager::ExchangeManager;
 
 use super::entities::KlineFetchStatus;
 
 type SubscribeStream =
-  Pin<Box<dyn Stream<Item = Result<HistChartProg>> + Send + Sync + 'static>>;
+  Pin<Box<dyn Stream<Item = HistChartProg> + Send + Sync + 'static>>;
 
 #[derive(Debug, Clone)]
 pub struct Service {
@@ -86,34 +83,19 @@ impl Service {
           let subsc = ws_svc.subscribe().await;
           match subsc {
             Err(e) => {
-              let _ = sock
-                .send(Message::close_with(
-                  1011 as u16,
-                  format!(
-                    "Got an error while trying to subscribe the channel: {}",
-                    e
-                  ),
-                ))
-                .await;
+              let msg = format!(
+                "Got an error while trying to subscribe the channel: {}",
+                e
+              );
+              let _ = sock.send(Message::close_with(1011 as u16, msg)).await;
               let _ = sock.flush().await;
             }
             Ok(resp) => {
               let mut stream = resp
-                .into_inner()
                 .map(|r| {
-                  return r
-                    .map(|d| {
-                      return jsonify(&d).unwrap_or(String::from(
-                        "Failed to serialize the progress data.",
-                      ));
-                    })
-                    .map_err(|e| {
-                      let st = Status::from_tonic_status(&e);
-                      return jsonify(&st).unwrap_or(String::from(
-                        "Failed to serialize the error",
-                      ));
-                    })
-                    .unwrap_or_else(|e| e);
+                  return jsonify(&r).unwrap_or(String::from(
+                    "Failed to serialize the progress data.",
+                  ));
                 })
                 .map(|txt| Message::text(txt));
               while let Some(item) = stream.next().await {
@@ -128,11 +110,10 @@ impl Service {
       .boxed();
   }
 
-  async fn subscribe(&self) -> Result<tonic::Response<SubscribeStream>> {
+  async fn subscribe(&self) -> SendableErrorResult<SubscribeStream> {
     let stream_logger = self.logger.new(o!("scope" => "Stream Logger"));
-    let mut subscriber =
-      rpc_ret_on_err!(Code::Internal, self.binance.subscribe().await);
-    let out = ::async_stream::try_stream! {
+    let mut subscriber = self.binance.subscribe().await?;
+    let out = ::async_stream::stream! {
       while let Some(msg) = subscriber.next().await {
         match read_msgpack(&msg.data[..]) {
           Err(e) => {
@@ -154,7 +135,7 @@ impl Service {
       }
       let _ = subscriber.unsubscribe();
     };
-    return Ok(Response::new(Box::pin(out) as SubscribeStream));
+    return Ok(Box::pin(out) as SubscribeStream);
   }
 
   fn empty_or_err(&self, res: SendableErrorResult<()>) -> impl Reply {

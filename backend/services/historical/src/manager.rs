@@ -9,7 +9,7 @@ use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::rpc::entities::Exchanges;
 use ::rpc::historical::HistChartProg;
 use ::slog::{error, o, Logger};
-use ::types::{ret_on_err, GenericResult, SendableErrorResult};
+use ::types::{ret_on_err, SendableErrorResult};
 
 use crate::entities::KlineFetchStatus;
 
@@ -83,7 +83,7 @@ where
     return Ok(());
   }
 
-  pub async fn subscribe(&self) -> GenericResult<NatsSubsc> {
+  pub async fn subscribe(&self) -> SendableErrorResult<NatsSubsc> {
     return match self.nats.subscribe("kline.progress").await {
       Err(err) => Err(Box::new(err)),
       Ok(v) => Ok(v),
