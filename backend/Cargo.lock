@@ -2870,7 +2870,6 @@ dependencies = [
  "libc",
  "mongodb",
  "nats",
- "num-traits",
  "rpc",
  "slog",
  "tokio",

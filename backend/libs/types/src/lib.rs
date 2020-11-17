@@ -26,11 +26,19 @@ macro_rules! ret_on_err {
 }
 
 #[macro_export]
-macro_rules! rpc_ret_on_err {
-  ($status_code: expr, $result: expr) => {
+macro_rules! reply_on_err {
+  ($code: expr, $result: expr) => {
     match $result {
       Err(err) => {
-        return Err(::tonic::Status::new($status_code, format!("{}", err)))
+        let resp: Box<dyn ::warp::Reply> =
+          Box::new(::warp::reply::with_status(
+            ::warp::reply::json(&::types::Status::new_int(
+              $code.as_u16() as i32,
+              format!("{}", err).as_str(),
+            )),
+            $code,
+          ));
+        return resp;
       }
       Ok(v) => v,
     }

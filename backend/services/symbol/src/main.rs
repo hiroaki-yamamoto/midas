@@ -9,10 +9,8 @@ use ::mongodb::{options::ClientOptions as DBCliOpt, Client as DBCli};
 use ::nats::asynk::connect as connect_broker;
 use ::slog::{info, o};
 use ::tokio::signal::unix as signal;
-use ::tonic::transport::Server as RPCServer;
 
 use ::config::{CmdArgs, Config};
-use ::rpc::symbol::symbol_server::SymbolServer;
 use ::types::GenericResult;
 
 use self::service::Service;
@@ -23,19 +21,24 @@ async fn main() -> GenericResult<()> {
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config))?;
   let (logger, _) = cfg.build_slog();
-  info!(logger, "Symbol Service");
   let db =
     DBCli::with_options(DBCliOpt::parse(&cfg.db_url).await?)?.database("midas");
   let broker = connect_broker(&cfg.broker_url).await?;
   let host: SocketAddr = cfg.host.parse()?;
   let svc =
     Service::new(&db, broker, logger.new(o!("scope" => "SymbolService"))).await;
-  let svc = SymbolServer::new(svc);
-  info!(logger, "Opened the server on {}", host);
-  RPCServer::builder()
-    .tls_config(cfg.tls.load_server()?)?
-    .add_service(svc)
-    .serve_with_shutdown(host, sig.recv().then(|_| async { () }))
-    .await?;
+
+  info!(logger, "Opened REST server on {}", host);
+  let (_, svr) = ::warp::serve(svc.route())
+    .tls()
+    .cert_path(&cfg.tls.cert)
+    .key_path(&cfg.tls.prv_key)
+    .bind_with_graceful_shutdown(host, async move {
+      sig.recv().await;
+    });
+  let svr = svr.then(|_| async {
+    ::slog::warn!(logger, "REST Server is shutting down! Bye! Bye!");
+  });
+  svr.await;
   return Ok(());
 }

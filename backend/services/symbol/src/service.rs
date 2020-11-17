@@ -1,18 +1,18 @@
-use ::futures::StreamExt;
+use ::futures::executor::block_on;
 use ::mongodb::Database;
 use ::nats::asynk::Connection as Broker;
-use ::num_traits::FromPrimitive;
 use ::slog::{o, Logger};
-use ::tonic::{async_trait, Code, Request, Response, Status};
+use ::warp::filters::BoxedFilter;
+use ::warp::http::StatusCode;
+use ::warp::Filter;
+use ::warp::Reply;
 
 use ::exchanges::binance;
 use ::exchanges::{ListSymbolStream, SymbolFetcher};
 use ::rpc::entities::Exchanges;
-use ::rpc::symbol::{
-  symbol_server::Symbol, QueryRequest, QueryResponse, RefreshRequest,
-};
-use ::types::{rpc_ret_on_err, Result};
+use ::types::{reply_on_err, Result};
 
+#[derive(Clone)]
 pub struct Service {
   binance: binance::SymbolFetcher,
 }
@@ -31,60 +31,40 @@ impl Service {
 
   fn get_fetcher(
     &self,
-    exchange: Option<Exchanges>,
+    exchange: Exchanges,
   ) -> Result<
     &(dyn SymbolFetcher<ListStream = ListSymbolStream<'static>> + Send + Sync),
   > {
     let fetcher: &(dyn SymbolFetcher<ListStream = ListSymbolStream<'static>>
         + Send
         + Sync) = match exchange {
-      Some(Exchanges::Binance) => {
+      Exchanges::Binance => {
         &self.binance
           as &(dyn SymbolFetcher<ListStream = ListSymbolStream> + Send + Sync)
-      }
-      _ => {
-        return Err(Status::new(
-          Code::NotFound,
-          format!("No such symbol fetcher for the exchange"),
-        ))
       }
     };
     return Ok(fetcher);
   }
-}
 
-#[async_trait]
-impl Symbol for Service {
-  async fn refresh(
-    &self,
-    request: Request<RefreshRequest>,
-  ) -> Result<Response<()>> {
-    let model = request.into_inner();
-    let fetcher = self.get_fetcher(FromPrimitive::from_i32(model.exchange))?;
-    rpc_ret_on_err!(Code::Internal, fetcher.refresh().await);
-    return Ok(Response::new(()));
+  pub fn route(&self) -> BoxedFilter<(impl Reply,)> {
+    return self.refresh().boxed();
   }
 
-  async fn query(
-    &self,
-    request: tonic::Request<QueryRequest>,
-  ) -> Result<tonic::Response<QueryResponse>> {
-    let request = request.into_inner();
-    let fetcher =
-      self.get_fetcher(FromPrimitive::from_i32(request.exchange))?;
-    let status = match request.status.trim() {
-      "" => None,
-      o => Some(String::from(o)),
-    };
-    let symbols: Option<Vec<String>>;
-    if request.symbols.len() > 0 {
-      symbols = Some(request.symbols);
-    } else {
-      symbols = None;
-    }
-    let list_st =
-      rpc_ret_on_err!(Code::Internal, fetcher.list(status, symbols).await);
-    let ret = list_st.collect().await;
-    return Ok(Response::new(QueryResponse { symbols: ret }));
+  fn refresh(&self) -> BoxedFilter<(impl Reply,)> {
+    let me = self.clone();
+    return ::warp::path("/refresh")
+      .and(::warp::path::param())
+      .map(move |exchange: Exchanges| {
+        let fetcher = reply_on_err!(
+          StatusCode::INTERNAL_SERVER_ERROR,
+          me.get_fetcher(exchange)
+        );
+        let _ = reply_on_err!(
+          StatusCode::INTERNAL_SERVER_ERROR,
+          block_on(fetcher.refresh())
+        );
+        return Box::new(::warp::reply());
+      })
+      .boxed();
   }
 }
