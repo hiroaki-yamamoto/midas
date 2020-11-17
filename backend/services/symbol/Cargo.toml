@@ -21,3 +21,4 @@ tokio = {version = "0.2.23", features = ["macros", "rt-threaded", "signal"]}
 futures = "0.3.8"
 libc = "0.2.80"
 nats = "0.8.3"
+warp = "0.2.5"

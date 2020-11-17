@@ -1115,7 +1115,6 @@ dependencies = [
  "slog",
  "slog-atomic",
  "tokio",
- "tonic",
  "types",
  "warp",
 ]
@@ -2877,6 +2876,7 @@ dependencies = [
  "tokio",
  "tonic",
  "types",
+ "warp",
 ]
 
 [[package]]
