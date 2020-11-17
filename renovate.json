@@ -35,18 +35,12 @@
       "allowedVersions": "<0.12"
     },
     {
-      "packageNames": [
-        "tokio-native-tls"
-      ],
+      "packageNames": ["tokio-native-tls"],
       "allowedVersions": "<0.2"
     },
     {
-      {
-        "packageNames": [
-          "slack"
-        ],
-        "allowedVersions": "<0.4"
-      }
-    },
+      "packageNames": ["slack"],
+      "allowedVersions": "<0.4"
+    }
   ]
 }
