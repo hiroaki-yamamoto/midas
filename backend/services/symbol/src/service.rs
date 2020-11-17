@@ -52,7 +52,7 @@ impl Service {
 
   fn refresh(&self) -> BoxedFilter<(impl Reply,)> {
     let me = self.clone();
-    return ::warp::path("/refresh")
+    return ::warp::path("refresh")
       .and(::warp::path::param())
       .map(move |exchange: Exchanges| {
         let fetcher = reply_on_err!(

@@ -156,7 +156,7 @@ impl Service {
 
   fn sync(&self) -> BoxedFilter<(impl Reply,)> {
     let me = self.clone();
-    return ::warp::path("/sync")
+    return ::warp::path("sync")
       .and(::warp::post())
       .and(::warp::body::json())
       .map(move |req: HistChartFetchReq| {
@@ -170,7 +170,7 @@ impl Service {
 
   fn stop(&self) -> BoxedFilter<(impl Reply,)> {
     let me = self.clone();
-    return ::warp::path("/stop")
+    return ::warp::path("stop")
       .and(::warp::post())
       .and(::warp::body::json())
       .map(move |req: StopRequest| {
