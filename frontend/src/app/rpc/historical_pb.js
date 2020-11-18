@@ -14,8 +14,6 @@ var global = Function('return this')();
 
 var entities_pb = require('./entities_pb.js');
 goog.object.extend(proto, entities_pb);
-var google_protobuf_empty_pb = require('google-protobuf/google/protobuf/empty_pb.js');
-goog.object.extend(proto, google_protobuf_empty_pb);
 goog.exportSymbol('proto.historical.HistChartFetchReq', null, global);
 goog.exportSymbol('proto.historical.HistChartProg', null, global);
 goog.exportSymbol('proto.historical.StopRequest', null, global);

@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 import "entities.proto";
-import "google/protobuf/empty.proto";
 
 package historical;
 option go_package="rpc";
