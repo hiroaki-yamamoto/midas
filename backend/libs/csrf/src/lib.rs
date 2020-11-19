@@ -1,42 +1,16 @@
 mod errors;
-use ::std::str::FromStr;
 
 use ::warp::wrap_fn;
 use ::warp::{Filter, Reply};
 
-use self::errors::MethodParseError;
-
-pub enum Methods {
-  DELETE,
-  GET,
-  HEAD,
-  OPTIONS,
-  PATCH,
-  POST,
-  PUT,
-}
-
-impl FromStr for Methods {
-  type Err = MethodParseError;
-  fn from_str(s: &str) -> Result<Self, Self::Err> {
-    return Ok(match s.to_lowercase().as_str() {
-      "post" => Self::POST,
-      "delete" => Self::DELETE,
-      "put" => Self::PUT,
-      "patch" => Self::PATCH,
-      "get" => Self::GET,
-      "head" => Self::HEAD,
-      "options" => Self::OPTIONS,
-      method => return Err(MethodParseError::new(method.to_string())),
-    });
-  }
-}
+use self::errors::CSRFCheckFailed;
+pub use ::http::Method;
 
 #[derive(Debug)]
 pub struct CSRFOption<'t> {
   cookie_name: &'t str,
   header_name: &'t str,
-  verify_methods: Vec<&'t str>,
+  verify_methods: Vec<Method>,
 }
 
 impl<'t> Default for CSRFOption<'t> {
@@ -44,7 +18,12 @@ impl<'t> Default for CSRFOption<'t> {
     return Self {
       cookie_name: "XSRF-TOKEN",
       header_name: "X-XSRF-TOKEN",
-      verify_methods: vec!["POST", "DELETE", "PUT", "PATCH"],
+      verify_methods: vec![
+        Method::POST,
+        Method::DELETE,
+        Method::PUT,
+        Method::PATCH,
+      ],
     };
   }
 }
@@ -61,31 +40,58 @@ impl<'t> CSRFOption<'t> {
     self.header_name = header_name;
     return self;
   }
-  pub fn verify_methods(mut self, verify_methods: Vec<&'t str>) -> Self {
+  pub fn verify_methods(mut self, verify_methods: Vec<Method>) -> Self {
     self.verify_methods = verify_methods;
     return self;
   }
 }
 
-fn protect_csrf<A, F, S, T, R>(
-  option: CSRFOption,
-) -> Result<A, MethodParseError>
+fn protect_csrf<F, S, T, R>(option: CSRFOption) -> impl Fn(F) -> S
 where
-  A: Fn(F) -> S,
   F: Filter<Extract = (T,), Error = std::convert::Infallible>
     + Clone
     + Send
     + Sync
     + 'static,
-  S: Filter<Extract = (U,)> + Clone + Send + Sync + 'static,
-  R: Reply,
+  F::Extract: Reply,
+  S: Filter<Extract = (R,)> + Clone + Send + Sync + 'static,
+  S::Extract: Reply,
 {
-  let mut filter = ::warp::method().map(|method| {
-    if !option.verify_methods.contains(method) {
-      return;
-    }
-  });
-  return mvoe || {
-    return filter;
+  let mut csrf_filter = ::warp::method()
+    .and(::warp::filters::cookie::optional(option.cookie_name))
+    .and(::warp::filters::header::optional(option.header_name))
+    .and_then(
+      |method: Method, cookie: Option<String>, header: Option<String>| async {
+        if !option.verify_methods.contains(&method) {
+          return Ok((method, cookie, header));
+        }
+        if cookie.is_none() || header.is_none() {
+          return Err(::warp::reject::custom(CSRFCheckFailed::new(
+            "Either cookie or header is none.".to_string(),
+            format!("{:?}", cookie),
+            format!("{:?}", header),
+          )));
+        }
+        let (cookie, header) = (cookie.unwrap(), header.unwrap());
+        if cookie == header {
+          return Ok((method, Some(cookie), Some(header)));
+        }
+        return Err(::warp::reject::custom(CSRFCheckFailed::new(
+          "CSRF Token Mismatch".to_string(),
+          cookie,
+          header,
+        )));
+      },
+    )
+    .untuple_one();
+  return move |filter: F| {
+    return csrf_filter.and(filter).map(
+      move |method: Method,
+            cookie: Option<String>,
+            header: Option<String>,
+            reply: F::Extract| {
+        return filter;
+      },
+    );
   };
 }
