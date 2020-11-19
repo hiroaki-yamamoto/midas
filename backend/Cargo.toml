@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "libs/csrf",
   "libs/config",
   "libs/exchanges",
   "libs/slog_builder",
