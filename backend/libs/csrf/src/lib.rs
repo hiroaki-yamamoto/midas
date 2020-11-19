@@ -1,4 +1,36 @@
+mod errors;
+use ::std::str::FromStr;
+
 use ::warp::wrap_fn;
+use ::warp::{Filter, Reply};
+
+use self::errors::MethodParseError;
+
+pub enum Methods {
+  DELETE,
+  GET,
+  HEAD,
+  OPTIONS,
+  PATCH,
+  POST,
+  PUT,
+}
+
+impl FromStr for Methods {
+  type Err = MethodParseError;
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    return Ok(match s.to_lowercase().as_str() {
+      "post" => Self::POST,
+      "delete" => Self::DELETE,
+      "put" => Self::PUT,
+      "patch" => Self::PATCH,
+      "get" => Self::GET,
+      "head" => Self::HEAD,
+      "options" => Self::OPTIONS,
+      method => return Err(MethodParseError::new(method.to_string())),
+    });
+  }
+}
 
 #[derive(Debug)]
 pub struct CSRFOption<'t> {
@@ -35,4 +67,25 @@ impl<'t> CSRFOption<'t> {
   }
 }
 
-fn protect_csrf() {}
+fn protect_csrf<A, F, S, T, R>(
+  option: CSRFOption,
+) -> Result<A, MethodParseError>
+where
+  A: Fn(F) -> S,
+  F: Filter<Extract = (T,), Error = std::convert::Infallible>
+    + Clone
+    + Send
+    + Sync
+    + 'static,
+  S: Filter<Extract = (U,)> + Clone + Send + Sync + 'static,
+  R: Reply,
+{
+  let mut filter = ::warp::method().map(|method| {
+    if !option.verify_methods.contains(method) {
+      return;
+    }
+  });
+  return mvoe || {
+    return filter;
+  };
+}

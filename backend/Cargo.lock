@@ -579,6 +579,7 @@ dependencies = [
 name = "csrf"
 version = "0.1.0"
 dependencies = [
+ "serde",
  "warp",
 ]
 
