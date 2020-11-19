@@ -51,10 +51,9 @@ where
   F: Filter<Extract = (T,), Error = std::convert::Infallible>
     + Clone
     + Send
-    + Sync
-    + 'static,
+    + Sync,
   F::Extract: Reply,
-  S: Filter<Extract = (R,)> + Clone + Send + Sync + 'static,
+  S: Filter<Extract = (R,)> + Clone + Send + Sync,
   S::Extract: Reply,
 {
   let mut csrf_filter = ::warp::method()
@@ -86,12 +85,9 @@ where
     .untuple_one();
   return move |filter: F| {
     return csrf_filter.and(filter).map(
-      move |method: Method,
-            cookie: Option<String>,
-            header: Option<String>,
-            reply: F::Extract| {
-        return filter;
+      move |method: Method, cookie: Option<String>, header: Option<String>| {
+        return ::warp::reply();
       },
-    );
+    ) as Filter<Extract = (R,)>;
   };
 }
