@@ -57,22 +57,30 @@ impl CSRF {
   pub fn protect<F, R1>(
     &self,
     filter: F,
-  ) -> impl Filter<Extract = (R1,), Error = ::warp::Rejection>
-       + Clone
-       + Send
-       + Sync
-       + 'static
+  ) -> impl Filter<Extract = (R1,), Error = ::warp::Rejection> + Clone + Send + Sync
   where
     F: Filter<Extract = (R1,), Error = ::std::convert::Infallible>
       + Clone
       + Send
-      + Sync
-      + 'static,
+      + Sync,
     F::Extract: Reply,
   {
     let cookie_name = self.opt.cookie_name;
     let header_name = self.opt.header_name;
-    let verify_methods = self.opt.verify_methods.clone();
+    let methods = self.opt.verify_methods;
+    let mut filter_ret = ::warp::any();
+    for method in self.opt.verify_methods {
+      let method_f = match method {
+        Method::GET => ::warp::get().boxed(),
+        Method::POST => ::warp::post().boxed(),
+        Method::PUT => ::warp::put().boxed(),
+        Method::PATCH => ::warp::patch().boxed(),
+        Method::HEAD => ::warp::head().boxed(),
+        Method::OPTIONS => ::warp::options().boxed(),
+        _ => ::warp::any().boxed(),
+      };
+      filter_ret = filter_ret.or(method_f);
+    }
 
     return ::warp::method()
       .and(::warp::filters::cookie::optional(
@@ -83,7 +91,8 @@ impl CSRF {
       ))
       .and_then(
         |method: Method, cookie: Option<String>, header: Option<String>| async move {
-          if !verify_methods.contains(&method) {
+          let verify_methods = methods.clone();
+          if !methods.contains(&method) {
             return Ok(());
           }
           if cookie.is_none() || header.is_none() {
