@@ -57,30 +57,22 @@ impl CSRF {
   pub fn protect<F, R1>(
     &self,
     filter: F,
-  ) -> impl Filter<Extract = (R1,), Error = ::warp::Rejection> + Clone + Send + Sync
+  ) -> impl Filter<Extract = (R1,), Error = ::warp::Rejection>
+       + Clone
+       + Send
+       + Sync
+       + 'static
   where
     F: Filter<Extract = (R1,), Error = ::std::convert::Infallible>
       + Clone
       + Send
-      + Sync,
+      + Sync
+      + 'static,
     F::Extract: Reply,
   {
     let cookie_name = self.opt.cookie_name;
     let header_name = self.opt.header_name;
     let methods = self.opt.verify_methods;
-    let mut filter_ret = ::warp::any();
-    for method in self.opt.verify_methods {
-      let method_f = match method {
-        Method::GET => ::warp::get().boxed(),
-        Method::POST => ::warp::post().boxed(),
-        Method::PUT => ::warp::put().boxed(),
-        Method::PATCH => ::warp::patch().boxed(),
-        Method::HEAD => ::warp::head().boxed(),
-        Method::OPTIONS => ::warp::options().boxed(),
-        _ => ::warp::any().boxed(),
-      };
-      filter_ret = filter_ret.or(method_f);
-    }
 
     return ::warp::method()
       .and(::warp::filters::cookie::optional(
