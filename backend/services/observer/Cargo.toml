@@ -13,7 +13,7 @@ rpc = { path = "../../libs/rpc" }
 types = { path = "../../libs/types" }
 
 futures = "0.3.8"
-nats = "0.8.3"
+nats = "0.8.6"
 warp = "0.2.5"
 clap = "3.0.0-beta.2"
 slog = "2.5.2"
