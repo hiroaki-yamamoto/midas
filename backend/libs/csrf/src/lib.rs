@@ -5,6 +5,7 @@ use ::hyper::header::SET_COOKIE;
 use ::rand::distributions::Alphanumeric;
 use ::rand::{thread_rng, Rng};
 use ::time::Duration as TimeDuration;
+use ::warp::http::Method;
 use ::warp::reply;
 use ::warp::{Filter, Reply};
 
@@ -81,8 +82,9 @@ impl CSRF {
 
   pub fn generate_cookie<F, Resp>(
     &self,
+    methods: Vec<Method>,
     filter: F,
-  ) -> impl Filter<Extract = (reply::Response,), Error = ::warp::Rejection>
+  ) -> impl Filter<Extract = (impl Reply,), Error = ::warp::Rejection>
        + Clone
        + Send
        + Sync
@@ -96,26 +98,32 @@ impl CSRF {
     Resp: Reply,
   {
     let cookie_name = self.opt.cookie_name.clone();
-    return ::warp::cookie::optional(&cookie_name).and(filter).map(
-      move |req_cookie: Option<String>, resp: Resp| {
-        let value: String =
-          thread_rng().sample_iter(&Alphanumeric).take(50).collect();
-        let cookie = CookieBuilder::new(cookie_name, value)
-          .max_age(TimeDuration::new(3600, 0))
-          .secure(true)
-          .finish();
-        match req_cookie {
-          None => {
-            return reply::with_header(
-              resp,
-              SET_COOKIE.as_str(),
-              cookie.to_string(),
-            )
-            .into_response();
+    return ::warp::method()
+      .and(::warp::cookie::optional(&cookie_name))
+      .and(filter)
+      .map(
+        move |method: Method, req_cookie: Option<String>, resp: Resp| {
+          if !methods.contains(&method) {
+            return resp.into_response();
           }
-          Some(_) => return resp.into_response(),
-        };
-      },
-    );
+          let value: String =
+            thread_rng().sample_iter(&Alphanumeric).take(50).collect();
+          let cookie = CookieBuilder::new(cookie_name, value)
+            .max_age(TimeDuration::new(3600, 0))
+            .secure(true)
+            .finish();
+          match req_cookie {
+            None => {
+              return reply::with_header(
+                resp,
+                SET_COOKIE.as_str(),
+                cookie.to_string(),
+              )
+              .into_response();
+            }
+            Some(_) => return resp.into_response(),
+          };
+        },
+      );
   }
 }

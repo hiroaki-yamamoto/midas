@@ -12,6 +12,7 @@ use ::mongodb::options::ClientOptions as MongoDBCliOpt;
 use ::mongodb::Client as DBCli;
 use ::slog::{info, warn};
 use ::tokio::signal::unix as signal;
+use ::warp::http::Method;
 use ::warp::http::StatusCode;
 use ::warp::{reply, Filter, Rejection, Reply};
 
@@ -40,8 +41,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
   let host: SocketAddr = cfg.host.parse()?;
   let svc = Service::new(&logger, &db, broker.clone()).await?;
   let csrf = CSRF::new(CSRFOption::builder());
-  let route = csrf.protect().recover(handle_rejection).and(svc.route());
-  let route = csrf.generate_cookie(route.or(::warp::get()));
+  let route = ::warp::post()
+    .or(::warp::put())
+    .or(::warp::delete())
+    .or(::warp::patch())
+    .and(csrf.protect())
+    .recover(handle_rejection)
+    .and(svc.route());
+  let route = csrf
+    .generate_cookie(vec![Method::GET, Method::HEAD, Method::OPTIONS], route);
 
   let mut sig = signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT))?;
   let host = host.clone();
