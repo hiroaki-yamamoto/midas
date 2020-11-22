@@ -17,7 +17,6 @@ use ::warp::{reply, Filter, Rejection, Reply};
 
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFCheckFailed, CSRFOption, CSRF};
-use ::types::Status;
 
 use crate::service::Service;
 
@@ -42,7 +41,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
   let svc = Service::new(&logger, &db, broker.clone()).await?;
   let csrf = CSRF::new(CSRFOption::builder());
   let route = csrf.protect().recover(handle_rejection).and(svc.route());
-  let route = csrf.generate_cookie(route);
+  let route = csrf.generate_cookie(route.or(::warp::get()));
 
   let mut sig = signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT))?;
   let host = host.clone();
