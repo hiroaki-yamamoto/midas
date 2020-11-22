@@ -9,8 +9,6 @@ import {
 
 import { Exchanges } from '../rpc/entities_pb';
 import { HistChartFetchReq } from '../rpc/historical_pb';
-import { HistChartClient } from '../rpc/historical_grpc_web_pb';
-import { SymbolPromiseClient } from '../rpc/symbol_grpc_web_pb';
 import { RefreshRequest as SymbolRefreshRequest } from '../rpc/symbol_pb';
 
 import { IHistChartProg } from '../sync-progress/entities';
@@ -34,10 +32,10 @@ export class SyncComponent implements OnInit, OnDestroy {
   progList: Map<string, IHistChartProg>;
   symbol: ISymbol;
 
-  private histClient: HistChartClient;
+  private histClient;
   private histStreamClient: WebSocket;
 
-  private symbolClient: SymbolPromiseClient;
+  private symbolClient;
 
   constructor(private tooltip: MatSnackBar) {
     this.progList = new Map();
@@ -45,8 +43,8 @@ export class SyncComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.histClient = new HistChartClient('', null, null);
-    this.symbolClient = new SymbolPromiseClient('', null, null);
+    this.histClient = undefined;
+    this.symbolClient = undefined;
     this.histStreamClient = new MidasSocket('/historical/stream/subscribe');
     this.histStreamClient.addEventListener('message', (ev) => {
       const obj = JSON.parse(ev.data) as IHistChartProg;

@@ -59,24 +59,26 @@ impl CSRF {
     return ::warp::any()
       .and(::warp::filters::cookie::optional(self.opt.cookie_name))
       .and(::warp::filters::header::optional(self.opt.header_name))
-      .and_then(|cookie: Option<String>, header: Option<String>| async {
-        if cookie.is_none() || header.is_none() {
+      .and_then(
+        |cookie: Option<String>, header: Option<String>| async move {
+          if cookie.is_none() || header.is_none() {
+            return Err(::warp::reject::custom(CSRFCheckFailed::new(
+              "Either cookie or header is none.".to_string(),
+              format!("{:?}", cookie),
+              format!("{:?}", header),
+            )));
+          }
+          let (cookie, header) = (cookie.unwrap(), header.unwrap());
+          if cookie == header {
+            return Ok(());
+          }
           return Err(::warp::reject::custom(CSRFCheckFailed::new(
-            "Either cookie or header is none.".to_string(),
-            format!("{:?}", cookie),
-            format!("{:?}", header),
+            "CSRF Token Mismatch".to_string(),
+            cookie,
+            header,
           )));
-        }
-        let (cookie, header) = (cookie.unwrap(), header.unwrap());
-        if cookie == header {
-          return Ok(());
-        }
-        return Err(::warp::reject::custom(CSRFCheckFailed::new(
-          "CSRF Token Mismatch".to_string(),
-          cookie,
-          header,
-        )));
-      })
+        },
+      )
       .untuple_one();
   }
 

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package symbol;
+option go_package = "rpc";
+
+import "entities.proto";
+
+message RefreshRequest {
+  entities.Exchanges exchange = 1;
+}
+message QueryRequest {
+  entities.Exchanges exchange = 1;
+  string Status = 2;
+  repeated string symbols = 3;
+}
+message QueryResponse {
+  repeated entities.SymbolInfo symbols = 1;
+}

@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package services;
+option go_package = "rpc";
+
+enum Strategy {
+  Trailing = 0;
+}
+
+message BotInfo {
+  string id = 1;
+  Strategy strategy = 2;
+  string name = 3;
+  string baseCurrency = 4;
+  string desc = 5;
+  string config = 6;
+}
+
+message CurrentPosition {
+  string id = 1;
+  string botId = 2;
+  string symbol = 3;
+  double tradingAmount = 4;
+  double profitAmount = 5;
+  double profitPercent = 6;
+}
+
+message BotInfoList {
+  repeated BotInfo bots = 1;
+}
+
+message BotInfoListRequest {
+  int64 offset = 1;
+  int64 limit = 2;
+}
