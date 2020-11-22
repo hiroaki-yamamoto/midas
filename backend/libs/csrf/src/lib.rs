@@ -8,7 +8,7 @@ use ::time::Duration as TimeDuration;
 use ::warp::reply;
 use ::warp::{Filter, Reply};
 
-use self::errors::CSRFCheckFailed;
+pub use self::errors::CSRFCheckFailed;
 
 #[derive(Debug, Clone)]
 pub struct CSRFOption {
@@ -82,13 +82,13 @@ impl CSRF {
   pub fn generate_cookie<F, Resp>(
     &self,
     filter: F,
-  ) -> impl Filter<Extract = (reply::Response,), Error = ::std::convert::Infallible>
+  ) -> impl Filter<Extract = (reply::Response,), Error = ::warp::Rejection>
        + Clone
        + Send
        + Sync
        + 'static
   where
-    F: Filter<Extract = (Resp,), Error = ::std::convert::Infallible>
+    F: Filter<Extract = (Resp,), Error = ::warp::Rejection>
       + Clone
       + Send
       + Sync

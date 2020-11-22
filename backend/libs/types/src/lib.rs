@@ -4,12 +4,10 @@ use ::std::error::Error;
 use ::std::result::Result as StdResult;
 
 use ::chrono::{DateTime as ChronoDateTime, Utc};
-use ::tonic::Status as TonicStatus;
 use ::url::{ParseError, Url};
 
 pub use self::entities::Status;
 
-pub type Result<T> = StdResult<T, TonicStatus>;
 pub type ParseURLResult = StdResult<Url, ParseError>;
 pub type GenericResult<T> = StdResult<T, Box<dyn Error>>;
 pub type SendableErrorResult<T> = StdResult<T, Box<dyn Error + Send>>;
@@ -32,8 +30,8 @@ macro_rules! reply_on_err {
       Err(err) => {
         let resp: Box<dyn ::warp::Reply> =
           Box::new(::warp::reply::with_status(
-            ::warp::reply::json(&::types::Status::new_int(
-              $code.as_u16() as i32,
+            ::warp::reply::json(&::types::Status::new(
+              $code,
               format!("{}", err).as_str(),
             )),
             $code,

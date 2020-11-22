@@ -143,10 +143,7 @@ impl Service {
       |e| -> Box<dyn Reply> {
         let code = ::http::StatusCode::INTERNAL_SERVER_ERROR;
         return Box::new(::warp::reply::with_status(
-          ::warp::reply::json(&Status::new_int(
-            code.as_u16() as i32,
-            format!("{}", e).as_str(),
-          )),
+          ::warp::reply::json(&Status::new(code, format!("{}", e).as_str())),
           code,
         ));
       },

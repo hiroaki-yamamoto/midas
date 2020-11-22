@@ -11,6 +11,7 @@ types = { path = "../../libs/types" }
 exchanges = { path = "../../libs/exchanges" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
+csrf = { path = "../../libs/csrf" }
 
 serde = {version = "1.0.117", features = ["derive"]}
 rmp-serde = "0.14.4"

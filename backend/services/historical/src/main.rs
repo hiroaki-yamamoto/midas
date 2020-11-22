@@ -12,10 +12,22 @@ use ::mongodb::options::ClientOptions as MongoDBCliOpt;
 use ::mongodb::Client as DBCli;
 use ::slog::{info, warn};
 use ::tokio::signal::unix as signal;
+use ::warp::http::StatusCode;
+use ::warp::{reply, Filter, Rejection, Reply};
 
 use ::config::{CmdArgs, Config};
+use ::csrf::{CSRFCheckFailed, CSRFOption, CSRF};
+use ::types::Status;
 
 use crate::service::Service;
+
+async fn handle_rejection(rej: Rejection) -> Result<impl Reply, Rejection> {
+  if let Some(rej) = rej.find::<CSRFCheckFailed>() {
+    let code = StatusCode::EXPECTATION_FAILED;
+    return Ok(reply::with_status(reply::json(rej), code));
+  }
+  return Err(rej);
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -28,7 +40,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     .database("midas");
   let host: SocketAddr = cfg.host.parse()?;
   let svc = Service::new(&logger, &db, broker.clone()).await?;
-  let route = svc.route();
+  let csrf = CSRF::new(CSRFOption::builder());
+  let route = csrf.protect().recover(handle_rejection).and(svc.route());
+  let route = csrf.generate_cookie(route);
 
   let mut sig = signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT))?;
   let host = host.clone();

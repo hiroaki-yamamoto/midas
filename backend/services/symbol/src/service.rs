@@ -10,7 +10,7 @@ use ::warp::Reply;
 use ::exchanges::binance;
 use ::exchanges::{ListSymbolStream, SymbolFetcher};
 use ::rpc::entities::Exchanges;
-use ::types::{reply_on_err, Result};
+use ::types::reply_on_err;
 
 #[derive(Clone)]
 pub struct Service {
@@ -32,9 +32,8 @@ impl Service {
   fn get_fetcher(
     &self,
     exchange: Exchanges,
-  ) -> Result<
-    &(dyn SymbolFetcher<ListStream = ListSymbolStream<'static>> + Send + Sync),
-  > {
+  ) -> &(dyn SymbolFetcher<ListStream = ListSymbolStream<'static>> + Send + Sync)
+  {
     let fetcher: &(dyn SymbolFetcher<ListStream = ListSymbolStream<'static>>
         + Send
         + Sync) = match exchange {
@@ -43,7 +42,7 @@ impl Service {
           as &(dyn SymbolFetcher<ListStream = ListSymbolStream> + Send + Sync)
       }
     };
-    return Ok(fetcher);
+    return fetcher;
   }
 
   pub fn route(&self) -> BoxedFilter<(impl Reply,)> {
@@ -55,10 +54,7 @@ impl Service {
     return ::warp::path("refresh")
       .and(::warp::path::param())
       .map(move |exchange: Exchanges| {
-        let fetcher = reply_on_err!(
-          StatusCode::INTERNAL_SERVER_ERROR,
-          me.get_fetcher(exchange)
-        );
+        let fetcher = me.get_fetcher(exchange);
         let _ = reply_on_err!(
           StatusCode::INTERNAL_SERVER_ERROR,
           block_on(fetcher.refresh())

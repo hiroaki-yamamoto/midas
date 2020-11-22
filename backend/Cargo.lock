@@ -1141,6 +1141,7 @@ dependencies = [
  "async-stream 0.3.0",
  "clap",
  "config",
+ "csrf",
  "exchanges",
  "futures",
  "http",
@@ -3641,7 +3642,6 @@ dependencies = [
  "chrono",
  "serde",
  "tokio",
- "tonic",
  "url",
  "warp",
 ]
