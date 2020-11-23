@@ -151,6 +151,19 @@ services:
     restart: unless-stopped
     depends_on:
       - broker
+  token_service:
+    build:
+      context: ./backend
+      dockerfile: devel.dockerfile
+      args:
+        - SERVICE=token_service
+    command:
+      - -c
+      - /etc/midas/midas.yml
+    volumes:
+      - ./etc:/etc/midas
+      - ./backend:/opt/code
+    restart: unless-stopped
   frontend:
     build:
       context: frontend

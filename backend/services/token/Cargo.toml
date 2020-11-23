@@ -1,5 +1,5 @@
 [package]
-name = "token"
+name = "token_service"
 version = "0.1.0"
 authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
 edition = "2018"
@@ -7,4 +7,12 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+config = { path = "../../libs/config" }
+csrf = { path = "../../libs/csrf" }
+
+slog = "2.5.2"
+clap = "3.0.0-beta.2"
+tokio = {version = "0.2.23", features = ["macros", "rt-threaded", "signal"]}
+futures = "0.3.8"
+libc = "0.2.80"
 warp = { version = "0.2.5", features = ["tls"] }
