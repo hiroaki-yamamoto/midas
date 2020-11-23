@@ -7,7 +7,7 @@ use ::rand::{thread_rng, Rng};
 use ::time::Duration as TimeDuration;
 use ::warp::http::Method;
 use ::warp::reply;
-use ::warp::{Filter, Reply};
+use ::warp::{Filter, Rejection, Reply};
 
 pub use self::errors::CSRFCheckFailed;
 
@@ -15,6 +15,7 @@ pub use self::errors::CSRFCheckFailed;
 pub struct CSRFOption {
   cookie_name: &'static str,
   header_name: &'static str,
+  verify_methods: Vec<Method>,
 }
 
 impl Default for CSRFOption {
@@ -22,6 +23,12 @@ impl Default for CSRFOption {
     return Self {
       cookie_name: "XSRF-TOKEN",
       header_name: "X-XSRF-TOKEN",
+      verify_methods: vec![
+        Method::POST,
+        Method::PUT,
+        Method::PATCH,
+        Method::DELETE,
+      ],
     };
   }
 }
@@ -36,6 +43,10 @@ impl CSRFOption {
   }
   pub fn header_name(mut self, header_name: &'static str) -> Self {
     self.header_name = header_name;
+    return self;
+  }
+  pub fn verify_methods(mut self, methods: Vec<Method>) -> Self {
+    self.verify_methods = methods;
     return self;
   }
 }
@@ -56,11 +67,17 @@ impl CSRF {
        + Send
        + Sync
        + 'static {
-    return ::warp::any()
+    let verify_methods = self.opt.verify_methods.clone();
+    return ::warp::method()
       .and(::warp::filters::cookie::optional(self.opt.cookie_name))
       .and(::warp::filters::header::optional(self.opt.header_name))
-      .and_then(
-        |cookie: Option<String>, header: Option<String>| async move {
+      .map(
+        move |method: Method,
+              cookie: Option<String>,
+              header: Option<String>| {
+          if !verify_methods.contains(&method) {
+            return Ok(());
+          }
           if cookie.is_none() || header.is_none() {
             return Err(::warp::reject::custom(CSRFCheckFailed::new(
               "Either cookie or header is none.".to_string(),
@@ -79,6 +96,7 @@ impl CSRF {
           )));
         },
       )
+      .and_then(|res: Result<(), Rejection>| async { return res })
       .untuple_one();
   }
 
