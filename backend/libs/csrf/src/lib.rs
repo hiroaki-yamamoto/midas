@@ -123,6 +123,7 @@ impl CSRF {
           thread_rng().sample_iter(&Alphanumeric).take(50).collect();
         let cookie = CookieBuilder::new(cookie_name, value)
           .max_age(TimeDuration::new(3600, 0))
+          .http_only(false)
           .secure(true)
           .path("/")
           .finish();

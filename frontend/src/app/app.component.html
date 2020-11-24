@@ -9,7 +9,7 @@
 <div fxLayout="row" class="router-body">
   <div fxFlex="5vw"></div>
   <div fxFlex>
-    <router-outlet></router-outlet>
+    <router-outlet (activate)="preventCSRF()"></router-outlet>
   </div>
   <div fxFlex="5vw"></div>
 </div>
