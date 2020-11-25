@@ -1,11 +1,12 @@
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Utc};
 use ::futures::stream::{BoxStream, Stream};
-use ::mongodb::bson::{doc, oid::ObjectId};
+use ::mongodb::bson::{doc, oid::ObjectId, Document};
+use ::mongodb::results::InsertManyResult;
 use ::mongodb::Database;
 use ::nats::asynk::Subscription;
+use ::serde::Serialize;
 
-use ::rpc::entities::SymbolInfo;
 use ::types::{GenericResult, SendableErrorResult};
 
 use super::entities::{BookTicker, ExecutionResult, OrderOption};
@@ -60,18 +61,27 @@ pub trait HistoryFetcher {
 
 #[async_trait]
 pub trait SymbolFetcher {
-  type ListStream: Stream<Item = SymbolInfo> + Send + 'static;
   async fn refresh(&self) -> SendableErrorResult<()>;
-  async fn list(
-    &self,
-    status: Option<String>,
-    symbols: Option<Vec<String>>,
-  ) -> SendableErrorResult<Self::ListStream>;
 }
 
 #[async_trait]
 pub trait HistoryRecorder {
   async fn spawn(&self);
+}
+
+#[async_trait]
+pub trait SymbolRecorder {
+  type ListStream: Stream + Send + 'static;
+  async fn list(
+    &self,
+    query: impl Into<Option<Document>> + Send + 'async_trait,
+  ) -> SendableErrorResult<Self::ListStream>;
+  async fn update_symbols<T>(
+    &self,
+    value: Vec<T>,
+  ) -> SendableErrorResult<InsertManyResult>
+  where
+    T: Serialize + Send;
 }
 
 #[async_trait]

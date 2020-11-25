@@ -3,7 +3,7 @@ use ::std::convert::TryFrom;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::futures::future::join3;
+use ::futures::future::join;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::nats::asynk::Connection as Broker;
@@ -22,8 +22,7 @@ use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::types::{ret_on_err, SendableErrorResult};
 
 use super::constants::{
-  SYMBOL_ADD_EVENT, SYMBOL_INIT_EVENT, SYMBOL_REMOVE_EVENT,
-  TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
+  SYMBOL_ADD_EVENT, SYMBOL_REMOVE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
 };
 use super::entities::{
   BookTicker, SubscribeRequest, SubscribeRequestInner, Symbol,
@@ -312,18 +311,14 @@ impl TradeObserver {
     socket: &mut TLSWebSocket,
   ) -> SendableErrorResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
-    let (symbol_init_event, symbol_add_event, symbol_remove_evnet) = join3(
-      self
-        .broker
-        .queue_subscribe(SYMBOL_INIT_EVENT, "trade_observer"),
+    let (symbol_add_event, symbol_remove_evnet) = join(
       self
         .broker
         .queue_subscribe(SYMBOL_ADD_EVENT, "trade_observer"),
       self.broker.subscribe(SYMBOL_REMOVE_EVENT),
     )
     .await;
-    let (mut symbol_init_event, mut symbol_add_event, mut symbol_remove_evnet) = (
-      ret_on_err!(symbol_init_event),
+    let (mut symbol_add_event, mut symbol_remove_evnet) = (
       ret_on_err!(symbol_add_event),
       ret_on_err!(symbol_remove_evnet),
     );
@@ -331,12 +326,6 @@ impl TradeObserver {
     loop {
       let event_delay = delay_for(EVENT_DELAY);
       select! {
-        Some(msg) = symbol_init_event.next() => {
-          if let Some(symb) = self.handle_add_symbol(&msg.data[..]) {
-            clear_sym_map_flag = true;
-            add_buf.insert(symb);
-          }
-        },
         Some(msg) = symbol_add_event.next() => {
           if let Some(symb) = self.handle_add_symbol(&msg.data[..]) {
             add_buf.insert(symb);

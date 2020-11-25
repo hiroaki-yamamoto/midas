@@ -1,5 +1,6 @@
 use ::serde::{Deserialize, Serialize};
 
+use ::futures::stream::BoxStream;
 use ::rpc::entities::SymbolInfo;
 
 use super::Filters;
@@ -25,13 +26,21 @@ pub struct Symbol {
   pub permissions: Vec<String>,
 }
 
-impl Symbol {
-  pub fn as_symbol_info(self) -> SymbolInfo {
-    return SymbolInfo {
-      symbol: self.symbol,
-      base: self.base_asset,
-      quote: self.quote_asset,
-      status: self.status,
+impl From<&Symbol> for SymbolInfo {
+  fn from(symbol: &Symbol) -> Self {
+    return symbol.clone().into();
+  }
+}
+
+impl From<Symbol> for SymbolInfo {
+  fn from(symbol: Symbol) -> Self {
+    return Self {
+      symbol: symbol.symbol,
+      base: symbol.base_asset,
+      quote: symbol.quote_asset,
+      status: symbol.status,
     };
   }
 }
+
+pub type ListSymbolStream<'a> = BoxStream<'a, Symbol>;

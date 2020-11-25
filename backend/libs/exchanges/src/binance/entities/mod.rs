@@ -13,7 +13,7 @@ pub use self::history::{
 };
 pub use self::info::ExchangeInfo;
 pub(crate) use self::stream::{SubscribeRequest, SubscribeRequestInner};
-pub use self::symbol::Symbol;
+pub use self::symbol::{ListSymbolStream, Symbol};
 pub use self::trade_time::TradeTime;
 
 use ::serde_json::Value;

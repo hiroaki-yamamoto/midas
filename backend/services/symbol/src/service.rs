@@ -1,27 +1,23 @@
 use ::std::pin::Pin;
 
-use ::futures::executor::block_on;
 use ::mongodb::Database;
 use ::nats::asynk::Connection as Broker;
 use ::slog::{o, Logger};
 use ::warp::filters::BoxedFilter;
-use ::warp::http::StatusCode;
 use ::warp::Filter;
 use ::warp::Reply;
 
 use ::exchanges::binance;
-use ::exchanges::{ListSymbolStream, SymbolFetcher};
+use ::exchanges::SymbolFetcher;
 use ::num_traits::FromPrimitive;
 use ::rpc::entities::Exchanges;
-use ::types::reply_on_err;
 
 #[derive(Clone)]
 pub struct Service {
   binance: binance::SymbolFetcher,
 }
 
-type Fetcher =
-  Box<dyn SymbolFetcher<ListStream = ListSymbolStream<'static>> + Send + Sync>;
+type Fetcher = Box<dyn SymbolFetcher + Send + Sync>;
 
 impl Service {
   pub async fn new(db: &Database, broker: Broker, log: Logger) -> Self {
