@@ -9,8 +9,10 @@ use ::mongodb::{options::ClientOptions as DBCliOpt, Client as DBCli};
 use ::nats::asynk::connect as connect_broker;
 use ::slog::{info, o};
 use ::tokio::signal::unix as signal;
+use ::warp::Filter;
 
 use ::config::{CmdArgs, Config};
+use ::csrf::{CSRFOption, CSRF};
 use ::types::GenericResult;
 
 use self::service::Service;
@@ -27,9 +29,11 @@ async fn main() -> GenericResult<()> {
   let host: SocketAddr = cfg.host.parse()?;
   let svc =
     Service::new(&db, broker, logger.new(o!("scope" => "SymbolService"))).await;
+  let csrf = CSRF::new(CSRFOption::builder());
+  let router = csrf.protect().and(svc.route());
 
   info!(logger, "Opened REST server on {}", host);
-  let (_, svr) = ::warp::serve(svc.route())
+  let (_, svr) = ::warp::serve(router)
     .tls()
     .cert_path(&cfg.tls.cert)
     .key_path(&cfg.tls.prv_key)

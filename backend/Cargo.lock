@@ -1783,6 +1783,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "config",
+ "csrf",
  "exchanges",
  "futures",
  "libc",
@@ -3024,6 +3025,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "config",
+ "csrf",
  "exchanges",
  "futures",
  "libc",

@@ -11,6 +11,7 @@ exchanges = { path = "../../libs/exchanges" }
 config = { path = "../../libs/config" }
 rpc = { path = "../../libs/rpc" }
 types = { path = "../../libs/types" }
+csrf = { path = "../../libs/csrf" }
 
 futures = "0.3.8"
 nats = "0.8.6"

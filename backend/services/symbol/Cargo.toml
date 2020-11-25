@@ -11,6 +11,7 @@ rpc = { path = "../../libs/rpc" }
 exchanges = { path = "../../libs/exchanges" }
 types = { path = "../../libs/types" }
 config = { path = "../../libs/config" }
+csrf = { path = "../../libs/csrf" }
 
 tonic = { version =  "0.3.1", features = ["transport", "tls"] }
 mongodb = "1.1.1"

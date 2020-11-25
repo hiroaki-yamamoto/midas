@@ -12,6 +12,7 @@ use ::warp::ws::Message;
 use ::warp::Filter;
 
 use ::config::{CmdArgs, Config};
+use ::csrf::{CSRFOption, CSRF};
 use ::exchanges::{binance, TradeObserver};
 use ::rpc::entities::Exchanges;
 
@@ -32,8 +33,12 @@ async fn main() {
   let broker = broker_con(cfg.broker_url.as_str()).await.unwrap();
   let (logger, _) = cfg.build_slog();
   let route_logger = logger.clone();
-  let route = ::warp::ws().and(warp::path::param()).map(
-    move |ws: ::warp::ws::Ws, exchange: String| {
+  let csrf = CSRF::new(CSRFOption::builder());
+  let route = csrf
+    .protect()
+    .and(::warp::ws())
+    .and(warp::path::param())
+    .map(move |ws: ::warp::ws::Ws, exchange: String| {
       let exchange: Result<Exchanges, String> = exchange.parse();
       let broker = broker.clone();
       let logger = route_logger.new(o! {
@@ -70,8 +75,7 @@ async fn main() {
           let _ = socket.flush().await;
         }
       });
-    },
-  );
+    });
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let host: SocketAddr = cfg.host.parse().unwrap();
