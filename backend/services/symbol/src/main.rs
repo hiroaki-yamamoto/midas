@@ -30,7 +30,7 @@ async fn main() -> GenericResult<()> {
   let svc =
     Service::new(&db, broker, logger.new(o!("scope" => "SymbolService"))).await;
   let csrf = CSRF::new(CSRFOption::builder());
-  let router = csrf.protect().and(svc.route());
+  let router = csrf.protect().and(svc.route().await);
 
   info!(logger, "Opened REST server on {}", host);
   let (_, svr) = ::warp::serve(router)

@@ -1,3 +1,5 @@
+use ::std::pin::Pin;
+
 use ::futures::executor::block_on;
 use ::mongodb::Database;
 use ::nats::asynk::Connection as Broker;
@@ -9,6 +11,7 @@ use ::warp::Reply;
 
 use ::exchanges::binance;
 use ::exchanges::{ListSymbolStream, SymbolFetcher};
+use ::num_traits::FromPrimitive;
 use ::rpc::entities::Exchanges;
 use ::types::reply_on_err;
 
@@ -16,6 +19,9 @@ use ::types::reply_on_err;
 pub struct Service {
   binance: binance::SymbolFetcher,
 }
+
+type Fetcher =
+  Box<dyn SymbolFetcher<ListStream = ListSymbolStream<'static>> + Send + Sync>;
 
 impl Service {
   pub async fn new(db: &Database, broker: Broker, log: Logger) -> Self {
@@ -29,38 +35,48 @@ impl Service {
     };
   }
 
-  fn get_fetcher(
-    &self,
-    exchange: Exchanges,
-  ) -> &(dyn SymbolFetcher<ListStream = ListSymbolStream<'static>> + Send + Sync)
-  {
-    let fetcher: &(dyn SymbolFetcher<ListStream = ListSymbolStream<'static>>
-        + Send
-        + Sync) = match exchange {
-      Exchanges::Binance => {
-        &self.binance
-          as &(dyn SymbolFetcher<ListStream = ListSymbolStream> + Send + Sync)
-      }
+  fn get_fetcher(&self, exchange: Exchanges) -> Fetcher {
+    let fetcher: Fetcher = match exchange {
+      Exchanges::Binance => Box::new(self.binance.clone()),
     };
     return fetcher;
   }
 
-  pub fn route(&self) -> BoxedFilter<(impl Reply,)> {
-    return self.refresh().boxed();
+  pub async fn route(&self) -> BoxedFilter<(impl Reply,)> {
+    return self.refresh().await.boxed();
   }
 
-  fn refresh(&self) -> BoxedFilter<(impl Reply,)> {
+  async fn refresh(
+    &self,
+  ) -> impl Filter<Extract = (impl Reply,), Error = ::warp::Rejection>
+       + Clone
+       + Send
+       + Sync
+       + 'static {
     let me = self.clone();
     return ::warp::path("refresh")
-      .and(::warp::path::param())
-      .map(move |exchange: Exchanges| {
-        let fetcher = me.get_fetcher(exchange);
-        let _ = reply_on_err!(
-          StatusCode::INTERNAL_SERVER_ERROR,
-          block_on(fetcher.refresh())
-        );
-        return Box::new(::warp::reply());
+      .and(::warp::path::param::<u16>())
+      .and_then(|param: u16| async move {
+        let exchange: Exchanges = match FromPrimitive::from_u16(param) {
+          Some(v) => v,
+          None => {
+            return Err(::warp::reject::not_found());
+          }
+        };
+        return Ok((exchange,));
       })
-      .boxed();
+      .untuple_one()
+      .map(move |exchange: Exchanges| Box::pin(me.get_fetcher(exchange)))
+      .and_then(handle_fetcher)
+      .map(move |_| {
+        return Box::new(::warp::reply());
+      });
   }
+}
+
+async fn handle_fetcher(
+  fetcher: Pin<Box<Fetcher>>,
+) -> Result<(), ::std::convert::Infallible> {
+  let _ = fetcher.refresh().await;
+  return Ok(());
 }
