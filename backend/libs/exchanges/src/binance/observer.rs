@@ -6,6 +6,7 @@ use ::async_trait::async_trait;
 use ::futures::future::join;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{BoxStream, StreamExt};
+use ::mongodb::Database;
 use ::nats::asynk::Connection as Broker;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
@@ -27,6 +28,7 @@ use super::constants::{
 use super::entities::{
   BookTicker, SubscribeRequest, SubscribeRequestInner, Symbol,
 };
+use super::symbol_recorder::SymbolRecorder;
 
 use crate::entities::BookTicker as CommonBookTicker;
 use crate::errors::{MaximumAttemptExceeded, WebsocketError};
@@ -41,14 +43,16 @@ const EVENT_DELAY: Duration = Duration::from_secs(1);
 pub struct TradeObserver {
   broker: Broker,
   logger: Logger,
+  recorder: SymbolRecorder,
   symbols: Vec<Vec<String>>,
 }
 
 impl TradeObserver {
-  pub fn new(broker: Broker, logger: Logger) -> Self {
+  pub async fn new(db: Database, broker: Broker, logger: Logger) -> Self {
     let me = Self {
       broker,
       logger,
+      recorder: SymbolRecorder::new(db).await,
       symbols: vec![],
     };
     return me;
