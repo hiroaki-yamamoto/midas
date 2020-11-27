@@ -43,16 +43,24 @@ const EVENT_DELAY: Duration = Duration::from_secs(1);
 pub struct TradeObserver {
   broker: Broker,
   logger: Logger,
-  recorder: SymbolRecorder,
+  recorder: Option<SymbolRecorder>,
   symbols: Vec<Vec<String>>,
 }
 
 impl TradeObserver {
-  pub async fn new(db: Database, broker: Broker, logger: Logger) -> Self {
+  pub async fn new(
+    db: Option<Database>,
+    broker: Broker,
+    logger: Logger,
+  ) -> Self {
+    let recorder = match db {
+      None => None,
+      Some(db) => Some(SymbolRecorder::new(db).await),
+    };
     let me = Self {
       broker,
       logger,
-      recorder: SymbolRecorder::new(db).await,
+      recorder,
       symbols: vec![],
     };
     return me;

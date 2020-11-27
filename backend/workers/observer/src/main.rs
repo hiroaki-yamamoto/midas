@@ -34,7 +34,7 @@ async fn main() {
   let exchange: Box<dyn TradeObserver> = match cmd_args.exchange {
     Exchanges::Binance => Box::new(
       binance::TradeObserver::new(
-        db,
+        Some(db),
         broker,
         logger.new(o!("scope" => "Trade Observer")),
       )
