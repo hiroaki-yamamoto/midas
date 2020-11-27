@@ -4,7 +4,7 @@ use ::futures::stream::{BoxStream, Stream};
 use ::mongodb::bson::{doc, oid::ObjectId, Document};
 use ::mongodb::results::InsertManyResult;
 use ::mongodb::Database;
-use ::nats::asynk::{Connection as NatsCon, Subscription};
+use ::nats::asynk::Subscription;
 use ::serde::Serialize;
 
 use ::types::{GenericResult, SendableErrorResult};

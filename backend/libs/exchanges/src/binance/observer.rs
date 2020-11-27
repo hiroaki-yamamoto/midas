@@ -6,6 +6,7 @@ use ::async_trait::async_trait;
 use ::futures::future::join;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{BoxStream, StreamExt};
+use ::mongodb::bson::doc;
 use ::mongodb::Database;
 use ::nats::asynk::Connection as Broker;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
@@ -26,13 +27,15 @@ use super::constants::{
   SYMBOL_ADD_EVENT, SYMBOL_REMOVE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
 };
 use super::entities::{
-  BookTicker, SubscribeRequest, SubscribeRequestInner, Symbol,
+  BookTicker, ListSymbolStream, SubscribeRequest, SubscribeRequestInner, Symbol,
 };
 use super::symbol_recorder::SymbolRecorder;
 
 use crate::entities::BookTicker as CommonBookTicker;
-use crate::errors::{MaximumAttemptExceeded, WebsocketError};
-use crate::traits::TradeObserver as TradeObserverTrait;
+use crate::errors::{InitError, MaximumAttemptExceeded, WebsocketError};
+use crate::traits::{
+  SymbolRecorder as SymbolRecorderTrait, TradeObserver as TradeObserverTrait,
+};
 
 type TLSWebSocket = WebSocketStream<Stream<TcpStream, TlsStream<TcpStream>>>;
 
@@ -335,9 +338,13 @@ impl TradeObserver {
       ret_on_err!(symbol_remove_evnet),
     );
     let mut clear_sym_map_flag = false;
+    let mut initial_symbols_stream = self.init().await?;
     loop {
       let event_delay = delay_for(EVENT_DELAY);
       select! {
+        Some(symbol) = initial_symbols_stream.next() => {
+          add_buf.insert(symbol.symbol);
+        }
         Some(msg) = symbol_add_event.next() => {
           if let Some(symb) = self.handle_add_symbol(&msg.data[..]) {
             add_buf.insert(symb);
@@ -393,6 +400,15 @@ impl TradeObserver {
       }
     }
     return Ok(());
+  }
+
+  async fn init(&self) -> SendableErrorResult<ListSymbolStream<'static>> {
+    let recorder = self
+      .recorder
+      .clone()
+      .ok_or(InitError::new(Some("binance.observer")));
+    let recorder = ret_on_err!(recorder);
+    return recorder.list(doc! {"status": "TRADING"}).await;
   }
 }
 
