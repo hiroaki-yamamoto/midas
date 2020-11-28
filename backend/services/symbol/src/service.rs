@@ -51,6 +51,7 @@ impl Service {
        + 'static {
     let me = self.clone();
     return ::warp::path("refresh")
+      .and(::warp::post())
       .and(::warp::path::param::<u16>())
       .and_then(|param: u16| async move {
         let exchange: Exchanges = match FromPrimitive::from_u16(param) {
