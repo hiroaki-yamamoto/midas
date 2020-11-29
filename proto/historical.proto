@@ -14,7 +14,6 @@ message HistChartProg {
 }
 
 message HistChartFetchReq {
-  entities.Exchanges exchange = 1;
   repeated string symbols = 2;
 }
 

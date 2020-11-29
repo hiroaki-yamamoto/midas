@@ -154,9 +154,20 @@ impl Service {
   fn sync(&self) -> BoxedFilter<(impl Reply,)> {
     let me = self.clone();
     return ::warp::path("sync")
+      .and(::warp::path::param())
+      .and_then(|param: u16| async move {
+        let exchange: Exchanges = match FromPrimitive::from_u16(param) {
+          Some(v) => v,
+          None => {
+            return Err(::warp::reject::not_found());
+          }
+        };
+        return Ok((exchange,));
+      })
+      .untuple_one()
       .and(::warp::post())
       .and(::warp::body::json())
-      .map(move |req: HistChartFetchReq| {
+      .map(move |_: Exchanges, req: HistChartFetchReq| {
         let resp = me.empty_or_err(block_on(
           me.binance.refresh_historical_klines(req.symbols),
         ));
