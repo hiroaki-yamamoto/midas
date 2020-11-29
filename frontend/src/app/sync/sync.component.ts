@@ -7,7 +7,6 @@ import {
   faSkullCrossbones,
 } from '@fortawesome/free-solid-svg-icons';
 
-import { Exchanges } from '../resources/exchanges.enum';
 import { Exchanges as RPCExchanges } from '../rpc/entities_pb';
 import { HistChartFetchReq } from '../rpc/historical_pb';
 
