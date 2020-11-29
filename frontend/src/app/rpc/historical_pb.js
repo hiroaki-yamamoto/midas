@@ -369,7 +369,6 @@ proto.historical.HistChartFetchReq.prototype.toObject = function(opt_includeInst
  */
 proto.historical.HistChartFetchReq.toObject = function(includeInstance, msg) {
   var f, obj = {
-    exchange: jspb.Message.getFieldWithDefault(msg, 1, 0),
     symbolsList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f
   };
 
@@ -407,10 +406,6 @@ proto.historical.HistChartFetchReq.deserializeBinaryFromReader = function(msg, r
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 1:
-      var value = /** @type {!proto.entities.Exchanges} */ (reader.readEnum());
-      msg.setExchange(value);
-      break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
       msg.addSymbols(value);
@@ -444,13 +439,6 @@ proto.historical.HistChartFetchReq.prototype.serializeBinary = function() {
  */
 proto.historical.HistChartFetchReq.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getExchange();
-  if (f !== 0.0) {
-    writer.writeEnum(
-      1,
-      f
-    );
-  }
   f = message.getSymbolsList();
   if (f.length > 0) {
     writer.writeRepeatedString(
@@ -458,24 +446,6 @@ proto.historical.HistChartFetchReq.serializeBinaryToWriter = function(message, w
       f
     );
   }
-};
-
-
-/**
- * optional entities.Exchanges exchange = 1;
- * @return {!proto.entities.Exchanges}
- */
-proto.historical.HistChartFetchReq.prototype.getExchange = function() {
-  return /** @type {!proto.entities.Exchanges} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
-};
-
-
-/**
- * @param {!proto.entities.Exchanges} value
- * @return {!proto.historical.HistChartFetchReq} returns this
- */
-proto.historical.HistChartFetchReq.prototype.setExchange = function(value) {
-  return jspb.Message.setProto3EnumField(this, 1, value);
 };
 
 

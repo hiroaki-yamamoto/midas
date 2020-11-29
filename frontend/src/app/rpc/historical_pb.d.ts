@@ -38,9 +38,6 @@ export namespace HistChartProg {
 }
 
 export class HistChartFetchReq extends jspb.Message {
-  getExchange(): entities_pb.Exchanges;
-  setExchange(value: entities_pb.Exchanges): HistChartFetchReq;
-
   getSymbolsList(): Array<string>;
   setSymbolsList(value: Array<string>): HistChartFetchReq;
   clearSymbolsList(): HistChartFetchReq;
@@ -56,7 +53,6 @@ export class HistChartFetchReq extends jspb.Message {
 
 export namespace HistChartFetchReq {
   export type AsObject = {
-    exchange: entities_pb.Exchanges,
     symbolsList: Array<string>,
   }
 }
