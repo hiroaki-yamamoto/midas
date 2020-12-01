@@ -6,7 +6,7 @@ import {
   EventEmitter,
   OnChanges,
 } from '@angular/core';
-import { IHistChartProg } from './entities';
+import { HistChartProg } from '../rpc/historical_pb';
 
 @Component({
   selector: 'app-sync-progress',
@@ -14,8 +14,8 @@ import { IHistChartProg } from './entities';
   styleUrls: ['./sync-progress.component.scss']
 })
 export class SyncProgressComponent implements OnInit, OnChanges {
-  @Input() public progress: IHistChartProg;
-  @Output() public completed:EventEmitter<IHistChartProg> = new EventEmitter(true);
+  @Input() public progress: HistChartProg.AsObject;
+  @Output() public completed: EventEmitter<HistChartProg.AsObject> = new EventEmitter(true);
 
   constructor() { }
 
@@ -23,7 +23,7 @@ export class SyncProgressComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges() {
-    if (this.progress.cur_object_num >= this.progress.num_objects) {
+    if (this.progress.curObjectNum >= this.progress.numObjects) {
       this.completed.emit(this.progress);
     }
   }

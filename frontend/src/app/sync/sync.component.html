@@ -34,7 +34,7 @@
         To synchronize historical kline data that is used for back testing,
         click / tap "Sync Hist Kline Data" button.
       </p>
-      <div *ngIf="progList.size &gt; 0">
+      <div *ngIf="historicalClient.syncProgress.size &gt; 0">
         <section>
           <header>
             <h4 i18n>Object Process Status</h4>
@@ -42,7 +42,7 @@
           <div fxLayout="column"
             fxLayoutAlign="center start"
             class="progress"
-            *ngFor="let prog of progList | keyvalue">
+            *ngFor="let prog of historicalClient.syncProgress | keyvalue">
             <app-sync-progress
               [progress]="prog.value"
               (completed)="fetchProgressCompleted($event)"
@@ -54,11 +54,11 @@
             <h4 i18n>Symbol Processing Status</h4>
           </header>
           <div fxLayout="column" fxLayoutAlign="center start" class="progress">
-            <mat-progress-bar [value]="symbol.cur / symbol.num * 100"> </mat-progress-bar>
+            <mat-progress-bar [value]="historicalClient.symbolProgress.current / historicalClient.symbolProgress.size * 100"> </mat-progress-bar>
             <div>
               <strong>
-                {{ symbol.cur }} /
-                {{ symbol.num }}
+                {{ historicalClient.symbolProgress.current }} /
+                {{ historicalClient.symbolProgress.size }}
               </strong>
             </div>
           </div>
@@ -68,7 +68,7 @@
     <div>
       <button mat-raised-button color="primary" i18n
         (click)="fetchHistoricalData()"
-        [disabled]="progList.size &gt; 0">
+        [disabled]="historicalClient.syncProgress.size &gt; 0">
         <fa-icon [icon]="histIcon" size="2x"></fa-icon><br>
         Sync Hist Kline Data
       </button>
