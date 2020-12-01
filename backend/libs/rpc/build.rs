@@ -25,6 +25,14 @@ fn main() -> Result<(), Box<dyn Error>> {
       "#[derive(::num_derive::FromPrimitive, ::clap::Clap)]",
     )
     .type_attribute("entities.Exchanges", "#[serde(tag = \"exchange\")]")
+    .field_attribute(
+      "historical.HistChartFetchReq.symbols",
+      "#[serde(rename = \"symbolsList\")]",
+    )
+    .field_attribute(
+      "historical.StopRequest.symbols",
+      "#[serde(rename = \"symbolsList\")]",
+    )
     .compile(&protos, &[String::from("../../../proto")])
   {
     Err(e) => Err(Box::new(e)),

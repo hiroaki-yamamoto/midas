@@ -20,6 +20,7 @@ pub struct HistChartProg {
 #[serde(rename_all = "camelCase")]
 pub struct HistChartFetchReq {
   #[prost(string, repeated, tag = "2")]
+  #[serde(rename = "symbolsList")]
   pub symbols: ::std::vec::Vec<std::string::String>,
 }
 #[derive(
