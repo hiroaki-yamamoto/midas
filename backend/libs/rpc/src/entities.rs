@@ -1,6 +1,7 @@
 #[derive(
   Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
 )]
+#[serde(rename_all = "camelCase")]
 pub struct SymbolInfo {
   #[prost(string, tag = "1")]
   pub symbol: std::string::String,
@@ -15,12 +16,9 @@ pub struct SymbolInfo {
   Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
 )]
 #[repr(i32)]
-#[derive(
-  ::serde::Serialize,
-  ::serde::Deserialize,
-  ::num_derive::FromPrimitive,
-  ::clap::Clap,
-)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[derive(::num_derive::FromPrimitive, ::clap::Clap)]
 #[serde(tag = "exchange")]
 pub enum Exchanges {
   Binance = 0,
@@ -29,12 +27,9 @@ pub enum Exchanges {
   Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
 )]
 #[repr(i32)]
-#[derive(
-  ::serde::Serialize,
-  ::serde::Deserialize,
-  ::num_derive::FromPrimitive,
-  ::clap::Clap,
-)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[derive(::num_derive::FromPrimitive, ::clap::Clap)]
 pub enum BackTestPriceBase {
   Close = 0,
   Open = 1,

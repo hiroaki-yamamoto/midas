@@ -1,6 +1,7 @@
 #[derive(
   Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
 )]
+#[serde(rename_all = "camelCase")]
 pub struct BotInfo {
   #[prost(string, tag = "1")]
   pub id: std::string::String,
@@ -18,6 +19,7 @@ pub struct BotInfo {
 #[derive(
   Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
 )]
+#[serde(rename_all = "camelCase")]
 pub struct CurrentPosition {
   #[prost(string, tag = "1")]
   pub id: std::string::String,
@@ -35,6 +37,7 @@ pub struct CurrentPosition {
 #[derive(
   Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
 )]
+#[serde(rename_all = "camelCase")]
 pub struct BotInfoList {
   #[prost(message, repeated, tag = "1")]
   pub bots: ::std::vec::Vec<BotInfo>,
@@ -42,6 +45,7 @@ pub struct BotInfoList {
 #[derive(
   Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
 )]
+#[serde(rename_all = "camelCase")]
 pub struct BotInfoListRequest {
   #[prost(int64, tag = "1")]
   pub offset: i64,
@@ -53,6 +57,7 @@ pub struct BotInfoListRequest {
 )]
 #[repr(i32)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum Strategy {
   Trailing = 0,
 }

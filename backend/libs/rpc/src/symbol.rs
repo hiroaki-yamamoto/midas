@@ -1,6 +1,7 @@
 #[derive(
   Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
 )]
+#[serde(rename_all = "camelCase")]
 pub struct RefreshRequest {
   #[prost(enumeration = "super::entities::Exchanges", tag = "1")]
   pub exchange: i32,
@@ -8,6 +9,7 @@ pub struct RefreshRequest {
 #[derive(
   Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
 )]
+#[serde(rename_all = "camelCase")]
 pub struct QueryRequest {
   #[prost(enumeration = "super::entities::Exchanges", tag = "1")]
   pub exchange: i32,
@@ -19,6 +21,7 @@ pub struct QueryRequest {
 #[derive(
   Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
 )]
+#[serde(rename_all = "camelCase")]
 pub struct QueryResponse {
   #[prost(message, repeated, tag = "1")]
   pub symbols: ::std::vec::Vec<super::entities::SymbolInfo>,

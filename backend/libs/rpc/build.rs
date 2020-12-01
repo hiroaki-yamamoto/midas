@@ -15,6 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     .build_server(true)
     .build_client(false)
     .type_attribute(".", "#[derive(::serde::Serialize, ::serde::Deserialize)]")
+    .type_attribute(".", "#[serde(rename_all = \"camelCase\")]")
     .type_attribute(
       "entities.Exchanges",
       "#[derive(::num_derive::FromPrimitive, ::clap::Clap)]",

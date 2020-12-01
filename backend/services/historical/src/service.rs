@@ -155,6 +155,7 @@ impl Service {
     let me = self.clone();
     return ::warp::path("sync")
       .and(::warp::path::param())
+      .and(::warp::post())
       .and_then(|param: u16| async move {
         let exchange: Exchanges = match FromPrimitive::from_u16(param) {
           Some(v) => v,
@@ -178,8 +179,8 @@ impl Service {
 
   fn stop(&self) -> BoxedFilter<(impl Reply,)> {
     let me = self.clone();
-    return ::warp::path("stop")
-      .and(::warp::post())
+    return ::warp::path("sync")
+      .and(::warp::delete())
       .and(::warp::body::json())
       .map(move |req: StopRequest| {
         let resp = me.empty_or_err(block_on(me.stop_exchanges(req)));
