@@ -16,9 +16,9 @@ use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
 
 use ::exchanges::binance;
-use ::rpc::entities::Exchanges;
+use ::rpc::entities::{Exchanges, Status};
 use ::rpc::historical::{HistChartFetchReq, HistChartProg, StopRequest};
-use ::types::{GenericResult, SendableErrorResult, Status};
+use ::types::{GenericResult, SendableErrorResult};
 
 use super::manager::ExchangeManager;
 

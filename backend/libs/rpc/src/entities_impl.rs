@@ -1,4 +1,5 @@
-use super::entities::Exchanges;
+use super::entities::{Exchanges, Status};
+use ::http::{status::InvalidStatusCode, StatusCode};
 
 impl Exchanges {
   pub fn as_string(&self) -> String {
@@ -22,5 +23,31 @@ impl ::std::str::FromStr for Exchanges {
 impl From<Exchanges> for String {
   fn from(exchange: Exchanges) -> Self {
     return exchange.as_string();
+  }
+}
+
+impl Status {
+  pub fn new<T>(code: StatusCode, msg: T) -> Self
+  where
+    T: AsRef<str>,
+  {
+    return Self {
+      code: code.as_u16() as u32,
+      message: msg.as_ref().to_string(),
+    };
+  }
+  pub fn new_int(code: u32, msg: &str) -> Self {
+    return Self {
+      code,
+      message: String::from(msg),
+    };
+  }
+}
+
+impl ::std::convert::TryFrom<Status> for StatusCode {
+  type Error = InvalidStatusCode;
+  fn try_from(value: Status) -> Result<Self, Self::Error> {
+    let code = u16::try_from(value.code).unwrap_or(::std::u16::MAX);
+    return Self::from_u16(code);
   }
 }

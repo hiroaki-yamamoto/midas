@@ -13,6 +13,16 @@ pub struct SymbolInfo {
   pub quote: std::string::String,
 }
 #[derive(
+  Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
+)]
+#[serde(rename_all = "camelCase")]
+pub struct Status {
+  #[prost(uint32, tag = "1")]
+  pub code: u32,
+  #[prost(string, tag = "2")]
+  pub message: std::string::String,
+}
+#[derive(
   Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
 )]
 #[repr(i32)]

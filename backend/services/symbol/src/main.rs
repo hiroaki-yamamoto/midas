@@ -13,20 +13,21 @@ use ::warp::Filter;
 
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
-use ::types::GenericResult;
 
 use self::service::Service;
 
 #[tokio::main]
-async fn main() -> GenericResult<()> {
-  let mut sig = signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT))?;
+async fn main() {
+  let mut sig =
+    signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let args: CmdArgs = CmdArgs::parse();
-  let cfg = Config::from_fpath(Some(args.config))?;
+  let cfg = Config::from_fpath(Some(args.config)).unwrap();
   let (logger, _) = cfg.build_slog();
-  let db =
-    DBCli::with_options(DBCliOpt::parse(&cfg.db_url).await?)?.database("midas");
-  let broker = connect_broker(&cfg.broker_url).await?;
-  let host: SocketAddr = cfg.host.parse()?;
+  let db = DBCli::with_options(DBCliOpt::parse(&cfg.db_url).await.unwrap())
+    .unwrap()
+    .database("midas");
+  let broker = connect_broker(&cfg.broker_url).await.unwrap();
+  let host: SocketAddr = cfg.host.parse().unwrap();
   let svc =
     Service::new(&db, broker, logger.new(o!("scope" => "SymbolService"))).await;
   let csrf = CSRF::new(CSRFOption::builder());
@@ -44,5 +45,5 @@ async fn main() -> GenericResult<()> {
     ::slog::warn!(logger, "REST Server is shutting down! Bye! Bye!");
   });
   svr.await;
-  return Ok(());
+  return;
 }

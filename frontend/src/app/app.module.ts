@@ -24,7 +24,7 @@ import { SyncComponent } from './sync/sync.component';
 import { IconSnackBarComponent } from './icon-snackbar/icon-snackbar.component';
 import { SyncProgressComponent } from './sync-progress/sync-progress.component';
 import { InfoComponent } from './info/info.component';
-import { TradeObserverService } from './trade-observer.service';
+import { TradeObserverService } from './resources/trade-observer.service';
 
 @NgModule({
   declarations: [

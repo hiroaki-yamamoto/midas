@@ -1,12 +1,8 @@
-mod entities;
-
 use ::std::error::Error;
 use ::std::result::Result as StdResult;
 
 use ::chrono::{DateTime as ChronoDateTime, Utc};
 use ::url::{ParseError, Url};
-
-pub use self::entities::Status;
 
 pub type ParseURLResult = StdResult<Url, ParseError>;
 pub type GenericResult<T> = StdResult<T, Box<dyn Error>>;

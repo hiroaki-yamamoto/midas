@@ -1789,11 +1789,11 @@ dependencies = [
  "libc",
  "mongodb",
  "nats",
+ "prost",
  "rpc",
  "serde_json",
  "slog",
  "tokio",
- "types",
  "warp",
 ]
 
@@ -2449,6 +2449,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "glob",
+ "http",
  "num-derive",
  "num-traits",
  "prost",

@@ -22,3 +22,8 @@ message SymbolInfo {
   string base = 3;
   string quote = 4;
 }
+
+message Status {
+  uint32 code = 1;
+  string message = 2;
+}

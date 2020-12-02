@@ -4,16 +4,17 @@ use ::clap::Clap;
 use ::futures::{FutureExt, SinkExt, StreamExt};
 use ::libc::{SIGINT, SIGTERM};
 use ::nats::asynk::{connect as broker_con, Connection as NatsCon};
-use ::serde_json::to_string as jsonify;
+use ::prost::Message as ProstMsg;
+use ::rpc::entities::Status;
 use ::slog::{o, Logger};
 use ::tokio::signal::unix as signal;
-use ::types::Status;
 use ::warp::ws::Message;
 use ::warp::{Filter, Reply};
 
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
 use ::exchanges::{binance, TradeObserver};
+use ::rpc::bookticker::BookTicker;
 use ::rpc::entities::Exchanges;
 
 async fn get_exchange(
@@ -44,12 +45,22 @@ fn handle_websocket(
       }
     };
     while let Some(best_price) = sub.next().await {
-      let _ = socket
-        .send(Message::text(jsonify(&best_price).unwrap_or_else(|e| {
-          return jsonify(&Status::new_int(0, format!("{}", e).as_str()))
-            .unwrap_or_else(|e| format!("{}", e));
-        })))
-        .await;
+      let best_price: BookTicker = best_price.into();
+      let mut buf: Vec<u8> = Vec::new();
+      let _ = best_price.encode(&mut buf).unwrap_or_else(|e| {
+        buf.clear();
+        Status::new_int(0, format!("{}", e).as_str())
+          .encode(&mut buf)
+          .unwrap_or_else(|e| {
+            buf.clear();
+            buf.extend(format!("{}", e).as_bytes());
+          });
+      });
+      let _ = socket.send(Message::binary(buf)).await;
+      // .send(Message::text(jsonify(&best_price).unwrap_or_else(|e| {
+      //   return jsonify(&Status::new_int(0, format!("{}", e).as_str()))
+      //     .unwrap_or_else(|e| format!("{}", e));
+      // })))
       let _ = socket.flush().await;
     }
   });

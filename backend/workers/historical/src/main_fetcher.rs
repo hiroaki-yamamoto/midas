@@ -13,17 +13,18 @@ use ::exchanges::binance::{
   SymbolFetcher as BinanceSymbolFetcher,
 };
 use ::exchanges::HistoryFetcher;
-use ::types::GenericResult;
 
 #[tokio::main]
-async fn main() -> GenericResult<()> {
+async fn main() {
   let args: CmdArgs = CmdArgs::parse();
-  let cfg = Config::from_fpath(Some(args.config))?;
+  let cfg = Config::from_fpath(Some(args.config)).unwrap();
   let (logger, _) = cfg.build_slog();
   info!(logger, "Kline fetch worker");
-  let broker = connect(&cfg.broker_url).await?;
-  let db = DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await?)?
-    .database("midas");
+  let broker = connect(&cfg.broker_url).await.unwrap();
+  let db =
+    DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await.unwrap())
+      .unwrap()
+      .database("midas");
   let fetchers: Vec<Box<dyn HistoryFetcher>> = vec![Box::new(
     BinanceHistoryFetcher::new(
       None,
@@ -36,11 +37,12 @@ async fn main() -> GenericResult<()> {
       )
       .await,
     )
-    .await?,
+    .await
+    .unwrap(),
   )];
   let fetchers = fetchers.iter().map(|fetcher| fetcher.spawn());
-  let mut sig = signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT))?;
+  let mut sig =
+    signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let sig = Box::pin(sig.recv());
   select(join_all(fetchers), sig).await;
-  return Ok(());
 }
