@@ -14,7 +14,6 @@ export class TradeObserverService {
   }
   private handle(exchange: string): (ev: MessageEvent<Blob>) => void {
     return (ev: MessageEvent<Blob>) => {
-      console.log(ev.data);
       ev.data.arrayBuffer().then((ab) => {
         const obj = BookTicker.deserializeBinary(new Uint8Array(ab));
         const index = (this.data[exchange]) ? this.data[exchange].findIndex((el: BookTicker) => {
