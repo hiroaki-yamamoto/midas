@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { Exchanges } from '../rpc/entities_pb';
 import { BookTicker, BookTickers } from '../rpc/bookticker_pb';
 import { MidasSocket } from '../websocket';
 
