@@ -41,7 +41,7 @@ fn handle_websocket(
     let mut pairs: BookTickers = BookTickers {
       book_ticker_map: HashMap::new(),
     };
-    let mut publish_interval = interval(Duration::from_millis(10));
+    let mut publish_interval = interval(Duration::from_millis(50));
     let mut sub = match exchange.subscribe().await {
       Ok(sub) => sub,
       Err(e) => {
@@ -52,25 +52,30 @@ fn handle_websocket(
         return;
       }
     };
+    let mut changed = false;
     loop {
       select! {
         Some(best_price) = sub.next() => {
           let best_price: BookTicker = best_price.into();
           pairs.book_ticker_map.insert(best_price.symbol.clone(), best_price);
+          changed = true;
         },
         _ = publish_interval.tick() => {
-          let mut buf: Vec<u8> = Vec::new();
-          let _ = pairs.encode(&mut buf).unwrap_or_else(|e| {
-            buf.clear();
-            Status::new_int(0, format!("{}", e).as_str())
-              .encode(&mut buf)
-              .unwrap_or_else(|e| {
-                buf.clear();
-                buf.extend(format!("{}", e).as_bytes());
-              });
-          });
-          let _ = socket.send(Message::binary(buf)).await;
-          let _ = socket.flush().await;
+          if changed {
+            let mut buf: Vec<u8> = Vec::new();
+            let _ = pairs.encode(&mut buf).unwrap_or_else(|e| {
+              buf.clear();
+              Status::new_int(0, format!("{}", e).as_str())
+                .encode(&mut buf)
+                .unwrap_or_else(|e| {
+                  buf.clear();
+                  buf.extend(format!("{}", e).as_bytes());
+                });
+            });
+            let _ = socket.send(Message::binary(buf)).await;
+            let _ = socket.flush().await;
+            changed = false;
+          }
         }
         else => {break;}
       }
