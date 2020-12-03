@@ -1,29 +1,22 @@
 import { Injectable } from '@angular/core';
 import { Exchanges } from '../rpc/entities_pb';
-import { BookTicker } from '../rpc/bookticker_pb';
+import { BookTicker, BookTickers } from '../rpc/bookticker_pb';
 import { MidasSocket } from '../websocket';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TradeObserverService {
-  public data: {[key: string]: [BookTicker]};
+  public readonly binance: Map<string, BookTicker>;
 
   constructor() {
-    this.data = {};
+    this.binance = new Map();
   }
   private handle(exchange: string): (ev: MessageEvent<Blob>) => void {
     return (ev: MessageEvent<Blob>) => {
       ev.data.arrayBuffer().then((ab) => {
-        const obj = BookTicker.deserializeBinary(new Uint8Array(ab));
-        const index = (this.data[exchange]) ? this.data[exchange].findIndex((el: BookTicker) => {
-          return el.getSymbol() === obj.getSymbol();
-        }) : -1;
-        if (index < 0) {
-          this.data[exchange] = [obj];
-        } else {
-          this.data[exchange][index] = obj;
-        }
+        const obj = BookTickers.deserializeBinary(new Uint8Array(ab));
+        this[exchange] = new Map(obj.getBookTickerMapMap().toArray());
       });
     };
   }

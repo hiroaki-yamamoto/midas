@@ -1,4 +1,6 @@
+use ::std::collections::HashMap;
 use ::std::net::SocketAddr;
+use ::std::time::Duration;
 
 use ::clap::Clap;
 use ::futures::{FutureExt, SinkExt, StreamExt};
@@ -7,14 +9,16 @@ use ::nats::asynk::{connect as broker_con, Connection as NatsCon};
 use ::prost::Message as ProstMsg;
 use ::rpc::entities::Status;
 use ::slog::{o, Logger};
+use ::tokio::select;
 use ::tokio::signal::unix as signal;
+use ::tokio::time::interval;
 use ::warp::ws::Message;
 use ::warp::{Filter, Reply};
 
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
 use ::exchanges::{binance, TradeObserver};
-use ::rpc::bookticker::BookTicker;
+use ::rpc::bookticker::{BookTicker, BookTickers};
 use ::rpc::entities::Exchanges;
 
 async fn get_exchange(
@@ -34,6 +38,10 @@ fn handle_websocket(
   ws: ::warp::ws::Ws,
 ) -> impl Reply {
   return ws.on_upgrade(|mut socket: ::warp::ws::WebSocket| async move {
+    let mut pairs: BookTickers = BookTickers {
+      book_ticker_map: HashMap::new(),
+    };
+    let mut publish_interval = interval(Duration::from_millis(10));
     let mut sub = match exchange.subscribe().await {
       Ok(sub) => sub,
       Err(e) => {
@@ -44,24 +52,28 @@ fn handle_websocket(
         return;
       }
     };
-    while let Some(best_price) = sub.next().await {
-      let best_price: BookTicker = best_price.into();
-      let mut buf: Vec<u8> = Vec::new();
-      let _ = best_price.encode(&mut buf).unwrap_or_else(|e| {
-        buf.clear();
-        Status::new_int(0, format!("{}", e).as_str())
-          .encode(&mut buf)
-          .unwrap_or_else(|e| {
+    loop {
+      select! {
+        Some(best_price) = sub.next() => {
+          let best_price: BookTicker = best_price.into();
+          pairs.book_ticker_map.insert(best_price.symbol.clone(), best_price);
+        },
+        _ = publish_interval.tick() => {
+          let mut buf: Vec<u8> = Vec::new();
+          let _ = pairs.encode(&mut buf).unwrap_or_else(|e| {
             buf.clear();
-            buf.extend(format!("{}", e).as_bytes());
+            Status::new_int(0, format!("{}", e).as_str())
+              .encode(&mut buf)
+              .unwrap_or_else(|e| {
+                buf.clear();
+                buf.extend(format!("{}", e).as_bytes());
+              });
           });
-      });
-      let _ = socket.send(Message::binary(buf)).await;
-      // .send(Message::text(jsonify(&best_price).unwrap_or_else(|e| {
-      //   return jsonify(&Status::new_int(0, format!("{}", e).as_str()))
-      //     .unwrap_or_else(|e| format!("{}", e));
-      // })))
-      let _ = socket.flush().await;
+          let _ = socket.send(Message::binary(buf)).await;
+          let _ = socket.flush().await;
+        }
+        else => {break;}
+      }
     }
   });
 }

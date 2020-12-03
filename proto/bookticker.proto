@@ -10,3 +10,7 @@ message BookTicker {
   double ask_price = 5;
   double ask_qty = 6;
 }
+
+message BookTickers {
+  map<string, BookTicker> book_ticker_map = 3;
+}

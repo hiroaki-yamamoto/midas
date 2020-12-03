@@ -16,3 +16,12 @@ pub struct BookTicker {
   #[prost(double, tag = "6")]
   pub ask_qty: f64,
 }
+#[derive(
+  Clone, PartialEq, ::prost::Message, ::serde::Serialize, ::serde::Deserialize,
+)]
+#[serde(rename_all = "camelCase")]
+pub struct BookTickers {
+  #[prost(map = "string, message", tag = "3")]
+  pub book_ticker_map:
+    ::std::collections::HashMap<std::string::String, BookTicker>,
+}
