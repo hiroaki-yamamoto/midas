@@ -19,7 +19,6 @@ export class TradeObserverService {
       decodeAsync(ev.data.stream()).then(
         (obj: BookTicker.AsObject) => {
           this[exchange] = Object.assign(this[exchange], obj);
-          console.log(this[exchange]);
         }
       );
     };
