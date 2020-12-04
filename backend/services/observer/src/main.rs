@@ -6,7 +6,7 @@ use ::clap::Clap;
 use ::futures::{FutureExt, SinkExt, StreamExt};
 use ::libc::{SIGINT, SIGTERM};
 use ::nats::asynk::{connect as broker_con, Connection as NatsCon};
-use ::prost::Message as ProstMsg;
+use ::rmp_serde::to_vec_named as to_msgpack;
 use ::rpc::entities::Status;
 use ::slog::{o, Logger};
 use ::tokio::select;
@@ -18,7 +18,7 @@ use ::warp::{Filter, Reply};
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
 use ::exchanges::{binance, TradeObserver};
-use ::rpc::bookticker::{BookTicker, BookTickers};
+use ::rpc::bookticker::BookTicker;
 use ::rpc::entities::Exchanges;
 
 async fn get_exchange(
@@ -38,9 +38,7 @@ fn handle_websocket(
   ws: ::warp::ws::Ws,
 ) -> impl Reply {
   return ws.on_upgrade(|mut socket: ::warp::ws::WebSocket| async move {
-    let mut pairs: BookTickers = BookTickers {
-      book_ticker_map: HashMap::new(),
-    };
+    let mut book_tickers: HashMap<String, BookTicker> = HashMap::new();
     let mut publish_interval = interval(Duration::from_millis(50));
     let mut sub = match exchange.subscribe().await {
       Ok(sub) => sub,
@@ -52,29 +50,26 @@ fn handle_websocket(
         return;
       }
     };
-    let mut changed = false;
+    let mut needs_flush = false;
     loop {
       select! {
         Some(best_price) = sub.next() => {
           let best_price: BookTicker = best_price.into();
-          pairs.book_ticker_map.insert(best_price.symbol.clone(), best_price);
-          changed = true;
+          book_tickers.insert(best_price.symbol.to_owned(), best_price);
+          needs_flush = true;
         },
         _ = publish_interval.tick() => {
-          if changed {
-            let mut buf: Vec<u8> = Vec::new();
-            let _ = pairs.encode(&mut buf).unwrap_or_else(|e| {
-              buf.clear();
-              Status::new_int(0, format!("{}", e).as_str())
-                .encode(&mut buf)
-                .unwrap_or_else(|e| {
-                  buf.clear();
-                  buf.extend(format!("{}", e).as_bytes());
-                });
+          if needs_flush {
+            let msg: Vec<u8> = to_msgpack(&book_tickers).unwrap_or_else(|e| {
+              return to_msgpack(&Status::new_int(0, format!("{}", e).as_str()))
+                .unwrap_or_else(
+                  |e| format!("Failed to encode the bookticker data: {}", e).into_bytes()
+                );
             });
-            let _ = socket.send(Message::binary(buf)).await;
+            book_tickers.clear();
+            let _ = socket.send(Message::binary(msg)).await;
             let _ = socket.flush().await;
-            changed = false;
+            needs_flush = false;
           }
         }
         else => {break;}
@@ -113,7 +108,10 @@ async fn main() {
       },
     )
     .and(::warp::ws())
-    .map(handle_websocket);
+    .map(handle_websocket)
+    .with(::warp::filters::compression::brotli())
+    .with(::warp::filters::compression::deflate())
+    .with(::warp::filters::compression::gzip());
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let host: SocketAddr = cfg.host.parse().unwrap();

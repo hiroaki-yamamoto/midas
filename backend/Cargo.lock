@@ -1789,9 +1789,8 @@ dependencies = [
  "libc",
  "mongodb",
  "nats",
- "prost",
+ "rmp-serde",
  "rpc",
- "serde_json",
  "slog",
  "tokio",
  "warp",
@@ -3829,6 +3828,7 @@ version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f41be6df54c97904af01aa23e613d4521eed7ab23537cede692d4058f6449407"
 dependencies = [
+ "async-compression",
  "bytes",
  "futures",
  "headers",

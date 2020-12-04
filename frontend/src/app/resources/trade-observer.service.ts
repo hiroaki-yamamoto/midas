@@ -1,22 +1,27 @@
 import { Injectable } from '@angular/core';
-import { BookTicker, BookTickers } from '../rpc/bookticker_pb';
+import { BookTicker } from '../rpc/bookticker_pb';
 import { MidasSocket } from '../websocket';
+import { decodeAsync } from '@msgpack/msgpack';
+
+type BookTickers = {[symbol: string]: BookTicker.AsObject};
 
 @Injectable({
   providedIn: 'root'
 })
 export class TradeObserverService {
-  public readonly binance: Map<string, BookTicker>;
+  public readonly binance: BookTickers;
 
   constructor() {
-    this.binance = new Map();
+    this.binance = {};
   }
   private handle(exchange: string): (ev: MessageEvent<Blob>) => void {
     return (ev: MessageEvent<Blob>) => {
-      ev.data.arrayBuffer().then((ab) => {
-        const obj = BookTickers.deserializeBinary(new Uint8Array(ab));
-        this[exchange] = new Map(obj.getBookTickerMapMap().toArray());
-      });
+      decodeAsync(ev.data.stream()).then(
+        (obj: BookTicker.AsObject) => {
+          this[exchange] = Object.assign(this[exchange], obj);
+          console.log(this[exchange]);
+        }
+      );
     };
   }
   public connect() {

@@ -1286,6 +1286,11 @@
     merge-source-map "^1.1.0"
     schema-utils "^2.7.0"
 
+"@msgpack/msgpack@^2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@msgpack/msgpack/-/msgpack-2.3.0.tgz#a9043b920837b2dd63482e7bf6b8345813e9816b"
+  integrity sha512-xxRejzNpiVQ2lzxMG/yo2ocfZSk+cKo2THq54AimaubMucg66DpQm9Yj7ESMr/l2EqDkmF2Dx4r0F/cbsitAaw==
+
 "@ngtools/webpack@11.0.2":
   version "11.0.2"
   resolved "https://registry.yarnpkg.com/@ngtools/webpack/-/webpack-11.0.2.tgz#d9513854d474fe09350ce705d04fee38ffb8f0c7"
