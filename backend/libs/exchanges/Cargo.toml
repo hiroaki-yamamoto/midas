@@ -19,7 +19,7 @@ types = { path = "../types" }
 chrono = "0.4.19"
 url = "2.2.0"
 serde_qs = "0.7.0"
-serde = "1.0.117"
+serde = "1.0.118"
 serde_json = "1.0.60"
 slog = "2.7.0"
 mongodb = "1.1.1"
