@@ -10,7 +10,7 @@ edition = "2018"
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 
-slog = "2.5.2"
+slog = "2.7.0"
 clap = "3.0.0-beta.2"
 tokio = {version = "0.2.23", features = ["macros", "rt-threaded", "signal"]}
 futures = "0.3.8"
