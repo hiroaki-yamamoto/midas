@@ -8,7 +8,7 @@
     </header>
     <mat-tab-group>
       <mat-tab *ngFor="let item of exchanges" label="{{item}}">
-        <app-book-ticker exchange="{{item.toLowerCase()}}"></app-book-ticker>
+        <app-book-ticker [exchange]="item.toLowerCase()"></app-book-ticker>
       </mat-tab>
     </mat-tab-group>
   </section>

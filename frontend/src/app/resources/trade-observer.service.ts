@@ -10,6 +10,7 @@ type BookTickers = {[symbol: string]: BookTicker.AsObject};
 })
 export class TradeObserverService {
   public readonly binance: BookTickers;
+  public onChanged?: (exchange: string) => void;
 
   constructor() {
     this.binance = {};
@@ -19,6 +20,9 @@ export class TradeObserverService {
       decodeAsync(ev.data.stream()).then(
         (obj: BookTicker.AsObject) => {
           this[exchange] = Object.assign(this[exchange], obj);
+          if (this.onChanged !== undefined) {
+            this.onChanged(exchange);
+          }
         }
       );
     };

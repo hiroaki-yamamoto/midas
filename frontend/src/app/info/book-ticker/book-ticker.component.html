@@ -1,23 +1,23 @@
 <div fxLayout="column">
-  <table mat-table [dataSource]="dataSource" fxFlex>
+  <table mat-table [dataSource]="dataSource" fxFlex matSort>
     <ng-container matColumnDef="symbol">
-      <th mat-header-cell *matHeaderCellDef>Symbol</th>
+      <th mat-header-cell *matHeaderCellDef i18n mat-sort-header>Symbol</th>
       <td mat-cell *matCellDef="let item">{{item.symbol}}</td>
     </ng-container>
     <ng-container matColumnDef="askPrice">
-      <th mat-header-cell *matHeaderCellDef i18n>Best Price for buy</th>
+      <th mat-header-cell *matHeaderCellDef i18n mat-sort-header>Best Price for buy</th>
       <td mat-cell *matCellDef="let item">{{item.askPrice}}</td>
     </ng-container>
     <ng-container matColumnDef="askQty">
-      <th mat-header-cell *matHeaderCellDef i18n>Best Qty for buy</th>
+      <th mat-header-cell *matHeaderCellDef i18n mat-sort-header>Best Qty for buy</th>
       <td mat-cell *matCellDef="let item">{{item.askQty}}</td>
     </ng-container>
     <ng-container matColumnDef="bidPrice">
-      <th mat-header-cell *matHeaderCellDef i18n>Best Price for Sell</th>
+      <th mat-header-cell *matHeaderCellDef i18n mat-sort-header>Best Price for Sell</th>
       <td mat-cell *matCellDef="let item">{{item.bidPrice}}</td>
     </ng-container>
     <ng-container matColumnDef="bidQty">
-      <th mat-header-cell *matHeaderCellDef i18n>Best Qty for Sell</th>
+      <th mat-header-cell *matHeaderCellDef i18n mat-sort-header>Best Qty for Sell</th>
       <td mat-cell *matCellDef="let item">{{item.bidQty}}</td>
     </ng-container>
     <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
