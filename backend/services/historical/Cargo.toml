@@ -13,7 +13,7 @@ rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 
-serde = {version = "1.0.117", features = ["derive"]}
+serde = {version = "1.0.118", features = ["derive"]}
 rmp-serde = "0.14.4"
 nats = "0.8.6"
 mongodb = "1.1.1"
