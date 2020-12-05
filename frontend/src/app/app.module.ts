@@ -15,6 +15,9 @@ import {
   MAT_SNACK_BAR_DEFAULT_OPTIONS
 } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatTableModule } from '@angular/material/table';
 
 import * as am4core from '@amcharts/amcharts4/core';
 import am4themes_animated from '@amcharts/amcharts4/themes/animated';
@@ -25,6 +28,7 @@ import { IconSnackBarComponent } from './icon-snackbar/icon-snackbar.component';
 import { SyncProgressComponent } from './sync-progress/sync-progress.component';
 import { InfoComponent } from './info/info.component';
 import { TradeObserverService } from './resources/trade-observer.service';
+import { BookTickerComponent } from './info/book-ticker/book-ticker.component';
 
 @NgModule({
   declarations: [
@@ -33,6 +37,7 @@ import { TradeObserverService } from './resources/trade-observer.service';
     IconSnackBarComponent,
     SyncProgressComponent,
     InfoComponent,
+    BookTickerComponent,
   ],
   imports: [
     BrowserModule,
@@ -44,8 +49,11 @@ import { TradeObserverService } from './resources/trade-observer.service';
     FlexLayoutModule,
     MatDialogModule,
     MatButtonModule,
+    MatPaginatorModule,
     MatProgressBarModule,
     MatSnackBarModule,
+    MatTableModule,
+    MatTabsModule,
     MatToolbarModule,
     FontAwesomeModule,
   ],
