@@ -3,14 +3,14 @@ use ::std::pin::Pin;
 
 use ::futures::executor::block_on;
 use ::futures::future::join_all;
-use ::futures::{SinkExt, Stream};
+use ::futures::{SinkExt, Stream, StreamExt};
 use ::mongodb::Database;
 use ::nats::asynk::Connection as NatsCon;
 use ::num_traits::FromPrimitive;
 use ::rmp_serde::from_slice as read_msgpack;
 use ::serde_json::to_string as jsonify;
 use ::slog::{error, o, Logger};
-use ::tokio::stream::StreamExt as TonicStreamExt;
+use ::tokio::select;
 use ::warp::filters::BoxedFilter;
 use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
@@ -98,9 +98,19 @@ impl Service {
                   ));
                 })
                 .map(|txt| Message::text(txt));
-              while let Some(item) = stream.next().await {
-                let _ = sock.send(item).await;
-                let _ = sock.flush().await;
+              loop {
+                select! {
+                  Some(item) = stream.next() => {
+                    let _ = sock.send(item).await;
+                    let _ = sock.flush().await;
+                  },
+                  Some(msg) = sock.next() => {
+                    let msg = msg.unwrap_or(::warp::ws::Message::close());
+                    if msg.is_close() {
+                      break;
+                    }
+                  }
+                }
               }
             }
           };
