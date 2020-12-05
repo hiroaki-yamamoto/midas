@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-slog = "2.5.2"
+slog = "2.7.0"
 slog-json = "2.3.0"
 slog-term = "2.6.0"
 slog-atomic = "3.0.0"
