@@ -18,7 +18,7 @@ slog = "2.7.0"
 clap = "3.0.0-beta.2"
 tokio = {version = "0.2.23", features = ["macros", "rt-threaded", "signal"]}
 futures = "0.3.8"
-libc = "0.2.80"
+libc = "0.2.81"
 nats = "0.8.6"
 warp = "0.2.5"
 num-traits = "0.2.14"
