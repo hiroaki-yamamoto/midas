@@ -16,5 +16,5 @@ tokio = {version = "0.2.23", features = ["signal", "rt-threaded", "macros"]}
 nats = "0.8.6"
 slog = "2.7.0"
 futures = "0.3.8"
-libc = "0.2.80"
+libc = "0.2.81"
 mongodb = "1.1.1"
