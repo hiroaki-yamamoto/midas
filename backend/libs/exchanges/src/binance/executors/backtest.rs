@@ -2,7 +2,7 @@ use ::std::collections::HashMap;
 
 use ::async_stream::try_stream;
 use ::async_trait::async_trait;
-use ::futures::stream::{Stream, StreamExt};
+use ::futures::stream::{LocalBoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 
 use ::rpc::entities::{BackTestPriceBase, Exchanges};
@@ -48,51 +48,6 @@ impl Executor {
       positions: HashMap::new(),
       hist_recorder: history_recorder,
       price_base_policy: BackTestPriceBase::HighLowMid,
-    });
-  }
-
-  pub async fn open(
-    &mut self,
-  ) -> GenericResult<impl Stream<Item = GenericResult<BookTicker>> + '_> {
-    let half_spread = self.spread / 2.0;
-    let price_base = self.price_base_policy.clone();
-    let mut stream = self
-      .hist_recorder
-      .list(None)
-      .await?
-      .map(move |kline| {
-        let kline = &kline;
-        let price = match price_base {
-          BackTestPriceBase::Close => kline.close_price,
-          BackTestPriceBase::Open => kline.open_price,
-          BackTestPriceBase::High => kline.high_price,
-          BackTestPriceBase::Low => kline.low_price,
-          BackTestPriceBase::OpenCloseMid => {
-            (kline.close_price + kline.open_price) / 2.0
-          }
-          BackTestPriceBase::HighLowMid => {
-            (kline.high_price + kline.low_price) / 2.0
-          }
-        };
-        return BookTicker {
-          exchange: Exchanges::Binance,
-          symbol: kline.symbol.clone(),
-          id: ObjectId::new().to_string(),
-          bid_price: price - half_spread,
-          ask_price: price + half_spread,
-          ask_qty: kline.volume,
-          bid_qty: kline.volume,
-        };
-      })
-      .boxed();
-    self.cur_trade = None;
-    return Ok(try_stream! {
-      while let Some(v) = stream.next().await {
-        self.cur_trade = Some(v.clone());
-        self.execute_order(ExecutionType::Maker)?;
-        yield v;
-      }
-      self.cur_trade = None;
     });
   }
 
@@ -143,6 +98,51 @@ impl Executor {
 
 #[async_trait]
 impl ExecutorTrait for Executor {
+  async fn open(
+    &mut self,
+  ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>> {
+    let half_spread = self.spread / 2.0;
+    let price_base = self.price_base_policy.clone();
+    let mut stream = self
+      .hist_recorder
+      .list(None)
+      .await?
+      .map(move |kline| {
+        let kline = &kline;
+        let price = match price_base {
+          BackTestPriceBase::Close => kline.close_price,
+          BackTestPriceBase::Open => kline.open_price,
+          BackTestPriceBase::High => kline.high_price,
+          BackTestPriceBase::Low => kline.low_price,
+          BackTestPriceBase::OpenCloseMid => {
+            (kline.close_price + kline.open_price) / 2.0
+          }
+          BackTestPriceBase::HighLowMid => {
+            (kline.high_price + kline.low_price) / 2.0
+          }
+        };
+        return BookTicker {
+          exchange: Exchanges::Binance,
+          symbol: kline.symbol.clone(),
+          id: ObjectId::new().to_string(),
+          bid_price: price - half_spread,
+          ask_price: price + half_spread,
+          ask_qty: kline.volume,
+          bid_qty: kline.volume,
+        };
+      })
+      .boxed();
+    self.cur_trade = None;
+    let stream = try_stream! {
+      while let Some(v) = stream.next().await {
+        self.cur_trade = Some(v.clone());
+        self.execute_order(ExecutionType::Maker)?;
+        yield v;
+      }
+      self.cur_trade = None;
+    };
+    return Ok(Box::pin(stream));
+  }
   async fn create_order(
     &mut self,
     symbol: String,

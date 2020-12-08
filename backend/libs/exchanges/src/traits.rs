@@ -1,6 +1,6 @@
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Utc};
-use ::futures::stream::{BoxStream, Stream};
+use ::futures::stream::{BoxStream, LocalBoxStream, Stream};
 use ::mongodb::bson::{doc, oid::ObjectId, Document};
 use ::mongodb::results::InsertManyResult;
 use ::mongodb::Database;
@@ -98,6 +98,9 @@ pub(crate) trait TradeDateTime {
 
 #[async_trait]
 pub trait Executor {
+  async fn open(
+    &mut self,
+  ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>>;
   async fn create_order(
     &mut self,
     symbol: String,
