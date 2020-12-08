@@ -5,25 +5,15 @@ use ::async_trait::async_trait;
 use ::futures::stream::{Stream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 
-use ::rpc::entities::BackTestPriceBase;
+use ::rpc::entities::{BackTestPriceBase, Exchanges};
 use ::types::GenericResult;
 
 use crate::binance::history_recorder::HistoryRecorder;
-use crate::entities::{ExecutionResult, OrderOption};
+use crate::entities::{BookTicker, ExecutionResult, OrderOption};
 use crate::errors::ExecutionFailed;
 use crate::traits::Executor as ExecutorTrait;
 
 use super::entities::{Order, OrderInner};
-
-#[derive(Debug, Clone)]
-pub struct Price {
-  symbol: String,
-  ask: f64,
-  bid: f64,
-  price_base: BackTestPriceBase,
-  asset_volume: f64,
-  base_volume: f64,
-}
 
 #[derive(Clone, Debug)]
 enum ExecutionType {
@@ -35,10 +25,11 @@ pub struct Executor {
   spread: f64,
   maker_fee: f64,
   taker_fee: f64,
-  cur_trade: Option<Price>,
+  cur_trade: Option<BookTicker>,
   orders: HashMap<ObjectId, Order>,
   positions: HashMap<ObjectId, OrderInner>,
   hist_recorder: HistoryRecorder,
+  pub price_base_policy: BackTestPriceBase,
 }
 
 impl Executor {
@@ -56,14 +47,15 @@ impl Executor {
       orders: HashMap::new(),
       positions: HashMap::new(),
       hist_recorder: history_recorder,
+      price_base_policy: BackTestPriceBase::HighLowMid,
     });
   }
 
   pub async fn open(
     &mut self,
-    price_base: BackTestPriceBase,
-  ) -> GenericResult<impl Stream<Item = GenericResult<Price>> + '_> {
+  ) -> GenericResult<impl Stream<Item = GenericResult<BookTicker>> + '_> {
     let half_spread = self.spread / 2.0;
+    let price_base = self.price_base_policy.clone();
     let mut stream = self
       .hist_recorder
       .list(None)
@@ -82,13 +74,14 @@ impl Executor {
             (kline.high_price + kline.low_price) / 2.0
           }
         };
-        return Price {
+        return BookTicker {
+          exchange: Exchanges::Binance,
           symbol: kline.symbol.clone(),
-          ask: price + half_spread,
-          bid: price - half_spread,
-          asset_volume: kline.volume,
-          base_volume: kline.quote_volume,
-          price_base,
+          id: ObjectId::new().to_string(),
+          bid_price: price - half_spread,
+          ask_price: price + half_spread,
+          ask_qty: kline.volume,
+          bid_qty: kline.volume,
         };
       })
       .boxed();
@@ -121,7 +114,7 @@ impl Executor {
       let position = order
         .inner
         .iter()
-        .filter(|&order| order.price >= cur_trade.ask)
+        .filter(|&order| order.price >= cur_trade.ask_price)
         .fold(OrderInner::default(), |mut acc, order| {
           let mut order = order.clone();
           order.qty = order.qty * (1.0 - fee);
@@ -131,7 +124,7 @@ impl Executor {
       let remain: Vec<OrderInner> = order
         .inner
         .iter()
-        .filter(|&order| order.price < cur_trade.ask)
+        .filter(|&order| order.price < cur_trade.ask_price)
         .cloned()
         .collect();
       match self.positions.get_mut(key) {
@@ -161,7 +154,7 @@ impl ExecutorTrait for Executor {
       return Err(Box::new(ExecutionFailed::new("Trade Stream is closed.")));
     }
     let id = ObjectId::new();
-    let price = price.unwrap_or(self.cur_trade.as_ref().unwrap().ask);
+    let price = price.unwrap_or(self.cur_trade.as_ref().unwrap().ask_price);
     let orders = match order_option {
       None => vec![OrderInner {
         price,
@@ -195,7 +188,7 @@ impl ExecutorTrait for Executor {
       return Err(Box::new(ExecutionFailed::new("Trade stream is closed.")));
     }
     let cur_trade = self.cur_trade.clone().unwrap();
-    let price = cur_trade.bid;
+    let price = cur_trade.bid_price;
     self.orders.remove(&id);
     let fee = self.taker_fee;
     let ret = match self.positions.get_mut(&id) {
