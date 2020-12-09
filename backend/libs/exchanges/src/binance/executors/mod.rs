@@ -1,5 +1,4 @@
 mod backtest;
-mod entities;
 mod front_test;
 
 pub use self::backtest::Executor as BackTestExecutor;

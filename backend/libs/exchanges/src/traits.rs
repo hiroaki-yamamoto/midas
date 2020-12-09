@@ -1,3 +1,5 @@
+use ::std::collections::HashMap;
+
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Utc};
 use ::futures::stream::{BoxStream, LocalBoxStream, Stream};
@@ -9,7 +11,11 @@ use ::serde::Serialize;
 
 use ::types::{GenericResult, SendableErrorResult};
 
-use super::entities::{BookTicker, ExecutionResult, OrderOption};
+use super::entities::{
+  BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
+};
+
+use super::errors::ExecutionFailed;
 
 #[async_trait]
 pub trait Recorder {
@@ -113,4 +119,58 @@ pub trait Executor {
     &mut self,
     id: ObjectId,
   ) -> GenericResult<ExecutionResult>;
+}
+
+pub(crate) trait TestExecutor {
+  fn get_current_trade(&self) -> Option<BookTicker>;
+  fn maker_fee(&self) -> f64;
+  fn taker_fee(&self) -> f64;
+  fn get_orders(&mut self) -> &mut HashMap<ObjectId, Order>;
+  fn get_positions(&mut self) -> &mut HashMap<ObjectId, OrderInner>;
+  fn execute_order(
+    &mut self,
+    exe_type: ExecutionType,
+  ) -> Result<(), ExecutionFailed> {
+    let cur_trade = self.get_current_trade();
+    if cur_trade.is_none() {
+      return Err(ExecutionFailed::new("Trade Stream seems to be closed."));
+    }
+    let cur_trade = cur_trade.unwrap();
+    for (key, order) in self.get_orders().iter_mut() {
+      if order.symbol != cur_trade.symbol {
+        continue;
+      }
+      let fee = match exe_type {
+        ExecutionType::Maker => self.maker_fee(),
+        ExecutionType::Taker => self.taker_fee(),
+      };
+      let position = order
+        .inner
+        .iter()
+        .filter(|&order| order.price >= cur_trade.ask_price)
+        .fold(OrderInner::default(), |mut acc, order| {
+          let mut order = order.clone();
+          order.qty = order.qty * (1.0 - fee);
+          acc += order;
+          return acc;
+        });
+      let remain: Vec<OrderInner> = order
+        .inner
+        .iter()
+        .filter(|&order| order.price < cur_trade.ask_price)
+        .cloned()
+        .collect();
+      let mut ref_positions = self.get_positions();
+      match ref_positions.get_mut(key) {
+        None => {
+          ref_positions.insert(key.clone(), position);
+        }
+        Some(v) => {
+          *v += position;
+        }
+      }
+      order.inner = remain;
+    }
+    return Ok(());
+  }
 }

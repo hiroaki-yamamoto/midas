@@ -1,5 +1,11 @@
 use ::mongodb::bson::oid::ObjectId;
 
+#[derive(Clone, Debug)]
+pub(crate) enum ExecutionType {
+  Maker,
+  Taker,
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct ExecutionResult {
   pub id: ObjectId,

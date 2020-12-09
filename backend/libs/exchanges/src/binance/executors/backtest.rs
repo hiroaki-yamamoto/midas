@@ -9,17 +9,13 @@ use ::rpc::entities::{BackTestPriceBase, Exchanges};
 use ::types::GenericResult;
 
 use crate::binance::history_recorder::HistoryRecorder;
-use crate::entities::{BookTicker, ExecutionResult, OrderOption};
+use crate::entities::{
+  BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
+};
 use crate::errors::ExecutionFailed;
-use crate::traits::Executor as ExecutorTrait;
-
-use super::entities::{Order, OrderInner};
-
-#[derive(Clone, Debug)]
-enum ExecutionType {
-  Maker,
-  Taker,
-}
+use crate::traits::{
+  Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
+};
 
 pub struct Executor {
   spread: f64,
@@ -50,49 +46,23 @@ impl Executor {
       price_base_policy: BackTestPriceBase::HighLowMid,
     });
   }
+}
 
-  fn execute_order(&mut self, exe_type: ExecutionType) -> GenericResult<()> {
-    if self.cur_trade.is_none() {
-      return Err(Box::new(ExecutionFailed::new(
-        "Trade Stream seems to be closed.",
-      )));
-    }
-    let cur_trade = self.cur_trade.clone().unwrap();
-    for (key, order) in self.orders.iter_mut() {
-      if order.symbol != cur_trade.symbol {
-        continue;
-      }
-      let fee = match exe_type {
-        ExecutionType::Maker => self.maker_fee,
-        ExecutionType::Taker => self.taker_fee,
-      };
-      let position = order
-        .inner
-        .iter()
-        .filter(|&order| order.price >= cur_trade.ask_price)
-        .fold(OrderInner::default(), |mut acc, order| {
-          let mut order = order.clone();
-          order.qty = order.qty * (1.0 - fee);
-          acc += order;
-          return acc;
-        });
-      let remain: Vec<OrderInner> = order
-        .inner
-        .iter()
-        .filter(|&order| order.price < cur_trade.ask_price)
-        .cloned()
-        .collect();
-      match self.positions.get_mut(key) {
-        None => {
-          self.positions.insert(key.clone(), position);
-        }
-        Some(v) => {
-          *v += position;
-        }
-      }
-      order.inner = remain;
-    }
-    return Ok(());
+impl TestExecutorTrait for Executor {
+  fn get_current_trade(&self) -> Option<BookTicker> {
+    return self.cur_trade;
+  }
+  fn maker_fee(&self) -> f64 {
+    return self.maker_fee;
+  }
+  fn taker_fee(&self) -> f64 {
+    return self.taker_fee;
+  }
+  fn get_orders(&mut self) -> &mut HashMap<ObjectId, Order> {
+    return &mut self.orders;
+  }
+  fn get_positions(&mut self) -> &mut HashMap<ObjectId, OrderInner> {
+    return &mut self.positions;
   }
 }
 
@@ -103,7 +73,7 @@ impl ExecutorTrait for Executor {
   ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>> {
     let half_spread = self.spread / 2.0;
     let price_base = self.price_base_policy.clone();
-    let mut stream = self
+    let mut db_stream = self
       .hist_recorder
       .list(None)
       .await?
@@ -134,9 +104,9 @@ impl ExecutorTrait for Executor {
       .boxed();
     self.cur_trade = None;
     let stream = try_stream! {
-      while let Some(v) = stream.next().await {
+      while let Some(v) = db_stream.next().await {
         self.cur_trade = Some(v.clone());
-        self.execute_order(ExecutionType::Maker)?;
+        self.execute_order(ExecutionType::Taker)?;
         yield v;
       }
       self.cur_trade = None;
@@ -177,7 +147,7 @@ impl ExecutorTrait for Executor {
     };
     let orders = Order::new(symbol, orders);
     self.orders.insert(id.clone(), orders);
-    self.execute_order(ExecutionType::Taker)?;
+    self.execute_order(ExecutionType::Maker)?;
     return Ok(id);
   }
   async fn remove_order(
