@@ -121,6 +121,7 @@ pub trait Executor {
   ) -> GenericResult<ExecutionResult>;
 }
 
+#[async_trait]
 pub(crate) trait TestExecutor {
   fn get_current_trade(&self) -> Option<BookTicker>;
   fn maker_fee(&self) -> f64;
@@ -172,5 +173,76 @@ pub(crate) trait TestExecutor {
       order.inner = remain;
     }
     return Ok(());
+  }
+
+  async fn create_order(
+    &mut self,
+    symbol: String,
+    price: Option<f64>,
+    budget: f64,
+    order_option: Option<OrderOption>,
+  ) -> GenericResult<ObjectId> {
+    let cur_trade = self.get_current_trade();
+    if cur_trade.is_none() {
+      return Err(Box::new(ExecutionFailed::new("Trade Stream is closed.")));
+    }
+    let id = ObjectId::new();
+    let price = price.unwrap_or(cur_trade.as_ref().unwrap().ask_price);
+    let orders = match order_option {
+      None => vec![OrderInner {
+        price,
+        qty: budget / price,
+      }],
+      Some(v) => {
+        let price_diff = price * v.price_ratio;
+        v.calc_trading_amounts(budget)
+          .into_iter()
+          .enumerate()
+          .map(|(index, amount)| {
+            let order_price = (price - price_diff) * ((index + 1) as f64);
+            OrderInner {
+              price: order_price.clone(),
+              qty: amount / order_price,
+            }
+          })
+          .collect()
+      }
+    };
+    let orders = Order::new(symbol, orders);
+    let order_dict = self.get_orders();
+    order_dict.insert(id.clone(), orders);
+    self.execute_order(ExecutionType::Maker)?;
+    return Ok(id);
+  }
+
+  async fn remove_order(
+    &mut self,
+    id: ObjectId,
+  ) -> GenericResult<ExecutionResult> {
+    let trade = self.get_current_trade();
+    if trade.is_none() {
+      return Err(Box::new(ExecutionFailed::new("Trade stream is closed.")));
+    }
+    let cur_trade = trade.unwrap();
+    let price = cur_trade.bid_price;
+    let orders = self.get_orders();
+    orders.remove(&id);
+    let fee = self.taker_fee();
+    let ret = match self.get_positions().get_mut(&id) {
+      None => ExecutionResult::default(),
+      Some(v) => {
+        let qty = v.qty * (1.0 - fee);
+        let profit = ((qty * price) - (v.qty * v.price)) / qty;
+        let profit_ratio = profit / v.price;
+        ExecutionResult {
+          id,
+          price,
+          profit,
+          profit_ratio,
+          qty: v.qty,
+        }
+      }
+    };
+    return Ok(ret);
   }
 }
