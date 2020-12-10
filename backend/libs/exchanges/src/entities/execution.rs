@@ -1,7 +1,7 @@
 use ::mongodb::bson::oid::ObjectId;
 
 #[derive(Clone, Debug)]
-pub(crate) enum ExecutionType {
+pub enum ExecutionType {
   Maker,
   Taker,
 }

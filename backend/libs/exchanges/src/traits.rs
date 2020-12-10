@@ -121,13 +121,14 @@ pub trait Executor {
   ) -> GenericResult<ExecutionResult>;
 }
 
-#[async_trait]
-pub(crate) trait TestExecutor {
+pub trait TestExecutor {
   fn get_current_trade(&self) -> Option<BookTicker>;
   fn maker_fee(&self) -> f64;
   fn taker_fee(&self) -> f64;
-  fn get_orders(&mut self) -> &mut HashMap<ObjectId, Order>;
-  fn get_positions(&mut self) -> &mut HashMap<ObjectId, OrderInner>;
+  fn get_orders(&self) -> HashMap<ObjectId, Order>;
+  fn get_positions(&self) -> HashMap<ObjectId, OrderInner>;
+  fn set_orders(&mut self, orders: HashMap<ObjectId, Order>);
+  fn set_positions(&mut self, positions: HashMap<ObjectId, OrderInner>);
   fn execute_order(
     &mut self,
     exe_type: ExecutionType,
@@ -137,14 +138,16 @@ pub(crate) trait TestExecutor {
       return Err(ExecutionFailed::new("Trade Stream seems to be closed."));
     }
     let cur_trade = cur_trade.unwrap();
-    for (key, order) in self.get_orders().iter_mut() {
+    let fee = match exe_type {
+      ExecutionType::Maker => self.maker_fee(),
+      ExecutionType::Taker => self.taker_fee(),
+    };
+    let mut positions = self.get_positions();
+    let mut orders = self.get_orders();
+    for (key, order) in orders.iter_mut() {
       if order.symbol != cur_trade.symbol {
         continue;
       }
-      let fee = match exe_type {
-        ExecutionType::Maker => self.maker_fee(),
-        ExecutionType::Taker => self.taker_fee(),
-      };
       let position = order
         .inner
         .iter()
@@ -161,10 +164,9 @@ pub(crate) trait TestExecutor {
         .filter(|&order| order.price < cur_trade.ask_price)
         .cloned()
         .collect();
-      let mut ref_positions = self.get_positions();
-      match ref_positions.get_mut(key) {
+      match positions.get_mut(key) {
         None => {
-          ref_positions.insert(key.clone(), position);
+          positions.insert(key.clone(), position);
         }
         Some(v) => {
           *v += position;
@@ -172,10 +174,12 @@ pub(crate) trait TestExecutor {
       }
       order.inner = remain;
     }
+    self.set_orders(orders);
+    self.set_positions(positions);
     return Ok(());
   }
 
-  async fn create_order(
+  fn create_order(
     &mut self,
     symbol: String,
     price: Option<f64>,
@@ -209,33 +213,31 @@ pub(crate) trait TestExecutor {
       }
     };
     let orders = Order::new(symbol, orders);
-    let order_dict = self.get_orders();
+    let mut order_dict = self.get_orders();
     order_dict.insert(id.clone(), orders);
+    self.set_orders(order_dict);
     self.execute_order(ExecutionType::Maker)?;
     return Ok(id);
   }
 
-  async fn remove_order(
-    &mut self,
-    id: ObjectId,
-  ) -> GenericResult<ExecutionResult> {
+  fn remove_order(&mut self, id: ObjectId) -> GenericResult<ExecutionResult> {
     let trade = self.get_current_trade();
     if trade.is_none() {
       return Err(Box::new(ExecutionFailed::new("Trade stream is closed.")));
     }
     let cur_trade = trade.unwrap();
     let price = cur_trade.bid_price;
-    let orders = self.get_orders();
-    orders.remove(&id);
+    let mut orders = self.get_orders();
+    let mut positions = self.get_positions();
     let fee = self.taker_fee();
-    let ret = match self.get_positions().get_mut(&id) {
+    let ret = match positions.get_mut(&id) {
       None => ExecutionResult::default(),
       Some(v) => {
         let qty = v.qty * (1.0 - fee);
         let profit = ((qty * price) - (v.qty * v.price)) / qty;
         let profit_ratio = profit / v.price;
         ExecutionResult {
-          id,
+          id: id.clone(),
           price,
           profit,
           profit_ratio,
@@ -243,6 +245,10 @@ pub(crate) trait TestExecutor {
         }
       }
     };
+    orders.remove(&id);
+    positions.remove(&id);
+    self.set_positions(positions);
+    self.set_orders(orders);
     return Ok(ret);
   }
 }
