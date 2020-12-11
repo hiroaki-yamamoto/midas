@@ -29,7 +29,7 @@ use super::constants::{
 use super::entities::{
   BookTicker, ListSymbolStream, SubscribeRequest, SubscribeRequestInner, Symbol,
 };
-use super::symbol_recorder::SymbolRecorder;
+use super::recorders::SymbolRecorder;
 
 use crate::entities::BookTicker as CommonBookTicker;
 use crate::errors::{InitError, MaximumAttemptExceeded, WebsocketError};

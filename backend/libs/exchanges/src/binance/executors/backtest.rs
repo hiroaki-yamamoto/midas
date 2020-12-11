@@ -8,7 +8,7 @@ use ::mongodb::bson::oid::ObjectId;
 use ::rpc::entities::{BackTestPriceBase, Exchanges};
 use ::types::GenericResult;
 
-use crate::binance::history_recorder::HistoryRecorder;
+use crate::binance::recorders::HistoryRecorder;
 use crate::entities::{
   BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
 };

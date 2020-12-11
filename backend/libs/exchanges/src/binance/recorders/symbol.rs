@@ -7,12 +7,10 @@ use ::serde::Serialize;
 
 use ::types::{ret_on_err, SendableErrorResult};
 
-use super::entities::ListSymbolStream;
+use super::super::entities::{ListSymbolStream, Symbol};
 use crate::traits::{
   Recorder as RecorderTrait, SymbolRecorder as SymbolRecorderTrait,
 };
-
-use super::entities::Symbol;
 
 #[derive(Debug, Clone)]
 pub struct SymbolRecorder {

@@ -9,10 +9,10 @@ use ::slog::Logger;
 use ::rpc::entities::SymbolInfo;
 use ::types::{ret_on_err, SendableErrorResult};
 
-use super::constants::REST_ENDPOINT;
-use super::entities::{ExchangeInfo, Symbol};
-use super::managers::SymbolUpdateEventManager;
-use super::symbol_recorder::SymbolRecorder;
+use super::super::constants::REST_ENDPOINT;
+use super::super::entities::{ExchangeInfo, Symbol};
+use super::super::managers::SymbolUpdateEventManager;
+use super::super::recorders::SymbolRecorder;
 
 use crate::errors::StatusFailure;
 use crate::traits::{

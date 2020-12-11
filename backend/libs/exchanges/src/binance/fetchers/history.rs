@@ -28,16 +28,16 @@ use crate::entities::KlineCtrl;
 use crate::errors::{EmptyError, MaximumAttemptExceeded};
 use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 
-use super::constants::{
+use super::super::constants::{
   HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
   HIST_FETCHER_PARAM_SUB_NAME, HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
   REST_ENDPOINT,
 };
-use super::entities::{
+use super::super::entities::{
   BinancePayload, HistFetcherParam, HistQuery, Kline, Klines, KlinesWithInfo,
   TradeTime,
 };
-use super::symbol_fetcher::SymbolFetcher;
+use super::SymbolFetcher;
 
 #[derive(Debug, Clone)]
 pub struct HistoryFetcher {
