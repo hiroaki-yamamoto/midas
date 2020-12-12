@@ -14,12 +14,12 @@ config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 
 serde = {version = "1.0.118", features = ["derive"]}
-rmp-serde = "0.14.4"
+rmp-serde = "0.15.0"
 nats = "0.8.6"
 mongodb = "1.1.1"
 clap = "3.0.0-beta.2"
 serde_yaml = "0.8.14"
-tokio = {version = "0.2.23", features = ["macros", "rt-threaded", "signal"]}
+tokio = {version = "0.2.24", features = ["macros", "rt-threaded", "signal"]}
 slog = "2.7.0"
 slog-atomic = "3.0.0"
 async-stream = "0.3.0"
