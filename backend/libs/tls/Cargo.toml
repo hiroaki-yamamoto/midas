@@ -11,7 +11,7 @@ types = { path = "../types" }
 
 hyper = "0.13.9"
 hyper-openssl = "0.8.1"
-openssl = "0.10.30"
+openssl = "0.10.31"
 tonic-openssl = "0.1.0"
 tower = "0.3.1"
 tower-util = "0.3.1"
