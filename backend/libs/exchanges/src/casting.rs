@@ -3,7 +3,7 @@ use ::serde_json::Value;
 use ::std::error::Error;
 use ::std::fmt::{Display, Formatter, Result as FormatResult};
 use ::std::marker::Send;
-use ::types::ret_on_err;
+use ::types::{ret_on_err, DateTime as UTCDateTime};
 
 type CastResult<T> = Result<T, Box<dyn Error + Send>>;
 
@@ -36,14 +36,18 @@ pub(crate) fn cast_datetime(
   fld_name: &str,
   value: &Value,
 ) -> CastResult<DateTime<Utc>> {
-  let (epoch, mils) = match value.as_i64() {
-    Some(n) => (n / 1000, n % 1000),
-    None => return Err(Box::new(ParseError::new(fld_name))),
+  return match value.as_i64() {
+    Some(n) => Ok(cast_datetime_from_i64(n)),
+    None => Err(Box::new(ParseError::new(fld_name))),
   };
-  return Ok(DateTime::from_utc(
+}
+
+pub(crate) fn cast_datetime_from_i64(value: i64) -> UTCDateTime {
+  let (epoch, mils) = (value / 1000, value % 1000);
+  return UTCDateTime::from_utc(
     NaiveDateTime::from_timestamp(epoch, (mils * 1000).abs() as u32),
     Utc,
-  ));
+  );
 }
 
 pub(crate) fn cast_f64(fld_name: &str, value: &Value) -> CastResult<f64> {
