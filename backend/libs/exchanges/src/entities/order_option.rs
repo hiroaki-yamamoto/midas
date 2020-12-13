@@ -1,5 +1,7 @@
 use ::num::pow::pow;
+use ::serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrderOption {
   pub(crate) iceberg: bool,
   pub(crate) num_ladder: u8,
