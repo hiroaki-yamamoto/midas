@@ -13,7 +13,9 @@ impl OrderRecorder {
       col: (&db).collection("binance.orders"),
       db,
     };
-    ret.update_indices(&["botId", "symbol"]).await;
+    ret
+      .update_indices(&["botId", "symbol", "orderId", "clientOrderId"])
+      .await;
     return ret;
   }
 }
