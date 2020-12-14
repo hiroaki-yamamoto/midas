@@ -60,6 +60,8 @@ impl FromStr for OrderType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Order<DT> {
+  #[serde(rename = "_id")]
+  pub id: ObjectId,
   pub bot_id: ObjectId,
   pub symbol: String,
   pub order_id: u64,
@@ -77,6 +79,7 @@ pub struct Order<DT> {
 impl From<Order<i64>> for Result<Order<DateTime>, ParseError> {
   fn from(from: Order<i64>) -> Self {
     return Ok(Order::<DateTime> {
+      id: from.id,
       bot_id: from.bot_id,
       symbol: from.symbol,
       order_id: from.order_id,
