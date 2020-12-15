@@ -12,6 +12,7 @@ members = [
   "services/symbol",
   "services/observer",
   "services/token",
+  "services/keychain",
 
   "workers/historical",
   "workers/observer"

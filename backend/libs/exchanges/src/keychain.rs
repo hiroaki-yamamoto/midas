@@ -1,11 +1,14 @@
+use ::futures::stream::BoxStream;
+use ::futures::StreamExt;
 use ::mongodb::bson::{from_document, to_document, Document};
 use ::mongodb::{Collection, Database};
 
-use ::types::GenericResult;
+use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use crate::entities::APIKey;
 use crate::traits::Recorder;
 
+#[derive(Debug, Clone)]
 pub struct KeyChain {
   db: Database,
   col: Collection,
@@ -25,14 +28,16 @@ impl KeyChain {
     return Ok(());
   }
 
-  pub async fn find(&self, filter: Document) -> GenericResult<Option<APIKey>> {
-    let value = self
-      .col
-      .find_one(filter, None)
-      .await?
-      .map(|doc| from_document::<APIKey>(doc).ok())
-      .flatten();
-    return Ok(value);
+  pub async fn list(
+    &self,
+    filter: Document,
+  ) -> SendableErrorResult<BoxStream<'_, APIKey>> {
+    let stream = ret_on_err!(self.col.find(filter, None).await)
+      .filter_map(|res| async { res.ok() })
+      .map(|doc| from_document::<APIKey>(doc))
+      .filter_map(|ent| async { ent.ok() })
+      .boxed();
+    return Ok(stream);
   }
 
   pub async fn delete(&self, query: Document) -> GenericResult<()> {
