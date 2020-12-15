@@ -8,17 +8,17 @@ pub struct KeyChain {
 }
 
 impl KeyChain {
-  fn new(db: Database) -> Self {
+  pub async fn new(db: Database) -> Self {
     let col = db.collection("apiKeyChains");
     let ret = Self { db, col };
-    ret.update_indices(&["exchange"]);
+    ret.update_indices(&["exchange"]).await;
     return ret;
   }
 }
 
 impl Recorder for KeyChain {
   fn get_database(&self) -> &Database {
-    return self.db;
+    return &self.db;
   }
 
   fn get_col_name(&self) -> &str {
