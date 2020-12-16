@@ -163,6 +163,21 @@ services:
       - ./etc:/etc/midas
       - ./backend:/opt/code
     restart: unless-stopped
+  keychain_service:
+    build:
+      context: ./backend
+      dockerfile: devel.dockerfile
+      args:
+        - SERVICE=keychain_service
+    command:
+      - -c
+      - /etc/midas/midas.yml
+    volumes:
+      - ./etc:/etc/midas
+      - ./backend:/opt/code
+    restart: unless-stopped
+    depends_on:
+      - database
   frontend:
     build:
       context: frontend
