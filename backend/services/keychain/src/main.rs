@@ -49,7 +49,15 @@ async fn main() {
             return Err(::warp::reject());
           }
           Ok(cursor) => {
-            return Ok(cursor.collect::<Vec<APIKey>>().await);
+            return Ok(
+              cursor
+                .map(|mut api_key| {
+                  api_key.prv_key = ("*").repeat(16);
+                  return api_key;
+                })
+                .collect::<Vec<APIKey>>()
+                .await,
+            );
           }
         };
       },
