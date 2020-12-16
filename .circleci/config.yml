@@ -166,3 +166,11 @@ workflows:
             branches:
               only: master
           service_name: observer_service
+      - deploy-image:
+          name: "Keychain Service Deployment"
+          requires:
+            - build-backend
+          filters:
+            branches:
+              only: master
+          service_name: keychain_service
