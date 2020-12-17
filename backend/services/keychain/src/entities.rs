@@ -4,5 +4,5 @@ use ::exchanges::APIKey;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct APIKeyList {
-  pub keys: Vec<APIKey>,
+  pub keys: Vec<APIKey<String>>,
 }

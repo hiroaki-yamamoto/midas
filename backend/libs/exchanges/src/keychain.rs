@@ -1,5 +1,6 @@
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
+use ::mongodb::bson::oid::{ObjectId, Result};
 use ::mongodb::bson::{from_document, to_document, Document};
 use ::mongodb::{Collection, Database};
 
@@ -22,7 +23,9 @@ impl KeyChain {
     return ret;
   }
 
-  pub async fn write(&self, value: APIKey) -> GenericResult<()> {
+  pub async fn write(&self, value: APIKey<String>) -> GenericResult<()> {
+    let value: Result<APIKey<ObjectId>> = value.into();
+    let value = value?;
     let value = to_document(&value)?;
     let _ = self.col.insert_one(value, None).await?;
     return Ok(());
@@ -31,11 +34,12 @@ impl KeyChain {
   pub async fn list(
     &self,
     filter: Document,
-  ) -> SendableErrorResult<BoxStream<'_, APIKey>> {
+  ) -> SendableErrorResult<BoxStream<'_, APIKey<String>>> {
     let stream = ret_on_err!(self.col.find(filter, None).await)
       .filter_map(|res| async { res.ok() })
-      .map(|doc| from_document::<APIKey>(doc))
+      .map(|doc| from_document::<APIKey<ObjectId>>(doc))
       .filter_map(|ent| async { ent.ok() })
+      .map(|api| api.into())
       .boxed();
     return Ok(stream);
   }

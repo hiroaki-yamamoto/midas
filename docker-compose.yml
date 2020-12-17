@@ -21,6 +21,7 @@ services:
       - symbol_service
       - historical_service
       - trade_observer_service
+      - keychain_service
       - frontend
     ports:
       - 50000:50000

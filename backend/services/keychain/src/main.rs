@@ -28,8 +28,7 @@ async fn main() {
   let db = db_cli.database("midas");
   let keychain = KeyChain::new(db).await;
 
-  let get_handler = ::warp::get()
-    .and(::warp::path::param())
+  let path_param = ::warp::path::param()
     .and_then(|exchange: String| async move {
       let exchange: Exchanges = match exchange.parse() {
         Err(_) => return Err(::warp::reject::not_found()),
@@ -40,7 +39,11 @@ async fn main() {
     .map(move |exchange| {
       return (exchange, keychain.clone(), logger_in_handler.clone());
     })
-    .untuple_one()
+    .untuple_one();
+
+  let get_handler = path_param
+    .clone()
+    .and(::warp::get())
     .and_then(
       |exchange: Exchanges, keychain: KeyChain, logger: Logger| async move {
         match keychain
@@ -65,7 +68,7 @@ async fn main() {
                   api_key.prv_key = ("*").repeat(16);
                   return api_key;
                 })
-                .collect::<Vec<APIKey>>()
+                .collect::<Vec<APIKey<String>>>()
                 .await,
             );
           }
@@ -75,6 +78,15 @@ async fn main() {
     .map(|api_key_list| {
       return ::warp::reply::json(&APIKeyList { keys: api_key_list });
     });
+  let post_handler = path_param
+    .and(::warp::post())
+    .and(::warp::filters::body::json())
+    .map(
+      |exchanges: Exchanges,
+       keychain: KeyChain,
+       logger: Logger,
+       api_key: APIKey<String>| {},
+    );
   let route = get_handler;
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
