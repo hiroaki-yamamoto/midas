@@ -4,6 +4,7 @@ use ::serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct APIKey<T> {
   pub id: T,
+  #[serde(default)]
   pub exchange: String,
   pub label: String,
   pub pub_key: String,

@@ -10,6 +10,7 @@ edition = "2018"
 exchanges = { path = "../../libs/exchanges" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
+csrf = { path = "../../libs/csrf" }
 
 clap = "3.0.0-beta.2"
 mongodb = "1.1.1"

@@ -13,8 +13,10 @@ use ::tokio::signal::unix as signal;
 use ::warp::Filter;
 
 use ::config::{CmdArgs, Config};
+use ::csrf::{CSRFOption, CSRF};
 use ::exchanges::{APIKey, KeyChain};
 use ::rpc::entities::Exchanges;
+use warp::reply;
 
 use self::entities::APIKeyList;
 
@@ -41,9 +43,8 @@ async fn main() {
     })
     .untuple_one();
 
-  let get_handler = path_param
-    .clone()
-    .and(::warp::get())
+  let get_handler = ::warp::get()
+    .and(path_param.clone())
     .and_then(
       |exchange: Exchanges, keychain: KeyChain, logger: Logger| async move {
         match keychain
@@ -78,16 +79,26 @@ async fn main() {
     .map(|api_key_list| {
       return ::warp::reply::json(&APIKeyList { keys: api_key_list });
     });
-  let post_handler = path_param
-    .and(::warp::post())
+  let post_handler = ::warp::post()
+    .and(path_param)
     .and(::warp::filters::body::json())
-    .map(
+    .and_then(
       |exchanges: Exchanges,
        keychain: KeyChain,
-       logger: Logger,
-       api_key: APIKey<String>| {},
-    );
-  let route = get_handler;
+       _: Logger,
+       mut api_key: APIKey<String>| async move {
+        api_key.exchange = exchanges.as_string();
+        let _ = keychain.write(api_key).await;
+        return Result::<(), ::warp::Rejection>::Ok(());
+      },
+    )
+    .untuple_one()
+    .map(|| {
+      return reply();
+    });
+  let route = CSRF::new(CSRFOption::builder())
+    .protect()
+    .and(get_handler.or(post_handler));
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let host: SocketAddr = config.host.parse().unwrap();
