@@ -119,14 +119,17 @@ impl CSRF {
     let cookie_name = self.opt.cookie_name.clone();
     return filter.and(::warp::cookie::optional(&cookie_name)).map(
       move |resp: Resp, req_cookie: Option<String>| {
-        let value: String =
+        let value: Vec<u8> =
           thread_rng().sample_iter(&Alphanumeric).take(50).collect();
-        let cookie = CookieBuilder::new(cookie_name, value)
-          .max_age(TimeDuration::new(3600, 0))
-          .http_only(false)
-          .secure(true)
-          .path("/")
-          .finish();
+        let cookie = CookieBuilder::new(
+          cookie_name,
+          String::from_utf8_lossy(value.as_ref()),
+        )
+        .max_age(TimeDuration::new(3600, 0))
+        .http_only(false)
+        .secure(true)
+        .path("/")
+        .finish();
         match req_cookie {
           None => {
             return reply::with_header(
