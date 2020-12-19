@@ -2,7 +2,11 @@ use ::mongodb::bson::oid::{ObjectId, Result};
 use ::serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct APIKey<T> {
+pub struct APIKey<T>
+where
+  T: Default,
+{
+  #[serde(default)]
   pub id: T,
   #[serde(default)]
   pub exchange: String,
@@ -11,7 +15,10 @@ pub struct APIKey<T> {
   pub prv_key: String,
 }
 
-impl<T> APIKey<T> {
+impl<T> APIKey<T>
+where
+  T: Default,
+{
   pub fn new(
     id: T,
     exchange: String,
@@ -41,14 +48,14 @@ impl From<APIKey<ObjectId>> for APIKey<String> {
   }
 }
 
-impl From<APIKey<String>> for Result<APIKey<ObjectId>> {
+impl From<APIKey<String>> for APIKey<ObjectId> {
   fn from(value: APIKey<String>) -> Self {
-    return Ok(APIKey {
-      id: ObjectId::with_string(&value.id)?,
+    return APIKey {
+      id: ObjectId::with_string(&value.id).unwrap_or(ObjectId::new()),
       exchange: value.exchange,
       label: value.label,
       pub_key: value.pub_key,
       prv_key: value.prv_key,
-    });
+    };
   }
 }

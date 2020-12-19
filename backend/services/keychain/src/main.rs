@@ -6,7 +6,7 @@ use ::clap::Clap;
 use ::futures::FutureExt;
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::mongodb::bson::doc;
+use ::mongodb::bson::{doc, oid::ObjectId};
 use ::mongodb::Client;
 use ::slog::Logger;
 use ::tokio::signal::unix as signal;

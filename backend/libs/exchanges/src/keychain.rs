@@ -24,8 +24,7 @@ impl KeyChain {
   }
 
   pub async fn write(&self, value: APIKey<String>) -> GenericResult<()> {
-    let value: Result<APIKey<ObjectId>> = value.into();
-    let value = value?;
+    let value: APIKey<ObjectId> = value.into();
     let value = to_document(&value)?;
     let _ = self.col.insert_one(value, None).await?;
     return Ok(());
