@@ -15,4 +15,4 @@ serde_yaml = "0.8.14"
 clap = "3.0.0-beta.2"
 slog = "2.7.0"
 slog-atomic = "3.0.0"
-reqwest = {version = "0.10.9", features = ["default-tls", "gzip", "brotli", "json"]}
+reqwest = {version = "0.10.10", features = ["default-tls", "gzip", "brotli", "json"]}
