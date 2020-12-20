@@ -1,7 +1,7 @@
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::oid::{ObjectId, Result};
-use ::mongodb::bson::{from_document, to_document, Document};
+use ::mongodb::bson::{doc, from_document, to_document, Document};
 use ::mongodb::{Collection, Database};
 
 use ::types::{ret_on_err, GenericResult, SendableErrorResult};
@@ -25,9 +25,31 @@ impl KeyChain {
 
   pub async fn write(&self, value: APIKey<String>) -> GenericResult<()> {
     let value: APIKey<ObjectId> = value.into();
+    let id = value.id.clone();
     let value = to_document(&value)?;
-    let _ = self.col.insert_one(value, None).await?;
+    if let Err(_) = self
+      .col
+      .update_one(doc! {"_id": id}, value.to_owned(), None)
+      .await
+    {
+      let _ = self.col.insert_one(value, None).await?;
+    }
     return Ok(());
+  }
+
+  pub async fn generate_unique_id(&self, id: ObjectId) -> ObjectId {
+    let mut id = id;
+    while let Ok(op) = self.col.find_one(doc! { "_id": &id }, None).await {
+      match op {
+        None => {
+          break;
+        }
+        Some(_) => {
+          id = ObjectId::new();
+        }
+      }
+    }
+    return id;
   }
 
   pub async fn list(

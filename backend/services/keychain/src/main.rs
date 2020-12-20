@@ -88,14 +88,23 @@ async fn main() {
        _: Logger,
        mut api_key: APIKey<String>| async move {
         api_key.exchange = exchanges.as_string();
+        api_key.id =
+          keychain.generate_unique_id(ObjectId::new()).await.to_hex();
         let _ = keychain.write(api_key).await;
-        return Result::<(), ::warp::Rejection>::Ok(());
+        return Result::<(), ::std::convert::Infallible>::Ok(());
       },
     )
     .untuple_one()
     .map(|| {
       return reply();
     });
+  let patch_handler = ::warp::patch()
+    .and(path_param.and(::warp::path::param()))
+    .and_then(
+      |exchanges: Exchanges, keychain: KeyChain, _: Logger, id: String| async {
+        return Result::<(), ::std::convert::Infallible>::Ok(());
+      },
+    );
   let route = CSRF::new(CSRFOption::builder())
     .protect()
     .and(get_handler.or(post_handler));
