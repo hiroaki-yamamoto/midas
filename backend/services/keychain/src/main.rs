@@ -80,7 +80,7 @@ async fn main() {
       return ::warp::reply::json(&APIKeyList { keys: api_key_list });
     });
   let post_handler = ::warp::post()
-    .and(path_param)
+    .and(path_param.clone())
     .and(::warp::filters::body::json())
     .and_then(
       |exchanges: Exchanges,
