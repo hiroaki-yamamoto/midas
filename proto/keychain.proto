@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package keychain;
+
+import "entities.proto";
+
+message APIKey {
+  string id = 1;
+  entities.Exchanges exchange = 2;
+  string label = 3;
+  string pub_key = 4;
+  string prv_key = 5;
+}
+
+message APIKeyList {
+  repeated APIKey keys = 1;
+}

@@ -1,19 +1,15 @@
-use ::std::error::Error;
-
 use ::glob::glob;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
   let mut protos = vec![];
-  for proto in glob("../../../proto/**/*.proto")? {
-    let path = proto?;
+  for proto in glob("../../../proto/**/*.proto").unwrap() {
+    let path = proto.unwrap();
     let path = String::from(path.to_str().unwrap());
     println!("cargo:rerun-if-changed={}", path);
     protos.push(path);
   }
-  return match ::tonic_build::configure()
+  return ::prost_build::Config::new()
     .out_dir("./src")
-    .build_server(true)
-    .build_client(false)
     .type_attribute(".", "#[derive(::serde::Serialize, ::serde::Deserialize)]")
     .type_attribute(".", "#[serde(rename_all = \"camelCase\")]")
     .type_attribute(
@@ -33,9 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
       "historical.StopRequest.symbols",
       "#[serde(rename = \"symbolsList\")]",
     )
-    .compile(&protos, &[String::from("../../../proto")])
-  {
-    Err(e) => Err(Box::new(e)),
-    Ok(ok) => Ok(ok),
-  };
+    .compile_well_known_types()
+    .compile_protos(&protos, &[String::from("../../../proto")])
+    .unwrap();
 }

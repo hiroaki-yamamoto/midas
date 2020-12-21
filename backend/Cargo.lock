@@ -2510,9 +2510,9 @@ dependencies = [
  "num-derive",
  "num-traits",
  "prost",
+ "prost-build",
  "serde",
  "tonic",
- "tonic-build",
 ]
 
 [[package]]
@@ -3412,18 +3412,6 @@ dependencies = [
  "tower-service",
  "tracing",
  "tracing-futures",
-]
-
-[[package]]
-name = "tonic-build"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19970cf58f3acc820962be74c4021b8bbc8e8a1c4e3a02095d0aa60cde5f3633"
-dependencies = [
- "proc-macro2 1.0.24",
- "prost-build",
- "quote 1.0.7",
- "syn 1.0.48",
 ]
 
 [[package]]
