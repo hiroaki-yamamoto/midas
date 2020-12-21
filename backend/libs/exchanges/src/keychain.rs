@@ -24,7 +24,8 @@ impl KeyChain {
   }
 
   pub async fn write(&self, value: APIKey<String>) -> GenericResult<()> {
-    let value: APIKey<ObjectId> = value.into();
+    let mut value: APIKey<ObjectId> = value.into();
+    value.id = self.generate_unique_id(ObjectId::new()).await;
     let id = value.id.clone();
     let value = to_document(&value)?;
     if let Err(_) = self
@@ -37,7 +38,19 @@ impl KeyChain {
     return Ok(());
   }
 
-  pub async fn generate_unique_id(&self, id: ObjectId) -> ObjectId {
+  pub async fn rename_label(
+    &self,
+    id: ObjectId,
+    label: &str,
+  ) -> GenericResult<()> {
+    let _ = self
+      .col
+      .update_one(doc! { "_id": id }, doc! { "label": label }, None)
+      .await?;
+    return Ok(());
+  }
+
+  async fn generate_unique_id(&self, id: ObjectId) -> ObjectId {
     let mut id = id;
     while let Ok(op) = self.col.find_one(doc! { "_id": &id }, None).await {
       match op {

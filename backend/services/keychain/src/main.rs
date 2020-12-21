@@ -88,8 +88,6 @@ async fn main() {
        _: Logger,
        mut api_key: APIKey<String>| async move {
         api_key.exchange = exchanges.as_string();
-        api_key.id =
-          keychain.generate_unique_id(ObjectId::new()).await.to_hex();
         let _ = keychain.write(api_key).await;
         return Result::<(), ::std::convert::Infallible>::Ok(());
       },
