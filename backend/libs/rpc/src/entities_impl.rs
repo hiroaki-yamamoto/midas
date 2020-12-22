@@ -3,9 +3,9 @@ use ::http::{status::InvalidStatusCode, StatusCode};
 
 impl Exchanges {
   pub fn as_string(&self) -> String {
-    return match self {
-      Exchanges::Binance => String::from("binance"),
-    };
+    return String::from(match self {
+      Exchanges::Binance => "binance",
+    });
   }
 }
 

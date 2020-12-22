@@ -1,12 +1,10 @@
-mod entities;
-
 use ::std::net::SocketAddr;
 
 use ::clap::Clap;
 use ::futures::FutureExt;
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::mongodb::bson::{doc, oid::ObjectId};
+use ::mongodb::bson::doc;
 use ::mongodb::Client;
 use ::slog::Logger;
 use ::tokio::signal::unix as signal;
@@ -16,9 +14,8 @@ use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
 use ::exchanges::{APIKey, KeyChain};
 use ::rpc::entities::Exchanges;
+use ::rpc::keychain::{ApiKey as RPCAPIKey, ApiKeyList as RPCAPIKeyList};
 use warp::reply;
-
-use self::entities::APIKeyList;
 
 #[tokio::main]
 async fn main() {
@@ -69,7 +66,12 @@ async fn main() {
                   api_key.prv_key = ("*").repeat(16);
                   return api_key;
                 })
-                .collect::<Vec<APIKey<String>>>()
+                .map(|api_key| {
+                  let api_key: Result<RPCAPIKey, String> = api_key.into();
+                  return api_key;
+                })
+                .filter_map(|api_key_result| async move { api_key_result.ok() })
+                .collect::<Vec<RPCAPIKey>>()
                 .await,
             );
           }
@@ -77,17 +79,18 @@ async fn main() {
       },
     )
     .map(|api_key_list| {
-      return ::warp::reply::json(&APIKeyList { keys: api_key_list });
+      return ::warp::reply::json(&RPCAPIKeyList { keys: api_key_list });
     });
   let post_handler = ::warp::post()
     .and(path_param.clone())
     .and(::warp::filters::body::json())
     .and_then(
-      |exchanges: Exchanges,
+      |exchange: Exchanges,
        keychain: KeyChain,
        _: Logger,
-       mut api_key: APIKey<String>| async move {
-        api_key.exchange = exchanges.as_string();
+       api_key: RPCAPIKey| async move {
+        let mut api_key: APIKey = api_key.into();
+        api_key.exchange = exchange.as_string();
         let _ = keychain.write(api_key).await;
         return Result::<(), ::std::convert::Infallible>::Ok(());
       },
