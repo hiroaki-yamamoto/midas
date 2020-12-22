@@ -20,3 +20,10 @@ pub struct ApiKeyList {
     #[prost(message, repeated, tag="1")]
     pub keys: ::std::vec::Vec<ApiKey>,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApiRename {
+    #[prost(string, tag="1")]
+    pub label: std::string::String,
+}

@@ -15,3 +15,7 @@ message APIKey {
 message APIKeyList {
   repeated APIKey keys = 1;
 }
+
+message APIRename {
+  string label = 1;
+}
