@@ -4,7 +4,7 @@ use ::clap::Clap;
 use ::futures::FutureExt;
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::mongodb::bson::doc;
+use ::mongodb::bson::{doc, oid::ObjectId};
 use ::mongodb::Client;
 use ::slog::Logger;
 use ::tokio::signal::unix as signal;
@@ -14,6 +14,7 @@ use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
 use ::exchanges::{APIKey, KeyChain};
 use ::rpc::entities::Exchanges;
+use ::rpc::keychain::ApiRename;
 use ::rpc::keychain::{ApiKey as RPCAPIKey, ApiKeyList as RPCAPIKeyList};
 use warp::reply;
 
@@ -100,15 +101,32 @@ async fn main() {
       return reply();
     });
   let patch_handler = ::warp::patch()
-    .and(path_param.and(::warp::path::param()))
-    .and_then(
-      |exchanges: Exchanges, keychain: KeyChain, _: Logger, id: String| async {
-        return Result::<(), ::std::convert::Infallible>::Ok(());
+    .and(path_param.and(::warp::path::param().and_then(
+      |id: String| async move {
+        match ObjectId::with_string(&id) {
+          Err(_) => return Err(::warp::reject()),
+          Ok(id) => return Ok(id),
+        };
       },
-    );
+    )))
+    .and(::warp::filters::body::json())
+    .and_then(
+      |_: Exchanges,
+       keychain: KeyChain,
+       _: Logger,
+       id: ObjectId,
+       rename: ApiRename| async move {
+        if let Err(_) = keychain.rename_label(id, &rename.label).await {
+          return Err(::warp::reject());
+        };
+        return Ok(());
+      },
+    )
+    .untuple_one()
+    .map(|| ::warp::reply());
   let route = CSRF::new(CSRFOption::builder())
     .protect()
-    .and(get_handler.or(post_handler));
+    .and(get_handler.or(post_handler).or(patch_handler));
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let host: SocketAddr = config.host.parse().unwrap();
