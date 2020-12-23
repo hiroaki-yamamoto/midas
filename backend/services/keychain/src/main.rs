@@ -101,7 +101,7 @@ async fn main() {
       return reply();
     });
   let patch_handler = ::warp::patch()
-    .and(path_param.and(::warp::path::param().and_then(
+    .and(path_param.clone().and(::warp::path::param().and_then(
       |id: String| async move {
         match ObjectId::with_string(&id) {
           Err(_) => return Err(::warp::reject()),
@@ -124,9 +124,33 @@ async fn main() {
     )
     .untuple_one()
     .map(|| ::warp::reply());
-  let route = CSRF::new(CSRFOption::builder())
-    .protect()
-    .and(get_handler.or(post_handler).or(patch_handler));
+  let delete_handler = ::warp::delete()
+    .and(path_param.and(::warp::path::param().and_then(
+      |id: String| async move {
+        match ObjectId::with_string(&id) {
+          Err(_) => return Err(::warp::reject()),
+          Ok(id) => return Ok(id),
+        };
+      },
+    )))
+    .and_then(
+      |exc: Exchanges, keychain: KeyChain, _: Logger, id: ObjectId| async move {
+        let del_defer =
+          keychain.delete(doc! {"_id": id, "exchange": exc.as_string()});
+        if let Err(_) = del_defer.await {
+          return Err(::warp::reject());
+        };
+        return Ok(());
+      },
+    )
+    .untuple_one()
+    .map(|| ::warp::reply());
+  let route = CSRF::new(CSRFOption::builder()).protect().and(
+    get_handler
+      .or(post_handler)
+      .or(patch_handler)
+      .or(delete_handler),
+  );
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let host: SocketAddr = config.host.parse().unwrap();
