@@ -30,6 +30,7 @@ import { SyncProgressComponent } from './sync-progress/sync-progress.component';
 import { InfoComponent } from './info/info.component';
 import { TradeObserverService } from './resources/trade-observer.service';
 import { BookTickerComponent } from './info/book-ticker/book-ticker.component';
+import { KeychainComponent } from './keychain/keychain.component';
 
 @NgModule({
   declarations: [
@@ -39,6 +40,7 @@ import { BookTickerComponent } from './info/book-ticker/book-ticker.component';
     SyncProgressComponent,
     InfoComponent,
     BookTickerComponent,
+    KeychainComponent,
   ],
   imports: [
     BrowserModule,
