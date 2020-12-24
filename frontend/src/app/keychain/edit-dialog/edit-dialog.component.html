@@ -3,29 +3,29 @@
     <h1 mat-dialog-content *ngIf="isNew">Add New API Key</h1>
     <h1 mat-dialog-content *ngIf="!isNew">Edit API Key</h1>
   </header>
-    <form novalidate [formGroup]="form" fxLayout="column">
-      <mat-form-field>
-        <mat-label i18n>Name</mat-label>
-        <input matInput formControlName="label">
-        <mat-error *ngIf="form.get('label').hasError('required')" i18n>
-          This field is required.
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label i18n>Public Key</mat-label>
-        <input matInput formControlName="pubKey">
-        <mat-error *ngIf="form.get('pubKey').hasError('required')" i18n>
-          This field is required.
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label i18n>Private Key</mat-label>
-        <input matInput formControlName="prvKey">
-        <mat-error *ngIf="form.get('prvKey').hasError('required')" i18n>
-          This field is required.
-        </mat-error>
-      </mat-form-field>
-    </form>
+  <form novalidate [formGroup]="form" fxLayout="column">
+    <mat-form-field>
+      <mat-label i18n>Name</mat-label>
+      <input matInput formControlName="label">
+      <mat-error *ngIf="form.get('label').hasError('required')" i18n>
+        This field is required.
+      </mat-error>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label i18n>Public Key</mat-label>
+      <input matInput formControlName="pubKey">
+      <mat-error *ngIf="form.get('pubKey').hasError('required')" i18n>
+        This field is required.
+      </mat-error>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label i18n>Private Key</mat-label>
+      <input matInput formControlName="prvKey">
+      <mat-error *ngIf="form.get('prvKey').hasError('required')" i18n>
+        This field is required.
+      </mat-error>
+    </mat-form-field>
+  </form>
   <mat-dialog-actions fxLayout="row">
     <button mat-raised-button color="accent" [mat-dialog-close]="'delete'">
       <fa-icon [icon]="trash"></fa-icon>
