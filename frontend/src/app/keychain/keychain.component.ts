@@ -1,5 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 
+import { MatDialog } from '@angular/material/dialog';
+
+import { EditDialogComponent } from './edit-dialog/edit-dialog.component';
+
 @Component({
   selector: 'app-keychain',
   templateUrl: './keychain.component.html',
@@ -7,9 +11,15 @@ import { Component, OnInit } from '@angular/core';
 })
 export class KeychainComponent implements OnInit {
 
-  constructor() { }
+  constructor(private dialogOpener: MatDialog) { }
 
-  ngOnInit(): void {
+  ngOnInit(): void {}
+
+  openEditDialog(isNew: boolean): void {
+    const dialog = this.dialogOpener.open(EditDialogComponent, {
+      width: '50vw',
+      data: {isNew: true},
+    });
   }
 
 }
