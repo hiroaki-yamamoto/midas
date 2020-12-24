@@ -19,6 +19,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
 
 import * as am4core from '@amcharts/amcharts4/core';
 import am4themes_animated from '@amcharts/amcharts4/themes/animated';
@@ -59,6 +61,8 @@ import { KeychainComponent } from './keychain/keychain.component';
     MatTabsModule,
     MatToolbarModule,
     MatSortModule,
+    MatIconModule,
+    MatListModule,
     FontAwesomeModule,
   ],
   providers: [
