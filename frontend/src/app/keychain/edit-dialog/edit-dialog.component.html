@@ -27,16 +27,16 @@
     </mat-form-field>
   </form>
   <mat-dialog-actions fxLayout="row">
-    <button mat-raised-button color="accent" [mat-dialog-close]="'delete'">
+    <button mat-raised-button color="accent" (click)="close(RespType.DELETE)" [disabled]="isNew">
       <fa-icon [icon]="trash"></fa-icon>
       Delete
     </button>
     <div fxFlex></div>
-    <button mat-button [mat-dialog-close]="form" i18n>
+    <button mat-button [mat-dialog-close]="form" i18n (click)="close(RespType.POST)">
       <mat-icon>done</mat-icon>
       Save
     </button>
-    <button mat-button mat-dialog-close i18n>
+    <button mat-button mat-dialog-close i18n (click)="close(RespType.CANCEL)">
       <mat-icon>clear</mat-icon>
       Cancel
     </button>
