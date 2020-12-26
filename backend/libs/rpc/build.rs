@@ -29,6 +29,10 @@ fn main() {
       "historical.StopRequest.symbols",
       "#[serde(rename = \"symbolsList\")]",
     )
+    .field_attribute(
+      "keychain.APIKeyList.keys",
+      "#[serde(rename = \"keysList\")]",
+    )
     .compile_well_known_types()
     .compile_protos(&protos, &[String::from("../../../proto")])
     .unwrap();

@@ -1396,6 +1396,7 @@ dependencies = [
  "futures",
  "libc",
  "mongodb",
+ "num-traits",
  "rpc",
  "serde",
  "slog",

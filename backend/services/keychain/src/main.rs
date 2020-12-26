@@ -6,6 +6,7 @@ use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::bson::{doc, oid::ObjectId};
 use ::mongodb::Client;
+use ::num_traits::FromPrimitive;
 use ::slog::Logger;
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
@@ -29,10 +30,10 @@ async fn main() {
   let keychain = KeyChain::new(db).await;
 
   let path_param = ::warp::path::param()
-    .and_then(|exchange: String| async move {
-      let exchange: Exchanges = match exchange.parse() {
-        Err(_) => return Err(::warp::reject::not_found()),
-        Ok(v) => v,
+    .and_then(|exchange: u16| async move {
+      let exchange: Exchanges = match FromPrimitive::from_u16(exchange) {
+        None => return Err(::warp::reject::not_found()),
+        Some(v) => v,
       };
       return Ok(exchange);
     })

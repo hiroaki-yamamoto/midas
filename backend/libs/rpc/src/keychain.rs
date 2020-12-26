@@ -18,6 +18,7 @@ pub struct ApiKey {
 #[serde(rename_all = "camelCase")]
 pub struct ApiKeyList {
     #[prost(message, repeated, tag="1")]
+    #[serde(rename = "keysList")]
     pub keys: ::std::vec::Vec<ApiKey>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
