@@ -1,12 +1,8 @@
-use ::std::time::Duration;
-
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{doc, from_document, to_document, Document};
-use ::mongodb::error::Result as MongoResult;
 use ::mongodb::{Collection, Database};
-use ::tokio::time::interval;
 
 use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
