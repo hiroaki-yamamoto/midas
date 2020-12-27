@@ -34,6 +34,7 @@ import { IconSnackBarComponent } from './icon-snackbar/icon-snackbar.component';
 import { SyncProgressComponent } from './sync-progress/sync-progress.component';
 import { InfoComponent } from './info/info.component';
 import { TradeObserverService } from './resources/trade-observer.service';
+import { KeychainService } from './resources/keychain.service';
 import { BookTickerComponent } from './info/book-ticker/book-ticker.component';
 import { KeychainComponent } from './keychain/keychain.component';
 import { EditDialogComponent } from './keychain/edit-dialog/edit-dialog.component';
@@ -79,8 +80,12 @@ import { EditDialogComponent } from './keychain/edit-dialog/edit-dialog.componen
   bootstrap: [AppComponent]
 })
 export class AppModule {
-  constructor(tradeObserver: TradeObserverService) {
+  constructor(
+    tradeObserver: TradeObserverService,
+    keychain: KeychainService,
+  ) {
     am4core.useTheme(am4themes_animated);
     tradeObserver.connect();
+    keychain.fetch().subscribe();
   }
 }

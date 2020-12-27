@@ -2,6 +2,7 @@ use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{doc, from_document, to_document, Document};
+use ::mongodb::options::UpdateOptions;
 use ::mongodb::{Collection, Database};
 
 use ::types::{ret_on_err, GenericResult, SendableErrorResult};
@@ -23,17 +24,17 @@ impl KeyChain {
     return ret;
   }
 
-  pub async fn write(&self, mut value: APIKey) -> GenericResult<()> {
-    value.id = self.generate_unique_id(ObjectId::new()).await;
+  pub async fn write(&self, value: APIKey) -> GenericResult<()> {
     let id = value.id.clone();
     let value = to_document(&value)?;
-    if let Err(_) = self
+    let _ = self
       .col
-      .update_one(doc! {"_id": id}, value.to_owned(), None)
-      .await
-    {
-      let _ = self.col.insert_one(value, None).await?;
-    }
+      .update_one(
+        doc! {"_id": id},
+        value.to_owned(),
+        UpdateOptions::builder().upsert(true).build(),
+      )
+      .await?;
     return Ok(());
   }
 
@@ -47,21 +48,6 @@ impl KeyChain {
       .update_one(doc! { "_id": id }, doc! { "label": label }, None)
       .await?;
     return Ok(());
-  }
-
-  async fn generate_unique_id(&self, id: ObjectId) -> ObjectId {
-    let mut id = id;
-    while let Ok(op) = self.col.find_one(doc! { "_id": &id }, None).await {
-      match op {
-        None => {
-          break;
-        }
-        Some(_) => {
-          id = ObjectId::new();
-        }
-      }
-    }
-    return id;
   }
 
   pub async fn list(

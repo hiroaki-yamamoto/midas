@@ -7,7 +7,7 @@ use ::rpc::keychain::ApiKey as RPCAPIKey;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct APIKey {
-  #[serde(default)]
+  #[serde(default, rename = "_id")]
   pub id: ObjectId,
   #[serde(default)]
   pub exchange: String,

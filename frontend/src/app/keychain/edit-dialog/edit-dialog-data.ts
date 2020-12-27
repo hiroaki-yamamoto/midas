@@ -1,4 +1,4 @@
-import { type } from "@amcharts/amcharts4/core"
+import { APIKey } from '../../rpc/keychain_pb';
 
 export enum RespType {
   DELETE,
@@ -8,5 +8,6 @@ export enum RespType {
 
 export interface EditDialogData {
   type: RespType,
-  data?: {[key: string]: any};
+  index?: number,
+  data?: APIKey.AsObject;
 }

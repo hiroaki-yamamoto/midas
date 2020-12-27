@@ -1,10 +1,9 @@
 import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { map, tap, catchError } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpEvent } from '@angular/common/http';
 
 import { APIKey, APIKeyList, APIRename } from '../rpc/keychain_pb';
-import { Exchanges } from '../rpc/entities_pb';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +16,7 @@ export class KeychainService {
 
   fetch(): Observable<APIKey.AsObject[]> {
     return this.http
-      .get(this.endpoint)
+      .get(`${this.endpoint}/`)
       .pipe(
         map((value: APIKeyList.AsObject) => value.keysList),
         tap((value) => this.keys = value)
@@ -26,7 +25,7 @@ export class KeychainService {
 
   add(payload: APIKey.AsObject) {
     return this.http
-      .post(this.endpoint, payload)
+      .post(`${this.endpoint}/`, payload)
       .pipe(tap(() => this.keys.push(payload)));
   }
 
@@ -43,6 +42,9 @@ export class KeychainService {
     const target = this.keys.splice(index, 1)[0];
     return this.http
       .delete(`${this.endpoint}/${target.id}`)
-      .pipe(tap(() => this.keys.splice(index, 1)));
+      .pipe(catchError((e) => {
+        this.keys.splice(index, 0, target);
+        throw e;
+      }));
   }
 }
