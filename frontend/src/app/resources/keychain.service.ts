@@ -15,35 +15,34 @@ export class KeychainService {
 
   constructor(private http: HttpClient) { }
 
-  fetch(exchange: Exchanges): Observable<APIKey.AsObject[]> {
+  fetch(): Observable<APIKey.AsObject[]> {
     return this.http
-      .get(`${this.endpoint}/${exchange.toString()}`)
+      .get(this.endpoint)
       .pipe(
         map((value: APIKeyList.AsObject) => value.keysList),
         tap((value) => this.keys = value)
       );
   }
 
-  add(
-    exchange: Exchanges,
-    payload: APIKey.AsObject
-  ) {
+  add(payload: APIKey.AsObject) {
     return this.http
-      .post(`${this.endpoint}/${exchange.toString()}`, payload)
+      .post(this.endpoint, payload)
       .pipe(tap(() => this.keys.push(payload)));
   }
 
-  rename(exchange: Exchanges, index: number) {
+  rename(index: number) {
+    const target = this.keys[index];
     const payload: APIRename.AsObject = {
-      label: this.keys[index].label,
+      label: target.label,
     }
     return this.http
-      .patch(`${this.endpoint}/${exchange.toString()}`, payload);
+      .patch(`${this.endpoint}/${target.id}`, payload);
   }
 
-  delete(exchange: Exchanges, index: number) {
+  delete(index: number) {
+    const target = this.keys.splice(index, 1)[0];
     return this.http
-      .delete(`${this.endpoint}/${exchange.toString()}`)
+      .delete(`${this.endpoint}/${target.id}`)
       .pipe(tap(() => this.keys.splice(index, 1)));
   }
 }

@@ -6,7 +6,6 @@ use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::bson::{doc, oid::ObjectId};
 use ::mongodb::Client;
-use ::num_traits::FromPrimitive;
 use ::slog::Logger;
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
@@ -14,7 +13,6 @@ use ::warp::Filter;
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
 use ::exchanges::{APIKey, KeyChain};
-use ::rpc::entities::Exchanges;
 use ::rpc::keychain::ApiRename;
 use ::rpc::keychain::{ApiKey as RPCAPIKey, ApiKeyList as RPCAPIKeyList};
 use warp::reply;
@@ -29,57 +27,45 @@ async fn main() {
   let db = db_cli.database("midas");
   let keychain = KeyChain::new(db).await;
 
-  let path_param = ::warp::path::param()
-    .and_then(|exchange: u16| async move {
-      let exchange: Exchanges = match FromPrimitive::from_u16(exchange) {
-        None => return Err(::warp::reject::not_found()),
-        Some(v) => v,
-      };
-      return Ok(exchange);
-    })
-    .map(move |exchange| {
-      return (exchange, keychain.clone(), logger_in_handler.clone());
+  let path_param = ::warp::any()
+    .map(move || {
+      return (keychain.clone(), logger_in_handler.clone());
     })
     .untuple_one();
 
+  let id_filter = ::warp::path::param().and_then(|id: String| async move {
+    match ObjectId::with_string(&id) {
+      Err(_) => return Err(::warp::reject()),
+      Ok(id) => return Ok(id),
+    };
+  });
+
   let get_handler = ::warp::get()
     .and(path_param.clone())
-    .and_then(
-      |exchange: Exchanges, keychain: KeyChain, logger: Logger| async move {
-        match keychain
-          .list(doc! {
-            "exchange": exchange.as_string(),
-          })
-          .await
-        {
-          Err(e) => {
-            ::slog::warn!(
-              logger,
-              "An error was occured when querying: {}",
-              e;
-              "exchange" => exchange.as_string()
-            );
-            return Err(::warp::reject());
-          }
-          Ok(cursor) => {
-            return Ok(
-              cursor
-                .map(|mut api_key| {
-                  api_key.prv_key = ("*").repeat(16);
-                  return api_key;
-                })
-                .map(|api_key| {
-                  let api_key: Result<RPCAPIKey, String> = api_key.into();
-                  return api_key;
-                })
-                .filter_map(|api_key_result| async move { api_key_result.ok() })
-                .collect::<Vec<RPCAPIKey>>()
-                .await,
-            );
-          }
-        };
-      },
-    )
+    .and_then(|keychain: KeyChain, logger: Logger| async move {
+      match keychain.list(doc! {}).await {
+        Err(e) => {
+          ::slog::warn!(logger, "An error was occured when querying: {}", e);
+          return Err(::warp::reject());
+        }
+        Ok(cursor) => {
+          return Ok(
+            cursor
+              .map(|mut api_key| {
+                api_key.prv_key = ("*").repeat(16);
+                return api_key;
+              })
+              .map(|api_key| {
+                let api_key: Result<RPCAPIKey, String> = api_key.into();
+                return api_key;
+              })
+              .filter_map(|api_key_result| async move { api_key_result.ok() })
+              .collect::<Vec<RPCAPIKey>>()
+              .await,
+          );
+        }
+      };
+    })
     .map(|api_key_list| {
       return ::warp::reply::json(&RPCAPIKeyList { keys: api_key_list });
     });
@@ -87,12 +73,8 @@ async fn main() {
     .and(path_param.clone())
     .and(::warp::filters::body::json())
     .and_then(
-      |exchange: Exchanges,
-       keychain: KeyChain,
-       _: Logger,
-       api_key: RPCAPIKey| async move {
-        let mut api_key: APIKey = api_key.into();
-        api_key.exchange = exchange.as_string();
+      |keychain: KeyChain, _: Logger, api_key: RPCAPIKey| async move {
+        let api_key: APIKey = api_key.into();
         let _ = keychain.write(api_key).await;
         return Result::<(), ::std::convert::Infallible>::Ok(());
       },
@@ -102,18 +84,11 @@ async fn main() {
       return reply();
     });
   let patch_handler = ::warp::patch()
-    .and(path_param.clone().and(::warp::path::param().and_then(
-      |id: String| async move {
-        match ObjectId::with_string(&id) {
-          Err(_) => return Err(::warp::reject()),
-          Ok(id) => return Ok(id),
-        };
-      },
-    )))
+    .and(path_param.clone())
+    .and(id_filter)
     .and(::warp::filters::body::json())
     .and_then(
-      |_: Exchanges,
-       keychain: KeyChain,
+      |keychain: KeyChain,
        _: Logger,
        id: ObjectId,
        rename: ApiRename| async move {
@@ -126,24 +101,15 @@ async fn main() {
     .untuple_one()
     .map(|| ::warp::reply());
   let delete_handler = ::warp::delete()
-    .and(path_param.and(::warp::path::param().and_then(
-      |id: String| async move {
-        match ObjectId::with_string(&id) {
-          Err(_) => return Err(::warp::reject()),
-          Ok(id) => return Ok(id),
-        };
-      },
-    )))
-    .and_then(
-      |exc: Exchanges, keychain: KeyChain, _: Logger, id: ObjectId| async move {
-        let del_defer =
-          keychain.delete(doc! {"_id": id, "exchange": exc.as_string()});
-        if let Err(_) = del_defer.await {
-          return Err(::warp::reject());
-        };
-        return Ok(());
-      },
-    )
+    .and(path_param)
+    .and(id_filter)
+    .and_then(|keychain: KeyChain, _: Logger, id: ObjectId| async move {
+      let del_defer = keychain.delete(doc! {"_id": id});
+      if let Err(_) = del_defer.await {
+        return Err(::warp::reject());
+      };
+      return Ok(());
+    })
     .untuple_one()
     .map(|| ::warp::reply());
   let route = CSRF::new(CSRFOption::builder()).protect().and(
