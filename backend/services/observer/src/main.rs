@@ -118,10 +118,7 @@ async fn main() {
       },
     )
     .and(::warp::ws())
-    .map(handle_websocket)
-    .with(::warp::filters::compression::brotli())
-    .with(::warp::filters::compression::deflate())
-    .with(::warp::filters::compression::gzip());
+    .map(handle_websocket);
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let host: SocketAddr = cfg.host.parse().unwrap();

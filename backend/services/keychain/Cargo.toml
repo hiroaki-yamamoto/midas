@@ -15,7 +15,7 @@ csrf = { path = "../../libs/csrf" }
 clap = "3.0.0-beta.2"
 mongodb = "1.1.1"
 tokio = {version = "0.2.24", features = ["macros", "rt-threaded", "signal"]}
-warp = {version = "0.2.5", features = ["compression"]}
+warp = "0.2.5"
 slog = "2.7.0"
 futures = "0.3.8"
 serde = "1.0.118"

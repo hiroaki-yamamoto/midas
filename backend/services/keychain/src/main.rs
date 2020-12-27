@@ -75,7 +75,7 @@ async fn main() {
     .and_then(
       |keychain: KeyChain, _: Logger, api_key: RPCAPIKey| async move {
         let api_key: APIKey = api_key.into();
-        let _ = keychain.write(api_key).await;
+        let _ = keychain.push(api_key).await;
         return Result::<(), ::std::convert::Infallible>::Ok(());
       },
     )
