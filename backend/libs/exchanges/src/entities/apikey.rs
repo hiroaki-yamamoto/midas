@@ -7,8 +7,8 @@ use ::rpc::keychain::ApiKey as RPCAPIKey;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct APIKey {
-  #[serde(default, rename = "_id")]
-  pub id: ObjectId,
+  #[serde(default, rename = "_id", skip_serializing_if = "Option::is_none")]
+  pub id: Option<ObjectId>,
   #[serde(default)]
   pub exchange: String,
   pub label: String,
@@ -16,28 +16,10 @@ pub struct APIKey {
   pub prv_key: String,
 }
 
-impl APIKey {
-  pub fn new(
-    id: ObjectId,
-    exchange: String,
-    label: String,
-    pub_key: String,
-    prv_key: String,
-  ) -> Self {
-    return Self {
-      id,
-      exchange,
-      label,
-      pub_key,
-      prv_key,
-    };
-  }
-}
-
 impl From<APIKey> for Result<RPCAPIKey, String> {
   fn from(value: APIKey) -> Self {
     return Ok(RPCAPIKey {
-      id: value.id.to_hex(),
+      id: value.id.map(|oid| oid.to_hex()).unwrap_or(String::from("")),
       exchange: value.exchange.parse::<Exchanges>()?.into(),
       label: value.label,
       pub_key: value.pub_key,
@@ -49,7 +31,7 @@ impl From<APIKey> for Result<RPCAPIKey, String> {
 impl From<RPCAPIKey> for APIKey {
   fn from(value: RPCAPIKey) -> Self {
     return APIKey {
-      id: ObjectId::with_string(&value.id).unwrap_or(ObjectId::new()),
+      id: ObjectId::with_string(&value.id).ok(),
       exchange: FromPrimitive::from_i32(value.exchange)
         .map(|exc: Exchanges| exc.as_string())
         .unwrap_or(String::default()),

@@ -5,7 +5,6 @@ use ::futures::StreamExt;
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{doc, from_document, to_document, Document};
 use ::mongodb::error::Result as MongoResult;
-use ::mongodb::options::{CountOptions, UpdateOptions};
 use ::mongodb::{Collection, Database};
 use ::tokio::time::interval;
 
@@ -28,39 +27,10 @@ impl KeyChain {
     return ret;
   }
 
-  pub async fn push(&self, mut value: APIKey) -> GenericResult<()> {
-    value.id = self.gen_uid(&value.id).await?;
-    let id = value.id.clone();
+  pub async fn push(&self, value: APIKey) -> GenericResult<()> {
     let value = to_document(&value)?;
-    let _ = self
-      .col
-      .update_one(
-        doc! {"_id": id},
-        value.to_owned(),
-        UpdateOptions::builder().upsert(true).build(),
-      )
-      .await?;
+    let _ = self.col.insert_one(value.to_owned(), None).await?;
     return Ok(());
-  }
-
-  pub async fn gen_uid(&self, id: &ObjectId) -> MongoResult<ObjectId> {
-    let mut id = id.clone();
-    let mut delay_ticker = interval(Duration::from_millis(100));
-    for _ in 0..10 {
-      let num_docs = self
-        .col
-        .count_documents(
-          doc! {"_id": &id},
-          CountOptions::builder().limit(1).build(),
-        )
-        .await?;
-      if num_docs < 1 {
-        break;
-      }
-      id = ObjectId::new();
-      delay_ticker.tick().await;
-    }
-    return Ok(id);
   }
 
   pub async fn rename_label(
