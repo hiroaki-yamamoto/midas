@@ -18,7 +18,7 @@ export class KeychainComponent implements OnInit {
 
   constructor(
     private dialogOpener: MatDialog,
-    private keychain: KeychainService,
+    public keychain: KeychainService,
   ) { }
 
   ngOnInit(): void {}

@@ -3,11 +3,11 @@
     <h1 i18n>API Keys Setting</h1>
   </header>
   <div fxLayout="row" fxLayoutAlign="end center">
-    <button mat-fab color="primary" (click)="openEditDialog()">
+    <button mat-fab color="primary" (click)="openEditDialog()" matTooltip="Add an API key">
       <mat-icon>add</mat-icon>
     </button>
   </div>
-  <mat-list>
+  <mat-list *ngIf="keychain.keys &amp;&amp; keychain.keys.length > 0">
     <mat-list-item>
       <div mat-line>Jade</div>
       <div mat-line>Exchange: Binance</div>
@@ -19,4 +19,10 @@
       </div>
     </mat-list-item>
   </mat-list>
+  <section class="description-no-keys" fxLayout="column" fxLayoutAlign="center center">
+    <header>
+      <h1 i18n>There's no any api keys...</h1>
+    </header>
+    <p i18n>To add an api key, click / tap add button on the top-right</p>
+  </section>
 </section>
