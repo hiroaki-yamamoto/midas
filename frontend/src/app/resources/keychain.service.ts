@@ -26,7 +26,11 @@ export class KeychainService {
   add(payload: APIKey.AsObject) {
     return this.http
       .post(`${this.endpoint}/`, payload)
-      .pipe(tap(() => this.keys.push(payload)));
+      .pipe(tap(() => {
+        let api = {...payload};
+        api.prvKey = ('*').repeat(16);
+        this.keys.push(api);
+      }));
   }
 
   rename(index: number) {

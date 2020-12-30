@@ -7,19 +7,21 @@
       <mat-icon>add</mat-icon>
     </button>
   </div>
-  <mat-list *ngIf="keychain.keys &amp;&amp; keychain.keys.length > 0">
-    <mat-list-item>
-      <div mat-line>Jade</div>
-      <div mat-line>Exchange: Binance</div>
+  <mat-list *ngIf="keychain.keys &amp;&amp; keychain.keys.length &gt; 0">
+    <mat-list-item *ngFor="let key of keychain.keys">
+      <div mat-line>{{key.label}}</div>
+      <div mat-line>Exchange: {{ key.exchange }}</div>
       <div mat-line>
-        PubKey: gjCJuEJahZ91yCqbKxL5xdOhLehwfpKXAQeDYbBRNd25kHUSZMXo6DAbyrOkDnZu
+        PubKey: {{ key.pubKey }}
       </div>
       <div mat-line>
-        Prvkey: ********
+        Prvkey: {{ key.prvKey }}
       </div>
     </mat-list-item>
   </mat-list>
-  <section class="description-no-keys" fxLayout="column" fxLayoutAlign="center center">
+  <section class="description-no-keys"
+    fxLayout="column" fxLayoutAlign="center center"
+    *ngIf="!keychain.keys || keychain.keys.length &lt; 0">
     <header>
       <h1 i18n>There's no any api keys...</h1>
     </header>

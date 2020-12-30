@@ -44,7 +44,7 @@ export class EditDialogComponent implements OnInit {
     if (!this.isNew) {
       this.form.get('pubKey').disable();
       this.form.get('prvKey').disable();
-      this.form.setValue(this.keychain.keys[this.option.index]);
+      this.form.setValue({...this.keychain.keys[this.option.index]});
     }
   }
 
@@ -52,6 +52,9 @@ export class EditDialogComponent implements OnInit {
     let respData: EditDialogData = { type };
     if (type == RespType.POST) {
       respData.data = this.form.value;
+    }
+    if (!this.isNew) {
+      respData.index = this.option.index;
     }
     this.dialog.close(respData);
   }
