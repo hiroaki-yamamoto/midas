@@ -21,7 +21,7 @@
   </mat-list>
   <section class="description-no-keys"
     fxLayout="column" fxLayoutAlign="center center"
-    *ngIf="!keychain.keys || keychain.keys.length &lt; 0">
+    *ngIf="!keychain.keys || keychain.keys.length &lt;= 0">
     <header>
       <h1 i18n>There's no any api keys...</h1>
     </header>
