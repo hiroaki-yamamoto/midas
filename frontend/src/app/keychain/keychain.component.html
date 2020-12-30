@@ -10,7 +10,7 @@
   <mat-list *ngIf="keychain.keys &amp;&amp; keychain.keys.length &gt; 0">
     <mat-list-item *ngFor="let key of keychain.keys">
       <div mat-line>{{key.label}}</div>
-      <div mat-line>Exchange: {{ key.exchange }}</div>
+      <div mat-line>Exchange: {{ key.exchange | exchangePipe | titlecase }}</div>
       <div mat-line>
         PubKey: {{ key.pubKey }}
       </div>

@@ -39,6 +39,7 @@ import { KeychainService } from './resources/keychain.service';
 import { BookTickerComponent } from './info/book-ticker/book-ticker.component';
 import { KeychainComponent } from './keychain/keychain.component';
 import { EditDialogComponent } from './keychain/edit-dialog/edit-dialog.component';
+import { ExchangePipePipe } from './rpc/exchange-pipe.pipe';
 
 @NgModule({
   declarations: [
@@ -50,6 +51,7 @@ import { EditDialogComponent } from './keychain/edit-dialog/edit-dialog.componen
     BookTickerComponent,
     KeychainComponent,
     EditDialogComponent,
+    ExchangePipePipe,
   ],
   imports: [
     BrowserModule,
