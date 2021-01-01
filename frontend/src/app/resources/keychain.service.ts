@@ -4,6 +4,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpEvent } from '@angular/common/http';
 
 import { APIKey, APIKeyList, APIRename } from '../rpc/keychain_pb';
+import { InsertOneResult } from '../rpc/entities_pb';
 
 @Injectable({
   providedIn: 'root'
@@ -26,20 +27,21 @@ export class KeychainService {
   add(payload: APIKey.AsObject) {
     return this.http
       .post(`${this.endpoint}/`, payload)
-      .pipe(tap(() => {
+      .pipe(tap((res: InsertOneResult.AsObject) => {
         let api = {...payload};
         api.prvKey = ('*').repeat(16);
+        api.id = res.id;
         this.keys.push(api);
       }));
   }
 
-  rename(index: number) {
-    const target = this.keys[index];
-    const payload: APIRename.AsObject = {
-      label: target.label,
-    }
+  rename(index: number, label: string) {
+    const payload: APIRename.AsObject = {label}
     return this.http
-      .patch(`${this.endpoint}/${target.id}`, payload);
+      .patch(`${this.endpoint}/${this.keys[index].id}`, payload)
+      .pipe(tap(() => {
+        this.keys[index].label = label;
+      }));
   }
 
   delete(index: number) {

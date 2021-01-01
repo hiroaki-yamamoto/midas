@@ -1,5 +1,7 @@
-use super::entities::{Exchanges, Status};
+use super::entities::{Exchanges, InsertOneResult, Status};
+use ::bson::oid::ObjectId;
 use ::http::{status::InvalidStatusCode, StatusCode};
+use ::warp::reject::Reject;
 
 impl Exchanges {
   pub fn as_string(&self) -> String {
@@ -44,10 +46,20 @@ impl Status {
   }
 }
 
+impl Reject for Status {}
+
 impl ::std::convert::TryFrom<Status> for StatusCode {
   type Error = InvalidStatusCode;
   fn try_from(value: Status) -> Result<Self, Self::Error> {
     let code = u16::try_from(value.code).unwrap_or(::std::u16::MAX);
     return Self::from_u16(code);
+  }
+}
+
+impl From<Option<ObjectId>> for InsertOneResult {
+  fn from(value: Option<ObjectId>) -> Self {
+    return Self {
+      id: value.map(|v| v.to_hex()).unwrap_or(String::default()),
+    };
   }
 }

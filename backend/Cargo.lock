@@ -1432,6 +1432,7 @@ dependencies = [
  "csrf",
  "exchanges",
  "futures",
+ "http",
  "libc",
  "mongodb",
  "num-traits",
@@ -2543,6 +2544,7 @@ dependencies = [
 name = "rpc"
 version = "0.1.0"
 dependencies = [
+ "bson",
  "clap",
  "glob",
  "http",
@@ -2552,6 +2554,7 @@ dependencies = [
  "prost-build",
  "serde",
  "tonic",
+ "warp",
 ]
 
 [[package]]

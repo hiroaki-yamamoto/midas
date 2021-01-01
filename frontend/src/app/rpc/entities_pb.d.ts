@@ -54,6 +54,24 @@ export namespace Status {
   }
 }
 
+export class InsertOneResult extends jspb.Message {
+  getId(): string;
+  setId(value: string): InsertOneResult;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): InsertOneResult.AsObject;
+  static toObject(includeInstance: boolean, msg: InsertOneResult): InsertOneResult.AsObject;
+  static serializeBinaryToWriter(message: InsertOneResult, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): InsertOneResult;
+  static deserializeBinaryFromReader(message: InsertOneResult, reader: jspb.BinaryReader): InsertOneResult;
+}
+
+export namespace InsertOneResult {
+  export type AsObject = {
+    id: string,
+  }
+}
+
 export enum Exchanges { 
   BINANCE = 0,
 }

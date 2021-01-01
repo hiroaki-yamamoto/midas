@@ -7,8 +7,8 @@
       <mat-icon>add</mat-icon>
     </button>
   </div>
-  <mat-list *ngIf="keychain.keys &amp;&amp; keychain.keys.length &gt; 0">
-    <mat-list-item *ngFor="let key of keychain.keys">
+  <mat-nav-list *ngIf="keychain.keys &amp;&amp; keychain.keys.length &gt; 0">
+    <mat-list-item *ngFor="let key of keychain.keys; index as i" (click)="openEditDialog(i)">
       <div mat-line>{{key.label}}</div>
       <div mat-line>Exchange: {{ key.exchange | exchangePipe | titlecase }}</div>
       <div mat-line>
@@ -18,7 +18,7 @@
         Prvkey: {{ key.prvKey }}
       </div>
     </mat-list-item>
-  </mat-list>
+  </mat-nav-list>
   <section class="description-no-keys"
     fxLayout="column" fxLayoutAlign="center center"
     *ngIf="!keychain.keys || keychain.keys.length &lt;= 0">

@@ -33,20 +33,22 @@ export class KeychainComponent implements OnInit {
 
   private editKeyPair() {
     return (result: EditDialogData) => {
-      console.log(this.keychain);
       if (result === undefined || result === null) {
         return;
       }
       switch (result.type) {
         case RespType.POST:
-          const key = new APIKey();
-          key.setExchange(result.data.exchange);
-          key.setLabel(result.data.label);
-          key.setPubKey(result.data.pubKey);
-          key.setPrvKey(result.data.prvKey);
-          const payload = key.toObject();
-          console.log(this.keychain);
-          this.keychain.add(payload).subscribe();
+          if (result.index >= 0) {
+            this.keychain.rename(result.index, result.data.label).subscribe();
+          } else {
+            const key = new APIKey();
+            key.setExchange(result.data.exchange);
+            key.setLabel(result.data.label);
+            key.setPubKey(result.data.pubKey);
+            key.setPrvKey(result.data.prvKey);
+            const payload = key.toObject();
+            this.keychain.add(payload).subscribe();
+          }
           break;
         case RespType.CANCEL:
           break;

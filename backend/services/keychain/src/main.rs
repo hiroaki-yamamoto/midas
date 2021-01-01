@@ -3,6 +3,7 @@ use ::std::net::SocketAddr;
 use ::clap::Clap;
 use ::futures::FutureExt;
 use ::futures::StreamExt;
+use ::http::StatusCode;
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::bson::{doc, oid::ObjectId};
 use ::mongodb::Client;
@@ -13,9 +14,9 @@ use ::warp::Filter;
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
 use ::exchanges::{APIKey, KeyChain};
+use ::rpc::entities::{InsertOneResult, Status};
 use ::rpc::keychain::ApiRename;
 use ::rpc::keychain::{ApiKey as RPCAPIKey, ApiKeyList as RPCAPIKeyList};
-use warp::reply;
 
 #[tokio::main]
 async fn main() {
@@ -75,13 +76,21 @@ async fn main() {
     .and_then(
       |keychain: KeyChain, _: Logger, api_key: RPCAPIKey| async move {
         let api_key: APIKey = api_key.into();
-        let _ = keychain.push(api_key).await;
-        return Result::<(), ::std::convert::Infallible>::Ok(());
+        match keychain.push(api_key).await {
+          Ok(v) => {
+            let res: InsertOneResult = v.into();
+            return Ok(res);
+          }
+          Err(e) => {
+            let status =
+              Status::new(StatusCode::SERVICE_UNAVAILABLE, format!("{}", e));
+            return Err(::warp::reject::custom(status));
+          }
+        }
       },
     )
-    .untuple_one()
-    .map(|| {
-      return reply();
+    .map(|res: InsertOneResult| {
+      return ::warp::reply::json(&res);
     });
   let patch_handler = ::warp::patch()
     .and(path_param.clone())

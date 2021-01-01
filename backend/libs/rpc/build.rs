@@ -16,11 +16,11 @@ fn main() {
       "entities.Exchanges",
       "#[derive(::num_derive::FromPrimitive, ::clap::Clap)]",
     )
+    .type_attribute("entities.Exchanges", "#[serde(tag = \"exchange\")]")
     .type_attribute(
       "entities.BackTestPriceBase",
       "#[derive(::num_derive::FromPrimitive, ::clap::Clap)]",
     )
-    .type_attribute("entities.Exchanges", "#[serde(tag = \"exchange\")]")
     .field_attribute(
       "historical.HistChartFetchReq.symbols",
       "#[serde(rename = \"symbolsList\")]",
@@ -32,6 +32,10 @@ fn main() {
     .field_attribute(
       "keychain.APIKeyList.keys",
       "#[serde(rename = \"keysList\")]",
+    )
+    .field_attribute(
+      "entities.InsertOneResult.id",
+      "#[serde(skip_serializing_if = \"String::is_empty\")]",
     )
     .compile_well_known_types()
     .compile_protos(&protos, &[String::from("../../../proto")])

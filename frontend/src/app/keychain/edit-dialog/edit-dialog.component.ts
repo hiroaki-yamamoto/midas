@@ -39,19 +39,21 @@ export class EditDialogComponent implements OnInit {
   ngOnInit(): void {
     const onlyNewValidation = (this.isNew) && Validators.required || undefined;
     this.form = new FormGroup({
+      id: new FormControl('',),
       exchange: new FormControl('', Validators.required),
       label: new FormControl('', Validators.required),
       pubKey: new FormControl('', onlyNewValidation),
       prvKey: new FormControl('', onlyNewValidation)
     });
-    if (!this.isNew) {
+    if (this.isNew) {
+      this.form.get('exchange').setValue(Exchanges.BINANCE);
+    } else {
       this.form.get('pubKey').disable();
       this.form.get('prvKey').disable();
       this.form.get('exchange').disable();
-      this.form.setValue({ ...this.keychain.keys[this.option.index] });
-    } else {
-      console.log(Exchanges.BINANCE.toString());
-      this.form.get('exchange').setValue(Exchanges.BINANCE);
+      this.form.setValue(
+        { ...this.keychain.keys[this.option.index] },
+      );
     }
   }
 

@@ -20,6 +20,14 @@ pub struct Status {
     #[prost(string, tag="2")]
     pub message: std::string::String,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InsertOneResult {
+    #[prost(string, tag="1")]
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub id: std::string::String,
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]

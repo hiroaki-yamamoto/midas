@@ -27,3 +27,7 @@ message Status {
   uint32 code = 1;
   string message = 2;
 }
+
+message InsertOneResult {
+  string id = 1;
+}

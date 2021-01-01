@@ -2,6 +2,7 @@ use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{doc, from_document, to_document, Document};
+use ::mongodb::options::UpdateModifications;
 use ::mongodb::{Collection, Database};
 
 use ::types::{ret_on_err, GenericResult, SendableErrorResult};
@@ -23,10 +24,11 @@ impl KeyChain {
     return ret;
   }
 
-  pub async fn push(&self, value: APIKey) -> GenericResult<()> {
+  pub async fn push(&self, value: APIKey) -> GenericResult<Option<ObjectId>> {
     let value = to_document(&value)?;
-    let _ = self.col.insert_one(value.to_owned(), None).await?;
-    return Ok(());
+    let result = self.col.insert_one(value.to_owned(), None).await?;
+    let id = result.inserted_id.as_object_id();
+    return Ok(id.cloned());
   }
 
   pub async fn rename_label(
@@ -36,7 +38,13 @@ impl KeyChain {
   ) -> GenericResult<()> {
     let _ = self
       .col
-      .update_one(doc! { "_id": id }, doc! { "label": label }, None)
+      .update_one(
+        doc! { "_id": id },
+        UpdateModifications::Pipeline(vec![doc! {
+          "$set": doc! {"label": label},
+        }]),
+        None,
+      )
       .await?;
     return Ok(());
   }
