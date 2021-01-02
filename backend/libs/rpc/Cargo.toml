@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 tonic = "0.3.1"
-prost = "0.6.1"
+prost = "0.7.0"
 serde = "1.0.118"
 num-traits = "0.2.14"
 num-derive = "0.3.3"
@@ -18,5 +18,5 @@ bson = "1.1.0"
 warp = "0.2.5"
 
 [build-dependencies]
-prost-build = "0.6.1"
+prost-build = "0.7.0"
 glob = "0.3.0"
