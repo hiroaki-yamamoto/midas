@@ -9,8 +9,8 @@ edition = "2018"
 [dependencies]
 types = { path = "../types" }
 
-hyper = "0.14.1"
-hyper-openssl = "0.9.0"
+hyper = "0.14.2"
+hyper-openssl = "0.9.1"
 openssl = "0.10.32"
 tonic-openssl = "0.1.0"
 tower = "0.3.1"
