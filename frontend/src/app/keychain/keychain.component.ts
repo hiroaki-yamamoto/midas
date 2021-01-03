@@ -3,10 +3,10 @@ import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 
 import { EditDialogComponent } from './edit-dialog/edit-dialog.component';
+import { DeleteWarnComponent } from './delete-warn/delete-warn.component';
 import { RespType, EditDialogData } from './edit-dialog/edit-dialog-data'
 
 import { KeychainService } from '../resources/keychain.service';
-import { Exchanges } from '../rpc/entities_pb';
 import { APIKey } from '../rpc/keychain_pb';
 
 @Component({
@@ -49,6 +49,15 @@ export class KeychainComponent implements OnInit {
             const payload = key.toObject();
             this.keychain.add(payload).subscribe();
           }
+          break;
+        case RespType.DELETE:
+          const dialog = this.dialogOpener.open(DeleteWarnComponent, {
+            width: '50vw',
+            data: {
+              index: result.index,
+              data: this.keychain.keys[result.index],
+            }
+          });
           break;
         case RespType.CANCEL:
           break;

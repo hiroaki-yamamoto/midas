@@ -41,6 +41,7 @@ import { BookTickerComponent } from './info/book-ticker/book-ticker.component';
 import { KeychainComponent } from './keychain/keychain.component';
 import { EditDialogComponent } from './keychain/edit-dialog/edit-dialog.component';
 import { ExchangePipePipe } from './rpc/exchange-pipe.pipe';
+import { DeleteWarnComponent } from './keychain/delete-warn/delete-warn.component';
 
 @NgModule({
   declarations: [
@@ -53,6 +54,7 @@ import { ExchangePipePipe } from './rpc/exchange-pipe.pipe';
     KeychainComponent,
     EditDialogComponent,
     ExchangePipePipe,
+    DeleteWarnComponent,
   ],
   imports: [
     BrowserModule,
