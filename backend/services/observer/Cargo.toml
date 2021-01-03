@@ -20,4 +20,4 @@ slog = "2.7.0"
 tokio = { version = "0.2.24", features = ["macros", "signal", "time"] }
 libc = "0.2.81"
 mongodb = "1.1.1"
-rmp-serde = "0.15.0"
+rmp-serde = "0.15.1"
