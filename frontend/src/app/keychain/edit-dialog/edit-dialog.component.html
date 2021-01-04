@@ -36,23 +36,27 @@
         This field is required.
       </mat-error>
     </mat-form-field>
+    <mat-dialog-actions fxLayout="row">
+      <button mat-raised-button type="button"
+        color="accent"
+        (click)="close(RespType.DELETE)"
+        [disabled]="isNew">
+        <fa-icon [icon]="trash"></fa-icon>
+        Delete
+      </button>
+      <div fxFlex></div>
+      <button type="submit" autofocus
+        mat-button
+        [mat-dialog-close]="form" i18n
+        (click)="close(RespType.POST)"
+        [disabled]="!(form.valid &amp;&amp; form.dirty)">
+        <mat-icon>done</mat-icon>
+        Save
+      </button>
+      <button mat-button mat-dialog-close i18n (click)="close(RespType.CANCEL)" type="button">
+        <mat-icon>clear</mat-icon>
+        Cancel
+      </button>
+    </mat-dialog-actions>
   </form>
-  <mat-dialog-actions fxLayout="row">
-    <button mat-raised-button color="accent" (click)="close(RespType.DELETE)" [disabled]="isNew">
-      <fa-icon [icon]="trash"></fa-icon>
-      Delete
-    </button>
-    <div fxFlex></div>
-    <button mat-button
-      [mat-dialog-close]="form" i18n
-      (click)="close(RespType.POST)"
-      [disabled]="!(form.valid &amp;&amp; form.dirty)">
-      <mat-icon>done</mat-icon>
-      Save
-    </button>
-    <button mat-button mat-dialog-close i18n (click)="close(RespType.CANCEL)">
-      <mat-icon>clear</mat-icon>
-      Cancel
-    </button>
-  </mat-dialog-actions>
 </section>

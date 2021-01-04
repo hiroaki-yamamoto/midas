@@ -58,10 +58,18 @@ export class KeychainComponent implements OnInit {
               data: this.keychain.keys[result.index],
             }
           });
+          dialog.afterClosed().subscribe(this.deleteKeyPair(result.index));
           break;
         case RespType.CANCEL:
           break;
       }
+    };
+  }
+
+  private deleteKeyPair(index: number) {
+    return (accepted: boolean) => {
+      if (!accepted) { return; }
+      this.keychain.delete(index).subscribe();
     };
   }
 

@@ -1,47 +1,47 @@
-#[derive(Clone, PartialEq, ::prost::Message)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SymbolInfo {
     #[prost(string, tag="1")]
-    pub symbol: std::string::String,
+    pub symbol: ::prost::alloc::string::String,
     #[prost(string, tag="2")]
-    pub status: std::string::String,
+    pub status: ::prost::alloc::string::String,
     #[prost(string, tag="3")]
-    pub base: std::string::String,
+    pub base: ::prost::alloc::string::String,
     #[prost(string, tag="4")]
-    pub quote: std::string::String,
+    pub quote: ::prost::alloc::string::String,
 }
-#[derive(Clone, PartialEq, ::prost::Message)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Status {
     #[prost(uint32, tag="1")]
     pub code: u32,
     #[prost(string, tag="2")]
-    pub message: std::string::String,
+    pub message: ::prost::alloc::string::String,
 }
-#[derive(Clone, PartialEq, ::prost::Message)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct InsertOneResult {
     #[prost(string, tag="1")]
     #[serde(skip_serializing_if = "String::is_empty")]
-    pub id: std::string::String,
+    pub id: ::prost::alloc::string::String,
 }
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[derive(::num_derive::FromPrimitive, ::clap::Clap)]
 #[serde(tag = "exchange")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
 pub enum Exchanges {
     Binance = 0,
 }
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[derive(::num_derive::FromPrimitive, ::clap::Clap)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
 pub enum BackTestPriceBase {
     Close = 0,
     Open = 1,
