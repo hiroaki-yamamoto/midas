@@ -8,6 +8,8 @@ use ::mongodb::results::InsertManyResult;
 use ::mongodb::Database;
 use ::nats::asynk::Subscription;
 use ::serde::Serialize;
+use ::ring::hmac;
+use ::bytes::Bytes;
 
 use ::types::{GenericResult, SendableErrorResult};
 
@@ -250,5 +252,15 @@ pub trait TestExecutor {
     self.set_positions(positions);
     self.set_orders(orders);
     return Ok(ret);
+  }
+}
+
+pub trait Sign {
+  fn get_secret_key(&self, prv_key: String) -> hmac::Key;
+  fn sign(&self, body: String, prv_key: String) -> String {
+    let secret = self.get_secret_key(prv_key);
+    let tag = hmac::sign(&secret, body.as_bytes());
+    let signature = Bytes::copy_from_slice(tag.as_ref());
+    return format!("{:x}", signature);
   }
 }
