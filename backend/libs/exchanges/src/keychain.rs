@@ -5,6 +5,7 @@ use ::mongodb::bson::{doc, from_document, to_document, Document};
 use ::mongodb::options::UpdateModifications;
 use ::mongodb::{Collection, Database};
 
+use ::rpc::entities::Exchanges;
 use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use crate::entities::APIKey;
@@ -59,6 +60,21 @@ impl KeyChain {
       .filter_map(|ent| async { ent.ok() })
       .boxed();
     return Ok(stream);
+  }
+
+  pub async fn get(
+    &self,
+    exchange: Exchanges,
+    id: ObjectId
+  ) -> GenericResult<Option<APIKey>> {
+    let key = self.col.find_one(doc! {
+      "_id": id,
+      "exchange": exchange.as_string()
+    }, None)
+      .await?
+      .map(|k| from_document::<APIKey>(k).ok())
+      .flatten();
+    return Ok(key);
   }
 
   pub async fn delete(&self, query: Document) -> GenericResult<()> {
