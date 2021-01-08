@@ -108,9 +108,11 @@ pub(crate) trait TradeDateTime {
 pub trait Executor {
   async fn open(
     &mut self,
+    api_key_id: ObjectId,
   ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>>;
   async fn create_order(
     &mut self,
+    api_key_id: ObjectId,
     symbol: String,
     price: Option<f64>,
     budget: f64,
@@ -119,6 +121,7 @@ pub trait Executor {
 
   async fn remove_order(
     &mut self,
+    api_key_id: ObjectId,
     id: ObjectId,
   ) -> GenericResult<ExecutionResult>;
 }

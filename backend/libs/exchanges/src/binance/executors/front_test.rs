@@ -77,6 +77,7 @@ impl TestExecutorTrait for Executor {
 impl ExecutorTrait for Executor {
   async fn open(
     &mut self,
+    _: ObjectId,
   ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>> {
     let observer = self.observer.clone();
     let stream = try_stream! {
@@ -94,6 +95,7 @@ impl ExecutorTrait for Executor {
 
   async fn create_order(
     &mut self,
+    _: ObjectId,
     _: String,
     _: Option<f64>,
     _: f64,
@@ -106,6 +108,7 @@ impl ExecutorTrait for Executor {
 
   async fn remove_order(
     &mut self,
+    _: ObjectId,
     _: ObjectId,
   ) -> GenericResult<ExecutionResult> {
     return Err(Box::new(ExecutionFailed::new(

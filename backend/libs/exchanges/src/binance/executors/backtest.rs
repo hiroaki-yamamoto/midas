@@ -52,6 +52,7 @@ impl Executor {
 impl ExecutorTrait for Executor {
   async fn open(
     &mut self,
+    _: ObjectId,
   ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>> {
     let half_spread = self.spread / 2.0;
     let price_base = self.price_base_policy.clone();
@@ -98,6 +99,7 @@ impl ExecutorTrait for Executor {
 
   async fn create_order(
     &mut self,
+    _: ObjectId,
     _: String,
     _: Option<f64>,
     _: f64,
@@ -110,6 +112,7 @@ impl ExecutorTrait for Executor {
 
   async fn remove_order(
     &mut self,
+    _: ObjectId,
     _: ObjectId,
   ) -> GenericResult<ExecutionResult> {
     return Err(Box::new(ExecutionFailed::new(
