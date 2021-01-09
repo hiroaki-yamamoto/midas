@@ -1,33 +1,12 @@
-use ::std::error::Error;
-use ::std::fmt::{Display, Formatter, Result as FormatResult};
 use ::std::str::FromStr;
 
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::DateTime;
 use ::serde::{Deserialize, Serialize};
+use url::form_urlencoded::Parse;
 
-use crate::casting::{cast_datetime_from_i64, ParseError};
-
-#[derive(Debug, Clone)]
-pub struct OrderTypeParseFailed {
-  pub value: String,
-}
-
-impl OrderTypeParseFailed {
-  fn new(value: &str) -> Self {
-    return Self {
-      value: String::from(value),
-    };
-  }
-}
-
-impl Display for OrderTypeParseFailed {
-  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-    return write!(f, "Failed to parse order type: {}", self.value);
-  }
-}
-
-impl Error for OrderTypeParseFailed {}
+use crate::casting::{cast_datetime_from_i64, ParseError as CastError};
+use crate::errors::ParseError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -42,9 +21,9 @@ pub enum OrderType {
 }
 
 impl FromStr for OrderType {
-  type Err = OrderTypeParseFailed;
+  type Err = ParseError;
   fn from_str(s: &str) -> Result<Self, Self::Err> {
-    return match s {
+    return match s.to_uppercase().as_str() {
       "LIMIT" => Ok(Self::Limit),
       "MARKET" => Ok(Self::Market),
       "STOP_LOSS" => Ok(Self::StopLoss),
@@ -52,8 +31,36 @@ impl FromStr for OrderType {
       "TAKE_PROFIT" => Ok(Self::TakeProfit),
       "TAKE_PROFIT_LIMIT" => Ok(Self::TakeProfitLimit),
       "LIMIT_MAKER" => Ok(Self::LimitMaker),
-      other => Err(OrderTypeParseFailed::new(other)),
+      _ => Err(ParseError::new(s.to_string())),
     };
+  }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum OrderStatus {
+  New,
+  PartiallyFilled,
+  Filled,
+  Canceled,
+  PendingCancel,
+  Rejected,
+  Expired,
+}
+
+impl FromStr for OrderStatus {
+  type Err = ParseError;
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+      match s.to_uppercase().as_str() {
+        "NEW" => { return Ok(Self::New); },
+        "PARTIALLY_FILLED" => { return Ok(Self::PartiallyFilled); },
+        "FILLED" => { return Ok(Self::Filled); },
+        "CANCELED" => { return Ok(Self::Canceled); },
+        "PENDING_CANCEL" => { return Ok(Self::PendingCancel); },
+        "REJECTED" => { return Ok(Self::Rejected); },
+        "EXPIRED" => { return Ok(Self::Expired); },
+        _ => { return Err(ParseError::new(s.to_string())); },
+      }
   }
 }
 
@@ -76,7 +83,7 @@ pub struct Order<DT> {
   pub order_type: OrderType,
 }
 
-impl From<Order<i64>> for Result<Order<DateTime>, ParseError> {
+impl From<Order<i64>> for Result<Order<DateTime>, CastError> {
   fn from(from: Order<i64>) -> Self {
     return Ok(Order::<DateTime> {
       id: from.id,

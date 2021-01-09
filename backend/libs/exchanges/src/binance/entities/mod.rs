@@ -6,6 +6,8 @@ mod order;
 mod stream;
 mod symbol;
 mod trade_time;
+mod positions;
+mod side;
 
 pub(crate) use self::book_ticker::BookTicker;
 pub use self::filters::Filters;
