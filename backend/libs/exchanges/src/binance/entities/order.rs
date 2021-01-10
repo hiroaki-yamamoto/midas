@@ -3,7 +3,6 @@ use ::std::str::FromStr;
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::DateTime;
 use ::serde::{Deserialize, Serialize};
-use url::form_urlencoded::Parse;
 
 use crate::casting::{cast_datetime_from_i64, ParseError as CastError};
 use crate::errors::ParseError;
