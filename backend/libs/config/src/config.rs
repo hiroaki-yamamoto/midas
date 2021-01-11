@@ -45,7 +45,6 @@ pub struct Config {
   #[serde(default)]
   pub debug: bool,
   pub tls: TLS,
-  pub service_addresses: ServiceAddresses,
 }
 
 impl Config {

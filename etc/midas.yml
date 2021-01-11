@@ -6,6 +6,3 @@ tls:
   privateKey: /etc/midas/tls/svc/devel.key
   cert: /etc/midas/tls/svc/devel.crt
   ca: /etc/midas/tls/svc/root-ca.pem
-serviceAddresses:
-  historical: https://historical_service:50000
-  symbol: https://symbol_service:50000
