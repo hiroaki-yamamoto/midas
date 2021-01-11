@@ -8,8 +8,9 @@ use super::order::OrderStatus;
 use super::side::Side;
 
 use crate::errors::ParseError;
+use crate::entities::{Order as CommonOrder, OrderInner as CommonOrderInner};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ExecutionType {
   New,
@@ -67,10 +68,34 @@ pub struct ExecutionReport<FloatType, DateTimeType> {
   trade_id: i64,
 }
 
+impl From<ExecutionReport<f64, DateTime>> for CommonOrderInner {
+  fn from(value: ExecutionReport<f64, DateTime>) -> Self {
+    return Self {
+      price: value.price,
+      qty: value.executed_qty,
+    };
+  }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExecutionReports {
   #[serde(rename = "_id")]
   id: ObjectId,
+  symbol: String,
   reports: Vec<ExecutionReport<f64, DateTime>>,
+}
+
+impl From<ExecutionReports> for CommonOrder {
+  fn from(value: ExecutionReports) -> Self {
+    let traded: Vec<CommonOrderInner> = value.reports
+      .into_iter()
+      .filter(|report| report.exec_type == ExecutionType::Trade)
+      .map(|report| report.into())
+      .collect();
+    return Self {
+      symbol: value.symbol,
+      inner: traded,
+    }
+  }
 }

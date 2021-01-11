@@ -1,8 +1,6 @@
 use ::std::str::FromStr;
-use ::std::fmt::{Display, Result as DispResult, Formatter};
 
 use ::serde::{Serialize, Deserialize};
-use url::form_urlencoded::Parse;
 
 use crate::errors::ParseError;
 
