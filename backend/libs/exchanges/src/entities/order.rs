@@ -47,4 +47,9 @@ impl Order {
   pub fn new(symbol: String, inner: Vec<OrderInner>) -> Self {
     return Self { symbol, inner };
   }
+
+  pub fn sum(&self) -> OrderInner {
+    return self.inner.clone().into_iter()
+      .fold(OrderInner{price: 0.0, qty: 0.0}, |acc, item| acc + item);
+  }
 }
