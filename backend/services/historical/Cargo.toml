@@ -13,19 +13,19 @@ rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 
-serde = {version = "1.0.118", features = ["derive"]}
+serde = {version = "1.0.119", features = ["derive"]}
 rmp-serde = "0.15.1"
-nats = "0.8.6"
+nats = "0.9.0"
 mongodb = "1.1.1"
 clap = "3.0.0-beta.2"
-serde_yaml = "0.8.14"
+serde_yaml = "0.8.15"
 tokio = {version = "0.2.24", features = ["macros", "rt-threaded", "signal"]}
 slog = "2.7.0"
 slog-atomic = "3.0.0"
 async-stream = "0.3.0"
-futures = "0.3.8"
+futures = "0.3.9"
 num-traits = "0.2.14"
-libc = "0.2.81"
+libc = "0.2.82"
 warp = { version = "0.2.5", features = ["tls"] }
 serde_json = "1.0.61"
-http = "0.2.2"
+http = "0.2.3"
