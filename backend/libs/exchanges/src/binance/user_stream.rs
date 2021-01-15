@@ -26,7 +26,7 @@ impl PubClient for UserStream {}
 
 #[async_trait]
 impl UserStreamTrait for UserStream {
-  async fn authenticate(&self, api_key: &APIKey) -> GenericResult<()> {
+  async fn authenticate(&mut self, api_key: &APIKey) -> GenericResult<()> {
     let client = self.get_client(api_key.pub_key.to_owned())?;
     let resp: ListenKey = client
       .post(format!("{}/api/v3/userDataStream", REST_ENDPOINT).as_str())
@@ -34,6 +34,7 @@ impl UserStreamTrait for UserStream {
       .await?
       .json()
       .await?;
+    self.listen_keys.push(resp.listen_key);
     return Ok(());
   }
 }
