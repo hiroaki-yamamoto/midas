@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = {version = "0.11.0", features = ["rustls-tls", "json", "gzip", "brotli"]}
+reqwest = {version = "0.11.0", features = ["rustls-tls-native-roots", "json", "gzip", "brotli"]}
 tokio = {version = "0.2.24", features = [
   "rt-threaded",
   "sync", "macros", "stream", "time", "net"

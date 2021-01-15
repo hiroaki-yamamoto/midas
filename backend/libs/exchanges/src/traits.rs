@@ -13,6 +13,8 @@ use ::bytes::Bytes;
 
 use ::types::{GenericResult, SendableErrorResult};
 
+use crate::APIKey;
+
 use super::entities::{
   BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
 };
@@ -266,4 +268,11 @@ pub trait Sign {
     let signature = Bytes::copy_from_slice(tag.as_ref());
     return format!("{:x}", signature);
   }
+}
+
+#[async_trait]
+pub trait UserStream {
+  async fn authenticate(&self, api_key: &APIKey) -> GenericResult<()>;
+  async fn start(&self, pub_key: String) -> GenericResult<()>;
+  async fn stop(&self) -> GenericResult<()>;
 }
