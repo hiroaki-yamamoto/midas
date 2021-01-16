@@ -19,7 +19,7 @@ nats = "0.8.6"
 mongodb = "1.1.1"
 clap = "3.0.0-beta.2"
 serde_yaml = "0.8.15"
-tokio = {version = "0.2.24", features = ["macros", "rt-threaded", "signal"]}
+tokio = {version = "1.0.2", features = ["macros", "rt-threaded", "signal"]}
 slog = "2.7.0"
 slog-atomic = "3.0.0"
 async-stream = "0.3.0"

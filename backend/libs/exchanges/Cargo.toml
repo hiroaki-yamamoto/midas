@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 reqwest = {version = "0.11.0", features = ["rustls-tls-native-roots", "json", "gzip", "brotli"]}
-tokio = {version = "0.2.24", features = [
+tokio = {version = "1.0.2", features = [
   "rt-threaded",
   "sync", "macros", "stream", "time", "net"
 ]}
