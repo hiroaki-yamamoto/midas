@@ -37,4 +37,10 @@ impl UserStreamTrait for UserStream {
     self.listen_keys.push(resp.listen_key);
     return Ok(());
   }
+  async fn start(&self) -> GenericResult<()> {
+    panic!("Not implemented yet");
+  }
+  async fn stop(&self) -> GenericResult<()> {
+    panic!("Not implemented yet");
+  }
 }
