@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 reqwest = {version = "0.11.0", features = ["rustls-tls-native-roots", "json", "gzip", "brotli"]}
-tokio = {version = "0.2.24", features = [
+tokio = {version = "0.3.6", features = [
   "rt-threaded",
   "sync", "macros", "stream", "time", "net"
 ]}
@@ -23,17 +23,17 @@ serde = "1.0.119"
 serde_json = "1.0.61"
 slog = "2.7.0"
 mongodb = "1.1.1"
-futures = "0.3.9"
-nats = "0.8.6"
+futures = "0.3.12"
+nats = "0.9.1"
 rmp-serde = "0.15.1"
 num_cpus = "1.13.0"
-rand = "0.8.1"
-tokio-tungstenite = { version = "0.11.0", features = ["tls"] }
+rand = "0.8.2"
+tokio-tungstenite = { version = "0.13.0", features = ["tls"] }
 http = "0.2.3"
 async-stream = "0.3.0"
-tonic = "0.3.1"
+tonic = "0.4.0"
 clap = "3.0.0-beta.2"
-tokio-native-tls = "0.1"
+tokio-native-tls = "0.3"
 num = "0.3.1"
 ring = "0.16.19"
 bytes = "1.0.1"
