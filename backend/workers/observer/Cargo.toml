@@ -15,6 +15,6 @@ clap = "3.0.0-beta.2"
 tokio = {version = "0.2.24", features = ["signal", "rt-threaded", "macros"]}
 nats = "0.8.6"
 slog = "2.7.0"
-futures = "0.3.9"
+futures = "0.3.12"
 libc = "0.2.82"
 mongodb = "1.1.1"
