@@ -23,7 +23,7 @@ tokio = {version = "0.2.24", features = ["macros", "rt-threaded", "signal"]}
 slog = "2.7.0"
 slog-atomic = "3.0.0"
 async-stream = "0.3.0"
-futures = "0.3.9"
+futures = "0.3.12"
 num-traits = "0.2.14"
 libc = "0.2.82"
 warp = { version = "0.2.5", features = ["tls"] }

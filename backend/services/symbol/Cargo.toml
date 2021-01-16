@@ -17,7 +17,7 @@ mongodb = "1.1.1"
 slog = "2.7.0"
 clap = "3.0.0-beta.2"
 tokio = {version = "0.2.24", features = ["macros", "rt-threaded", "signal"]}
-futures = "0.3.9"
+futures = "0.3.12"
 libc = "0.2.82"
 nats = "0.8.6"
 warp = "0.2.5"

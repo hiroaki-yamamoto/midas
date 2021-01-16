@@ -12,7 +12,7 @@ config = { path = "../../libs/config" }
 rpc = { path = "../../libs/rpc" }
 csrf = { path = "../../libs/csrf" }
 
-futures = "0.3.9"
+futures = "0.3.12"
 nats = "0.8.6"
 warp = "0.2.5"
 clap = "3.0.0-beta.2"
