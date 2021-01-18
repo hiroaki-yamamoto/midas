@@ -1,24 +1,43 @@
 use ::async_trait::async_trait;
 use ::nats::asynk::Connection as Broker;
+use ::futures::StreamExt;
+use ::tokio_tungstenite::connect_async;
+use ::tokio::select;
 
-use ::types::{GenericResult};
+use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+use ::types::GenericResult;
 
 use super::constants::REST_ENDPOINT;
 use super::client::PubClient;
 use super::entities::ListenKey;
+use super::constants::{USER_STREAM_LISTEN_KEY_SUB_NAME, WS_ENDPOINT};
 
 use crate::entities::APIKey;
 use crate::traits::UserStream as UserStreamTrait;
+use crate::types::TLSWebSocket;
+use crate::errors::WebsocketError;
 
 #[derive(Debug, Clone)]
 pub struct UserStream {
   broker: Broker,
-  listen_keys: Vec<String>,
 }
 
 impl UserStream {
-  fn new(broker: Broker) -> Self {
-    return Self { broker, listen_keys: vec![] };
+  pub fn new(broker: Broker) -> Self {
+    return Self { broker };
+  }
+  async fn init_websocket<S>(
+    &self,
+    addr: S
+  ) -> Result<TLSWebSocket, WebsocketError>
+  where
+    S: IntoClientRequest + Unpin
+  {
+    let (socket, resp) = connect_async(addr).await.map_err(|err| WebsocketError{
+      status: None ,
+      msg: Some(err.to_string()),
+    })?;
+    return Ok(socket);
   }
 }
 
@@ -34,13 +53,30 @@ impl UserStreamTrait for UserStream {
       .await?
       .json()
       .await?;
-    self.listen_keys.push(resp.listen_key);
+    let _ = self.broker.publish(
+      USER_STREAM_LISTEN_KEY_SUB_NAME, resp.listen_key.as_bytes()
+    ).await?;
     return Ok(());
   }
   async fn start(&self) -> GenericResult<()> {
-    panic!("Not implemented yet");
-  }
-  async fn stop(&self) -> GenericResult<()> {
-    panic!("Not implemented yet");
+    let listen_keys: Vec<String> = vec![];
+    let mut listen_key_sub = self.broker.queue_subscribe(
+      USER_STREAM_LISTEN_KEY_SUB_NAME, "user_stream"
+    )
+      .await?
+      .map(|msg| String::from_utf8(msg.data))
+      .filter_map(|msg| async { msg.ok() })
+      .boxed();
+    let user_stream: Vec<TLSWebSocket> = vec![];
+    loop {
+      select! {
+        Some(listen_key) = listen_key_sub.next() => {
+          let (socket, resp) = connect_async(
+            format!("{}/{}", WS_ENDPOINT, listen_key)
+          ).await?;
+        },
+      };
+    }
+    return Ok(());
   }
 }

@@ -12,12 +12,10 @@ use ::nats::asynk::Connection as Broker;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
-use ::tokio::net::TcpStream;
 use ::tokio::select;
 use ::tokio::time::{delay_for, interval};
-use ::tokio_native_tls::TlsStream;
 use ::tokio_tungstenite::{
-  connect_async, stream::Stream, tungstenite as wsocket, WebSocketStream,
+  connect_async, tungstenite as wsocket,
 };
 
 use ::config::DEFAULT_RECONNECT_INTERVAL;
@@ -30,14 +28,13 @@ use super::entities::{
   BookTicker, ListSymbolStream, SubscribeRequest, SubscribeRequestInner, Symbol,
 };
 use super::recorders::SymbolRecorder;
+use crate::types::TLSWebSocket;
 
 use crate::entities::BookTicker as CommonBookTicker;
 use crate::errors::{InitError, MaximumAttemptExceeded, WebsocketError};
 use crate::traits::{
   SymbolRecorder as SymbolRecorderTrait, TradeObserver as TradeObserverTrait,
 };
-
-type TLSWebSocket = WebSocketStream<Stream<TcpStream, TlsStream<TcpStream>>>;
 
 const NUM_SESSION: usize = 10;
 const EVENT_DELAY: Duration = Duration::from_secs(1);
@@ -100,7 +97,10 @@ impl TradeObserver {
     let (websocket, resp) = ret_on_err!(connect_async(WS_ENDPOINT).await);
     let status = resp.status();
     if !status.is_informational() {
-      return Err(Box::new(WebsocketError { status }));
+      return Err(Box::new(WebsocketError {
+        status: Some(status.as_u16()),
+        msg: Some(status.as_str().to_string())
+      }));
     }
     return Ok(websocket);
   }

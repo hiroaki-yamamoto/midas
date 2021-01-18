@@ -2,6 +2,8 @@ use ::std::error::Error;
 use ::std::fmt::{Debug, Display, Formatter, Result as FormatResult};
 
 use ::http::StatusCode;
+use ::serde::Serialize;
+use ::slog::{KV, Key};
 
 use ::url::Url;
 
@@ -43,18 +45,28 @@ impl Display for EmptyError {
 
 impl Error for EmptyError {}
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct WebsocketError {
-  pub status: StatusCode,
+  pub status: Option<u16>,
+  pub msg: Option<String>,
 }
+
+// impl KV for WebsocketError {
+//   fn serialize(
+//     &self,
+//     record: &::slog::Record,
+//     serializer: &mut dyn ::slog::Serializer
+//   ) -> Result {
+//   }
+// }
 
 impl Display for WebsocketError {
   fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
     return write!(
       f,
       "Websocket Error: {} {}",
-      self.status.as_u16(),
-      self.status.as_str()
+      self.status,
+      self.msg,
     );
   }
 }

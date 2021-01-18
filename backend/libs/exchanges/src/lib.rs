@@ -3,6 +3,7 @@ mod casting;
 mod entities;
 mod keychain;
 mod traits;
+mod types;
 
 pub mod errors;
 

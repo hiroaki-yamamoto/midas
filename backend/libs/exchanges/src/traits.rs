@@ -274,5 +274,4 @@ pub trait Sign {
 pub trait UserStream {
   async fn authenticate(&mut self, api_key: &APIKey) -> GenericResult<()>;
   async fn start(&self) -> GenericResult<()>;
-  async fn stop(&self) -> GenericResult<()>;
 }
