@@ -93,14 +93,16 @@ impl TradeObserver {
     return None;
   }
 
-  async fn init_socket(&self) -> SendableErrorResult<TLSWebSocket> {
-    let (websocket, resp) = ret_on_err!(connect_async(WS_ENDPOINT).await);
+  async fn init_socket(&self) -> Result<TLSWebSocket, WebsocketError> {
+    let (websocket, resp) = connect_async(WS_ENDPOINT)
+      .await
+      .map_err(|err| WebsocketError{ msg: Some(err.to_string()), status: None })?;
     let status = resp.status();
     if !status.is_informational() {
-      return Err(Box::new(WebsocketError {
+      return Err(WebsocketError {
         status: Some(status.as_u16()),
         msg: Some(status.as_str().to_string())
-      }));
+      });
     }
     return Ok(websocket);
   }
@@ -113,8 +115,7 @@ impl TradeObserver {
         Err(e) => {
           ::slog::error!(
             self.logger,
-            "Failed to subscribe trade stream: {}",
-            e
+            "Failed to subscribe trade stream"; e,
           );
           interval.tick().await;
           continue;

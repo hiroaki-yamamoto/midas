@@ -2,8 +2,9 @@ use ::std::error::Error;
 use ::std::fmt::{Debug, Display, Formatter, Result as FormatResult};
 
 use ::http::StatusCode;
+use mongodb::bson::compat::u2f::serialize;
 use ::serde::Serialize;
-use ::slog::{KV, Key};
+use ::slog::{KV, Key, Serializer};
 
 use ::url::Url;
 
@@ -45,29 +46,31 @@ impl Display for EmptyError {
 
 impl Error for EmptyError {}
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct WebsocketError {
   pub status: Option<u16>,
   pub msg: Option<String>,
 }
 
-// impl KV for WebsocketError {
-//   fn serialize(
-//     &self,
-//     record: &::slog::Record,
-//     serializer: &mut dyn ::slog::Serializer
-//   ) -> Result {
-//   }
-// }
+impl KV for WebsocketError {
+  fn serialize(
+    &self,
+    _: &::slog::Record,
+    serializer: &mut dyn ::slog::Serializer
+  ) -> ::slog::Result {
+    if let Some(status) = self.status {
+      serializer.emit_u16(Key::from("status"), status)?;
+    }
+    if let Some(msg) = &self.msg {
+      serializer.emit_str(Key::from("msg"), msg.as_str())?;
+    }
+    return Ok(());
+  }
+}
 
 impl Display for WebsocketError {
   fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-    return write!(
-      f,
-      "Websocket Error: {} {}",
-      self.status,
-      self.msg,
-    );
+    return write!(f, "Websocket Error");
   }
 }
 
