@@ -22,7 +22,7 @@ use ::rpc::keychain::{ApiKey as RPCAPIKey, ApiKeyList as RPCAPIKeyList};
 async fn main() {
   let opts: CmdArgs = CmdArgs::parse();
   let config = Config::from_fpath(Some(opts.config)).unwrap();
-  let (logger, _) = config.build_slog();
+  let logger = config.build_slog();
   let logger_in_handler = logger.clone();
   let db_cli = Client::with_uri_str(&config.db_url).await.unwrap();
   let db = db_cli.database("midas");

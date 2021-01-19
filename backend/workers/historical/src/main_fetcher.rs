@@ -18,7 +18,7 @@ use ::exchanges::HistoryFetcher;
 async fn main() {
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
-  let (logger, _) = cfg.build_slog();
+  let logger = cfg.build_slog();
   info!(logger, "Kline fetch worker");
   let broker = connect(&cfg.broker_url).await.unwrap();
   let db =

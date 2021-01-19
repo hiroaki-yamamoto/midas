@@ -93,7 +93,7 @@ async fn main() {
   let cmd: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(cmd.config)).unwrap();
   let broker = broker_con(cfg.broker_url.as_str()).await.unwrap();
-  let (logger, _) = cfg.build_slog();
+  let logger = cfg.build_slog();
   let route_logger = logger.clone();
   let csrf = CSRF::new(CSRFOption::builder());
   let route = csrf

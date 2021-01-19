@@ -14,9 +14,7 @@ use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
 use ::tokio::select;
 use ::tokio::time::{delay_for, interval};
-use ::tokio_tungstenite::{
-  connect_async, tungstenite as wsocket,
-};
+use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::types::{ret_on_err, SendableErrorResult};
@@ -94,14 +92,18 @@ impl TradeObserver {
   }
 
   async fn init_socket(&self) -> Result<TLSWebSocket, WebsocketError> {
-    let (websocket, resp) = connect_async(WS_ENDPOINT)
-      .await
-      .map_err(|err| WebsocketError{ msg: Some(err.to_string()), status: None })?;
+    let (websocket, resp) =
+      connect_async(WS_ENDPOINT)
+        .await
+        .map_err(|err| WebsocketError {
+          msg: Some(err.to_string()),
+          status: None,
+        })?;
     let status = resp.status();
     if !status.is_informational() {
       return Err(WebsocketError {
         status: Some(status.as_u16()),
-        msg: Some(status.as_str().to_string())
+        msg: Some(status.as_str().to_string()),
       });
     }
     return Ok(websocket);

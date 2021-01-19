@@ -30,7 +30,7 @@ async fn main() {
     DBCli::with_options(MongoDBCliOpt::parse(&config.db_url).await.unwrap())
       .unwrap()
       .database("midas");
-  let (logger, _) = config.build_slog();
+  let logger = config.build_slog();
   let exchange: Box<dyn TradeObserver> = match cmd_args.exchange {
     Exchanges::Binance => Box::new(
       binance::TradeObserver::new(

@@ -65,12 +65,11 @@ impl Config {
     return Self::from_stream(f);
   }
 
-  pub fn build_slog(&self) -> (Logger, AtomicSwitchCtrl) {
-    if self.debug {
-      return build_debug();
-    } else {
-      return build_json();
-    }
+  pub fn build_slog(&self) -> Logger {
+    return match self.debug {
+      true => build_debug(),
+      false => build_json(),
+    };
   }
 
   pub fn build_rest_client(&self) -> GenericResult<Client> {

@@ -17,7 +17,7 @@ async fn main() {
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
-  let (logger, _) = cfg.build_slog();
+  let logger = cfg.build_slog();
   let host: SocketAddr = cfg.host.parse().unwrap();
   let csrf = CSRF::new(CSRFOption::builder());
   let route = ::warp::get()

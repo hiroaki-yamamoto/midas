@@ -23,6 +23,10 @@
   },
   "packageRules": [
     {
+      packageNames: ["typescript"],
+      "allowedVersions": "<4.1.0"
+    },
+    {
       "packageNames": ["tokio"],
       "allowedVersions": "<0.3.0"
     },
