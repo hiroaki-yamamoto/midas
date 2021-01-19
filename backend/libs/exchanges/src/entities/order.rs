@@ -49,7 +49,12 @@ impl Order {
   }
 
   pub fn sum(&self) -> OrderInner {
-    return self.inner.clone().into_iter()
-      .fold(OrderInner{price: 0.0, qty: 0.0}, |acc, item| acc + item);
+    return self.inner.clone().into_iter().fold(
+      OrderInner {
+        price: 0.0,
+        qty: 0.0,
+      },
+      |acc, item| acc + item,
+    );
   }
 }

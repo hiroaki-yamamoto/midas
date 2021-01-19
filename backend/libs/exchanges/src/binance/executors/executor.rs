@@ -1,8 +1,8 @@
-use ::mongodb::{Database, Collection};
+use ::mongodb::{Collection, Database};
 use ::ring::hmac;
 
-use crate::{KeyChain, traits::Executor as ExecutorTrait};
 use crate::traits::Sign;
+use crate::{traits::Executor as ExecutorTrait, KeyChain};
 
 pub struct Executor {
   keychain: KeyChain,
@@ -16,7 +16,12 @@ impl Executor {
     let keychain = KeyChain::new(db.clone()).await;
     let orders = db.collection("binance.orders");
     let positions = db.collection("binance.positions");
-    return Self{ keychain, db, orders, positions };
+    return Self {
+      keychain,
+      db,
+      orders,
+      positions,
+    };
   }
 }
 

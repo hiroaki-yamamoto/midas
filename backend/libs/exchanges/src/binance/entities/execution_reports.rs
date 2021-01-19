@@ -2,13 +2,13 @@ use ::std::str::FromStr;
 
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::DateTime;
-use ::serde::{Serialize, Deserialize};
+use ::serde::{Deserialize, Serialize};
 
 use super::order::OrderStatus;
 use super::side::Side;
 
-use crate::errors::ParseError;
 use crate::entities::{Order as CommonOrder, OrderInner as CommonOrderInner};
+use crate::errors::ParseError;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -18,21 +18,35 @@ pub enum ExecutionType {
   Replaced,
   Rejected,
   Trade,
-  Expired
+  Expired,
 }
 
 impl FromStr for ExecutionType {
   type Err = ParseError;
   fn from_str(s: &str) -> Result<Self, Self::Err> {
-      match s.to_uppercase().as_str() {
-        "NEW" => { return Ok(Self::New); },
-        "CANCELED" => { return Ok(Self::Canceled); },
-        "REPLACED" => { return Ok(Self::Replaced); },
-        "REJECTED" => { return Ok(Self::Rejected); },
-        "TRADE" => { return Ok(Self::Trade); },
-        "EXPIRED" => { return Ok(Self::Expired); },
-        _ => { return Err(ParseError::new(s.to_string())); },
+    match s.to_uppercase().as_str() {
+      "NEW" => {
+        return Ok(Self::New);
       }
+      "CANCELED" => {
+        return Ok(Self::Canceled);
+      }
+      "REPLACED" => {
+        return Ok(Self::Replaced);
+      }
+      "REJECTED" => {
+        return Ok(Self::Rejected);
+      }
+      "TRADE" => {
+        return Ok(Self::Trade);
+      }
+      "EXPIRED" => {
+        return Ok(Self::Expired);
+      }
+      _ => {
+        return Err(ParseError::new(s.to_string()));
+      }
+    }
   }
 }
 
@@ -88,7 +102,8 @@ pub struct ExecutionReports {
 
 impl From<ExecutionReports> for CommonOrder {
   fn from(value: ExecutionReports) -> Self {
-    let traded: Vec<CommonOrderInner> = value.reports
+    let traded: Vec<CommonOrderInner> = value
+      .reports
       .into_iter()
       .filter(|report| report.exec_type == ExecutionType::Trade)
       .map(|report| report.into())
@@ -96,6 +111,6 @@ impl From<ExecutionReports> for CommonOrder {
     return Self {
       symbol: value.symbol,
       inner: traded,
-    }
+    };
   }
 }

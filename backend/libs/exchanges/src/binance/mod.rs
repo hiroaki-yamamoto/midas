@@ -1,3 +1,4 @@
+mod client;
 mod constants;
 mod entities;
 mod executors;
@@ -6,7 +7,6 @@ mod managers;
 mod observer;
 mod recorders;
 mod user_stream;
-mod client;
 
 pub use self::executors::BackTestExecutor;
 pub use self::fetchers::{HistoryFetcher, SymbolFetcher};

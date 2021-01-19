@@ -1,21 +1,21 @@
 use ::async_trait::async_trait;
-use ::nats::asynk::Connection as Broker;
 use ::futures::StreamExt;
-use ::tokio_tungstenite::connect_async;
+use ::nats::asynk::Connection as Broker;
 use ::tokio::select;
+use ::tokio_tungstenite::connect_async;
 
-use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use ::types::GenericResult;
+use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 
-use super::constants::REST_ENDPOINT;
 use super::client::PubClient;
-use super::entities::ListenKey;
+use super::constants::REST_ENDPOINT;
 use super::constants::{USER_STREAM_LISTEN_KEY_SUB_NAME, WS_ENDPOINT};
+use super::entities::ListenKey;
 
 use crate::entities::APIKey;
+use crate::errors::WebsocketError;
 use crate::traits::UserStream as UserStreamTrait;
 use crate::types::TLSWebSocket;
-use crate::errors::WebsocketError;
 
 #[derive(Debug, Clone)]
 pub struct UserStream {
@@ -28,15 +28,16 @@ impl UserStream {
   }
   async fn init_websocket<S>(
     &self,
-    addr: S
+    addr: S,
   ) -> Result<TLSWebSocket, WebsocketError>
   where
-    S: IntoClientRequest + Unpin
+    S: IntoClientRequest + Unpin,
   {
-    let (socket, resp) = connect_async(addr).await.map_err(|err| WebsocketError{
-      status: None ,
-      msg: Some(err.to_string()),
-    })?;
+    let (socket, resp) =
+      connect_async(addr).await.map_err(|err| WebsocketError {
+        status: None,
+        msg: Some(err.to_string()),
+      })?;
     return Ok(socket);
   }
 }
@@ -53,16 +54,17 @@ impl UserStreamTrait for UserStream {
       .await?
       .json()
       .await?;
-    let _ = self.broker.publish(
-      USER_STREAM_LISTEN_KEY_SUB_NAME, resp.listen_key.as_bytes()
-    ).await?;
+    let _ = self
+      .broker
+      .publish(USER_STREAM_LISTEN_KEY_SUB_NAME, resp.listen_key.as_bytes())
+      .await?;
     return Ok(());
   }
   async fn start(&self) -> GenericResult<()> {
     let listen_keys: Vec<String> = vec![];
-    let mut listen_key_sub = self.broker.queue_subscribe(
-      USER_STREAM_LISTEN_KEY_SUB_NAME, "user_stream"
-    )
+    let mut listen_key_sub = self
+      .broker
+      .queue_subscribe(USER_STREAM_LISTEN_KEY_SUB_NAME, "user_stream")
       .await?
       .map(|msg| String::from_utf8(msg.data))
       .filter_map(|msg| async { msg.ok() })

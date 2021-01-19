@@ -65,12 +65,17 @@ impl KeyChain {
   pub async fn get(
     &self,
     exchange: Exchanges,
-    id: ObjectId
+    id: ObjectId,
   ) -> GenericResult<Option<APIKey>> {
-    let key = self.col.find_one(doc! {
-      "_id": id,
-      "exchange": exchange.as_string()
-    }, None)
+    let key = self
+      .col
+      .find_one(
+        doc! {
+          "_id": id,
+          "exchange": exchange.as_string()
+        },
+        None,
+      )
       .await?
       .map(|k| from_document::<APIKey>(k).ok())
       .flatten();

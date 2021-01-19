@@ -1,4 +1,4 @@
-use ::reqwest::{Client as Req, header};
+use ::reqwest::{header, Client as Req};
 
 use ::types::GenericResult;
 
@@ -7,7 +7,7 @@ pub trait PubClient {
     let mut def_header = header::HeaderMap::new();
     def_header.insert(
       header::HeaderName::from_static("x-mbx-apikey"),
-      header::HeaderValue::from_str(pub_key.as_str())?
+      header::HeaderValue::from_str(pub_key.as_str())?,
     );
     return Ok(Req::builder().default_headers(def_header).build()?);
   }
