@@ -5,7 +5,6 @@ use ::std::io::Read;
 use ::reqwest::{Certificate, Client, Identity};
 use ::serde::Deserialize;
 use ::slog::Logger;
-use ::slog_atomic::AtomicSwitchCtrl;
 use ::slog_builder::{build_debug, build_json};
 
 use ::types::GenericResult;

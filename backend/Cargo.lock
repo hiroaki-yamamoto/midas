@@ -493,7 +493,6 @@ dependencies = [
  "serde",
  "serde_yaml",
  "slog",
- "slog-atomic",
  "slog_builder",
  "types",
 ]
@@ -1189,7 +1188,6 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "slog",
- "slog-atomic",
  "tokio 0.2.24",
  "types",
  "warp",
@@ -3092,16 +3090,6 @@ name = "slog"
 version = "2.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8347046d4ebd943127157b94d63abb990fcf729dc4e9978927fdf4ac3c998d06"
-
-[[package]]
-name = "slog-atomic"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87803759296346553aabece939e9ff174e7fc7ce2406c1fbd235b0c0a322523a"
-dependencies = [
- "arc-swap",
- "slog",
-]
 
 [[package]]
 name = "slog-json"
