@@ -1,8 +1,10 @@
 use ::async_trait::async_trait;
 use ::futures::StreamExt;
 use ::nats::asynk::Connection as Broker;
+use ::slog::Logger;
 use ::tokio::select;
 use ::tokio_tungstenite::connect_async;
+use http::status;
 
 use ::types::GenericResult;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
@@ -20,11 +22,12 @@ use crate::types::TLSWebSocket;
 #[derive(Debug, Clone)]
 pub struct UserStream {
   broker: Broker,
+  logger: Logger,
 }
 
 impl UserStream {
-  pub fn new(broker: Broker) -> Self {
-    return Self { broker };
+  pub fn new(broker: Broker, logger: Logger) -> Self {
+    return Self { broker, logger };
   }
   async fn init_websocket<S>(
     &self,
@@ -38,6 +41,13 @@ impl UserStream {
         status: None,
         msg: Some(err.to_string()),
       })?;
+    let status = &resp.status();
+    if !status.is_informational() {
+      return Err(WebsocketError {
+        status: Some(status.as_u16()),
+        msg: status.canonical_reason().map(|s| s.to_string()),
+      });
+    }
     return Ok(socket);
   }
 }
@@ -69,13 +79,23 @@ impl UserStreamTrait for UserStream {
       .map(|msg| String::from_utf8(msg.data))
       .filter_map(|msg| async { msg.ok() })
       .boxed();
-    let user_stream: Vec<TLSWebSocket> = vec![];
+    let mut user_stream: Vec<TLSWebSocket> = vec![];
+    let me = self;
     loop {
       select! {
         Some(listen_key) = listen_key_sub.next() => {
-          let (socket, resp) = connect_async(
+          let socket = match me.init_websocket(
             format!("{}/{}", WS_ENDPOINT, listen_key)
-          ).await?;
+          ).await {
+            Err(e) => {
+              ::slog::warn!(
+                me.logger, "Switching Protocol Failed"; e
+              );
+              continue;
+            },
+            Ok(v) => v,
+          };
+          user_stream.push(socket);
         },
       };
     }
