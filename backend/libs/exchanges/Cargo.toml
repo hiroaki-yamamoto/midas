@@ -21,7 +21,7 @@ serde_qs = "0.8.2"
 serde = "1.0.119"
 serde_json = "1.0.61"
 slog = {version = "2.7.0" }
-mongodb = "1.1.1"
+mongodb = {version = "1.1.1", default-features = false, features = ["async-std-runtime"]}
 futures = "0.3.12"
 nats = "0.8.6"
 rmp-serde = "0.15.1"
