@@ -7,15 +7,14 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = {version = "0.11.0", features = ["rustls-tls-native-roots", "json", "gzip", "brotli"]}
-tokio = {version = "0.2.24", features = [
-  "rt-threaded",
-  "sync", "macros", "stream", "time", "net"
-]}
 rpc = { path = "../rpc" }
 config = { path = "../config" }
 async-trait = "0.1.42"
 types = { path = "../types" }
+reqwest = {version = "0.11.0", features = ["rustls-tls-native-roots", "json", "gzip", "brotli"]}
+tokio = { version = "1.0", features = [
+  "rt", "rt-multi-thread", "sync", "macros", "time", "net"
+]}
 chrono = "0.4.19"
 url = "2.2.0"
 serde_qs = "0.8.2"
@@ -28,13 +27,14 @@ nats = "0.8.6"
 rmp-serde = "0.15.1"
 num_cpus = "1.13.0"
 rand = "0.8.2"
-tokio-tungstenite = { version = "0.11.0", features = ["tls"] }
+tokio-tungstenite = { version = "0.13.0", features = ["tls"] }
 http = "0.2.3"
 async-stream = "0.3.0"
 clap = "3.0.0-beta.2"
-tokio-native-tls = "0.1"
+tokio-native-tls = "0.3"
 num = "0.3.1"
 ring = "0.16.19"
 bytes = "1.0.1"
 erased-serde = "0.3.13"
 slog_derive = "0.2.0"
+tokio-stream = "0.1.2"

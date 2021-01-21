@@ -11,9 +11,9 @@ use ::rand::random;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
 use ::tokio::select;
-use ::tokio::stream::StreamExt as TokioStreamExt;
 use ::tokio::sync::broadcast;
-use ::tokio::time::delay_for;
+use ::tokio::time::sleep;
+use ::tokio_stream::StreamExt as TokioStreamExt;
 use ::url::Url;
 
 use ::config::{
@@ -165,7 +165,7 @@ impl HistoryFetcher {
           rest_status.as_u16(),
           retry_secs.num_seconds(),
         );
-        delay_for(ret_on_err!(retry_secs.to_std())).await;
+        sleep(ret_on_err!(retry_secs.to_std())).await;
       } else {
         let text = ret_on_err!(resp.text().await);
         warn!(
@@ -176,7 +176,7 @@ impl HistoryFetcher {
       c += 1;
       let wait_dur = Duration::nanoseconds((random::<i64>() + 1) % 1_000_000);
       let wait_dur = ret_on_err!(wait_dur.to_std());
-      delay_for(wait_dur).await;
+      sleep(wait_dur).await;
     }
     return Err(Box::new(MaximumAttemptExceeded::default()));
   }
