@@ -13,7 +13,7 @@ use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
 use ::tokio::select;
-use ::tokio::time::{delay_for, interval};
+use ::tokio::time::{interval, sleep};
 use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
 use ::config::DEFAULT_RECONNECT_INTERVAL;
@@ -343,7 +343,7 @@ impl TradeObserver {
     let mut clear_sym_map_flag = false;
     let mut initial_symbols_stream = self.init().await?;
     loop {
-      let event_delay = delay_for(EVENT_DELAY);
+      let event_delay = sleep(EVENT_DELAY);
       select! {
         Some(symbol) = initial_symbols_stream.next() => {
           add_buf.insert(symbol.symbol);
