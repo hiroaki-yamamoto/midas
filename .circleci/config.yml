@@ -87,6 +87,7 @@ jobs:
             - ./backend/prod.dockerfile
   deploy-image:
     executor: docker-build
+    shell: /bin/sh -leo pipefail
     parameters:
       service_name:
         type: string
