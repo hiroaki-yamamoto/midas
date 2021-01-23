@@ -80,7 +80,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - ./.circleci/slack_template_success.json
+            # - ./.circleci/slack_template_success.json
             - ./backend/target/x86_64-unknown-linux-musl/release/bin
             - ./backend/prod.dockerfile
   deploy-image:
@@ -120,10 +120,10 @@ jobs:
           event: fail
           ignore_errors: false
           template: basic_fail_1
-      - run:
-          name: "Export slack notification on success"
-          command: |
-            echo 'export SLACK_TMPL_PASS=$(cat ./.circleci/slack_template_success.json)' >> $BASH_ENV
+      # - run:
+      #     name: "Export slack notification on success"
+      #     command: |
+      #       echo 'export SLACK_TMPL_PASS=$(cat ./.circleci/slack_template_success.json)' >> $BASH_ENV
       - slack/notify:
           event: pass
           ignore_errors: false
