@@ -77,7 +77,7 @@ jobs:
       - slack/notify:
           event: pass
           ignore_errors: false
-          template: SLACK_TMPL_PASS
+          template: basic_fail_1
       - persist_to_workspace:
           root: .
           paths:
@@ -127,7 +127,7 @@ jobs:
       - slack/notify:
           event: pass
           ignore_errors: false
-          template: basic_fail_1
+          template: SLACK_TMPL_PASS
       - run: docker logout https://docker.pkg.github.com
 
 devel-filter: &devel-filter
