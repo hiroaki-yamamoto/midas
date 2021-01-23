@@ -82,7 +82,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            # - ./.circleci/slack_template_success.json
+            - ./.circleci/slack_template_success.json
             - ./backend/target/x86_64-unknown-linux-musl/release/bin
             - ./backend/prod.dockerfile
   deploy-image:
