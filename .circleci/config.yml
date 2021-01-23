@@ -69,15 +69,12 @@ jobs:
           event: fail
           ignore_errors: false
           template: basic_fail_1
-      - run:
-          name: "Export slack notification on success"
-          command: |
-            export SLACK_TMPL_PASS=`cat ./.circleci/slack_template_success.json`
-            echo $SLACK_TMPL_PASS
       - slack/notify:
           event: pass
           ignore_errors: false
-          template: basic_fail_1
+          template: SLACK_TMPL_PASS
+          environment:
+            SLACK_TMPL_PASS: <<include(./.circleci/slack_template_success.json)>>
       - persist_to_workspace:
           root: .
           paths:
