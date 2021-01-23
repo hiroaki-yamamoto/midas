@@ -74,7 +74,7 @@ jobs:
           ignore_errors: false
           template: SLACK_TMPL_PASS
           environment:
-            SLACK_TMPL_PASS: <<include(./.circleci/slack_template_success.json)>>
+            SLACK_TMPL_PASS: "<<include(./.circleci/slack_template_success.json)>>"
       - persist_to_workspace:
           root: .
           paths:
