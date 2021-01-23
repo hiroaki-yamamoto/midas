@@ -19,7 +19,7 @@ jobs:
       - checkout
       - slack/notify:
           event: fail
-          ignore_errors: true
+          ignore_errors: false
           template: basic_fail_1
       - run:
           name: "Export slack notification on success"
@@ -27,6 +27,7 @@ jobs:
             export SLACK_TMPL_PASS=`cat ./.circleci/slack_template_success.json`
       - slack/notify:
           event: pass
+          ignore_errors: false
           template: SLACK_TMPL_PASS
       - restore_cache:
           key: build-cache-{{ checksum "backend/Cargo.lock" }}
@@ -91,7 +92,7 @@ jobs:
           at: .
       - slack/notify:
           event: fail
-          ignore_errors: true
+          ignore_errors: false
           template: basic_fail_1
       - run:
           name: "Export slack notification on success"
@@ -99,6 +100,7 @@ jobs:
             export SLACK_TMPL_PASS=`cat ./.circleci/slack_template_success.json`
       - slack/notify:
           event: pass
+          ignore_errors: false
           template: SLACK_TMPL_PASS
       - setup_remote_docker:
           version: 19.03.12
