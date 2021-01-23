@@ -69,16 +69,15 @@ jobs:
           event: fail
           ignore_errors: false
           template: basic_fail_1
-          channel: '#circleci'
       - run:
           name: "Export slack notification on success"
           command: |
             export SLACK_TMPL_PASS=`cat ./.circleci/slack_template_success.json`
+            echo $SLACK_TMPL_PASS
       - slack/notify:
           event: pass
           ignore_errors: false
           template: SLACK_TMPL_PASS
-          channel: '#circleci'
       - persist_to_workspace:
           root: .
           paths:
@@ -121,7 +120,6 @@ jobs:
           event: fail
           ignore_errors: false
           template: basic_fail_1
-          channel: '#circleci'
       - run:
           name: "Export slack notification on success"
           command: |
@@ -130,7 +128,6 @@ jobs:
           event: pass
           ignore_errors: false
           template: SLACK_TMPL_PASS
-          channel: '#circleci'
       - run: docker logout https://docker.pkg.github.com
 
 devel-filter: &devel-filter
