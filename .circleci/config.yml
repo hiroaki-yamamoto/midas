@@ -21,7 +21,7 @@ jobs:
           key: build-cache-{{ checksum "backend/Cargo.lock" }}
       - run:
           name: "Install musl tools"
-          command: "apt-get update && apt-get install -y musl-tools"
+          command: "apt-get update && apt-get install -y musl-tools jq curl"
       - run: rustup component add rustfmt
       - run:
           name: "Install musl package"
@@ -86,7 +86,7 @@ jobs:
           name: "Install bash"
           command: |
             apk update
-            apk add --no-cache bash curl
+            apk add --no-cache bash curl jq
       - run:
           name: Log into docker.pkg.github.com
           command: |
