@@ -11,6 +11,8 @@ executors:
   docker-build:
     docker:
       - image: docker
+        environment:
+          BASH_ENV: /etc/profile
 
 jobs:
   build-backend:
@@ -120,14 +122,15 @@ jobs:
           event: fail
           ignore_errors: false
           template: basic_fail_1
-      # - run:
-      #     name: "Export slack notification on success"
-      #     command: |
-      #       echo 'export SLACK_TMPL_PASS=$(cat ./.circleci/slack_template_success.json)' >> $BASH_ENV
+      - run:
+          name: "Export slack notification on success"
+          command: |
+            echo 'export SLACK_TMPL_PASS=$(cat ./.circleci/slack_template_success.json)' >> $BASH_ENV
       - slack/notify:
           event: pass
           ignore_errors: false
           template: SLACK_TMPL_PASS
+          shell: /bin/sh -leo pipefail
       - run: docker logout https://docker.pkg.github.com
 
 devel-filter: &devel-filter
