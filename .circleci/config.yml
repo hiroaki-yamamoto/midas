@@ -41,7 +41,7 @@ jobs:
             tar xzf ${SCCACHE_ARCHIVE}
             mkdir -p /usr/local/bin/
             mv "${TARGET}/sccache-dist" $RUSTC_WRAPPER
-            rm -rf ${SCCACHE_ARCHIVE}
+            rm -rf ${SCCACHE_ARCHIVE} ${TARGET}
             chmod u+x $RUSTC_WRAPPER
       - run:
           name: "Extract openssl-musl package"
