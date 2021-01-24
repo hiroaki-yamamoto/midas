@@ -40,7 +40,7 @@ jobs:
             curl -fLC - ${SCCACHE_URL} -o ${SCCACHE_ARCHIVE}
             tar xzf ${SCCACHE_ARCHIVE}
             mkdir -p /usr/local/bin/
-            mv "${SCCACHE_ARCHIVE}/sccache-dist" $RUSTC_WRAPPER
+            mv "${TARGET}/sccache-dist" $RUSTC_WRAPPER
             rm -rf ${SCCACHE_ARCHIVE}
       - run:
           name: "Extract openssl-musl package"
