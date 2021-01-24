@@ -32,13 +32,10 @@ jobs:
           command: "rustup target add x86_64-unknown-linux-musl"
       - run:
           name: "Install rust compile cache"
-          environment:
-            SCCACHE_ARCHIVE: |
-              sccache-dist-${SCCACHE_VER}-x86_64-unknown-linux-musl.tar.gz
-            SCCACHE_URL: >-
-              https://github.com/mozilla/sccache/
-                releases/download/${SCCACHE_VER}/${SCCACHE_ARCHIVE}
           command: |
+            SCCACHE_ARCHIVE='sccache-dist-${SCCACHE_VER}-x86_64-unknown-linux-musl.tar.gz'
+            SCCACHE_URL='https://github.com/mozilla/sccache/releases/download/'
+            SCCACHE_URL="${SCCACHE_URL}${SCCACHE_VER}/${SCCACHE_ARCHIVE}"
             curl -sSL ${SCCACHE_URL}
             tar xzf ${SCCACHE_ARCHIVE}
             mkdir -p /usr/local/bin/
