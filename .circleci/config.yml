@@ -7,6 +7,9 @@ executors:
   backend-rust:
     docker:
       - image: rust
+    environment:
+      SCCACHE_VER: v0.2.15
+      RUSTC_WRAPPER: /usr/local/bin/sccache
     # working_directory: .
   docker-build:
     docker:
@@ -29,6 +32,19 @@ jobs:
           name: "Install musl package"
           command: "rustup target add x86_64-unknown-linux-musl"
       - run:
+          name: "Install rust compile cache"
+          environment:
+            SCCACHE_ARCHIVE: |
+              sccache-dist-${SCCACHE_VER}-x86_64-unknown-linux-musl.tar.gz
+            SCCACHE_URL: >-
+              https://github.com/mozilla/sccache/
+                releases/download/${SCCACHE_VER}/${SCCACHE_ARCHIVE}
+          command: |
+            curl -sSL ${SCCACHE_URL}
+            tar xzf ${SCCACHE_ARCHIVE}
+            mkdir -p /usr/local/bin/
+            mv sccache-dist $RUSTC_WRAPPER
+      - run:
           name: "Extract openssl-musl package"
           command: "tar xJvf openssl-musl.txz && mv openssl-musl ~/"
           working_directory: ./.circleci
@@ -45,6 +61,7 @@ jobs:
           paths:
             - ./backend/target
             - ~/.rustup
+            - ~/.cache/sccache
           key: build-cache-{{ checksum "backend/Cargo.lock" }}
       - run:
           name: "Collect executable"
