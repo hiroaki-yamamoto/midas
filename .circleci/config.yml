@@ -36,7 +36,7 @@ jobs:
             SCCACHE_ARCHIVE='sccache-dist-${SCCACHE_VER}-x86_64-unknown-linux-musl.tar.gz'
             SCCACHE_URL='https://github.com/mozilla/sccache/releases/download/'
             SCCACHE_URL="${SCCACHE_URL}${SCCACHE_VER}/${SCCACHE_ARCHIVE}"
-            curl -sSL ${SCCACHE_URL}
+            curl -sSL ${SCCACHE_URL} -o ${SCCACHE_ARCHIVE}
             tar xzf ${SCCACHE_ARCHIVE}
             mkdir -p /usr/local/bin/
             mv sccache-dist $RUSTC_WRAPPER
