@@ -13,13 +13,13 @@ rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 
-serde = {version = "1.0.119", features = ["derive"]}
-rmp-serde = "0.15.1"
+serde = {version = "1.0.121", features = ["derive"]}
+rmp-serde = "0.15.3"
 nats = "0.8.6"
 mongodb = {version = "1.1.1", default-features = false, features = ["async-std-runtime"]}
 clap = "3.0.0-beta.2"
 serde_yaml = "0.8.15"
-tokio = {version = "1.0", features = ["macros", "rt", "rt-multi-thread", "signal"]}
+tokio = {version = "1.1", features = ["macros", "rt", "rt-multi-thread", "signal"]}
 slog = "2.7.0"
 async-stream = "0.3.0"
 futures = "0.3.12"

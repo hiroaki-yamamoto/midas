@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 url = "2.2.0"
-serde = "1.0.119"
-tokio = {version = "1.0", features = ["sync"]}
+serde = "1.0.121"
+tokio = {version = "1.1", features = ["sync"]}
 chrono = "0.4.19"
 warp = "0.3"
