@@ -9,7 +9,7 @@ executors:
       - image: rust
     environment:
       SCCACHE_VER: v0.2.15
-      RUSTC_WRAPPER: /usr/local/bin/sccache
+      RUSTC_WRAPPER: sccache
   docker-build:
     docker:
       - image: docker
@@ -40,9 +40,9 @@ jobs:
             curl -fLC - ${SCCACHE_URL} -o ${SCCACHE_ARCHIVE}
             tar xzf ${SCCACHE_ARCHIVE}
             mkdir -p /usr/local/bin/
-            mv "${TARGET}/sccache-dist" $RUSTC_WRAPPER
+            mv "${TARGET}/sccache-dist" /usr/local/bin/$RUSTC_WRAPPER
             rm -rf ${SCCACHE_ARCHIVE} ${TARGET}
-            chmod u+x $RUSTC_WRAPPER
+            chmod u+x /usr/local/bin/$RUSTC_WRAPPER
       - run:
           name: "Extract openssl-musl package"
           command: "tar xJvf openssl-musl.txz && mv openssl-musl ~/"
