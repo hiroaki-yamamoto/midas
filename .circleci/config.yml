@@ -33,13 +33,15 @@ jobs:
       - run:
           name: "Install rust compile cache"
           command: |
-            SCCACHE_ARCHIVE="sccache-dist-${SCCACHE_VER}-x86_64-unknown-linux-musl.tar.gz"
+            TARGET="sccache-dist-${SCCACHE_VER}-x86_64-unknown-linux-musl"
+            SCCACHE_ARCHIVE="${TARGET}.tar.gz"
             SCCACHE_URL='https://github.com/mozilla/sccache/releases/download/'
             SCCACHE_URL="${SCCACHE_URL}${SCCACHE_VER}/${SCCACHE_ARCHIVE}"
             curl -fLC - ${SCCACHE_URL} -o ${SCCACHE_ARCHIVE}
             tar xzf ${SCCACHE_ARCHIVE}
             mkdir -p /usr/local/bin/
-            mv sccache-dist $RUSTC_WRAPPER
+            mv "${SCCACHE_ARCHIVE}/sccache-dist" $RUSTC_WRAPPER
+            rm -rf ${SCCACHE_ARCHIVE}
       - run:
           name: "Extract openssl-musl package"
           command: "tar xJvf openssl-musl.txz && mv openssl-musl ~/"
