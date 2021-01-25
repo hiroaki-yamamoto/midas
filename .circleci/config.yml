@@ -9,7 +9,7 @@ executors:
       - image: rust
     environment:
       SCCACHE_VER: v0.2.15
-      # RUSTC_WRAPPER: sccache
+      RUSTC_WRAPPER: sccache
   docker-build:
     docker:
       - image: docker
