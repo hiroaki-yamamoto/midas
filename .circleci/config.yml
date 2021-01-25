@@ -43,7 +43,7 @@ jobs:
             rm -rf ${SCCACHE_ARCHIVE} ${TARGET}
             chmod u+x /usr/bin/$RUSTC_WRAPPER
       - run: rustc --version
-      - run: sccache rustc - --version
+      - run: sccache /usr/bin/rustc - --version
       - run:
           name: "Extract openssl-musl package"
           command: "tar xJvf openssl-musl.txz && mv openssl-musl ~/"
