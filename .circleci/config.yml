@@ -42,6 +42,7 @@ jobs:
             mv "${TARGET}/sccache-dist" /usr/bin/$RUSTC_WRAPPER
             rm -rf ${SCCACHE_ARCHIVE} ${TARGET}
             chmod u+x /usr/bin/$RUSTC_WRAPPER
+      - run: rustc --version
       - run: sccache rustc - --version
       - run:
           name: "Extract openssl-musl package"
