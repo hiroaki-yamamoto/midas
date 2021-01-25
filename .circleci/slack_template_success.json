@@ -1,12 +1,10 @@
 {
   "blocks": [
     {
-      "type": "header",
-      "text": {
-        "type": "plain_text",
-        "text": "Job Done. :+1:",
-        "emoji": true
-      }
+      "type": "section",
+      "fields": [
+        { "type": "plain_text", "text": ":tada: Job Done", "emoji": true }
+      ]
     },
     {
       "type": "section",
