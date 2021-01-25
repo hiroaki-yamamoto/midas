@@ -39,10 +39,9 @@ jobs:
             SCCACHE_URL="${SCCACHE_URL}${SCCACHE_VER}/${SCCACHE_ARCHIVE}"
             curl -fLC - ${SCCACHE_URL} -o ${SCCACHE_ARCHIVE}
             tar xzf ${SCCACHE_ARCHIVE}
-            mkdir -p /usr/local/bin/
-            mv "${TARGET}/sccache-dist" /usr/local/bin/$RUSTC_WRAPPER
+            mv "${TARGET}/sccache-dist" /usr/bin/$RUSTC_WRAPPER
             rm -rf ${SCCACHE_ARCHIVE} ${TARGET}
-            chmod u+x /usr/local/bin/$RUSTC_WRAPPER
+            chmod u+x /usr/bin/$RUSTC_WRAPPER
       - run:
           name: "Extract openssl-musl package"
           command: "tar xJvf openssl-musl.txz && mv openssl-musl ~/"
