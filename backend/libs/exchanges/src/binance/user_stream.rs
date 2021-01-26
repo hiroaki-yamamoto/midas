@@ -1,10 +1,11 @@
 use ::async_trait::async_trait;
+use ::futures::future::select_all;
 use ::futures::StreamExt;
 use ::nats::asynk::Connection as Broker;
 use ::slog::Logger;
 use ::tokio::select;
 use ::tokio_tungstenite::connect_async;
-use http::status;
+use ::tokio_tungstenite::tungstenite::Message;
 
 use ::types::GenericResult;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
@@ -49,6 +50,9 @@ impl UserStream {
       });
     }
     return Ok(socket);
+  }
+  async fn handle_message(&self, msg: &Message) -> GenericResult<()> {
+    return Ok(());
   }
 }
 
@@ -96,6 +100,18 @@ impl UserStreamTrait for UserStream {
             Ok(v) => v,
           };
           user_stream.push(socket);
+        },
+        (Some(user_data), _, _) = select_all(
+          user_stream.iter_mut().map(|stream| stream.next())
+        ) => {
+          let user_data = match user_data {
+            Err(e) => {
+              ::slog::warn!(me.logger, "Failed to receive payload: {}", e);
+              continue;
+            },
+            Ok(v) => v,
+          };
+          me.handle_message(&user_data).await?;
         },
       };
     }
