@@ -75,7 +75,6 @@ impl UserStreamTrait for UserStream {
     return Ok(());
   }
   async fn start(&self) -> GenericResult<()> {
-    let listen_keys: Vec<String> = vec![];
     let mut listen_key_sub = self
       .broker
       .queue_subscribe(USER_STREAM_LISTEN_KEY_SUB_NAME, "user_stream")
