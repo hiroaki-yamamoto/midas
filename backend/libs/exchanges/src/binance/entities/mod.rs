@@ -16,7 +16,7 @@ pub use self::history::{
   HistFetcherParam, HistQuery, Kline, Klines, KlinesWithInfo,
 };
 pub use self::info::ExchangeInfo;
-pub(crate) use self::listen_key::ListenKey;
+pub(crate) use self::listen_key::{ListenKey, ListenKeyPair};
 pub use self::order::Order;
 pub(crate) use self::stream::{SubscribeRequest, SubscribeRequestInner};
 pub use self::symbol::{ListSymbolStream, Symbol};
