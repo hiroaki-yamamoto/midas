@@ -1,12 +1,14 @@
+use ::std::collections::HashMap;
+
 use ::async_trait::async_trait;
 use ::futures::future::{join_all, select_all};
-use ::futures::StreamExt;
 use ::nats::asynk::Connection as Broker;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::slog::Logger;
 use ::std::time::Duration;
 use ::tokio::select;
 use ::tokio::time::interval;
+use ::tokio_stream::{StreamExt, StreamMap};
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use ::tokio_tungstenite::tungstenite::Message;
@@ -79,17 +81,18 @@ impl UserStreamTrait for UserStream {
     return Ok(());
   }
   async fn start(&self) -> GenericResult<()> {
-    let mut listen_key_sub = self
+    let listen_key_sub = self
       .broker
       .queue_subscribe(USER_STREAM_LISTEN_KEY_SUB_NAME, "user_stream")
       .await?
       .map(|msg| from_msgpack::<ListenKeyPair>(&msg.data))
-      .filter_map(|msg| async { msg.ok() })
-      .boxed();
+      .filter_map(|msg| msg.ok());
+    let mut listen_key_sub = Box::pin(listen_key_sub);
     // 1800 = 30 * 60 = 30 mins.
     let mut listen_key_refresh = interval(Duration::from_secs(1800));
-    let mut listen_keys: Vec<ListenKeyPair> = vec![];
-    let mut user_stream: Vec<TLSWebSocket> = vec![];
+    // Key = Pub API key, Value = Listen Key
+    let mut listen_keys: HashMap<String, String> = HashMap::new();
+    let mut user_stream: StreamMap<String, TLSWebSocket> = StreamMap::new();
     let me = self;
     loop {
       select! {
@@ -105,30 +108,29 @@ impl UserStreamTrait for UserStream {
             },
             Ok(v) => v,
           };
-          user_stream.push(socket);
-          listen_keys.push(listen_key);
+          user_stream.insert(listen_key.pub_key.clone(), socket);
+          listen_keys.insert(listen_key.pub_key, listen_key.listen_key);
         },
         _ = listen_key_refresh.tick() => {
           let url = format!("{}/api/v3/userDataStream", REST_ENDPOINT);
           let result_defer = listen_keys
-            .iter().map(|key_pair| {
+            .iter().map(|(pub_key, lis_key)| {
               return me
-                .get_client(&key_pair.pub_key)
-                .map(|cli| (cli, key_pair));
+                .get_client(&pub_key)
+                .map(|cli| (cli, lis_key));
             })
             .filter_map(|res| res.ok())
-            .map(|(cli, key_pair)| {
+            .map(|(cli, lis_key)| {
               return cli
                 .put(url.as_str())
-                .query(&[("listenKey", key_pair.listen_key.to_owned())])
+                .query(&[("listenKey", lis_key.to_owned())])
                 .send();
             });
           join_all(result_defer).await;
         },
-        (Some(user_data), _, _) = select_all(
-          user_stream.iter_mut().map(|stream| stream.next())
-        ) => {
-          let user_data = match user_data {
+        Some((api_key, msg)) = user_stream.next() => {
+          // I have no idea to handle the dirty close...
+          let user_data = match msg {
             Err(e) => {
               ::slog::warn!(me.logger, "Failed to receive payload: {}", e);
               continue;

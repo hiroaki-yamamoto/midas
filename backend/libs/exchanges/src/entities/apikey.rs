@@ -5,7 +5,7 @@ use ::serde::{Deserialize, Serialize};
 use ::rpc::entities::Exchanges;
 use ::rpc::keychain::ApiKey as RPCAPIKey;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct APIKey {
   #[serde(default, rename = "_id", skip_serializing_if = "Option::is_none")]
   pub id: Option<ObjectId>,
