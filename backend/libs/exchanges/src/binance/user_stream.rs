@@ -1,27 +1,29 @@
 use ::std::collections::HashMap;
+use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::futures::future::{join_all, select_all};
+use ::futures::future::{join, join_all, select_all, FutureExt};
 use ::nats::asynk::Connection as Broker;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::slog::Logger;
-use ::std::time::Duration;
 use ::tokio::select;
-use ::tokio::time::interval;
+use ::tokio::time::{interval, sleep};
 use ::tokio_stream::{StreamExt, StreamMap};
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::client::IntoClientRequest;
-use ::tokio_tungstenite::tungstenite::Message;
+use ::tokio_tungstenite::tungstenite::{Error as WebSocketError, Message};
 
 use ::types::GenericResult;
 
 use super::client::PubClient;
 use super::constants::REST_ENDPOINT;
-use super::constants::{USER_STREAM_LISTEN_KEY_SUB_NAME, WS_ENDPOINT};
+use super::constants::{
+  USER_STREAM_LISTEN_KEY_SUB_NAME, USER_STREAM_REAUTH_SUB_NAME, WS_ENDPOINT,
+};
 use super::entities::{ListenKey, ListenKeyPair};
 
 use crate::entities::APIKey;
-use crate::errors::WebsocketError;
+use crate::errors::{MaximumAttemptExceeded, WebsocketError};
 use crate::traits::UserStream as UserStreamTrait;
 use crate::types::TLSWebSocket;
 
@@ -59,18 +61,55 @@ impl UserStream {
   async fn handle_message(&self, msg: &Message) -> GenericResult<()> {
     return Ok(());
   }
+
+  async fn handle_dirty_disconnect(
+    &self,
+    pub_key: String,
+  ) -> Result<(), MaximumAttemptExceeded> {
+    let retry_sec = Duration::from_secs(5);
+    ::slog::warn!(
+      self.logger,
+      "Session Disconnected. Reconnecting...";
+      "api_key" => &pub_key,
+    );
+    let mut key = APIKey::default();
+    key.pub_key = pub_key;
+    for _ in 0..5 {
+      match self.authenticate(&key).await {
+        Err(e) => {
+          ::slog::warn!(
+            self.logger,
+            "Failed to reconnect trying in {} secs ({})",
+            retry_sec.as_secs(),
+            e; "pub_key" => &key.pub_key
+          );
+        }
+        Ok(_) => {
+          ::slog::info!(
+            self.logger,
+            "Reconnected.";
+            "pub_key" => &key.pub_key
+          );
+          return Ok(());
+        }
+      }
+      sleep(retry_sec).await;
+    }
+    return Err(MaximumAttemptExceeded);
+  }
 }
 
 impl PubClient for UserStream {}
 
 #[async_trait]
 impl UserStreamTrait for UserStream {
-  async fn authenticate(&mut self, api_key: &APIKey) -> GenericResult<()> {
+  async fn authenticate(&self, api_key: &APIKey) -> GenericResult<()> {
     let client = self.get_client(api_key.pub_key.to_owned())?;
     let resp: ListenKey = client
       .post(format!("{}/api/v3/userDataStream", REST_ENDPOINT).as_str())
       .send()
       .await?
+      .error_for_status()?
       .json()
       .await?;
     let key = ListenKeyPair::new(resp.listen_key, api_key.pub_key.clone());
@@ -81,18 +120,28 @@ impl UserStreamTrait for UserStream {
     return Ok(());
   }
   async fn start(&self) -> GenericResult<()> {
-    let listen_key_sub = self
-      .broker
-      .queue_subscribe(USER_STREAM_LISTEN_KEY_SUB_NAME, "user_stream")
-      .await?
+    let (listen_key_sub, reauth_sub) = join(
+      self
+        .broker
+        .queue_subscribe(USER_STREAM_LISTEN_KEY_SUB_NAME, "user_stream"),
+      self
+        .broker
+        .queue_subscribe(USER_STREAM_REAUTH_SUB_NAME, "user_stream"),
+    )
+    .await;
+    let listen_key_sub = listen_key_sub?
       .map(|msg| from_msgpack::<ListenKeyPair>(&msg.data))
       .filter_map(|msg| msg.ok());
+    let reauth_sub = reauth_sub?
+      .map(|msg| String::from_utf8(msg.data))
+      .filter_map(|msg| msg.ok());
     let mut listen_key_sub = Box::pin(listen_key_sub);
+    let mut reauth_sub = Box::pin(reauth_sub);
     // 1800 = 30 * 60 = 30 mins.
     let mut listen_key_refresh = interval(Duration::from_secs(1800));
+    let mut sockets: StreamMap<String, TLSWebSocket> = StreamMap::new();
     // Key = Pub API key, Value = Listen Key
     let mut listen_keys: HashMap<String, String> = HashMap::new();
-    let mut user_stream: StreamMap<String, TLSWebSocket> = StreamMap::new();
     let me = self;
     loop {
       select! {
@@ -108,7 +157,7 @@ impl UserStreamTrait for UserStream {
             },
             Ok(v) => v,
           };
-          user_stream.insert(listen_key.pub_key.clone(), socket);
+          sockets.insert(listen_key.pub_key.clone(), socket);
           listen_keys.insert(listen_key.pub_key, listen_key.listen_key);
         },
         _ = listen_key_refresh.tick() => {
@@ -128,17 +177,39 @@ impl UserStreamTrait for UserStream {
             });
           join_all(result_defer).await;
         },
-        Some((api_key, msg)) = user_stream.next() => {
+        Some(pub_key) = reauth_sub.next() => {
+          match me.handle_dirty_disconnect(pub_key).await {
+            Ok(_) => {},
+            Err(e) => {
+              ::slog::error!(
+                me.logger,
+                "Failed to authenticate listen key: {}", e
+              );
+            },
+          };
+        },
+        Some((api_key, msg)) = sockets.next() => {
           // I have no idea to handle the dirty close...
           let user_data = match msg {
             Err(e) => {
-              ::slog::warn!(me.logger, "Failed to receive payload: {}", e);
+              match e {
+                WebSocketError::ConnectionClosed |
+                WebSocketError::AlreadyClosed => {
+                  sockets.remove(&api_key);
+                  listen_keys.remove(&api_key);
+                  let _ = me.broker.publish(
+                    USER_STREAM_REAUTH_SUB_NAME,
+                    api_key
+                  ).await;
+                },
+                _ => ::slog::warn!(me.logger, "Failed to receive payload: {}", e),
+              }
               continue;
             },
             Ok(v) => v,
           };
           me.handle_message(&user_data).await?;
-        },
+        }
       };
     }
     return Ok(());

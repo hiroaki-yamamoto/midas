@@ -10,3 +10,4 @@ pub const SYMBOL_REMOVE_EVENT: &str = "binance.symbol.events.remove";
 pub const TRADE_OBSERVER_SUB_NAME: &str = "binance.trades";
 pub const USER_STREAM_LISTEN_KEY_SUB_NAME: &str =
   "binance.user_stream.listen_key";
+pub const USER_STREAM_REAUTH_SUB_NAME: &str = "binance.user_stream.reauth";
