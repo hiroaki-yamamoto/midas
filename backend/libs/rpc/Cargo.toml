@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 prost = "0.7.0"
-serde = "1.0.121"
+serde = "1.0.123"
 num-traits = "0.2.14"
 num-derive = "0.3.3"
 clap = "3.0.0-beta.2"
