@@ -10,8 +10,9 @@ use ::tokio::select;
 use ::tokio::time::{interval, sleep};
 use ::tokio_stream::{StreamExt, StreamMap};
 use ::tokio_tungstenite::connect_async;
-use ::tokio_tungstenite::tungstenite::client::IntoClientRequest;
-use ::tokio_tungstenite::tungstenite::{Error as WebSocketError, Message};
+use ::tokio_tungstenite::tungstenite::{
+  client::IntoClientRequest, Error as WebSocketError, Message,
+};
 
 use ::types::GenericResult;
 
@@ -58,13 +59,47 @@ impl UserStream {
     }
     return Ok(socket);
   }
-  async fn handle_message(&self, msg: &Message) -> GenericResult<()> {
+  async fn handle_message(
+    &self,
+    api_key: &String,
+    sockets: &mut StreamMap<String, TLSWebSocket>,
+    listen_keys: &mut HashMap<String, String>,
+    msg: &Message,
+  ) -> GenericResult<()> {
+    match msg {
+      Message::Close(reason) => {
+        match reason {
+          Some(reason) => {
+            ::slog::warn!(
+              self.logger, "Closing connection...";
+              "code" => format!("{}", reason.code),
+              "reason" => reason.reason.to_string()
+            );
+          }
+          None => {
+            ::slog::warn!(self.logger, "Closing connection...");
+          }
+        };
+        if let Some(mut socket) = sockets.remove(api_key) {
+          let _ = socket.close(None).await;
+        }
+        listen_keys.remove(api_key);
+        let _ = self
+          .broker
+          .publish(USER_STREAM_REAUTH_SUB_NAME, api_key)
+          .await;
+      }
+      Message::Ping(d) => {}
+      Message::Text(text) => {}
+      Message::Binary(binary) => {}
+      _ => {}
+    }
     return Ok(());
   }
 
-  async fn handle_dirty_disconnect(
+  async fn handle_disconnect(
     &self,
-    pub_key: String,
+    pub_key: &String,
   ) -> Result<(), MaximumAttemptExceeded> {
     let retry_sec = Duration::from_secs(5);
     ::slog::warn!(
@@ -73,7 +108,7 @@ impl UserStream {
       "api_key" => &pub_key,
     );
     let mut key = APIKey::default();
-    key.pub_key = pub_key;
+    key.pub_key = pub_key.clone();
     for _ in 0..5 {
       match self.authenticate(&key).await {
         Err(e) => {
@@ -178,7 +213,7 @@ impl UserStreamTrait for UserStream {
           join_all(result_defer).await;
         },
         Some(pub_key) = reauth_sub.next() => {
-          match me.handle_dirty_disconnect(pub_key).await {
+          match me.handle_disconnect(&pub_key).await {
             Ok(_) => {},
             Err(e) => {
               ::slog::error!(
@@ -208,7 +243,7 @@ impl UserStreamTrait for UserStream {
             },
             Ok(v) => v,
           };
-          me.handle_message(&user_data).await?;
+          me.handle_message(&api_key, &mut sockets, &mut listen_keys, &user_data).await?;
         }
       };
     }
