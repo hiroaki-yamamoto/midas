@@ -1,8 +1,10 @@
 use ::std::collections::HashMap;
 use ::std::time::Duration;
+use core::future;
 
 use ::async_trait::async_trait;
 use ::futures::future::{join, join_all, select_all, FutureExt};
+use ::futures::Sink;
 use ::nats::asynk::Connection as Broker;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::slog::Logger;
@@ -13,6 +15,7 @@ use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::{
   client::IntoClientRequest, Error as WebSocketError, Message,
 };
+use futures::SinkExt;
 
 use ::types::GenericResult;
 
@@ -66,33 +69,43 @@ impl UserStream {
     listen_keys: &mut HashMap<String, String>,
     msg: &Message,
   ) -> GenericResult<()> {
-    match msg {
-      Message::Close(reason) => {
-        match reason {
-          Some(reason) => {
-            ::slog::warn!(
-              self.logger, "Closing connection...";
-              "code" => format!("{}", reason.code),
-              "reason" => reason.reason.to_string()
-            );
-          }
-          None => {
-            ::slog::warn!(self.logger, "Closing connection...");
-          }
-        };
-        if let Some(mut socket) = sockets.remove(api_key) {
-          let _ = socket.close(None).await;
+    if let Message::Close(reason) = &msg {
+      match reason {
+        Some(reason) => {
+          ::slog::warn!(
+            self.logger, "Closing connection...";
+            "code" => format!("{}", reason.code),
+            "reason" => reason.reason.to_string()
+          );
         }
-        listen_keys.remove(api_key);
-        let _ = self
-          .broker
-          .publish(USER_STREAM_REAUTH_SUB_NAME, api_key)
-          .await;
+        None => {
+          ::slog::warn!(self.logger, "Closing connection...");
+        }
+      };
+      if let Some(mut socket) = sockets.remove(api_key) {
+        let _ = socket.close(None).await;
       }
-      Message::Ping(d) => {}
-      Message::Text(text) => {}
-      Message::Binary(binary) => {}
-      _ => {}
+      listen_keys.remove(api_key);
+      let _ = self
+        .broker
+        .publish(USER_STREAM_REAUTH_SUB_NAME, api_key)
+        .await;
+      return Ok(());
+    }
+    let socket_opt = sockets
+      .iter_mut()
+      .find(|(pub_key, _)| pub_key == api_key)
+      .map(|(_, socket)| socket);
+    if let Some(socket) = socket_opt {
+      match msg {
+        Message::Ping(d) => {
+          let _ = socket.send(Message::Pong(d.to_owned())).await;
+        }
+        Message::Text(text) => {}
+        Message::Binary(binary) => {}
+        _ => {}
+      };
+      let _ = socket.flush().await;
     }
     return Ok(());
   }
