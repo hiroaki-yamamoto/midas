@@ -101,8 +101,8 @@ impl UserStream {
         Message::Ping(d) => {
           let _ = socket.send(Message::Pong(d.to_owned())).await;
         }
-        Message::Text(text) => {}
         Message::Binary(binary) => {}
+        Message::Text(text) => {}
         _ => {}
       };
       let _ = socket.flush().await;
