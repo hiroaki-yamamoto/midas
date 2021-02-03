@@ -1,4 +1,5 @@
 use ::std::str::FromStr;
+use std::num::ParseFloatError;
 
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::DateTime;
@@ -7,6 +8,7 @@ use ::serde::{Deserialize, Serialize};
 use super::order::OrderStatus;
 use super::side::Side;
 
+use crate::casting::cast_datetime_from_i64;
 use crate::entities::{Order as CommonOrder, OrderInner as CommonOrderInner};
 use crate::errors::ParseError;
 
@@ -51,7 +53,7 @@ impl FromStr for ExecutionType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExecutionReport<FloatType, DateTimeType> {
+pub struct ExecutionReport<DateTimeType, FloatType> {
   #[serde(rename = "s")]
   symbol: String,
   #[serde(rename = "i")]
@@ -82,12 +84,35 @@ pub struct ExecutionReport<FloatType, DateTimeType> {
   trade_id: i64,
 }
 
-impl From<ExecutionReport<f64, DateTime>> for CommonOrderInner {
-  fn from(value: ExecutionReport<f64, DateTime>) -> Self {
+impl From<ExecutionReport<DateTime, f64>> for CommonOrderInner {
+  fn from(value: ExecutionReport<DateTime, f64>) -> Self {
     return Self {
       price: value.price,
       qty: value.executed_qty,
     };
+  }
+}
+
+impl From<ExecutionReport<i64, String>>
+  for Result<ExecutionReport<DateTime, f64>, ParseFloatError>
+{
+  fn from(v: ExecutionReport<i64, String>) -> Self {
+    return Ok(ExecutionReport::<DateTime, f64> {
+      symbol: v.symbol,
+      order_id: v.order_id,
+      client_order_id: v.client_order_id,
+      side: v.side,
+      exec_type: v.exec_type,
+      order_status: v.order_status,
+      reject_reason: v.reject_reason,
+      executed_qty: v.executed_qty.parse()?,
+      acc_qty: v.acc_qty.parse()?,
+      price: v.price.parse()?,
+      commission_amount: v.commission_amount.parse()?,
+      commission_asset: v.commission_asset,
+      trade_time: cast_datetime_from_i64(v.trade_time).into(),
+      trade_id: v.trade_id,
+    });
   }
 }
 
@@ -97,7 +122,7 @@ pub struct ExecutionReports {
   #[serde(rename = "_id")]
   id: ObjectId,
   symbol: String,
-  reports: Vec<ExecutionReport<f64, DateTime>>,
+  reports: Vec<ExecutionReport<DateTime, f64>>,
 }
 
 impl From<ExecutionReports> for CommonOrder {
