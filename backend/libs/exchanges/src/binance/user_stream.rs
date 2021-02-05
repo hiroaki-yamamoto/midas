@@ -1,12 +1,13 @@
 use ::std::collections::HashMap;
 use ::std::time::Duration;
-use core::future;
 
 use ::async_trait::async_trait;
 use ::futures::future::{join, join_all, select_all, FutureExt};
-use ::futures::Sink;
+use ::futures::SinkExt;
+use ::mongodb::bson::DateTime;
 use ::nats::asynk::Connection as Broker;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
+use ::serde_json::{from_slice as from_json_bin, from_str as from_json_str};
 use ::slog::Logger;
 use ::tokio::select;
 use ::tokio::time::{interval, sleep};
@@ -15,7 +16,6 @@ use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::{
   client::IntoClientRequest, Error as WebSocketError, Message,
 };
-use futures::SinkExt;
 
 use ::types::GenericResult;
 
@@ -24,7 +24,7 @@ use super::constants::REST_ENDPOINT;
 use super::constants::{
   USER_STREAM_LISTEN_KEY_SUB_NAME, USER_STREAM_REAUTH_SUB_NAME, WS_ENDPOINT,
 };
-use super::entities::{ListenKey, ListenKeyPair};
+use super::entities::{ListenKey, ListenKeyPair, RawUserStreamEvents};
 
 use crate::entities::APIKey;
 use crate::errors::{MaximumAttemptExceeded, WebsocketError};
@@ -61,6 +61,12 @@ impl UserStream {
       });
     }
     return Ok(socket);
+  }
+  async fn handle_UDS_event(
+    &self,
+    uds: &RawUserStreamEvents,
+  ) -> GenericResult<()> {
+    return Ok(());
   }
   async fn handle_message(
     &self,
@@ -101,8 +107,14 @@ impl UserStream {
         Message::Ping(d) => {
           let _ = socket.send(Message::Pong(d.to_owned())).await;
         }
-        Message::Binary(binary) => {}
-        Message::Text(text) => {}
+        Message::Binary(binary) => {
+          let event: RawUserStreamEvents = from_json_bin(binary)?;
+          self.handle_UDS_event(&event).await?;
+        }
+        Message::Text(text) => {
+          let event: RawUserStreamEvents = from_json_str(text.as_str())?;
+          self.handle_UDS_event(&event).await?;
+        }
         _ => {}
       };
       let _ = socket.flush().await;

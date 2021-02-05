@@ -21,7 +21,8 @@ pub use self::info::ExchangeInfo;
 pub(crate) use self::listen_key::{ListenKey, ListenKeyPair};
 pub use self::order::Order;
 pub(crate) use self::stream::{
-  SubscribeRequest, SubscribeRequestInner, UserStreamEvents,
+  CastedUserStreamEvents, RawUserStreamEvents, SubscribeRequest,
+  SubscribeRequestInner,
 };
 pub use self::symbol::{ListSymbolStream, Symbol};
 pub use self::trade_time::TradeTime;
