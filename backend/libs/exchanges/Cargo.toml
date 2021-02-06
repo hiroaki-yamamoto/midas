@@ -12,19 +12,19 @@ config = { path = "../config" }
 async-trait = "0.1.42"
 types = { path = "../types" }
 reqwest = {version = "0.11.0", features = ["rustls-tls-native-roots", "json", "gzip", "brotli"]}
-tokio = { version = "1.1", features = [
+tokio = { version = "1.2", features = [
   "rt", "rt-multi-thread", "sync", "macros", "time", "net"
 ]}
 chrono = "0.4.19"
 url = "2.2.0"
 serde_qs = "0.8.2"
 serde = "1.0.123"
-serde_json = "1.0.61"
+serde_json = "1.0.62"
 slog = {version = "2.7.0" }
 mongodb = {version = "1.1.1", default-features = false, features = ["async-std-runtime"]}
 futures = "0.3.12"
 nats = "0.8.6"
-rmp-serde = "0.15.3"
+rmp-serde = "0.15.4"
 num_cpus = "1.13.0"
 rand = "0.8.3"
 tokio-tungstenite = { version = "0.13.0", features = ["tls"] }
@@ -33,8 +33,8 @@ async-stream = "0.3.0"
 clap = "3.0.0-beta.2"
 tokio-native-tls = "0.3"
 num = "0.3.1"
-ring = "0.16.19"
+ring = "0.16.20"
 bytes = "1.0.1"
 erased-serde = "0.3.13"
 slog_derive = "0.2.0"
-tokio-stream = "0.1.2"
+tokio-stream = "0.1.3"

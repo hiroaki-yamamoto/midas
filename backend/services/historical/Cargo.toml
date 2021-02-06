@@ -14,17 +14,17 @@ config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 
 serde = {version = "1.0.123", features = ["derive"]}
-rmp-serde = "0.15.3"
+rmp-serde = "0.15.4"
 nats = "0.8.6"
 mongodb = {version = "1.1.1", default-features = false, features = ["async-std-runtime"]}
 clap = "3.0.0-beta.2"
-serde_yaml = "0.8.15"
-tokio = {version = "1.1", features = ["macros", "rt", "rt-multi-thread", "signal"]}
+serde_yaml = "0.8.16"
+tokio = {version = "1.2", features = ["macros", "rt", "rt-multi-thread", "signal"]}
 slog = "2.7.0"
 async-stream = "0.3.0"
 futures = "0.3.12"
 num-traits = "0.2.14"
-libc = "0.2.84"
+libc = "0.2.85"
 warp = { version = "0.3", features = ["tls"] }
-serde_json = "1.0.61"
+serde_json = "1.0.62"
 http = "0.2.3"
