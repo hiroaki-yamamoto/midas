@@ -14,11 +14,11 @@ csrf = { path = "../../libs/csrf" }
 
 clap = "3.0.0-beta.2"
 mongodb = {version = "1.1.1", default-features = false, features = ["async-std-runtime"]}
-tokio = {version = "1.1", features = ["macros", "rt", "rt-multi-thread", "signal"]}
+tokio = {version = "1.2", features = ["macros", "rt", "rt-multi-thread", "signal"]}
 warp = "0.3"
 slog = "2.7.0"
 futures = "0.3.12"
 serde = "1.0.123"
-libc = "0.2.84"
+libc = "0.2.85"
 num-traits = "0.2.14"
 http = "0.2.3"

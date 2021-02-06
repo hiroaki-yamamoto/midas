@@ -17,7 +17,7 @@ nats = "0.8.6"
 warp = "0.3"
 clap = "3.0.0-beta.2"
 slog = "2.7.0"
-tokio = { version = "1.1", features = ["macros", "signal", "time"] }
-libc = "0.2.84"
+tokio = { version = "1.2", features = ["macros", "signal", "time"] }
+libc = "0.2.85"
 mongodb = {version = "1.1.1", default-features = false, features = ["async-std-runtime"]}
-rmp-serde = "0.15.3"
+rmp-serde = "0.15.4"
