@@ -20,11 +20,13 @@ use ::tokio_tungstenite::tungstenite::{
 use ::types::GenericResult;
 
 use super::client::PubClient;
-use super::constants::REST_ENDPOINT;
 use super::constants::{
-  USER_STREAM_LISTEN_KEY_SUB_NAME, USER_STREAM_REAUTH_SUB_NAME, WS_ENDPOINT,
+  REST_ENDPOINT, USER_STREAM_LISTEN_KEY_SUB_NAME,
+  USER_STREAM_NOTIFICATION_SUB_NAME, USER_STREAM_REAUTH_SUB_NAME, WS_ENDPOINT,
 };
-use super::entities::{ListenKey, ListenKeyPair, RawUserStreamEvents};
+use super::entities::{
+  CastedUserStreamEvents, ListenKey, ListenKeyPair, RawUserStreamEvents,
+};
 
 use crate::entities::APIKey;
 use crate::errors::{MaximumAttemptExceeded, WebsocketError};
@@ -62,10 +64,18 @@ impl UserStream {
     }
     return Ok(socket);
   }
-  async fn handle_UDS_event(
+  async fn handle_user_stream_event(
     &self,
-    uds: &RawUserStreamEvents,
+    uds: RawUserStreamEvents,
   ) -> GenericResult<()> {
+    self
+      .broker
+      .publish(USER_STREAM_NOTIFICATION_SUB_NAME, {
+        let casted: GenericResult<CastedUserStreamEvents> = uds.into();
+        let casted = casted?;
+        to_msgpack(&casted)?
+      })
+      .await?;
     return Ok(());
   }
   async fn handle_message(
@@ -109,11 +119,11 @@ impl UserStream {
         }
         Message::Binary(binary) => {
           let event: RawUserStreamEvents = from_json_bin(binary)?;
-          self.handle_UDS_event(&event).await?;
+          self.handle_user_stream_event(event).await?;
         }
         Message::Text(text) => {
           let event: RawUserStreamEvents = from_json_str(text.as_str())?;
-          self.handle_UDS_event(&event).await?;
+          self.handle_user_stream_event(event).await?;
         }
         _ => {}
       };
