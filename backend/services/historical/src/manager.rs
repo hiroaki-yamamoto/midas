@@ -9,7 +9,7 @@ use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::rpc::entities::Exchanges;
 use ::rpc::historical::HistChartProg;
 use ::slog::{error, o, Logger};
-use ::types::{ret_on_err, SendableErrorResult};
+use ::types::ThreadSafeResult;
 
 use crate::entities::KlineFetchStatus;
 
@@ -44,7 +44,7 @@ where
   pub async fn refresh_historical_klines(
     &self,
     symbols: Vec<String>,
-  ) -> SendableErrorResult<()> {
+  ) -> ThreadSafeResult<()> {
     let mut prog =
       Box::pin(
         self.history_fetcher.refresh(symbols).await?.filter_map(
@@ -83,16 +83,16 @@ where
     return Ok(());
   }
 
-  pub async fn subscribe(&self) -> SendableErrorResult<NatsSubsc> {
+  pub async fn subscribe(&self) -> ThreadSafeResult<NatsSubsc> {
     return match self.nats.subscribe("kline.progress").await {
       Err(err) => Err(Box::new(err)),
       Ok(v) => Ok(v),
     };
   }
 
-  pub async fn stop(&self) -> SendableErrorResult<()> {
+  pub async fn stop(&self) -> ThreadSafeResult<()> {
     let status = KlineFetchStatus::Stop;
-    let msg = ret_on_err!(to_msgpack(&status));
+    let msg = to_msgpack(&status)?;
     let stop_progress = self.nats.publish("kline.progress", &msg[..]);
     let stop_hist_fetch = self.history_fetcher.stop();
     let (stop_progress, stop_hist_fetch) =

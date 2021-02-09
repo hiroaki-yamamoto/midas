@@ -15,7 +15,7 @@ use ::tokio::sync::mpsc;
 use ::tokio::task::block_in_place;
 
 use ::rpc::historical::HistChartProg;
-use ::types::{ret_on_err, GenericResult, SendableErrorResult};
+use ::types::{GenericResult, ThreadSafeResult};
 
 use super::super::constants::{
   HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
@@ -86,33 +86,31 @@ impl HistoryRecorder {
   async fn get_latest_trade_time(
     &self,
     symbols: Vec<String>,
-  ) -> SendableErrorResult<HashMap<String, TradeTime<MongoDateTime>>> {
-    let mut cur = ret_on_err!(
-      self
-        .col
-        .aggregate(
-          vec![
-            doc! { "$match": doc! { "symbol": doc! { "$in": symbols } } },
-            doc! {
-              "$group": doc! {
-                "_id": "$symbol",
-                "open_time": doc! {
-                  "$max": "$open_time"
-                },
-                "close_time": doc! {
-                  "$max": "$close_time"
-                }
+  ) -> ThreadSafeResult<HashMap<String, TradeTime<MongoDateTime>>> {
+    let mut cur = self
+      .col
+      .aggregate(
+        vec![
+          doc! { "$match": doc! { "symbol": doc! { "$in": symbols } } },
+          doc! {
+            "$group": doc! {
+              "_id": "$symbol",
+              "open_time": doc! {
+                "$max": "$open_time"
+              },
+              "close_time": doc! {
+                "$max": "$close_time"
               }
             }
-          ],
-          None
-        )
-        .await
-    );
+          },
+        ],
+        None,
+      )
+      .await?;
     let mut ret = HashMap::new();
     while let Some(doc) = cur.next().await {
-      let doc = ret_on_err!(doc);
-      let latest: TradeTime<MongoDateTime> = ret_on_err!(from_document(doc));
+      let doc = doc?;
+      let latest: TradeTime<MongoDateTime> = from_document(doc)?;
       ret.insert(latest.symbol.clone(), latest);
     }
     return Ok(ret);

@@ -7,18 +7,8 @@ use ::url::{ParseError, Url};
 
 pub type ParseURLResult = StdResult<Url, ParseError>;
 pub type GenericResult<T> = StdResult<T, Box<dyn Error>>;
-pub type SendableErrorResult<T> = StdResult<T, Box<dyn Error + Send>>;
+pub type ThreadSafeResult<T> = StdResult<T, Box<dyn Error + Send + Sync>>;
 pub type DateTime = ChronoDateTime<Utc>;
-
-#[macro_export]
-macro_rules! ret_on_err {
-  ($result: expr) => {
-    match $result {
-      Err(err) => return Err(Box::new(err)),
-      Ok(v) => v,
-    }
-  };
-}
 
 #[macro_export]
 macro_rules! reply_on_err {
