@@ -4,14 +4,14 @@
 pub struct HistChartProg {
     #[prost(string, tag="1")]
     pub symbol: ::prost::alloc::string::String,
-    #[prost(int64, tag="2")]
-    pub num_symbols: i64,
-    #[prost(int64, tag="3")]
-    pub cur_symbol_num: i64,
-    #[prost(int64, tag="4")]
-    pub num_objects: i64,
-    #[prost(int64, tag="5")]
-    pub cur_object_num: i64,
+    #[prost(uint64, tag="2")]
+    pub num_symbols: u64,
+    #[prost(uint64, tag="3")]
+    pub cur_symbol_num: u64,
+    #[prost(uint64, tag="4")]
+    pub num_objects: u64,
+    #[prost(uint64, tag="5")]
+    pub cur_object_num: u64,
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
