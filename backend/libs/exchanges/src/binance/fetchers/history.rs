@@ -426,7 +426,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
     return Ok(());
   }
 
-  async fn stop(&self) -> GenericResult<()> {
+  async fn stop(&self) -> ThreadSafeResult<()> {
     let msg = to_msgpack(&KlineCtrl::Stop)?;
     self.broker.publish("binance.kline.ctrl", &msg[..]).await?;
     return Ok(());

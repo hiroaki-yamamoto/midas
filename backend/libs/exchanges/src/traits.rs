@@ -67,7 +67,7 @@ pub trait HistoryFetcher {
     &self,
     symbols: Vec<String>,
   ) -> ThreadSafeResult<Subscription>;
-  async fn stop(&self) -> GenericResult<()>;
+  async fn stop(&self) -> ThreadSafeResult<()>;
   async fn spawn(&self) -> ThreadSafeResult<()>;
 }
 
