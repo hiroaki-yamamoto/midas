@@ -1,4 +1,5 @@
 use ::async_trait::async_trait;
+use ::futures::future::join;
 use ::futures::stream::StreamExt;
 use ::mongodb::bson::{doc, Document};
 use ::mongodb::Database;
@@ -6,7 +7,7 @@ use ::nats::asynk::Connection as Broker;
 use ::slog::Logger;
 
 use ::rpc::entities::SymbolInfo;
-use ::types::GenericResult;
+use ::types::{GenericResult, ThreadSafeResult};
 
 use super::super::constants::REST_ENDPOINT;
 use super::super::entities::{ExchangeInfo, Symbol};
@@ -39,7 +40,7 @@ impl SymbolFetcher {
   pub async fn get(
     &self,
     filter: impl Into<Option<Document>> + Send,
-  ) -> GenericResult<Vec<SymbolInfo>> {
+  ) -> ThreadSafeResult<Vec<SymbolInfo>> {
     let docs = self.recorder.list(filter).await?;
     let docs: Vec<SymbolInfo> = docs.map(|doc| doc.into()).collect().await;
     return Ok(docs);
@@ -48,7 +49,7 @@ impl SymbolFetcher {
 
 #[async_trait]
 impl SymbolFetcherTrait for SymbolFetcher {
-  async fn refresh(&self) -> GenericResult<()> {
+  async fn refresh(&self) -> ThreadSafeResult<()> {
     let mut url: url::Url = REST_ENDPOINT.parse()?;
     url = url.join("/api/v3/exchangeInfo")?;
     let resp = reqwest::get(url.clone()).await?;
@@ -64,8 +65,12 @@ impl SymbolFetcherTrait for SymbolFetcher {
         new_symbols.clone(),
         old_symbols,
       );
-      let update = self.recorder.update_symbols(new_symbols).await?;
-      let update_event = update_event_manager.publish_changes().await;
+      let (update, _) = join(
+        self.recorder.update_symbols(new_symbols),
+        update_event_manager.publish_changes(),
+      )
+      .await;
+      update?;
       return Ok(());
     } else {
       return Err(Box::new(StatusFailure {

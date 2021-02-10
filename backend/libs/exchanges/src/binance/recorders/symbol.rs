@@ -5,7 +5,7 @@ use ::mongodb::results::InsertManyResult;
 use ::mongodb::{Collection, Database};
 use ::serde::Serialize;
 
-use ::types::GenericResult;
+use ::types::ThreadSafeResult;
 
 use super::super::entities::{ListSymbolStream, Symbol};
 use crate::traits::{
@@ -44,7 +44,7 @@ impl SymbolRecorderTrait for SymbolRecorder {
   async fn list(
     &self,
     query: impl Into<Option<bson::Document>> + Send + 'async_trait,
-  ) -> GenericResult<Self::ListStream> {
+  ) -> ThreadSafeResult<Self::ListStream> {
     let cur = self.col.find(query, None).await?;
     let cur = cur
       .filter_map(|doc| async { doc.ok() })
@@ -56,7 +56,7 @@ impl SymbolRecorderTrait for SymbolRecorder {
   async fn update_symbols<T>(
     &self,
     value: Vec<T>,
-  ) -> GenericResult<InsertManyResult>
+  ) -> ThreadSafeResult<InsertManyResult>
   where
     T: Serialize + Send,
   {

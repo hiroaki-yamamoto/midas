@@ -6,6 +6,7 @@ use ::futures::{Stream, StreamExt};
 use ::mongodb::bson::{
   doc, from_document, to_bson, DateTime as MongoDateTime, Document,
 };
+use ::mongodb::error::Result as MongoResult;
 use ::mongodb::{Collection, Database};
 use ::nats::asynk::Connection as NatsConnection;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
@@ -86,7 +87,7 @@ impl HistoryRecorder {
   async fn get_latest_trade_time(
     &self,
     symbols: Vec<String>,
-  ) -> ThreadSafeResult<HashMap<String, TradeTime<MongoDateTime>>> {
+  ) -> MongoResult<HashMap<String, TradeTime<MongoDateTime>>> {
     let mut cur = self
       .col
       .aggregate(
@@ -229,7 +230,7 @@ impl HistoryRecorder {
   pub(crate) async fn list(
     &self,
     query: impl Into<Option<Document>>,
-  ) -> GenericResult<impl Stream<Item = Kline>> {
+  ) -> MongoResult<impl Stream<Item = Kline>> {
     return Ok(
       self
         .col

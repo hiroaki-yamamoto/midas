@@ -1,4 +1,5 @@
 use ::std::collections::HashMap;
+use std::thread::Thread;
 
 use ::async_trait::async_trait;
 use ::bytes::Bytes;
@@ -12,6 +13,7 @@ use ::ring::hmac;
 use ::serde::Serialize;
 
 use ::types::GenericResult;
+use types::ThreadSafeResult;
 
 use crate::APIKey;
 
@@ -61,14 +63,17 @@ pub trait Recorder {
 
 #[async_trait]
 pub trait HistoryFetcher {
-  async fn refresh(&self, symbols: Vec<String>) -> GenericResult<Subscription>;
+  async fn refresh(
+    &self,
+    symbols: Vec<String>,
+  ) -> ThreadSafeResult<Subscription>;
   async fn stop(&self) -> GenericResult<()>;
-  async fn spawn(&self) -> GenericResult<()>;
+  async fn spawn(&self) -> ThreadSafeResult<()>;
 }
 
 #[async_trait]
 pub trait SymbolFetcher {
-  async fn refresh(&self) -> GenericResult<()>;
+  async fn refresh(&self) -> ThreadSafeResult<()>;
 }
 
 #[async_trait]
@@ -82,11 +87,11 @@ pub trait SymbolRecorder {
   async fn list(
     &self,
     query: impl Into<Option<Document>> + Send + 'async_trait,
-  ) -> GenericResult<Self::ListStream>;
+  ) -> ThreadSafeResult<Self::ListStream>;
   async fn update_symbols<T>(
     &self,
     value: Vec<T>,
-  ) -> GenericResult<InsertManyResult>
+  ) -> ThreadSafeResult<InsertManyResult>
   where
     T: Serialize + Send;
 }

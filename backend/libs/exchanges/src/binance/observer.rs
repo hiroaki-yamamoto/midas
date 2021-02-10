@@ -17,7 +17,7 @@ use ::tokio::time::{interval, sleep};
 use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
 use ::config::DEFAULT_RECONNECT_INTERVAL;
-use ::types::ThreadSafeResult;
+use ::types::{GenericResult, ThreadSafeResult};
 
 use super::constants::{
   SYMBOL_ADD_EVENT, SYMBOL_REMOVE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
@@ -109,7 +109,7 @@ impl TradeObserver {
     return Ok(websocket);
   }
 
-  async fn connect(&mut self) -> ThreadSafeResult<TLSWebSocket> {
+  async fn connect(&mut self) -> GenericResult<TLSWebSocket> {
     let mut interval =
       interval(Duration::from_secs(DEFAULT_RECONNECT_INTERVAL as u64));
     for _ in 0..20 {
@@ -414,7 +414,7 @@ impl TradeObserver {
 
 #[async_trait]
 impl TradeObserverTrait for TradeObserver {
-  async fn start(&self) -> ThreadSafeResult<()> {
+  async fn start(&self) -> GenericResult<()> {
     let mut me = self.clone();
     let mut socket = me.connect().await?;
     if let Err(e) = me.handle_event(&mut socket).await {

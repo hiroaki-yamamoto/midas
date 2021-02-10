@@ -6,6 +6,7 @@ use ::std::time::Duration as StdDur;
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::futures::future::{join_all, FutureExt};
+use ::futures::StreamExt;
 use ::mongodb::bson::DateTime as MongoDateTime;
 use ::nats::asynk::{Connection, Subscription};
 use ::rand::random;
@@ -14,7 +15,6 @@ use ::serde_qs::to_string;
 use ::tokio::select;
 use ::tokio::sync::broadcast;
 use ::tokio::time::sleep;
-use ::tokio_stream::StreamExt as TokioStreamExt;
 use ::url::Url;
 
 use ::config::{
@@ -71,7 +71,7 @@ impl HistoryFetcher {
     pair: String,
     start_at: DateTime<Utc>,
     end_at: Option<DateTime<Utc>>,
-  ) -> GenericResult<Klines> {
+  ) -> ThreadSafeResult<Klines> {
     let limit = match end_at {
       Some(end_at) => Some((end_at - start_at).num_minutes()),
       None => None,
@@ -319,7 +319,10 @@ impl HistoryFetcher {
 
 #[async_trait]
 impl HistoryFetcherTrait for HistoryFetcher {
-  async fn refresh(&self, symbol: Vec<String>) -> GenericResult<Subscription> {
+  async fn refresh(
+    &self,
+    symbol: Vec<String>,
+  ) -> ThreadSafeResult<Subscription> {
     if symbol.len() < 1 {
       return Err(Box::new(EmptyError {
         field: String::from("symbol"),
@@ -334,7 +337,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
       query = Some(doc! { "symbol": doc! { "$in": symbol } });
     }
     let symbols = self.symbol_fetcher.get(query).await?;
-    self.push_fetch_request(&symbols).await;
+    let _ = self.push_fetch_request(&symbols).await;
     return Ok(prog_sub);
   }
 
@@ -344,7 +347,8 @@ impl HistoryFetcherTrait for HistoryFetcher {
       .broker
       .queue_subscribe(HIST_FETCHER_PARAM_SUB_NAME, "fetch.thread")
       .await?
-      .map(|item| (from_msgpack::<HistFetcherParam>(item.data.as_ref()), item));
+      .map(|item| (from_msgpack::<HistFetcherParam>(item.data.as_ref()), item))
+      .boxed();
     let logger = self.logger.clone();
     loop {
       select! {
@@ -422,7 +426,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
     return Ok(());
   }
 
-  async fn stop(&self) -> ThreadSafeResult<()> {
+  async fn stop(&self) -> GenericResult<()> {
     let msg = to_msgpack(&KlineCtrl::Stop)?;
     self.broker.publish("binance.kline.ctrl", &msg[..]).await?;
     return Ok(());
