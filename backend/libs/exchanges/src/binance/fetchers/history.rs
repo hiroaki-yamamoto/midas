@@ -177,10 +177,8 @@ impl HistoryFetcher {
       .filter(move |symbol| !latest_kline_clone.contains_key(symbol));
     let logger = self.logger.clone();
     let mut resp_vec = vec![];
-    let (prog_send, mut prog_recv) = broadcast::channel(CHAN_BUF_SIZE);
     for symbol in to_fetch_binance {
       let broker = &self.broker;
-      let prog_send = prog_send.clone();
       let param = HistFetcherParam {
         symbol: symbol.clone(),
         num_symbols: 1,
@@ -199,58 +197,55 @@ impl HistoryFetcher {
           HIST_FETCHER_PARAM_SUB_NAME,
           req_payload.as_slice().to_owned(),
         )
-        .then(|item| async move {
-          match item {
-            Err(e) => {
-              warn!(logger, "Failed to publish the messgae: {}", e);
-              return None;
-            }
-            Ok(item) => {
-              let item: Kline =
-                match from_msgpack::<KlinesWithInfo>(&item.data[..]) {
-                  Err(e) => {
-                    warn!(logger, "Failed to decode the response: {}", e);
-                    return None;
-                  }
-                  Ok(mut v) => match v.klines.pop() {
-                    None => {
-                      warn!(logger, "No value in the response.");
+        .then({
+          let broker = broker.clone();
+          |item| async move {
+            match item {
+              Err(e) => {
+                warn!(logger, "Failed to publish the messgae: {}", e);
+                return None;
+              }
+              Ok(item) => {
+                let item: Kline =
+                  match from_msgpack::<KlinesWithInfo>(&item.data[..]) {
+                    Err(e) => {
+                      warn!(logger, "Failed to decode the response: {}", e);
                       return None;
                     }
-                    Some(kline) => kline,
-                  },
+                    Ok(mut v) => match v.klines.pop() {
+                      None => {
+                        warn!(logger, "No value in the response.");
+                        return None;
+                      }
+                      Some(kline) => kline,
+                    },
+                  };
+                let prog = HistChartProg {
+                  symbol: String::from("Currency Trade Date Fetch"),
+                  num_symbols: symbols_len,
+                  cur_symbol_num: 0,
+                  num_objects: symbols_len,
+                  cur_object_num: 1,
                 };
-              let prog = HistChartProg {
-                symbol: String::from("Currency Trade Date Fetch"),
-                num_symbols: symbols_len,
-                cur_symbol_num: 0,
-                num_objects: symbols_len,
-                cur_object_num: 1,
-              };
-              match to_msgpack(&prog) {
-                Err(e) => {
-                  error!(logger, "Failed to encode the progress: {}", e);
-                  return None;
-                }
-                Ok(msg) => {
-                  let _ = prog_send.send(msg);
-                }
-              };
-              return Some(item);
+                match to_msgpack(&prog) {
+                  Err(e) => {
+                    error!(logger, "Failed to encode the progress: {}", e);
+                    return None;
+                  }
+                  Ok(msg) => {
+                    let _ = broker
+                      .publish(HIST_FETCHER_FETCH_PROG_SUB_NAME, &msg[..])
+                      .await;
+                  }
+                };
+                return Some(item);
+              }
             }
           }
         })
         .boxed();
       resp_vec.push(resp);
     }
-    let broker = self.broker.clone();
-    ::tokio::spawn(async move {
-      while let Ok(msg) = prog_recv.recv().await {
-        let _ = broker
-          .publish(HIST_FETCHER_FETCH_PROG_SUB_NAME, &msg[..])
-          .await;
-      }
-    });
     let results = join_all(resp_vec).await;
     let results = results.into_iter().filter_map(|item| item);
     for result in results {
