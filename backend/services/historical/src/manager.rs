@@ -1,6 +1,7 @@
 use ::std::collections::HashMap;
 
-use ::futures::{join, StreamExt};
+use ::futures::future::join;
+use ::futures::StreamExt;
 
 use ::nats::asynk::{Connection as NatsConnection, Subscription as NatsSubsc};
 
@@ -64,7 +65,7 @@ where
         let result = match hist_fetch_prog.get_mut(&prog.symbol) {
           None => {
             let mut prog_clone = prog.clone();
-            prog_clone.cur_symbol_num = (hist_fetch_prog.len() + 1) as i64;
+            prog_clone.cur_symbol_num = (hist_fetch_prog.len() as u64) + 1;
             hist_fetch_prog.insert(prog.symbol.clone(), prog_clone);
             &prog
           }
@@ -96,7 +97,7 @@ where
     let stop_progress = self.nats.publish("kline.progress", &msg[..]);
     let stop_hist_fetch = self.history_fetcher.stop();
     let (stop_progress, stop_hist_fetch) =
-      join!(stop_progress, stop_hist_fetch);
+      join(stop_progress, stop_hist_fetch).await;
     let _ = stop_progress.or(stop_hist_fetch)?;
     return Ok(());
   }

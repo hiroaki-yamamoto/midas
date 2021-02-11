@@ -31,9 +31,9 @@ use crate::errors::{EmptyError, MaximumAttemptExceeded, ObjectNotFound};
 use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 
 use super::super::constants::{
-  HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
-  HIST_FETCHER_PARAM_SUB_NAME, HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
-  REST_ENDPOINT,
+  HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_REQ_SUB_NAME,
+  HIST_FETCHER_FETCH_RESP_SUB_NAME, HIST_FETCHER_PARAM_SUB_NAME,
+  HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME, REST_ENDPOINT,
 };
 use super::super::entities::{
   BinancePayload, HistFetcherParam, HistQuery, Kline, Klines, KlinesWithInfo,
@@ -307,39 +307,82 @@ impl HistoryFetcherTrait for HistoryFetcher {
         field: String::from("symbol"),
       }));
     }
-
-    let prog_sub = self
-      .broker
-      .subscribe(HIST_FETCHER_FETCH_PROG_SUB_NAME)
-      .await?;
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
       query = Some(doc! { "symbol": doc! { "$in": symbol } });
     }
     let symbols = self.symbol_fetcher.get(query).await?;
-    let _ = self.push_fetch_request(&symbols).await;
-    return Ok(prog_sub);
+    let symbols_len = symbols.len();
+    let symbols = symbols
+      .into_iter()
+      .map(move |symbol| (symbol, symbols_len.clone()))
+      .map(|symbol_tup| to_msgpack(&symbol_tup))
+      .filter_map(|res| res.ok());
+    let me = self.clone();
+    ::tokio::spawn(async move {
+      let mut fetch_req = vec![];
+      for symbol in symbols {
+        fetch_req
+          .push(me.broker.publish(HIST_FETCHER_FETCH_REQ_SUB_NAME, symbol));
+      }
+      join_all(fetch_req).await;
+    });
+    return Ok(
+      self
+        .broker
+        .subscribe(HIST_FETCHER_FETCH_PROG_SUB_NAME)
+        .await?,
+    );
   }
 
   async fn spawn(&self) -> ThreadSafeResult<()> {
     let me = self.clone();
-    let mut param_sub = me
-      .broker
-      .queue_subscribe(HIST_FETCHER_PARAM_SUB_NAME, "fetch.thread")
+    let (param_sub, req_sub, ctrl_sub) = (
+      self
+        .broker
+        .queue_subscribe(HIST_FETCHER_PARAM_SUB_NAME, "fetch.thread"),
+      self
+        .broker
+        .queue_subscribe(HIST_FETCHER_FETCH_REQ_SUB_NAME, "fetch.thread"),
+      self.broker.subscribe("binance.kline.ctrl"),
+    );
+    let mut param_sub = param_sub
       .await?
-      .map(|item| (from_msgpack::<HistFetcherParam>(item.data.as_ref()), item))
+      .map(|item| {
+        (from_msgpack::<HistFetcherParam>(item.data.as_ref())
+          .ok()
+          .zip(Some(item)))
+      })
+      .filter_map(|msg| async { msg })
+      .boxed();
+    let mut req_sub = req_sub
+      .await?
+      .map(|msg| from_msgpack::<(SymbolInfo, usize)>(msg.data.as_ref()))
+      .filter_map(|msg| async { msg.ok() })
+      .boxed();
+    let mut ctrl_sub = ctrl_sub
+      .await?
+      .map(|msg| from_msgpack::<KlineCtrl>(msg.data.as_ref()))
+      .filter_map(|msg| async { msg.ok() })
       .boxed();
     let logger = self.logger.clone();
     loop {
       select! {
+        Some(ctrl) = ctrl_sub.next() => {
+          match ctrl {
+            KlineCtrl::Stop => {
+              warn!(
+                me.logger,
+                "Stop signal has been received. Stopping the worker..."
+              );
+            }
+            _ => {}
+          }
+        }
+        Some((symbol, symbols_len)) = req_sub.next() => {
+          let _ = me.push_fetch_request(&symbol, symbols_len).await;
+        },
         Some((param, msg)) = param_sub.next() => {
-          let param = match param {
-            Err(e) => {
-              warn!(me.logger, "Failed to parse the param msg: {}", e);
-              continue;
-            },
-            Ok(v) => v
-          };
           let num_obj = match param.end_time {
             None => 1,
             Some(end_time) => (*end_time - *param.start_time).num_minutes()
