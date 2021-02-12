@@ -27,7 +27,7 @@ use ::slog::{crit, error, warn, Logger};
 use ::types::{GenericResult, ThreadSafeResult};
 
 use crate::entities::KlineCtrl;
-use crate::errors::{EmptyError, MaximumAttemptExceeded, ObjectNotFound};
+use crate::errors::{EmptyError, MaximumAttemptExceeded};
 use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 
 use super::super::constants::{
@@ -147,149 +147,165 @@ impl HistoryFetcher {
 
   async fn get_first_trade_date(
     &self,
-    symbol: &String,
-    symbols_len: usize,
-  ) -> GenericResult<TradeTime<DateTime<Utc>>> {
-    let latest_klines = self
+    symbols: Vec<String>,
+  ) -> GenericResult<HashMap<String, TradeTime<DateTime<Utc>>>> {
+    let symbols_len = symbols.len() as i64;
+    let latest_kline = self
       .broker
       .request(
         HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
-        to_msgpack(&[symbol])?,
+        to_msgpack(&symbols)?,
       )
       .await?;
-    let latest_klines: HashMap<String, TradeTime<MongoDateTime>> =
-      from_msgpack(&latest_klines.data[..])?;
-    let latest_kline = latest_klines.get(symbol);
+    let mut latest_kline: HashMap<String, TradeTime<MongoDateTime>> =
+      from_msgpack(&latest_kline.data[..])?;
     let first_trade_date_prog = HistChartProg {
       symbol: String::from("Currency Trade Date Fetch"),
-      num_symbols: symbols_len as u64,
+      num_symbols: symbols_len,
       cur_symbol_num: 0,
-      num_objects: symbols_len as u64,
-      cur_object_num: latest_klines.len() as u64,
+      num_objects: symbols_len,
+      cur_object_num: latest_kline.len() as i64,
     };
     let msg = to_msgpack(&first_trade_date_prog)?;
     let _ = self
       .broker
       .publish(HIST_FETCHER_FETCH_PROG_SUB_NAME, msg.as_slice())
       .await;
+    let latest_kline_clone = latest_kline.clone();
+    let to_fetch_binance = symbols
+      .into_iter()
+      .filter(move |symbol| !latest_kline_clone.contains_key(symbol));
     let logger = self.logger.clone();
-    let param = HistFetcherParam {
-      symbol: symbol.clone(),
-      num_symbols: 1,
-      entire_data_len: 1,
-      start_time: DateTime::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc)
+    let mut resp_vec = vec![];
+    for symbol in to_fetch_binance {
+      let broker = &self.broker;
+      let param = HistFetcherParam {
+        symbol: symbol.clone(),
+        num_symbols: 1,
+        entire_data_len: 1,
+        start_time: DateTime::from_utc(
+          NaiveDateTime::from_timestamp(0, 0),
+          Utc,
+        )
         .into(),
-      end_time: None,
-    };
-    let req_payload = to_msgpack(&param)?;
-    let logger = logger.clone();
-    let resp = self
-      .broker
-      .request(
-        HIST_FETCHER_PARAM_SUB_NAME,
-        req_payload.as_slice().to_owned(),
-      )
-      .then({
-        let broker = self.broker.clone();
-        |item| async move {
-          let item = item
-            .map_err(|e| {
-              warn!(logger, "Failed to publish the messgae: {}", e);
-            })
-            .map(|item| {
-              from_msgpack::<KlinesWithInfo>(&item.data[..])
-                .map_err(|e| {
-                  warn!(logger, "Failed to decode the response: {}", e);
-                })
-                .ok()
-            })
-            .ok()
-            .flatten()
-            .map(|mut item| item.klines.pop())
-            .map(|item| {
-              return item.zip(Some(HistChartProg {
-                symbol: String::from("Currency Trade Date Fetch"),
-                num_symbols: symbols_len as u64,
-                cur_symbol_num: 0,
-                num_objects: symbols_len as u64,
-                cur_object_num: 1,
-              }));
-            })
-            .flatten()
-            .map(|(item, prog)| {
-              let msg = to_msgpack(&prog);
-              return Some((item, prog)).zip(msg.ok());
-            })
-            .flatten();
-          match item {
-            None => {
-              warn!(logger, "No value in the response.");
-              return None;
-            }
-            Some(((item, _), msg)) => {
-              let _ = broker
-                .publish(HIST_FETCHER_FETCH_PROG_SUB_NAME, &msg[..])
-                .await;
-              return Some(item);
+        end_time: None,
+      };
+      let req_payload = to_msgpack(&param)?;
+      let logger = logger.clone();
+      let resp = broker
+        .request(
+          HIST_FETCHER_PARAM_SUB_NAME,
+          req_payload.as_slice().to_owned(),
+        )
+        .then({
+          let broker = broker.clone();
+          |item| async move {
+            match item {
+              Err(e) => {
+                warn!(logger, "Failed to publish the messgae: {}", e);
+                return None;
+              }
+              Ok(item) => {
+                let item: Kline =
+                  match from_msgpack::<KlinesWithInfo>(&item.data[..]) {
+                    Err(e) => {
+                      warn!(logger, "Failed to decode the response: {}", e);
+                      return None;
+                    }
+                    Ok(mut v) => match v.klines.pop() {
+                      None => {
+                        warn!(logger, "No value in the response.");
+                        return None;
+                      }
+                      Some(kline) => kline,
+                    },
+                  };
+                let prog = HistChartProg {
+                  symbol: String::from("Currency Trade Date Fetch"),
+                  num_symbols: symbols_len,
+                  cur_symbol_num: 0,
+                  num_objects: symbols_len,
+                  cur_object_num: 1,
+                };
+                match to_msgpack(&prog) {
+                  Err(e) => {
+                    error!(logger, "Failed to encode the progress: {}", e);
+                    return None;
+                  }
+                  Ok(msg) => {
+                    let _ = broker
+                      .publish(HIST_FETCHER_FETCH_PROG_SUB_NAME, &msg[..])
+                      .await;
+                  }
+                };
+                return Some(item);
+              }
             }
           }
-        }
-      })
-      .boxed();
-    let result = resp.await;
-    let latest_kline = latest_kline.map(|kline| {
-      let kline: TradeTime<DateTime<Utc>> = kline.into();
-      return kline;
-    });
-    return match latest_kline {
-      None => Err(ObjectNotFound::new("LatestKline".to_string()).into()),
-      Some(v) => Ok(v),
-    };
+        })
+        .boxed();
+      resp_vec.push(resp);
+    }
+    let results = join_all(resp_vec).await;
+    let results = results.into_iter().filter_map(|item| item);
+    for result in results {
+      latest_kline.insert(result.symbol.clone(), result.into());
+    }
+    return Ok(HashMap::from_iter(latest_kline.iter().map(
+      move |(sym, trade_time)| {
+        let trade_time: TradeTime<DateTime<Utc>> = trade_time.into();
+        return (sym.clone(), trade_time);
+      },
+    )));
   }
 
   async fn push_fetch_request(
     &self,
-    symbol: &SymbolInfo,
-    symbols_len: usize,
+    symbols: &Vec<SymbolInfo>,
   ) -> GenericResult<()> {
     let end_at = Utc::now();
-    let trade_date = self
-      .get_first_trade_date(&symbol.symbol, symbols_len)
+    let trade_dates = self
+      .get_first_trade_date(
+        symbols.into_iter().map(|sym| sym.symbol.clone()).collect(),
+      )
       .await?;
+    let symbols_len = symbols.len();
     let mut publish_defers = vec![];
-    let start_at = trade_date.open_time;
-    let mut entire_data_len = (end_at - start_at).num_minutes();
-    let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
-    entire_data_len /= 1000;
-    if entire_data_len_rem > 0 {
-      entire_data_len += 1;
-    }
-    let mut sec_start_date = start_at;
-    while sec_start_date < end_at {
-      let mut sec_end_date =
-        sec_start_date + Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
-      if sec_end_date > end_at {
-        sec_end_date = end_at;
+    for (symbol, dates) in trade_dates.into_iter() {
+      let start_at = dates.open_time;
+      let mut entire_data_len = (end_at - start_at).num_minutes();
+      let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
+      entire_data_len /= 1000;
+      if entire_data_len_rem > 0 {
+        entire_data_len += 1;
       }
-      let msg = match to_msgpack(
-        HistFetcherParam {
-          symbol: symbol.symbol.clone(),
-          num_symbols: symbols_len as i64,
-          entire_data_len,
-          start_time: sec_start_date.clone().into(),
-          end_time: Some(sec_end_date.into()),
+      let mut sec_start_date = start_at;
+      while sec_start_date < end_at {
+        let mut sec_end_date =
+          sec_start_date + Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
+        if sec_end_date > end_at {
+          sec_end_date = end_at;
         }
-        .as_ref(),
-      ) {
-        Err(e) => {
-          warn!(self.logger, "Filed to encode HistFetcherParam: {}", e);
-          continue;
-        }
-        Ok(v) => v,
-      };
-      publish_defers
-        .push(self.broker.publish(HIST_FETCHER_PARAM_SUB_NAME, msg));
-      sec_start_date = sec_end_date.clone();
+        let msg = match to_msgpack(
+          HistFetcherParam {
+            symbol: symbol.clone(),
+            num_symbols: symbols_len as i64,
+            entire_data_len,
+            start_time: sec_start_date.clone().into(),
+            end_time: Some(sec_end_date.into()),
+          }
+          .as_ref(),
+        ) {
+          Err(e) => {
+            warn!(self.logger, "Filed to encode HistFetcherParam: {}", e);
+            continue;
+          }
+          Ok(v) => v,
+        };
+        publish_defers
+          .push(self.broker.publish(HIST_FETCHER_PARAM_SUB_NAME, msg));
+        sec_start_date = sec_end_date.clone();
+      }
     }
     join_all(publish_defers).await;
     return Ok(());
@@ -307,7 +323,6 @@ impl HistoryFetcherTrait for HistoryFetcher {
         field: String::from("symbol"),
       }));
     }
-
     let prog_sub = self
       .broker
       .subscribe(HIST_FETCHER_FETCH_PROG_SUB_NAME)
