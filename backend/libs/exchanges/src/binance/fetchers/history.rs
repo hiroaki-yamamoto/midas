@@ -1,5 +1,6 @@
 use ::std::collections::HashMap;
 use ::std::fmt::Debug;
+use ::std::iter::FromIterator;
 use ::std::time::Duration as StdDur;
 
 use ::async_trait::async_trait;
@@ -12,14 +13,17 @@ use ::rand::random;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
 use ::tokio::select;
+use ::tokio::sync::broadcast;
 use ::tokio::time::sleep;
 use ::url::Url;
 
-use ::config::{DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH};
+use ::config::{
+  CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH,
+};
 use ::mongodb::bson::{doc, Document};
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
-use ::slog::{warn, Logger};
+use ::slog::{crit, error, warn, Logger};
 use ::types::{GenericResult, ThreadSafeResult};
 
 use crate::entities::KlineCtrl;
@@ -232,7 +236,7 @@ impl HistoryFetcher {
         }
       })
       .boxed();
-    let _ = resp.await;
+    let result = resp.await;
     let latest_kline = latest_kline.map(|kline| {
       let kline: TradeTime<DateTime<Utc>> = kline.into();
       return kline;
@@ -372,6 +376,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
                 "Stop signal has been received. Stopping the worker..."
               );
             }
+            _ => {}
           }
         }
         Some((symbol, symbols_len)) = req_sub.next() => {
@@ -400,7 +405,8 @@ impl HistoryFetcherTrait for HistoryFetcher {
             param.symbol.clone(),
             start_time,
             param.end_time.map(|d| *d),
-          ).await;
+          );
+          let resp = resp.await;
           let resp = match resp {
             Err(e) => {
               warn!(me.logger, "Failed to fetch kline data: {}", e);
