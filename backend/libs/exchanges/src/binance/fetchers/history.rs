@@ -12,6 +12,7 @@ use ::rand::random;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
 use ::tokio::select;
+use ::tokio::sync::broadcast;
 use ::tokio::time::sleep;
 use ::url::Url;
 
@@ -361,6 +362,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
       .map(|msg| from_msgpack::<KlineCtrl>(msg.data.as_ref()))
       .filter_map(|msg| async { msg.ok() })
       .boxed();
+    let (stop_send, _) = broadcast::channel::<()>(1024);
     let logger = self.logger.clone();
     loop {
       select! {
