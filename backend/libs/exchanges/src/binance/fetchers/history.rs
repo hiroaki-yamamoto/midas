@@ -370,15 +370,17 @@ impl HistoryFetcherTrait for HistoryFetcher {
           match ctrl {
             KlineCtrl::Stop => {
               warn!(
-                me.logger,
+                logger,
                 "Stop signal has been received. Stopping the worker..."
               );
+              stop_send.send(());
+              break;
             }
           }
         }
         Some((symbol, symbols_len)) = req_sub.next() => {
           let _ = me.push_fetch_request(&symbol, symbols_len).await;
-        },
+        }
         Some((param, msg)) = param_sub.next() => {
           let num_obj = match param.end_time {
             None => 1,

@@ -9,8 +9,9 @@ edition = "2018"
 [dependencies]
 rpc = { path = "../rpc" }
 config = { path = "../config" }
-async-trait = "0.1.42"
 types = { path = "../types" }
+
+async-trait = "0.1.42"
 reqwest = {version = "0.11.0", features = ["rustls-tls-native-roots", "json", "gzip", "brotli"]}
 tokio = { version = "1.2", features = [
   "rt", "rt-multi-thread", "sync", "macros", "time", "net"
