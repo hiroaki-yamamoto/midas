@@ -314,12 +314,12 @@ impl HistoryFetcherTrait for HistoryFetcher {
       .filter_map(|res| res.ok());
     let me = self.clone();
     ::tokio::spawn(async move {
-      let mut fetch_req = vec![];
       for symbol in symbols {
-        fetch_req
-          .push(me.broker.publish(HIST_FETCHER_FETCH_REQ_SUB_NAME, symbol));
+        let _ = me
+          .broker
+          .publish(HIST_FETCHER_FETCH_REQ_SUB_NAME, symbol)
+          .await;
       }
-      join_all(fetch_req).await;
     });
     return Ok(
       self
