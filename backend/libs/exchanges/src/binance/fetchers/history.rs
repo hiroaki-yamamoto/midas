@@ -253,6 +253,7 @@ impl HistoryFetcher {
     let trade_date = self
       .get_first_trade_date(&symbol.symbol, symbols_len)
       .await?;
+    let mut publish_defers = vec![];
     let start_at = trade_date.open_time;
     let mut entire_data_len = (end_at - start_at).num_minutes();
     let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
@@ -283,9 +284,11 @@ impl HistoryFetcher {
         }
         Ok(v) => v,
       };
-      let _ = self.broker.publish(HIST_FETCHER_PARAM_SUB_NAME, msg).await;
+      publish_defers
+        .push(self.broker.publish(HIST_FETCHER_PARAM_SUB_NAME, msg));
       sec_start_date = sec_end_date.clone();
     }
+    join_all(publish_defers).await;
     return Ok(());
   }
 }
@@ -370,7 +373,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
                 logger,
                 "Stop signal has been received. Stopping the worker..."
               );
-              let _ = stop_send.send(());
+              stop_send.send(());
               break;
             }
           }
