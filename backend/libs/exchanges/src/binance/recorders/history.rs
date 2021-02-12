@@ -149,9 +149,9 @@ impl HistoryRecorder {
         Some(klines) = value_sub.next() => {
           let prog = HistChartProg {
               symbol: klines.symbol,
-              num_symbols: klines.num_symbols as u64,
+              num_symbols: klines.num_symbols,
               cur_symbol_num: 1,
-              num_objects: klines.entire_data_len as u64,
+              num_objects: klines.entire_data_len,
               cur_object_num: 1,
             };
           let prog_msg = match to_msgpack(&prog) {
