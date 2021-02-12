@@ -154,15 +154,14 @@ impl HistoryFetcher {
         to_msgpack(&[symbol])?,
       )
       .await?;
-    let latest_klines: HashMap<String, TradeTime<MongoDateTime>> =
+    let mut latest_kline: HashMap<String, TradeTime<MongoDateTime>> =
       from_msgpack(&latest_klines.data[..])?;
-    let latest_kline = latest_klines.get(symbol);
     let first_trade_date_prog = HistChartProg {
       symbol: String::from("Currency Trade Date Fetch"),
       num_symbols: symbols_len as u64,
       cur_symbol_num: 0,
       num_objects: symbols_len as u64,
-      cur_object_num: latest_klines.len() as u64,
+      cur_object_num: latest_kline.len() as u64,
     };
     let msg = to_msgpack(&first_trade_date_prog)?;
     let _ = self
@@ -233,20 +232,20 @@ impl HistoryFetcher {
         }
       })
       .boxed();
-    let _ = resp.await;
-    let latest_kline = latest_kline.map(|kline| {
-      let kline: TradeTime<DateTime<Utc>> = kline.into();
-      return kline;
-    });
-    return match latest_kline {
-      None => Err(ObjectNotFound::new("LatestKline".to_string()).into()),
-      Some(v) => Ok(v),
-    };
+    let result = resp.await;
+    if let Some(result) = result {
+      latest_kline.insert(result.symbol.clone(), result.into());
+    }
+    if let Some(latest_kline) = latest_kline.get(symbol) {
+      let latest_kline: TradeTime<DateTime<Utc>> = latest_kline.into();
+      return Ok(latest_kline);
+    }
+    return Err(ObjectNotFound::new("LatestKline".to_string()).into());
   }
 
   async fn push_fetch_request(
     &self,
-    symbol: &SymbolInfo,
+    symbol: SymbolInfo,
     symbols_len: usize,
   ) -> GenericResult<()> {
     let end_at = Utc::now();
@@ -261,31 +260,35 @@ impl HistoryFetcher {
       entire_data_len += 1;
     }
     let mut sec_start_date = start_at;
-    while sec_start_date < end_at {
-      let mut sec_end_date =
-        sec_start_date + Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
-      if sec_end_date > end_at {
-        sec_end_date = end_at;
+    let broker = self.broker.clone();
+    let logger = self.logger.clone();
+    ::tokio::spawn(async move {
+      while sec_start_date < end_at {
+        let mut sec_end_date =
+          sec_start_date + Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
+        if sec_end_date > end_at {
+          sec_end_date = end_at;
+        }
+        let msg = match to_msgpack(
+          HistFetcherParam {
+            symbol: symbol.symbol.clone(),
+            num_symbols: symbols_len as i64,
+            entire_data_len,
+            start_time: sec_start_date.clone().into(),
+            end_time: Some(sec_end_date.into()),
+          }
+          .as_ref(),
+        ) {
+          Err(e) => {
+            warn!(logger, "Filed to encode HistFetcherParam: {}", e);
+            continue;
+          }
+          Ok(v) => v,
+        };
+        let _ = broker.publish(HIST_FETCHER_PARAM_SUB_NAME, msg).await;
+        sec_start_date = sec_end_date.clone();
       }
-      let msg = match to_msgpack(
-        HistFetcherParam {
-          symbol: symbol.symbol.clone(),
-          num_symbols: symbols_len as i64,
-          entire_data_len,
-          start_time: sec_start_date.clone().into(),
-          end_time: Some(sec_end_date.into()),
-        }
-        .as_ref(),
-      ) {
-        Err(e) => {
-          warn!(self.logger, "Filed to encode HistFetcherParam: {}", e);
-          continue;
-        }
-        Ok(v) => v,
-      };
-      let _ = self.broker.publish(HIST_FETCHER_PARAM_SUB_NAME, msg).await;
-      sec_start_date = sec_end_date.clone();
-    }
+    });
     return Ok(());
   }
 }
@@ -376,7 +379,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
           }
         }
         Some((symbol, symbols_len)) = req_sub.next() => {
-          let _ = me.push_fetch_request(&symbol, symbols_len).await;
+          let _ = me.push_fetch_request(symbol, symbols_len).await;
         }
         Some((param, msg)) = param_sub.next() => {
           let num_obj = match param.end_time {
