@@ -17,7 +17,7 @@ use ::tokio::time::{interval, sleep};
 use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
 use ::config::DEFAULT_RECONNECT_INTERVAL;
-use ::types::{ret_on_err, SendableErrorResult};
+use ::types::{GenericResult, ThreadSafeResult};
 
 use super::constants::{
   SYMBOL_ADD_EVENT, SYMBOL_REMOVE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
@@ -109,7 +109,7 @@ impl TradeObserver {
     return Ok(websocket);
   }
 
-  async fn connect(&mut self) -> SendableErrorResult<TLSWebSocket> {
+  async fn connect(&mut self) -> GenericResult<TLSWebSocket> {
     let mut interval =
       interval(Duration::from_secs(DEFAULT_RECONNECT_INTERVAL as u64));
     for _ in 0..20 {
@@ -133,7 +133,7 @@ impl TradeObserver {
     &mut self,
     socket: &mut TLSWebSocket,
     symbols: T,
-  ) -> SendableErrorResult<()>
+  ) -> ThreadSafeResult<()>
   where
     T: Iterator<Item = String>,
   {
@@ -160,8 +160,8 @@ impl TradeObserver {
       let req = SubscribeRequestInner { id, params };
       let req = SubscribeRequest::Subscribe(req);
       ::slog::debug!(self.logger, "Subscribe: {:?}", &req);
-      let req = ret_on_err!(to_json(&req));
-      let req = ret_on_err!(String::from_utf8(req));
+      let req = to_json(&req)?;
+      let req = String::from_utf8(req)?;
       let _ = socket.send(wsocket::Message::Text(req)).await;
       let _ = socket.flush().await;
       let _ = timer.tick().await;
@@ -173,7 +173,7 @@ impl TradeObserver {
     &mut self,
     socket: &mut TLSWebSocket,
     symbols: T,
-  ) -> SendableErrorResult<()>
+  ) -> ThreadSafeResult<()>
   where
     T: Iterator<Item = String>,
   {
@@ -211,8 +211,8 @@ impl TradeObserver {
       };
       let req = SubscribeRequest::Unsubscribe(req);
       ::slog::debug!(self.logger, "Unsubscribe: {:?}", &req);
-      let req = ret_on_err!(to_json(&req));
-      let req = ret_on_err!(String::from_utf8(req));
+      let req = to_json(&req)?;
+      let req = String::from_utf8(req)?;
       let _ = socket.send(wsocket::Message::Text(req)).await;
       let _ = socket.flush().await;
       let _ = timer.tick().await;
@@ -327,7 +327,7 @@ impl TradeObserver {
   async fn handle_event(
     &mut self,
     socket: &mut TLSWebSocket,
-  ) -> SendableErrorResult<()> {
+  ) -> ThreadSafeResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
     let (symbol_add_event, symbol_remove_evnet) = join(
       self
@@ -336,10 +336,8 @@ impl TradeObserver {
       self.broker.subscribe(SYMBOL_REMOVE_EVENT),
     )
     .await;
-    let (mut symbol_add_event, mut symbol_remove_evnet) = (
-      ret_on_err!(symbol_add_event),
-      ret_on_err!(symbol_remove_evnet),
-    );
+    let (mut symbol_add_event, mut symbol_remove_evnet) =
+      (symbol_add_event?, symbol_remove_evnet?);
     let mut clear_sym_map_flag = false;
     let mut initial_symbols_stream = self.init().await?;
     loop {
@@ -405,19 +403,18 @@ impl TradeObserver {
     return Ok(());
   }
 
-  async fn init(&self) -> SendableErrorResult<ListSymbolStream<'static>> {
+  async fn init(&self) -> ThreadSafeResult<ListSymbolStream<'static>> {
     let recorder = self
       .recorder
       .clone()
-      .ok_or(InitError::new(Some("binance.observer")));
-    let recorder = ret_on_err!(recorder);
+      .ok_or(InitError::new(Some("binance.observer")))?;
     return recorder.list(doc! {"status": "TRADING"}).await;
   }
 }
 
 #[async_trait]
 impl TradeObserverTrait for TradeObserver {
-  async fn start(&self) -> SendableErrorResult<()> {
+  async fn start(&self) -> GenericResult<()> {
     let mut me = self.clone();
     let mut socket = me.connect().await?;
     if let Err(e) = me.handle_event(&mut socket).await {

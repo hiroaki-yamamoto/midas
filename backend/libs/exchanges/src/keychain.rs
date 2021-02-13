@@ -6,7 +6,7 @@ use ::mongodb::options::UpdateModifications;
 use ::mongodb::{Collection, Database};
 
 use ::rpc::entities::Exchanges;
-use ::types::{ret_on_err, GenericResult, SendableErrorResult};
+use ::types::{GenericResult, ThreadSafeResult};
 
 use crate::entities::APIKey;
 use crate::traits::Recorder;
@@ -53,8 +53,11 @@ impl KeyChain {
   pub async fn list(
     &self,
     filter: Document,
-  ) -> SendableErrorResult<BoxStream<'_, APIKey>> {
-    let stream = ret_on_err!(self.col.find(filter, None).await)
+  ) -> ThreadSafeResult<BoxStream<'_, APIKey>> {
+    let stream = self
+      .col
+      .find(filter, None)
+      .await?
       .filter_map(|res| async { res.ok() })
       .map(|doc| from_document::<APIKey>(doc))
       .filter_map(|ent| async { ent.ok() })

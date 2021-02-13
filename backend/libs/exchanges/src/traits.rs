@@ -11,7 +11,8 @@ use ::nats::asynk::Subscription;
 use ::ring::hmac;
 use ::serde::Serialize;
 
-use ::types::{GenericResult, SendableErrorResult};
+use ::types::GenericResult;
+use types::ThreadSafeResult;
 
 use crate::APIKey;
 
@@ -64,14 +65,14 @@ pub trait HistoryFetcher {
   async fn refresh(
     &self,
     symbols: Vec<String>,
-  ) -> SendableErrorResult<Subscription>;
-  async fn stop(&self) -> SendableErrorResult<()>;
-  async fn spawn(&self) -> SendableErrorResult<()>;
+  ) -> ThreadSafeResult<Subscription>;
+  async fn stop(&self) -> ThreadSafeResult<()>;
+  async fn spawn(&self) -> ThreadSafeResult<()>;
 }
 
 #[async_trait]
 pub trait SymbolFetcher {
-  async fn refresh(&self) -> SendableErrorResult<()>;
+  async fn refresh(&self) -> ThreadSafeResult<()>;
 }
 
 #[async_trait]
@@ -85,18 +86,18 @@ pub trait SymbolRecorder {
   async fn list(
     &self,
     query: impl Into<Option<Document>> + Send + 'async_trait,
-  ) -> SendableErrorResult<Self::ListStream>;
+  ) -> ThreadSafeResult<Self::ListStream>;
   async fn update_symbols<T>(
     &self,
     value: Vec<T>,
-  ) -> SendableErrorResult<InsertManyResult>
+  ) -> ThreadSafeResult<InsertManyResult>
   where
     T: Serialize + Send;
 }
 
 #[async_trait]
 pub trait TradeObserver {
-  async fn start(&self) -> SendableErrorResult<()>;
+  async fn start(&self) -> GenericResult<()>;
   async fn subscribe(&self) -> ::std::io::Result<BoxStream<'_, BookTicker>>;
 }
 

@@ -18,7 +18,7 @@ use ::warp::{Filter, Reply};
 use ::exchanges::binance;
 use ::rpc::entities::{Exchanges, Status};
 use ::rpc::historical::{HistChartFetchReq, HistChartProg, StopRequest};
-use ::types::{GenericResult, SendableErrorResult};
+use ::types::{GenericResult, ThreadSafeResult};
 
 use super::manager::ExchangeManager;
 
@@ -120,7 +120,7 @@ impl Service {
       .boxed();
   }
 
-  async fn subscribe(&self) -> SendableErrorResult<SubscribeStream> {
+  async fn subscribe(&self) -> ThreadSafeResult<SubscribeStream> {
     let stream_logger = self.logger.new(o!("scope" => "Stream Logger"));
     let mut subscriber = self.binance.subscribe().await?;
     let out = ::async_stream::stream! {
@@ -148,7 +148,7 @@ impl Service {
     return Ok(Box::pin(out) as SubscribeStream);
   }
 
-  fn empty_or_err(&self, res: SendableErrorResult<()>) -> impl Reply {
+  fn empty_or_err(&self, res: ThreadSafeResult<()>) -> impl Reply {
     return res.map_or_else(
       |e| -> Box<dyn Reply> {
         let code = ::http::StatusCode::INTERNAL_SERVER_ERROR;
@@ -199,7 +199,7 @@ impl Service {
       .boxed();
   }
 
-  async fn stop_exchanges(&self, req: StopRequest) -> SendableErrorResult<()> {
+  async fn stop_exchanges(&self, req: StopRequest) -> ThreadSafeResult<()> {
     let mut stop_vec = vec![];
     for exc in req.exchanges {
       match FromPrimitive::from_i32(exc) {
@@ -222,7 +222,7 @@ impl Service {
     };
   }
 
-  pub async fn graceful_shutdown(&self) -> SendableErrorResult<()> {
+  pub async fn graceful_shutdown(&self) -> ThreadSafeResult<()> {
     let _ = self
       .stop_exchanges(StopRequest {
         exchanges: vec![Exchanges::Binance as i32],

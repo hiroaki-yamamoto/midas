@@ -6,6 +6,7 @@ use ::futures::{Stream, StreamExt};
 use ::mongodb::bson::{
   doc, from_document, to_bson, DateTime as MongoDateTime, Document,
 };
+use ::mongodb::error::Result as MongoResult;
 use ::mongodb::{Collection, Database};
 use ::nats::asynk::Connection as NatsConnection;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
@@ -15,7 +16,6 @@ use ::tokio::sync::mpsc;
 use ::tokio::task::block_in_place;
 
 use ::rpc::historical::HistChartProg;
-use ::types::{ret_on_err, GenericResult, SendableErrorResult};
 
 use super::super::constants::{
   HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
@@ -61,10 +61,7 @@ impl HistoryRecorder {
     return ret;
   }
 
-  async fn spawn_record(
-    &self,
-    mut kline_recv: mpsc::UnboundedReceiver<Klines>,
-  ) {
+  async fn spawn_record(self, mut kline_recv: mpsc::UnboundedReceiver<Klines>) {
     let col = self.col.clone();
     loop {
       select! {
@@ -86,33 +83,31 @@ impl HistoryRecorder {
   async fn get_latest_trade_time(
     &self,
     symbols: Vec<String>,
-  ) -> SendableErrorResult<HashMap<String, TradeTime<MongoDateTime>>> {
-    let mut cur = ret_on_err!(
-      self
-        .col
-        .aggregate(
-          vec![
-            doc! { "$match": doc! { "symbol": doc! { "$in": symbols } } },
-            doc! {
-              "$group": doc! {
-                "_id": "$symbol",
-                "open_time": doc! {
-                  "$max": "$open_time"
-                },
-                "close_time": doc! {
-                  "$max": "$close_time"
-                }
+  ) -> MongoResult<HashMap<String, TradeTime<MongoDateTime>>> {
+    let mut cur = self
+      .col
+      .aggregate(
+        vec![
+          doc! { "$match": doc! { "symbol": doc! { "$in": symbols } } },
+          doc! {
+            "$group": doc! {
+              "_id": "$symbol",
+              "open_time": doc! {
+                "$max": "$open_time"
+              },
+              "close_time": doc! {
+                "$max": "$close_time"
               }
             }
-          ],
-          None
-        )
-        .await
-    );
+          },
+        ],
+        None,
+      )
+      .await?;
     let mut ret = HashMap::new();
     while let Some(doc) = cur.next().await {
-      let doc = ret_on_err!(doc);
-      let latest: TradeTime<MongoDateTime> = ret_on_err!(from_document(doc));
+      let doc = doc?;
+      let latest: TradeTime<MongoDateTime> = from_document(doc)?;
       ret.insert(latest.symbol.clone(), latest);
     }
     return Ok(ret);
@@ -175,33 +170,34 @@ impl HistoryRecorder {
 
   async fn spawn_latest_trade_time_request(&self) {
     let me = self.clone();
-    let mut sub = Box::pin(
-      match me
-        .broker
-        .queue_subscribe(HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME, "recorder")
-        .await
-      {
-        Err(e) => {
-          error!(
-            me.logger,
-            "Failed to subscribe latest trade time channel: {}", e;
-            "fn" => "spawn_latest_trade_time_request"
-          );
-          return;
-        }
-        Ok(v) => v,
+    let mut sub = match me
+      .broker
+      .queue_subscribe(HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME, "recorder")
+      .await
+    {
+      Err(e) => {
+        error!(
+          me.logger,
+          "Failed to subscribe latest trade time channel: {}", e;
+          "fn" => "spawn_latest_trade_time_request"
+        );
+        return;
       }
-      .map(|msg| {
-        return (from_msgpack::<Vec<String>>(&msg.data[..]), msg);
-      })
-      .filter_map(|(item, msg)| async move { Some((item.ok()?, msg)) }),
-    );
+      Ok(v) => v,
+    }
+    .map(|msg| {
+      return (from_msgpack::<Vec<String>>(&msg.data[..]), msg);
+    })
+    .filter_map(|(item, msg)| async move { Some((item.ok()?, msg)) })
+    .boxed();
     loop {
+      let logger = self.logger.clone();
+      let me = self.clone();
       select! {
         Some((symbols, msg)) = sub.next() => {
           let trade_dates = match me.get_latest_trade_time(symbols).await {
             Err(e) => {
-              error!(me.logger, "Failed to get the latest trade time: {}", e);
+              error!(logger, "Failed to get the latest trade time: {}", e);
               continue;
             },
             Ok(v) => v
@@ -210,7 +206,7 @@ impl HistoryRecorder {
             Some(_) => {
               let resp = match to_msgpack(&trade_dates) {
                 Err(e) => {
-                  error!(me.logger, "Failed to encode the response message: {}", e);
+                  error!(logger, "Failed to encode the response message: {}", e);
                   continue;
                 },
                 Ok(v) => v
@@ -218,7 +214,7 @@ impl HistoryRecorder {
               let _ = msg.respond(resp).await;
             },
             None => {
-              warn!(me.logger, "The request doesn't have reply subject.");
+              warn!(logger, "The request doesn't have reply subject.");
               continue;
             }
           }
@@ -231,7 +227,7 @@ impl HistoryRecorder {
   pub(crate) async fn list(
     &self,
     query: impl Into<Option<Document>>,
-  ) -> GenericResult<impl Stream<Item = Kline>> {
+  ) -> MongoResult<impl Stream<Item = Kline>> {
     return Ok(
       self
         .col
@@ -250,16 +246,20 @@ impl HistRecTrait for HistoryRecorder {
     let mut record_workers = vec![];
     let mut senders = vec![];
     for _ in 0..num_cpus::get() {
+      let me = self.clone();
       let (kline_sender, kline_recvr) = mpsc::unbounded_channel();
       senders.push(kline_sender);
-      let worker = self.spawn_record(kline_recvr);
+      let worker = me.spawn_record(kline_recvr);
       record_workers.push(worker);
     }
-    join3(
-      self.spawn_fetch_response(senders),
-      self.spawn_latest_trade_time_request(),
-      join_all(record_workers),
-    )
-    .await;
+    let me = self.clone();
+    let resp_thread =
+      ::tokio::spawn(async move { me.spawn_fetch_response(senders).await });
+    let me = self.clone();
+    let latest_trade_time_thread =
+      ::tokio::spawn(async move { me.spawn_latest_trade_time_request().await });
+    let record_worker_thread = ::tokio::spawn(join_all(record_workers));
+    let _ =
+      join3(resp_thread, latest_trade_time_thread, record_worker_thread).await;
   }
 }

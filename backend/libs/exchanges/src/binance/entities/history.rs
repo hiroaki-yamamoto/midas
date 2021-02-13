@@ -4,7 +4,7 @@ use ::mongodb::bson::DateTime as MongoDateTime;
 use ::serde::{Deserialize, Serialize};
 use ::serde_json::Value;
 
-use ::types::{DateTime as ChronoDateTime, SendableErrorResult};
+use ::types::{DateTime as ChronoDateTime, ThreadSafeResult};
 
 use crate::casting::{cast_datetime, cast_f64, cast_i64};
 use crate::traits::TradeDateTime;
@@ -51,10 +51,7 @@ pub struct Kline {
 }
 
 impl Kline {
-  pub fn new(
-    symbol: String,
-    payload: &Vec<Value>,
-  ) -> SendableErrorResult<Self> {
+  pub fn new(symbol: String, payload: &Vec<Value>) -> ThreadSafeResult<Self> {
     return Ok(Kline {
       symbol,
       open_time: (cast_datetime("open_time", &payload[0])?).into(),

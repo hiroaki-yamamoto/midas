@@ -5,7 +5,7 @@ use ::mongodb::results::InsertManyResult;
 use ::mongodb::{Collection, Database};
 use ::serde::Serialize;
 
-use ::types::{ret_on_err, SendableErrorResult};
+use ::types::ThreadSafeResult;
 
 use super::super::entities::{ListSymbolStream, Symbol};
 use crate::traits::{
@@ -44,33 +44,31 @@ impl SymbolRecorderTrait for SymbolRecorder {
   async fn list(
     &self,
     query: impl Into<Option<bson::Document>> + Send + 'async_trait,
-  ) -> SendableErrorResult<Self::ListStream> {
-    let cur = ret_on_err!(self.col.find(query, None).await);
+  ) -> ThreadSafeResult<Self::ListStream> {
+    let cur = self.col.find(query, None).await?;
     let cur = cur
       .filter_map(|doc| async { doc.ok() })
       .map(|doc| bson::from_bson::<Symbol>(bson::Bson::Document(doc)))
       .filter_map(|doc| async { doc.ok() })
       .boxed();
-    return Ok(Box::pin(cur) as Self::ListStream);
+    return Ok(cur as Self::ListStream);
   }
   async fn update_symbols<T>(
     &self,
     value: Vec<T>,
-  ) -> SendableErrorResult<InsertManyResult>
+  ) -> ThreadSafeResult<InsertManyResult>
   where
     T: Serialize + Send,
   {
     let empty = bson::Array::new();
-    let serialized: Vec<bson::Document> = ret_on_err!(bson::to_bson(&value))
+    let serialized: Vec<bson::Document> = bson::to_bson(&value)?
       .as_array()
       .unwrap_or(&empty)
       .into_iter()
       .filter_map(|item| item.as_document())
       .map(|item| item.clone())
       .collect();
-    let _ = ret_on_err!(self.col.delete_many(bson::doc! {}, None).await);
-    return Ok(ret_on_err!(
-      self.col.insert_many(serialized.into_iter(), None).await
-    ));
+    let _ = self.col.delete_many(bson::doc! {}, None).await?;
+    return Ok(self.col.insert_many(serialized.into_iter(), None).await?);
   }
 }

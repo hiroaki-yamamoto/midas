@@ -2,10 +2,8 @@ use ::chrono::{DateTime, NaiveDateTime, Utc};
 use ::serde_json::Value;
 use ::std::error::Error;
 use ::std::fmt::{Display, Formatter, Result as FormatResult};
-use ::std::marker::Send;
-use ::types::{ret_on_err, DateTime as UTCDateTime};
 
-type CastResult<T> = Result<T, Box<dyn Error + Send>>;
+use ::types::{DateTime as UTCDateTime, ThreadSafeResult};
 
 #[derive(Debug)]
 pub(crate) struct ParseError {
@@ -35,7 +33,7 @@ impl Error for ParseError {
 pub(crate) fn cast_datetime(
   fld_name: &str,
   value: &Value,
-) -> CastResult<DateTime<Utc>> {
+) -> ThreadSafeResult<DateTime<Utc>> {
   return match value.as_i64() {
     Some(n) => Ok(cast_datetime_from_i64(n)),
     None => Err(Box::new(ParseError::new(fld_name))),
@@ -50,14 +48,14 @@ pub(crate) fn cast_datetime_from_i64(value: i64) -> UTCDateTime {
   );
 }
 
-pub(crate) fn cast_f64(fld_name: &str, value: &Value) -> CastResult<f64> {
+pub(crate) fn cast_f64(fld_name: &str, value: &Value) -> ThreadSafeResult<f64> {
   return match value.as_str() {
-    Some(s) => Ok(ret_on_err!(s.parse())),
+    Some(s) => Ok(s.parse()?),
     None => return Err(Box::new(ParseError::new(fld_name))),
   };
 }
 
-pub(crate) fn cast_i64(fld_name: &str, value: &Value) -> CastResult<i64> {
+pub(crate) fn cast_i64(fld_name: &str, value: &Value) -> ThreadSafeResult<i64> {
   return match value.as_i64() {
     Some(n) => Ok(n),
     None => return Err(Box::new(ParseError::new(fld_name))),
