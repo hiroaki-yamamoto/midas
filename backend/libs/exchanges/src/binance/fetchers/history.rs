@@ -16,8 +16,6 @@ use ::tokio::select;
 use ::tokio::sync::{broadcast, mpsc};
 use ::tokio::time::sleep;
 use ::url::Url;
-use futures::channel::mpsc::Receiver;
-use mpsc::{unbounded_channel, UnboundedReceiver};
 
 use ::config::{
   CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH,
@@ -25,7 +23,7 @@ use ::config::{
 use ::mongodb::bson::{doc, Document};
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
-use ::slog::{crit, error, warn, Logger};
+use ::slog::{error, warn, Logger};
 use ::types::{GenericResult, ThreadSafeResult};
 
 use crate::entities::KlineCtrl;
@@ -372,7 +370,6 @@ impl HistoryFetcherTrait for HistoryFetcher {
       .map(|item| from_msgpack::<KlineCtrl>(item.data.as_ref()))
       .filter_map(|item| async { item.ok() })
       .boxed();
-    let logger = self.logger.clone();
     let (stop_sender, _) = broadcast::channel(1024);
     let _ = ::tokio::spawn({
       let stop_sender = stop_sender.clone();

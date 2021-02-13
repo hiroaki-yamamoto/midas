@@ -7,7 +7,7 @@ use ::nats::asynk::Connection as Broker;
 use ::slog::Logger;
 
 use ::rpc::entities::SymbolInfo;
-use ::types::{GenericResult, ThreadSafeResult};
+use ::types::ThreadSafeResult;
 
 use super::super::constants::REST_ENDPOINT;
 use super::super::entities::{ExchangeInfo, Symbol};

@@ -2,9 +2,8 @@ use ::std::collections::HashMap;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::futures::future::{join, join_all, select_all, FutureExt};
+use ::futures::future::{join, join_all};
 use ::futures::SinkExt;
-use ::mongodb::bson::DateTime;
 use ::nats::asynk::Connection as Broker;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_json::{from_slice as from_json_bin, from_str as from_json_str};
