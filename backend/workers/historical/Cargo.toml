@@ -17,7 +17,7 @@ nats = "0.8.6"
 clap = "3.0.0-beta.2"
 mongodb = {version = "1.1.1", default-features = false, features = ["async-std-runtime"]}
 futures = "0.3.12"
-libc = "0.2.85"
+libc = "0.2.86"
 
 [[bin]]
 name = "historical_fetch_worker"

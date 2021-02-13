@@ -13,7 +13,7 @@ num-traits = "0.2.14"
 num-derive = "0.3.3"
 clap = "3.0.0-beta.2"
 http = "0.2.3"
-bson = "1.1.0"
+bson = "1.2.0"
 warp = "0.3"
 
 [build-dependencies]
