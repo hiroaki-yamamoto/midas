@@ -5,7 +5,7 @@ use ::std::time::Duration as StdDur;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use ::futures::future::{join_all, FutureExt};
+use ::futures::future::{join, join_all, FutureExt};
 use ::futures::StreamExt;
 use ::mongodb::bson::DateTime as MongoDateTime;
 use ::nats::asynk::{Connection, Subscription};
@@ -159,14 +159,13 @@ impl HistoryFetcher {
       .await?;
     let mut latest_kline: HashMap<String, TradeTime<MongoDateTime>> =
       from_msgpack(&latest_kline.data[..])?;
-    let first_trade_date_prog = HistChartProg {
+    let msg = to_msgpack(&HistChartProg {
       symbol: String::from("Currency Trade Date Fetch"),
       num_symbols: symbols_len,
       cur_symbol_num: 0,
       num_objects: symbols_len,
-      cur_object_num: latest_kline.len() as i64,
-    };
-    let msg = to_msgpack(&first_trade_date_prog)?;
+      cur_object_num: 0,
+    })?;
     let _ = self
       .broker
       .publish(HIST_FETCHER_FETCH_PROG_SUB_NAME, msg.as_slice())
@@ -275,7 +274,6 @@ impl HistoryFetcher {
       )
       .await?;
     let symbols_len = symbols.len();
-    let mut publish_defers = vec![];
     for (symbol, dates) in trade_dates.into_iter() {
       let start_at = dates.open_time;
       let mut entire_data_len = (end_at - start_at).num_minutes();
@@ -307,12 +305,10 @@ impl HistoryFetcher {
           }
           Ok(v) => v,
         };
-        publish_defers
-          .push(self.broker.publish(HIST_FETCHER_PARAM_SUB_NAME, msg));
+        let _ = self.broker.publish(HIST_FETCHER_PARAM_SUB_NAME, msg).await;
         sec_start_date = sec_end_date.clone();
       }
     }
-    join_all(publish_defers).await;
     return Ok(());
   }
 }
@@ -337,21 +333,39 @@ impl HistoryFetcherTrait for HistoryFetcher {
       query = Some(doc! { "symbol": doc! { "$in": symbol } });
     }
     let symbols = self.symbol_fetcher.get(query).await?;
-    let _ = self.push_fetch_request(&symbols).await;
+    let me = self.clone();
+    let _ = tokio::spawn(async move {
+      let _ = me.clone().push_fetch_request(&symbols).await;
+    });
     return Ok(prog_sub);
   }
 
   async fn spawn(&self) -> ThreadSafeResult<()> {
     let me = self.clone();
-    let mut param_sub = me
-      .broker
-      .queue_subscribe(HIST_FETCHER_PARAM_SUB_NAME, "fetch.thread")
-      .await?
+    let (param_sub, ctrl_sub) = join(
+      me.broker
+        .queue_subscribe(HIST_FETCHER_PARAM_SUB_NAME, "fetch.thread"),
+      me.broker.subscribe("binance.kline.ctrl"),
+    )
+    .await;
+    let mut param_sub = param_sub?
       .map(|item| (from_msgpack::<HistFetcherParam>(item.data.as_ref()), item))
+      .boxed();
+    let mut ctrl_sub = ctrl_sub?
+      .map(|item| from_msgpack::<KlineCtrl>(item.data.as_ref()))
+      .filter_map(|item| async { item.ok() })
       .boxed();
     let logger = self.logger.clone();
     loop {
       select! {
+        Some(ctrl) = ctrl_sub.next() => {
+          match ctrl {
+            KlineCtrl::Stop => {
+              warn!(me.logger, "Stop Signal has been received. Shutting down the worker...");
+              break;
+            }
+          }
+        },
         Some((param, msg)) = param_sub.next() => {
           let param = match param {
             Err(e) => {
