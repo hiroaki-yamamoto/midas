@@ -13,9 +13,11 @@ use ::rand::random;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
 use ::tokio::select;
-use ::tokio::sync::broadcast;
+use ::tokio::sync::{broadcast, mpsc};
 use ::tokio::time::sleep;
 use ::url::Url;
+use futures::channel::mpsc::Receiver;
+use mpsc::{unbounded_channel, UnboundedReceiver};
 
 use ::config::{
   CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH,
@@ -266,6 +268,7 @@ impl HistoryFetcher {
   async fn push_fetch_request(
     &self,
     symbols: &Vec<SymbolInfo>,
+    stop_sig: &mut mpsc::UnboundedReceiver<()>,
   ) -> GenericResult<()> {
     let end_at = Utc::now();
     let trade_dates = self
@@ -305,8 +308,15 @@ impl HistoryFetcher {
           }
           Ok(v) => v,
         };
-        let _ = self.broker.publish(HIST_FETCHER_PARAM_SUB_NAME, msg).await;
-        sec_start_date = sec_end_date.clone();
+        select! {
+          _ = stop_sig.recv() => {
+            break;
+          },
+          else => {
+            let _ = self.broker.publish(HIST_FETCHER_PARAM_SUB_NAME, msg).await;
+            sec_start_date = sec_end_date.clone();
+          }
+        }
       }
     }
     return Ok(());
@@ -328,14 +338,21 @@ impl HistoryFetcherTrait for HistoryFetcher {
       .broker
       .subscribe(HIST_FETCHER_FETCH_PROG_SUB_NAME)
       .await?;
+    let mut stop_sub = self.broker.subscribe("binance.kline.ctrl").await?;
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
       query = Some(doc! { "symbol": doc! { "$in": symbol } });
     }
     let symbols = self.symbol_fetcher.get(query).await?;
     let me = self.clone();
+    let (stop_send, mut stop_recv) = mpsc::unbounded_channel();
     let _ = tokio::spawn(async move {
-      let _ = me.clone().push_fetch_request(&symbols).await;
+      while let Some(_) = stop_sub.next().await {
+        let _ = stop_send.send(());
+      }
+    });
+    let _ = tokio::spawn(async move {
+      let _ = me.push_fetch_request(&symbols, &mut stop_recv).await;
     });
     return Ok(prog_sub);
   }
@@ -356,17 +373,32 @@ impl HistoryFetcherTrait for HistoryFetcher {
       .filter_map(|item| async { item.ok() })
       .boxed();
     let logger = self.logger.clone();
-    loop {
-      select! {
-        Some(ctrl) = ctrl_sub.next() => {
+    let (stop_sender, _) = broadcast::channel(1024);
+    let _ = ::tokio::spawn({
+      let stop_sender = stop_sender.clone();
+      async move {
+        while let Some(ctrl) = ctrl_sub.next().await {
           match ctrl {
             KlineCtrl::Stop => {
-              warn!(me.logger, "Stop Signal has been received. Shutting down the worker...");
+              let _ = stop_sender.send(());
               break;
             }
           }
+        }
+      }
+    });
+    loop {
+      let mut stop_recv = stop_sender.subscribe();
+      select! {
+         _ignore = stop_recv.recv() => {
+          warn!(me.logger, "Stop Signal has been received. Shutting down the worker...");
+          break;
         },
         Some((param, msg)) = param_sub.next() => {
+          if let Ok(_) = stop_recv.try_recv() {
+            warn!(me.logger, "Stop Signal has been received. Shutting down the worker...");
+            break;
+          }
           let param = match param {
             Err(e) => {
               warn!(me.logger, "Failed to parse the param msg: {}", e);
@@ -423,7 +455,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
           match msg.reply {
             Some(_) => {
               if let Err(e) = msg.respond(&response_payload[..].to_owned()).await {
-                warn!(logger, "Failed to respond to the request: {}", e;
+                warn!(me.logger, "Failed to respond to the request: {}", e;
                 "subject" => msg.subject, "reply" => msg.reply);
               }
             },
