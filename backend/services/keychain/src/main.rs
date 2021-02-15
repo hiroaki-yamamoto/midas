@@ -1,12 +1,14 @@
 use ::std::net::SocketAddr;
 
 use ::clap::Clap;
+use ::futures::future::join;
 use ::futures::FutureExt;
 use ::futures::StreamExt;
 use ::http::StatusCode;
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::bson::{doc, oid::ObjectId};
 use ::mongodb::Client;
+use ::nats::asynk::connect;
 use ::slog::Logger;
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
@@ -17,6 +19,7 @@ use ::exchanges::{APIKey, KeyChain};
 use ::rpc::entities::{InsertOneResult, Status};
 use ::rpc::keychain::ApiRename;
 use ::rpc::keychain::{ApiKey as RPCAPIKey, ApiKeyList as RPCAPIKeyList};
+use ::rpc::rejection_handler::handle_rejection;
 
 #[tokio::main]
 async fn main() {
@@ -24,9 +27,14 @@ async fn main() {
   let config = Config::from_fpath(Some(opts.config)).unwrap();
   let logger = config.build_slog();
   let logger_in_handler = logger.clone();
-  let db_cli = Client::with_uri_str(&config.db_url).await.unwrap();
+  let (broker, db_cli) = join(
+    connect(config.broker_url.as_str()),
+    Client::with_uri_str(&config.db_url),
+  )
+  .await;
+  let (broker, db_cli) = (broker.unwrap(), db_cli.unwrap());
   let db = db_cli.database("midas");
-  let keychain = KeyChain::new(db).await;
+  let keychain = KeyChain::new(broker, db).await;
 
   let path_param = ::warp::any()
     .map(move || {
@@ -76,15 +84,19 @@ async fn main() {
     .and_then(
       |keychain: KeyChain, _: Logger, api_key: RPCAPIKey| async move {
         let api_key: APIKey = api_key.into();
-        match keychain.push(api_key).await {
-          Ok(v) => {
-            let res: InsertOneResult = v.into();
-            return Ok(res);
-          }
+        let res = keychain.push(api_key).await.map_err(|e| {
+          ::warp::reject::custom(Status::new(
+            StatusCode::SERVICE_UNAVAILABLE,
+            format!("{}", e),
+          ))
+        });
+        match res {
           Err(e) => {
-            let status =
-              Status::new(StatusCode::SERVICE_UNAVAILABLE, format!("{}", e));
-            return Err(::warp::reject::custom(status));
+            return Err(e);
+          }
+          Ok(res) => {
+            let res: InsertOneResult = res.into();
+            return Ok(res);
           }
         }
       },
@@ -113,7 +125,7 @@ async fn main() {
     .and(path_param)
     .and(id_filter)
     .and_then(|keychain: KeyChain, _: Logger, id: ObjectId| async move {
-      let del_defer = keychain.delete(doc! {"_id": id});
+      let del_defer = keychain.delete(id);
       if let Err(_) = del_defer.await {
         return Err(::warp::reject());
       };
@@ -125,7 +137,8 @@ async fn main() {
     get_handler
       .or(post_handler)
       .or(patch_handler)
-      .or(delete_handler),
+      .or(delete_handler)
+      .recover(handle_rejection),
   );
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();

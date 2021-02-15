@@ -41,3 +41,10 @@ impl From<RPCAPIKey> for APIKey {
     };
   }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum APIKeyEvent {
+  Add(APIKey),
+  Remove(APIKey),
+}

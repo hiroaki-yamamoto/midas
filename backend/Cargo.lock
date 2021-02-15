@@ -1477,6 +1477,7 @@ dependencies = [
  "http",
  "libc",
  "mongodb",
+ "nats",
  "num-traits",
  "rpc",
  "serde",

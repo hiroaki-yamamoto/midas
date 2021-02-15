@@ -4,31 +4,39 @@ use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{doc, from_document, to_document, Document};
 use ::mongodb::options::UpdateModifications;
 use ::mongodb::{Collection, Database};
+use ::nats::asynk::{Connection as NatsCon, Subscription as NatsSub};
+use ::rmp_serde::to_vec as to_msgpack;
 
 use ::rpc::entities::Exchanges;
 use ::types::{GenericResult, ThreadSafeResult};
 
-use crate::entities::APIKey;
+use crate::entities::{APIKey, APIKeyEvent};
 use crate::traits::Recorder;
 
 #[derive(Debug, Clone)]
 pub struct KeyChain {
+  broker: NatsCon,
   db: Database,
   col: Collection,
 }
 
 impl KeyChain {
-  pub async fn new(db: Database) -> Self {
+  pub async fn new(broker: NatsCon, db: Database) -> Self {
     let col = db.collection("apiKeyChains");
-    let ret = Self { db, col };
+    let ret = Self { broker, db, col };
     ret.update_indices(&["exchange"]).await;
     return ret;
   }
 
-  pub async fn push(&self, value: APIKey) -> GenericResult<Option<ObjectId>> {
-    let value = to_document(&value)?;
+  pub async fn push(&self, api_key: APIKey) -> GenericResult<Option<ObjectId>> {
+    let value = to_document(&api_key)?;
     let result = self.col.insert_one(value.to_owned(), None).await?;
     let id = result.inserted_id.as_object_id();
+    let mut api_key = api_key.clone();
+    api_key.id = id.cloned();
+    let event = APIKeyEvent::Add(api_key);
+    let msg = to_msgpack(&event)?;
+    let _ = self.broker.publish("apikey", msg).await?;
     return Ok(id.cloned());
   }
 
@@ -85,9 +93,20 @@ impl KeyChain {
     return Ok(key);
   }
 
-  pub async fn delete(&self, query: Document) -> GenericResult<()> {
-    self.col.delete_many(query, None).await?;
+  pub async fn delete(&self, id: ObjectId) -> GenericResult<()> {
+    if let Some(doc) =
+      self.col.find_one_and_delete(doc! {"_id": id}, None).await?
+    {
+      let api_key: APIKey = from_document(doc)?;
+      let event = APIKeyEvent::Remove(api_key);
+      let msg = to_msgpack(&event)?;
+      let _ = self.broker.publish("apikey", msg).await?;
+    }
     return Ok(());
+  }
+
+  pub async fn subscribe_event(&self) -> ::std::io::Result<NatsSub> {
+    return self.broker.subscribe("apikey").await;
   }
 }
 

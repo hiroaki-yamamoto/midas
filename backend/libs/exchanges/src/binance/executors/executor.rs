@@ -1,4 +1,5 @@
 use ::mongodb::{Collection, Database};
+use ::nats::asynk::Connection as NatsCon;
 use ::ring::hmac;
 
 use crate::traits::Sign;
@@ -6,17 +7,19 @@ use crate::{traits::Executor as ExecutorTrait, KeyChain};
 
 pub struct Executor {
   keychain: KeyChain,
+  broker: NatsCon,
   db: Database,
   orders: Collection,
   positions: Collection,
 }
 
 impl Executor {
-  pub async fn new(db: Database) -> Self {
-    let keychain = KeyChain::new(db.clone()).await;
+  pub async fn new(broker: NatsCon, db: Database) -> Self {
+    let keychain = KeyChain::new(broker.clone(), db.clone()).await;
     let orders = db.collection("binance.orders");
     let positions = db.collection("binance.positions");
     return Self {
+      broker,
       keychain,
       db,
       orders,
