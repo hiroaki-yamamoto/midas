@@ -281,6 +281,5 @@ impl UserStreamTrait for UserStream {
         }
       };
     }
-    return Ok(());
   }
 }
