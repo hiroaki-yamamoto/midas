@@ -14,5 +14,6 @@ members = [
   "services/keychain",
 
   "workers/historical",
-  "workers/observer"
+  "workers/observer",
+  "workers/notify"
 ]

@@ -136,6 +136,22 @@ services:
     depends_on:
       - database
       - broker
+  notify_worker:
+    build:
+      context: ./backend
+      dockerfile: devel.dockerfile
+      args:
+        - SERVICE=notify_worker
+    command:
+      - -c
+      - /etc/midas/midas.yml
+    volumes:
+      - ./etc:/etc/midas
+      - ./backend:/opt/code
+    restart: unless-stopped
+    depends_on:
+      - database
+      - broker
   trade_observer_service:
     build:
       context: ./backend

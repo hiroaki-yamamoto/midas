@@ -211,3 +211,11 @@ workflows:
             branches:
               only: master
           service_name: keychain_service
+      - deploy-image:
+          name: "Notification Worker Deployment"
+          requires:
+            - build-backend
+          filters:
+            branches:
+              only: master
+          service_name: notify_worker
