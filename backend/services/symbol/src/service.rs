@@ -1,11 +1,8 @@
-use ::std::pin::Pin;
-
 use ::mongodb::Database;
 use ::nats::asynk::Connection as Broker;
 use ::slog::{o, Logger};
 use ::warp::filters::BoxedFilter;
 use ::warp::{Filter, Rejection, Reply};
-use warp::reject::Reject;
 
 use ::exchanges::binance;
 use ::exchanges::SymbolFetcher;

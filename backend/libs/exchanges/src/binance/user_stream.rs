@@ -16,8 +16,6 @@ use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::{
   client::IntoClientRequest, Error as WebSocketError, Message,
 };
-
-use ::rpc::entities::Exchanges;
 use ::types::GenericResult;
 
 use super::client::PubClient;
@@ -224,7 +222,7 @@ impl UserStreamTrait for UserStream {
     loop {
       select! {
         Some(APIKeyEvent::Add(APIKey::Binance(api_key))) = keychain_sub.next() => {
-          me.authenticate(&api_key).await;
+          let _ = me.authenticate(&api_key).await;
         },
         Some(listen_key) = listen_key_sub.next() => {
           let socket = match me.init_websocket(

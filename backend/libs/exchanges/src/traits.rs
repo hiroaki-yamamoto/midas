@@ -15,7 +15,6 @@ use ::types::GenericResult;
 use types::ThreadSafeResult;
 
 use crate::entities::APIKeyInternal;
-use crate::APIKey;
 
 use super::entities::{
   BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
