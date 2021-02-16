@@ -145,7 +145,7 @@ impl UserStream {
     let mut key = APIKeyInternal::default();
     key.pub_key = pub_key.clone();
     for _ in 0..5 {
-      match self.authenticate(&key).await {
+      match self.get_listen_key(&key).await {
         Err(e) => {
           ::slog::warn!(
             self.logger,
@@ -173,9 +173,12 @@ impl PubClient for UserStream {}
 
 #[async_trait]
 impl UserStreamTrait for UserStream {
-  async fn authenticate(&self, api_key: &APIKeyInternal) -> GenericResult<()> {
-    let pub_key = api_key.pub_key.clone();
-    let client = self.get_client(&pub_key)?;
+  async fn get_listen_key(
+    &self,
+    api_key: &APIKeyInternal,
+  ) -> GenericResult<()> {
+    let pub_key = &api_key.pub_key;
+    let client = self.get_client(pub_key)?;
     let resp: ListenKey = client
       .post(format!("{}/api/v3/userDataStream", REST_ENDPOINT).as_str())
       .send()
@@ -183,11 +186,26 @@ impl UserStreamTrait for UserStream {
       .error_for_status()?
       .json()
       .await?;
-    let key = ListenKeyPair::new(resp.listen_key, pub_key);
+    let key = ListenKeyPair::new(resp.listen_key, pub_key.clone());
     let _ = self
       .broker
       .publish(USER_STREAM_LISTEN_KEY_SUB_NAME, to_msgpack(&key)?)
       .await?;
+    return Ok(());
+  }
+  async fn clise_listen_key(
+    &self,
+    api_key: &APIKeyInternal,
+    listen_key: &String,
+  ) -> GenericResult<()> {
+    let pub_key = &api_key.pub_key;
+    let client = self.get_client(pub_key)?;
+    let _ = client
+      .delete(format!("{}/api/v3/userDataStream", REST_ENDPOINT).as_str())
+      .query(&[("listenKey", listen_key)])
+      .send()
+      .await?
+      .error_for_status()?;
     return Ok(());
   }
   async fn start(&self) -> GenericResult<()> {
@@ -221,8 +239,19 @@ impl UserStreamTrait for UserStream {
     let me = self;
     loop {
       select! {
-        Some(APIKeyEvent::Add(APIKey::Binance(api_key))) = keychain_sub.next() => {
-          let _ = me.authenticate(&api_key).await;
+        Some(event) = keychain_sub.next() => {
+          match event {
+            APIKeyEvent::Add(APIKey::Binance(api_key)) => {
+              let _ = me.get_listen_key(&api_key).await;
+            },
+            APIKeyEvent::Remove(APIKey::Binance(api_key)) => {
+              if let Some(listen_key) = listen_keys.remove(&api_key.pub_key) {
+                sockets.remove(&api_key.pub_key);
+                let _ = me.clise_listen_key(&api_key, &listen_key);
+              }
+            }
+            _ => {},
+          }
         },
         Some(listen_key) = listen_key_sub.next() => {
           let socket = match me.init_websocket(
