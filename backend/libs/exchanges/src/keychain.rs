@@ -33,7 +33,7 @@ impl KeyChain {
     let result = self.col.insert_one(value.to_owned(), None).await?;
     let id = result.inserted_id.as_object_id();
     let mut api_key = api_key.clone();
-    api_key.id = id.cloned();
+    api_key.inner_mut().id = id.cloned();
     let event = APIKeyEvent::Add(api_key);
     let msg = to_msgpack(&event)?;
     let _ = self.broker.publish("apikey", msg).await?;
@@ -105,8 +105,8 @@ impl KeyChain {
     return Ok(());
   }
 
-  pub async fn subscribe_event(&self) -> ::std::io::Result<NatsSub> {
-    return self.broker.subscribe("apikey").await;
+  pub async fn subscribe_event(broker: &NatsCon) -> ::std::io::Result<NatsSub> {
+    return broker.subscribe("apikey").await;
   }
 }
 

@@ -4,8 +4,8 @@ use ::mongodb::Database;
 use ::nats::asynk::Connection as Broker;
 use ::slog::{o, Logger};
 use ::warp::filters::BoxedFilter;
-use ::warp::Filter;
-use ::warp::Reply;
+use ::warp::{Filter, Rejection, Reply};
+use warp::reject::Reject;
 
 use ::exchanges::binance;
 use ::exchanges::SymbolFetcher;
@@ -16,8 +16,6 @@ use ::rpc::entities::Exchanges;
 pub struct Service {
   binance: binance::SymbolFetcher,
 }
-
-type Fetcher = Box<dyn SymbolFetcher + Send + Sync>;
 
 impl Service {
   pub async fn new(db: &Database, broker: Broker, log: Logger) -> Self {
@@ -31,11 +29,14 @@ impl Service {
     };
   }
 
-  fn get_fetcher(&self, exchange: Exchanges) -> Fetcher {
-    let fetcher: Fetcher = match exchange {
-      Exchanges::Binance => Box::new(self.binance.clone()),
+  fn get_fetcher(
+    &self,
+    exchange: Exchanges,
+  ) -> Result<impl SymbolFetcher + Send + Sync, Rejection> {
+    return match exchange {
+      Exchanges::Binance => Ok(self.binance.clone()),
+      Exchanges::Unknown => Err(::warp::reject::not_found()),
     };
-    return fetcher;
   }
 
   pub async fn route(&self) -> BoxedFilter<(impl Reply,)> {
@@ -63,7 +64,7 @@ impl Service {
         return Ok((exchange,));
       })
       .untuple_one()
-      .map(move |exchange: Exchanges| Box::pin(me.get_fetcher(exchange)))
+      .map(move |exchange: Exchanges| me.get_fetcher(exchange))
       .and_then(handle_fetcher)
       .map(move |_| {
         return Box::new(::warp::reply());
@@ -72,8 +73,9 @@ impl Service {
 }
 
 async fn handle_fetcher(
-  fetcher: Pin<Box<Fetcher>>,
-) -> Result<(), ::std::convert::Infallible> {
+  fetcher: Result<impl SymbolFetcher + Send + Sync, Rejection>,
+) -> Result<(), Rejection> {
+  let fetcher = fetcher?;
   let _ = fetcher.refresh().await;
   return Ok(());
 }

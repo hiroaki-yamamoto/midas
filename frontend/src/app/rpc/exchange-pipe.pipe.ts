@@ -12,7 +12,7 @@ export class ExchangePipePipe implements PipeTransform {
   });
 
   transform(value: Exchanges): string {
-    return this.exhcnage_keys[value];
+    return this.exhcnage_keys[value].toString();
   }
 
 }

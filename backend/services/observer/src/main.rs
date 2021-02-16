@@ -25,11 +25,12 @@ async fn get_exchange(
   exchange: Exchanges,
   broker: NatsCon,
   logger: Logger,
-) -> impl TradeObserver {
+) -> Option<impl TradeObserver> {
   return match exchange {
     Exchanges::Binance => {
-      binance::TradeObserver::new(None, broker, logger).await
+      Some(binance::TradeObserver::new(None, broker, logger).await)
     }
+    Exchanges::Unknown => None,
   };
 }
 
@@ -105,15 +106,17 @@ async fn main() {
     .untuple_one()
     .and_then(
       |exchange: String, broker: NatsCon, logger: Logger| async move {
-        let exchange: Result<Exchanges, String> = exchange.parse();
-        let logger = logger.new(o! {
-          "scope" => "Trade Observer Service"
-        });
-        match exchange {
-          Err(_) => return Err(::warp::reject::not_found()),
-          Ok(exchange) => {
-            return Ok(get_exchange(exchange, broker, logger).await)
+        let exchange: Exchanges =
+          exchange.parse().map_err(|_| ::warp::reject::not_found())?;
+        let observer = match exchange {
+          Exchanges::Unknown => {
+            return Err(::warp::reject::not_found());
           }
+          Exchanges::Binance => get_exchange(exchange, broker, logger).await,
+        };
+        return match observer {
+          None => Err(::warp::reject::not_found()),
+          Some(o) => Ok(o),
         };
       },
     )

@@ -35,7 +35,8 @@ pub struct InsertOneResult {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum Exchanges {
-    Binance = 0,
+    Unknown = 0,
+    Binance = 1,
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

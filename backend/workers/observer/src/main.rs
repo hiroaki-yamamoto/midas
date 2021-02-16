@@ -40,6 +40,9 @@ async fn main() {
       )
       .await,
     ),
+    p => {
+      panic!("Unknown exchange: {:?}", p);
+    }
   };
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();

@@ -14,6 +14,7 @@ use ::serde::Serialize;
 use ::types::GenericResult;
 use types::ThreadSafeResult;
 
+use crate::entities::APIKeyInternal;
 use crate::APIKey;
 
 use super::entities::{
@@ -273,6 +274,6 @@ pub trait Sign {
 
 #[async_trait]
 pub trait UserStream {
-  async fn authenticate(&self, api_key: &APIKey) -> GenericResult<()>;
+  async fn authenticate(&self, api_key: &APIKeyInternal) -> GenericResult<()>;
   async fn start(&self) -> GenericResult<()>;
 }

@@ -594,7 +594,8 @@ proto.entities.InsertOneResult.prototype.setId = function(value) {
  * @enum {number}
  */
 proto.entities.Exchanges = {
-  BINANCE: 0
+  UNKNOWN: 0,
+  BINANCE: 1
 };
 
 /**

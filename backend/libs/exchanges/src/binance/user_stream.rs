@@ -2,20 +2,22 @@ use ::std::collections::HashMap;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::futures::future::{join, join_all};
+use ::futures::future::{join3, join_all};
 use ::futures::SinkExt;
+use ::futures::StreamExt;
 use ::nats::asynk::Connection as Broker;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_json::{from_slice as from_json_bin, from_str as from_json_str};
 use ::slog::Logger;
 use ::tokio::select;
 use ::tokio::time::{interval, sleep};
-use ::tokio_stream::{StreamExt, StreamMap};
+use ::tokio_stream::StreamMap;
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::{
   client::IntoClientRequest, Error as WebSocketError, Message,
 };
 
+use ::rpc::entities::Exchanges;
 use ::types::GenericResult;
 
 use super::client::PubClient;
@@ -27,10 +29,11 @@ use super::entities::{
   CastedUserStreamEvents, ListenKey, ListenKeyPair, RawUserStreamEvents,
 };
 
-use crate::entities::APIKey;
+use crate::entities::{APIKey, APIKeyEvent, APIKeyInternal};
 use crate::errors::{MaximumAttemptExceeded, WebsocketError};
 use crate::traits::UserStream as UserStreamTrait;
 use crate::types::TLSWebSocket;
+use crate::KeyChain;
 
 #[derive(Debug, Clone)]
 pub struct UserStream {
@@ -141,7 +144,7 @@ impl UserStream {
       "Session Disconnected. Reconnecting...";
       "api_key" => &pub_key,
     );
-    let mut key = APIKey::default();
+    let mut key = APIKeyInternal::default();
     key.pub_key = pub_key.clone();
     for _ in 0..5 {
       match self.authenticate(&key).await {
@@ -172,8 +175,9 @@ impl PubClient for UserStream {}
 
 #[async_trait]
 impl UserStreamTrait for UserStream {
-  async fn authenticate(&self, api_key: &APIKey) -> GenericResult<()> {
-    let client = self.get_client(api_key.pub_key.to_owned())?;
+  async fn authenticate(&self, api_key: &APIKeyInternal) -> GenericResult<()> {
+    let pub_key = api_key.pub_key.clone();
+    let client = self.get_client(&pub_key)?;
     let resp: ListenKey = client
       .post(format!("{}/api/v3/userDataStream", REST_ENDPOINT).as_str())
       .send()
@@ -181,7 +185,7 @@ impl UserStreamTrait for UserStream {
       .error_for_status()?
       .json()
       .await?;
-    let key = ListenKeyPair::new(resp.listen_key, api_key.pub_key.clone());
+    let key = ListenKeyPair::new(resp.listen_key, pub_key);
     let _ = self
       .broker
       .publish(USER_STREAM_LISTEN_KEY_SUB_NAME, to_msgpack(&key)?)
@@ -189,7 +193,8 @@ impl UserStreamTrait for UserStream {
     return Ok(());
   }
   async fn start(&self) -> GenericResult<()> {
-    let (listen_key_sub, reauth_sub) = join(
+    let (keychain_sub, listen_key_sub, reauth_sub) = join3(
+      KeyChain::subscribe_event(&self.broker),
       self
         .broker
         .queue_subscribe(USER_STREAM_LISTEN_KEY_SUB_NAME, "user_stream"),
@@ -198,14 +203,18 @@ impl UserStreamTrait for UserStream {
         .queue_subscribe(USER_STREAM_REAUTH_SUB_NAME, "user_stream"),
     )
     .await;
+    let keychain_sub = keychain_sub?
+      .map(|msg| from_msgpack::<APIKeyEvent>(&msg.data))
+      .filter_map(|msg| async { msg.ok() });
     let listen_key_sub = listen_key_sub?
       .map(|msg| from_msgpack::<ListenKeyPair>(&msg.data))
-      .filter_map(|msg| msg.ok());
+      .filter_map(|msg| async { msg.ok() });
     let reauth_sub = reauth_sub?
       .map(|msg| String::from_utf8(msg.data))
-      .filter_map(|msg| msg.ok());
-    let mut listen_key_sub = Box::pin(listen_key_sub);
-    let mut reauth_sub = Box::pin(reauth_sub);
+      .filter_map(|msg| async { msg.ok() });
+    let mut keychain_sub = keychain_sub.boxed();
+    let mut listen_key_sub = listen_key_sub.boxed();
+    let mut reauth_sub = reauth_sub.boxed();
     // 1800 = 30 * 60 = 30 mins.
     let mut listen_key_refresh = interval(Duration::from_secs(1800));
     let mut sockets: StreamMap<String, TLSWebSocket> = StreamMap::new();
@@ -214,6 +223,9 @@ impl UserStreamTrait for UserStream {
     let me = self;
     loop {
       select! {
+        Some(APIKeyEvent::Add(APIKey::Binance(api_key))) = keychain_sub.next() => {
+          me.authenticate(&api_key).await;
+        },
         Some(listen_key) = listen_key_sub.next() => {
           let socket = match me.init_websocket(
             format!("{}/{}", WS_ENDPOINT, listen_key.listen_key)

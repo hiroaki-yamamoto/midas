@@ -61,7 +61,7 @@ async fn main() {
           return Ok(
             cursor
               .map(|mut api_key| {
-                api_key.prv_key = ("*").repeat(16);
+                api_key.inner_mut().prv_key = ("*").repeat(16);
                 return api_key;
               })
               .map(|api_key| {

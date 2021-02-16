@@ -4,7 +4,8 @@ package entities;
 option go_package = "rpc";
 
 enum Exchanges {
-  Binance = 0;
+  Unknown = 0;
+  Binance = 1;
 }
 
 enum BackTestPriceBase {

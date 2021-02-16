@@ -6,6 +6,7 @@ use ::warp::reject::Reject;
 impl Exchanges {
   pub fn as_string(&self) -> String {
     return String::from(match self {
+      Exchanges::Unknown => "Unknown",
       Exchanges::Binance => "binance",
     });
   }

@@ -6,39 +6,78 @@ use ::rpc::entities::Exchanges;
 use ::rpc::keychain::ApiKey as RPCAPIKey;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct APIKey {
+pub struct APIKeyInternal {
   #[serde(default, rename = "_id", skip_serializing_if = "Option::is_none")]
   pub id: Option<ObjectId>,
-  #[serde(default)]
-  pub exchange: String,
   pub label: String,
   pub pub_key: String,
   pub prv_key: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "exchange", rename_all = "camelCase")]
+pub enum APIKey {
+  Binance(APIKeyInternal),
+  Unknown(APIKeyInternal),
+}
+
+impl APIKey {
+  pub fn inner(&self) -> &APIKeyInternal {
+    match self {
+      APIKey::Binance(inner) => inner,
+      APIKey::Unknown(inner) => inner,
+    }
+  }
+  pub fn inner_mut(&mut self) -> &mut APIKeyInternal {
+    match self {
+      APIKey::Binance(inner) => inner,
+      APIKey::Unknown(inner) => inner,
+    }
+  }
+}
+
+impl From<APIKey> for Exchanges {
+  fn from(v: APIKey) -> Self {
+    match v {
+      APIKey::Binance(_) => Self::Binance,
+      APIKey::Unknown(_) => Self::Unknown,
+    }
+  }
+}
+
 impl From<APIKey> for Result<RPCAPIKey, String> {
   fn from(value: APIKey) -> Self {
+    let inner = value.inner().clone();
+    let exchange: Exchanges = value.into();
     return Ok(RPCAPIKey {
-      id: value.id.map(|oid| oid.to_hex()).unwrap_or(String::from("")),
-      exchange: value.exchange.parse::<Exchanges>()?.into(),
-      label: value.label,
-      pub_key: value.pub_key,
-      prv_key: value.prv_key,
+      id: inner.id.map(|oid| oid.to_hex()).unwrap_or(String::from("")),
+      exchange: exchange.into(),
+      label: inner.label,
+      pub_key: inner.pub_key,
+      prv_key: inner.prv_key,
     });
   }
 }
 
 impl From<RPCAPIKey> for APIKey {
   fn from(value: RPCAPIKey) -> Self {
-    return APIKey {
-      id: ObjectId::with_string(&value.id).ok(),
-      exchange: FromPrimitive::from_i32(value.exchange)
-        .map(|exc: Exchanges| exc.as_string())
-        .unwrap_or(String::default()),
-      label: value.label,
-      pub_key: value.pub_key,
-      prv_key: value.prv_key,
+    let exchange: Exchanges =
+      FromPrimitive::from_i32(value.exchange).unwrap_or(Exchanges::Unknown);
+    let exchange: APIKey = match exchange {
+      Exchanges::Binance => APIKey::Binance(APIKeyInternal {
+        id: ObjectId::with_string(&value.id).ok(),
+        label: value.label,
+        pub_key: value.pub_key,
+        prv_key: value.prv_key,
+      }),
+      Exchanges::Unknown => APIKey::Unknown(APIKeyInternal {
+        id: ObjectId::with_string(&value.id).ok(),
+        label: value.label,
+        pub_key: value.pub_key,
+        prv_key: value.prv_key,
+      }),
     };
+    return exchange;
   }
 }
 
