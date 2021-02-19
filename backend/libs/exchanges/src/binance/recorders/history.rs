@@ -23,7 +23,7 @@ use super::super::constants::{
 };
 use super::super::entities::{Kline, Klines, KlinesWithInfo, TradeTime};
 
-use crate::traits::{HistoryRecorder as HistRecTrait, Recorder};
+use crate::traits::HistoryRecorder as HistRecTrait;
 
 #[derive(Debug, Clone)]
 pub struct HistoryRecorder {

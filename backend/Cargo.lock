@@ -301,6 +301,11 @@ dependencies = [
 [[package]]
 name = "base_recorder"
 version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "mongodb",
+]
 
 [[package]]
 name = "bitflags"
@@ -838,6 +843,7 @@ version = "0.1.0"
 dependencies = [
  "async-stream",
  "async-trait",
+ "base_recorder",
  "bytes 1.0.1",
  "chrono",
  "clap",
@@ -1258,10 +1264,18 @@ dependencies = [
 [[package]]
 name = "history_fetcher"
 version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "nats",
+ "types",
+]
 
 [[package]]
 name = "history_recorder"
 version = "0.1.0"
+dependencies = [
+ "async-trait",
+]
 
 [[package]]
 name = "hmac"
@@ -3101,10 +3115,21 @@ dependencies = [
 [[package]]
 name = "symbol_fetcher"
 version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "types",
+]
 
 [[package]]
 name = "symbol_recorder"
 version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures-core",
+ "mongodb",
+ "serde",
+ "types",
+]
 
 [[package]]
 name = "symbol_service"
