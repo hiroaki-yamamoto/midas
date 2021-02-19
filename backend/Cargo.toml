@@ -1,5 +1,15 @@
 [workspace]
 members = [
+  "libs/rulesets/base_recorder",
+  "libs/rulesets/executor",
+  "libs/rulesets/history_recorder",
+  "libs/rulesets/history_fetcher",
+  "libs/rulesets/sign",
+  "libs/rulesets/symbol_fetcher",
+  "libs/rulesets/symbol_recorder",
+  "libs/rulesets/trade_observer",
+  "libs/rulesets/user_stream",
+
   "libs/csrf",
   "libs/config",
   "libs/exchanges",
