@@ -11,17 +11,17 @@ rpc = { path = "../rpc" }
 config = { path = "../config" }
 async-trait = "0.1.42"
 types = { path = "../types" }
-reqwest = {version = "0.11.0", features = ["rustls-tls-native-roots", "json", "gzip", "brotli"]}
+reqwest = {version = "0.11.1", features = ["rustls-tls-native-roots", "json", "gzip", "brotli"]}
 tokio = { version = "1.2", features = [
   "rt", "rt-multi-thread", "sync", "macros", "time", "net"
 ]}
 chrono = "0.4.19"
-url = "2.2.0"
+url = "2.2.1"
 serde_qs = "0.8.2"
 serde = "1.0.123"
 serde_json = "1.0.62"
 slog = {version = "2.7.0" }
-mongodb = {version = "1.1.1", default-features = false, features = ["async-std-runtime"]}
+mongodb = {version = "1.2.0", default-features = false, features = ["async-std-runtime"]}
 futures = "0.3.12"
 nats = "0.8.6"
 rmp-serde = "0.15.4"
