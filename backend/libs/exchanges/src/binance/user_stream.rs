@@ -27,7 +27,7 @@ use super::entities::{
   CastedUserStreamEvents, ListenKey, ListenKeyPair, RawUserStreamEvents,
 };
 
-use crate::entities::{APIKey, APIKeyEvent, APIKeyInternal};
+use crate::entities::{APIKey, APIKeyEvent, APIKeyInner};
 use crate::errors::{MaximumAttemptExceeded, WebsocketError};
 use crate::traits::UserStream as UserStreamTrait;
 use crate::types::TLSWebSocket;
@@ -142,7 +142,7 @@ impl UserStream {
       "Session Disconnected. Reconnecting...";
       "api_key" => &pub_key,
     );
-    let mut key = APIKeyInternal::default();
+    let mut key = APIKeyInner::default();
     key.pub_key = pub_key.clone();
     for _ in 0..5 {
       match self.get_listen_key(&key).await {
@@ -173,10 +173,7 @@ impl PubClient for UserStream {}
 
 #[async_trait]
 impl UserStreamTrait for UserStream {
-  async fn get_listen_key(
-    &self,
-    api_key: &APIKeyInternal,
-  ) -> GenericResult<()> {
+  async fn get_listen_key(&self, api_key: &APIKeyInner) -> GenericResult<()> {
     let pub_key = &api_key.pub_key;
     let client = self.get_client(pub_key)?;
     let resp: ListenKey = client
@@ -195,7 +192,7 @@ impl UserStreamTrait for UserStream {
   }
   async fn clise_listen_key(
     &self,
-    api_key: &APIKeyInternal,
+    api_key: &APIKeyInner,
     listen_key: &String,
   ) -> GenericResult<()> {
     let pub_key = &api_key.pub_key;

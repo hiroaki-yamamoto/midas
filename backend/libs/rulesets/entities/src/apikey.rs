@@ -6,7 +6,7 @@ use ::rpc::entities::Exchanges;
 use ::rpc::keychain::ApiKey as RPCAPIKey;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct APIKeyInternal {
+pub struct APIKeyInner {
   #[serde(default, rename = "_id", skip_serializing_if = "Option::is_none")]
   pub id: Option<ObjectId>,
   pub label: String,
@@ -17,18 +17,18 @@ pub struct APIKeyInternal {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "exchange", rename_all = "camelCase")]
 pub enum APIKey {
-  Binance(APIKeyInternal),
-  Unknown(APIKeyInternal),
+  Binance(APIKeyInner),
+  Unknown(APIKeyInner),
 }
 
 impl APIKey {
-  pub fn inner(&self) -> &APIKeyInternal {
+  pub fn inner(&self) -> &APIKeyInner {
     match self {
       APIKey::Binance(inner) => inner,
       APIKey::Unknown(inner) => inner,
     }
   }
-  pub fn inner_mut(&mut self) -> &mut APIKeyInternal {
+  pub fn inner_mut(&mut self) -> &mut APIKeyInner {
     match self {
       APIKey::Binance(inner) => inner,
       APIKey::Unknown(inner) => inner,
@@ -64,13 +64,13 @@ impl From<RPCAPIKey> for APIKey {
     let exchange: Exchanges =
       FromPrimitive::from_i32(value.exchange).unwrap_or(Exchanges::Unknown);
     let exchange: APIKey = match exchange {
-      Exchanges::Binance => APIKey::Binance(APIKeyInternal {
+      Exchanges::Binance => APIKey::Binance(APIKeyInner {
         id: ObjectId::with_string(&value.id).ok(),
         label: value.label,
         pub_key: value.pub_key,
         prv_key: value.prv_key,
       }),
-      Exchanges::Unknown => APIKey::Unknown(APIKeyInternal {
+      Exchanges::Unknown => APIKey::Unknown(APIKeyInner {
         id: ObjectId::with_string(&value.id).ok(),
         label: value.label,
         pub_key: value.pub_key,

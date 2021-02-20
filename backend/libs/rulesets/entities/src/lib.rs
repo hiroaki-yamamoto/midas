@@ -6,7 +6,7 @@ mod order;
 mod order_option;
 
 pub use self::apikey::APIKeyEvent;
-pub use self::apikey::{APIKey, APIKeyInternal};
+pub use self::apikey::{APIKey, APIKeyInner};
 pub use self::book_ticker::BookTicker;
 pub use self::execution::{ExecutionResult, ExecutionType};
 pub use self::kline::KlineCtrl;

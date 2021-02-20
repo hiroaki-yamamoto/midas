@@ -2933,6 +2933,10 @@ dependencies = [
 [[package]]
 name = "sign"
 version = "0.1.0"
+dependencies = [
+ "bytes 1.0.1",
+ "ring",
+]
 
 [[package]]
 name = "signal-hook-registry"
@@ -3530,6 +3534,13 @@ dependencies = [
 [[package]]
 name = "trade_observer"
 version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "entities",
+ "futures-core",
+ "types",
+]
 
 [[package]]
 name = "trust-dns-proto"
@@ -3706,6 +3717,11 @@ dependencies = [
 [[package]]
 name = "user_stream"
 version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "entities",
+ "types",
+]
 
 [[package]]
 name = "utf-8"
