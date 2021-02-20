@@ -10,8 +10,8 @@ use ::rmp_serde::to_vec as to_msgpack;
 use ::rpc::entities::Exchanges;
 use ::types::{GenericResult, ThreadSafeResult};
 
-use crate::entities::{APIKey, APIKeyEvent};
-use crate::traits::Recorder;
+use ::base_recorder::Recorder;
+use ::entities::{APIKey, APIKeyEvent};
 
 #[derive(Debug, Clone)]
 pub struct KeyChain {

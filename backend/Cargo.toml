@@ -13,6 +13,7 @@ members = [
 
   "libs/csrf",
   "libs/errors",
+  "libs/keychain",
   "libs/config",
   "libs/exchanges",
   "libs/slog_builder",
