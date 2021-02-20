@@ -9,8 +9,8 @@ use super::order::OrderStatus;
 use super::side::Side;
 
 use crate::casting::cast_datetime_from_i64;
-use crate::entities::{Order as CommonOrder, OrderInner as CommonOrderInner};
 use crate::errors::ParseError;
+use crate::{Order as CommonOrder, OrderInner as CommonOrderInner};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]

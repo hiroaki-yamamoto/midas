@@ -10,7 +10,9 @@ edition = "2018"
 rpc = { path = "../rpc" }
 config = { path = "../config" }
 types = { path = "../types" }
+
 base_recorder = { path = "../rulesets/base_recorder" }
+entities = { path = "../rulesets/entities" }
 
 async-trait = "0.1.42"
 reqwest = {version = "0.11.0", features = ["rustls-tls-native-roots", "json", "gzip", "brotli"]}

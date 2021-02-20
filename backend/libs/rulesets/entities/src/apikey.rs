@@ -1,5 +1,5 @@
-use ::mongodb::bson::oid::ObjectId;
-use ::num::traits::FromPrimitive;
+use ::bson::oid::ObjectId;
+use ::num_traits::FromPrimitive;
 use ::serde::{Deserialize, Serialize};
 
 use ::rpc::entities::Exchanges;

@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "libs/rulesets/entities",
   "libs/rulesets/base_recorder",
   "libs/rulesets/executor",
   "libs/rulesets/history_recorder",
@@ -11,6 +12,7 @@ members = [
   "libs/rulesets/user_stream",
 
   "libs/csrf",
+  "libs/errors",
   "libs/config",
   "libs/exchanges",
   "libs/slog_builder",

@@ -1,4 +1,4 @@
-use ::mongodb::bson::oid::ObjectId;
+use ::bson::oid::ObjectId;
 
 #[derive(Clone, Debug)]
 pub enum ExecutionType {

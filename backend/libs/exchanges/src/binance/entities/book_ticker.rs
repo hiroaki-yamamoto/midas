@@ -1,7 +1,7 @@
 use ::std::convert::TryFrom;
 use ::std::error::Error;
 
-use crate::entities::BookTicker as CommonBookTicker;
+use ::entities::BookTicker as CommonBookTicker;
 use ::rpc::entities::Exchanges;
 use ::serde::{Deserialize, Serialize};
 

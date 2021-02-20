@@ -1,16 +1,16 @@
-use ::num::pow::pow;
+use ::num_traits::pow::pow;
 use ::serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrderOption {
-  pub(crate) iceberg: bool,
-  pub(crate) num_ladder: u8,
+  pub iceberg: bool,
+  pub num_ladder: u8,
   // Note: order_price[n] =
   //   order_price[n - 1] * (price_ratio)^n,
   //   where n in N & n > 0
-  pub(crate) price_ratio: f64,
+  pub price_ratio: f64,
   // Note: base_asset_amount[n] = base_asset_amount[n-1] * amount_multiplyer
-  pub(crate) amount_multiplyer: f64,
+  pub amount_multiplyer: f64,
 }
 
 impl Default for OrderOption {

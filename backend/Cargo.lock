@@ -797,6 +797,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "entities"
+version = "0.1.0"
+dependencies = [
+ "bson",
+ "futures-core",
+ "num-traits",
+ "rpc",
+ "serde",
+]
+
+[[package]]
 name = "enum-as-inner"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -832,6 +843,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "errors"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "slog",
+ "slog_derive",
+ "url",
+]
+
+[[package]]
 name = "event-listener"
 version = "2.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -848,6 +869,7 @@ dependencies = [
  "chrono",
  "clap",
  "config",
+ "entities",
  "erased-serde",
  "futures",
  "http",
@@ -876,6 +898,14 @@ dependencies = [
 [[package]]
 name = "executor"
 version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bson",
+ "entities",
+ "errors",
+ "futures-core",
+ "types",
+]
 
 [[package]]
 name = "fake-simd"
