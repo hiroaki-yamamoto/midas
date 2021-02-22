@@ -3655,6 +3655,8 @@ dependencies = [
  "chrono",
  "serde",
  "tokio 1.2.0",
+ "tokio-native-tls",
+ "tokio-tungstenite",
  "url",
  "warp",
 ]

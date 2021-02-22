@@ -9,6 +9,8 @@ edition = "2018"
 [dependencies]
 url = "2.2.0"
 serde = {version = "1.0.123", features = ["derive"]}
-tokio = {version = "1.2", features = ["sync"]}
+tokio = {version = "1.2", features = ["sync", "net"]}
 chrono = "0.4.19"
 warp = "0.3"
+tokio-tungstenite = { version = "0.13.0", features = ["tls"] }
+tokio-native-tls = "0.3"
