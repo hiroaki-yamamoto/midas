@@ -1,4 +1,6 @@
+pub mod casting;
 pub mod errors;
+
 use ::std::error::Error;
 use ::std::result::Result as StdResult;
 
