@@ -7,11 +7,12 @@ use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::futures::future::{join, join_all, FutureExt};
 use ::futures::StreamExt;
-use ::mongodb::bson::DateTime as MongoDateTime;
+use ::mongodb::bson::{doc, DateTime as MongoDateTime, Document};
 use ::nats::asynk::{Connection, Subscription};
 use ::rand::random;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
+use ::slog::{error, warn, Logger};
 use ::tokio::select;
 use ::tokio::sync::{broadcast, mpsc};
 use ::tokio::time::sleep;
@@ -20,24 +21,20 @@ use ::url::Url;
 use ::config::{
   CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH,
 };
-use ::mongodb::bson::{doc, Document};
+use ::entities::KlineCtrl;
+use ::errors::{EmptyError, MaximumAttemptExceeded};
+use ::history_fetcher::HistoryFetcher as HistoryFetcherTrait;
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
-use ::slog::{error, warn, Logger};
 use ::types::{GenericResult, ThreadSafeResult};
 
-use crate::entities::KlineCtrl;
-use crate::errors::{EmptyError, MaximumAttemptExceeded};
-use crate::traits::HistoryFetcher as HistoryFetcherTrait;
-
-use super::super::constants::{
+use super::constants::{
   HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
   HIST_FETCHER_PARAM_SUB_NAME, HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
   REST_ENDPOINT,
 };
-use super::super::entities::{
-  BinancePayload, HistFetcherParam, HistQuery, Kline, Klines, KlinesWithInfo,
-  TradeTime,
+use super::entities::{
+  BinancePayload, Kline, Klines, KlinesWithInfo, Param, Query, TradeTime,
 };
 use super::SymbolFetcher;
 
@@ -77,7 +74,7 @@ impl HistoryFetcher {
       None => None,
     };
     let mut url = self.endpoint.clone();
-    let param = HistQuery {
+    let param = Query {
       symbol: pair.clone(),
       interval: "1m".into(),
       start_time: format!("{}", start_at.timestamp() * 1000),
@@ -180,7 +177,7 @@ impl HistoryFetcher {
     for symbol in to_fetch_binance {
       let broker = &self.broker;
       let prog_send = prog_send.clone();
-      let param = HistFetcherParam {
+      let param = Param {
         symbol: symbol.clone(),
         num_symbols: 1,
         entire_data_len: 1,

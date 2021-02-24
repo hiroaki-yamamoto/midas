@@ -7,9 +7,9 @@ use ::mongodb::bson::oid::ObjectId;
 use ::nats::asynk::Connection as NatsCon;
 use ::slog::Logger;
 
+use ::errors::ExecutionFailed;
 use ::types::GenericResult;
 
-use crate::errors::ExecutionFailed;
 use crate::traits::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
   TradeObserver as TradeObserverTrait,

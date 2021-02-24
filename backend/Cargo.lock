@@ -311,16 +311,54 @@ dependencies = [
 name = "binance_clients"
 version = "0.1.0"
 dependencies = [
+ "reqwest",
  "types",
 ]
 
 [[package]]
 name = "binance_executors"
 version = "0.1.0"
+dependencies = [
+ "async-stream",
+ "async-trait",
+ "errors",
+ "executor",
+ "futures",
+ "mongodb",
+ "nats",
+ "ring",
+ "rpc",
+ "slog",
+ "types",
+]
 
 [[package]]
 name = "binance_histories"
 version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "binance_clients",
+ "chrono",
+ "config",
+ "entities",
+ "errors",
+ "futures",
+ "history_fetcher",
+ "history_recorder",
+ "mongodb",
+ "nats",
+ "rand 0.8.3",
+ "rmp-serde",
+ "rpc",
+ "serde",
+ "serde_json",
+ "serde_qs",
+ "slog",
+ "tokio 1.2.0",
+ "trade_observer",
+ "types",
+ "url",
+]
 
 [[package]]
 name = "binance_observers"
@@ -337,6 +375,16 @@ version = "0.1.0"
 [[package]]
 name = "binance_symbols"
 version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "mongodb",
+ "nats",
+ "rpc",
+ "serde",
+ "slog",
+ "types",
+]
 
 [[package]]
 name = "bitflags"
@@ -1362,6 +1410,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "hyper-rustls"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f9f7a97316d44c0af9b0301e65010573a853a9fc97046d7331d7f6bc0fd5a64"
+dependencies = [
+ "futures-util",
+ "hyper",
+ "log",
+ "rustls 0.19.0",
+ "tokio 1.2.0",
+ "tokio-rustls 0.22.0",
+ "webpki",
+]
+
+[[package]]
 name = "hyper-tls"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1728,7 +1791,7 @@ dependencies = [
  "uuid",
  "version_check",
  "webpki",
- "webpki-roots",
+ "webpki-roots 0.18.0",
 ]
 
 [[package]]
@@ -2369,6 +2432,7 @@ dependencies = [
  "http",
  "http-body",
  "hyper",
+ "hyper-rustls",
  "hyper-tls",
  "ipnet",
  "js-sys",
@@ -2378,16 +2442,19 @@ dependencies = [
  "native-tls",
  "percent-encoding",
  "pin-project-lite 0.2.4",
+ "rustls 0.19.0",
  "serde",
  "serde_json",
  "serde_urlencoded",
  "tokio 1.2.0",
  "tokio-native-tls",
+ "tokio-rustls 0.22.0",
  "tokio-util",
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+ "webpki-roots 0.21.0",
  "winreg 0.7.0",
 ]
 
@@ -2654,6 +2721,17 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "serde_qs"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5cb0f0564a84554436c4ceff5c896308d4e09d0eb4bd0215b8f698f88084601"
+dependencies = [
+ "percent-encoding",
+ "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -3743,6 +3821,15 @@ name = "webpki-roots"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "91cd5736df7f12a964a5067a12c62fa38e1bd8080aff1f80bc29be7c80d19ab4"
+dependencies = [
+ "webpki",
+]
+
+[[package]]
+name = "webpki-roots"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82015b7e0b8bad8185994674a13a93306bea76cf5a16c5a181382fd3a5ec2376"
 dependencies = [
  "webpki",
 ]

@@ -7,3 +7,15 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+types = { path = "../../../types" }
+errors = { path = "../../../errors" }
+rpc = { path = "../../../rpc" }
+executor = { path = "../../../rulesets/executor" }
+
+async-stream = "0.3.0"
+async-trait = "0.1.42"
+futures = "0.3.13"
+mongodb = {version = "1.1.1", default-features = false, features = ["async-std-runtime"]}
+nats = "0.8"
+slog = "2.7.0"
+ring = "0.16.20"

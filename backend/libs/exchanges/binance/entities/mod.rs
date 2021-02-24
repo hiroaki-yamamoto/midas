@@ -27,6 +27,4 @@ pub(crate) use self::stream::{
 pub use self::symbol::{ListSymbolStream, Symbol};
 pub use self::trade_time::TradeTime;
 
-use ::serde_json::Value;
-
-pub type BinancePayload = Vec<Vec<Value>>;
+use serde_json::Value;

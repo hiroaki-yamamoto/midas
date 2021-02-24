@@ -1,38 +1,10 @@
-use ::std::convert::AsRef;
-
 use ::mongodb::bson::DateTime as MongoDateTime;
 use ::serde::{Deserialize, Serialize};
 use ::serde_json::Value;
 
+use ::trade_observer::TradeDateTime;
+use ::types::casting::{cast_datetime, cast_f64, cast_i64};
 use ::types::{DateTime as ChronoDateTime, ThreadSafeResult};
-
-use crate::casting::{cast_datetime, cast_f64, cast_i64};
-use crate::traits::TradeDateTime;
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct HistQuery {
-  pub symbol: String,
-  pub interval: String,
-  pub start_time: String,
-  pub end_time: Option<String>,
-  pub limit: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HistFetcherParam {
-  pub symbol: String,
-  pub num_symbols: i64,
-  pub entire_data_len: i64,
-  pub start_time: MongoDateTime,
-  pub end_time: Option<MongoDateTime>,
-}
-
-impl AsRef<HistFetcherParam> for HistFetcherParam {
-  fn as_ref(&self) -> &Self {
-    return self;
-  }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Kline {

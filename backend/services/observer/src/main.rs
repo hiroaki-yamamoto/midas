@@ -15,9 +15,9 @@ use ::tokio::time::interval;
 use ::warp::ws::Message;
 use ::warp::{Filter, Reply};
 
+use ::binance_streams::{self as binance, traits::TeadeObserver};
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
-use ::binance_streams{self as binance, traits::TeadeObserver};
 use ::rpc::bookticker::BookTicker;
 use ::rpc::entities::Exchanges;
 

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use super::Kline;
 
-use crate::traits::TradeDateTime;
+use ::trade_observer::TradeDateTime;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct TradeTime<T> {
