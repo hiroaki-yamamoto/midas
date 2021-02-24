@@ -15,7 +15,7 @@ use ::warp::filters::BoxedFilter;
 use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
 
-use ::exchanges::binance;
+use binance_histories as binance;
 use ::rpc::entities::{Exchanges, Status};
 use ::rpc::historical::{HistChartFetchReq, HistChartProg, StopRequest};
 use ::types::{GenericResult, ThreadSafeResult};

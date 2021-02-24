@@ -17,7 +17,7 @@ use ::warp::{Filter, Reply};
 
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
-use ::exchanges::{binance, TradeObserver};
+use ::binance_streams{self as binance, traits::TeadeObserver};
 use ::rpc::bookticker::BookTicker;
 use ::rpc::entities::Exchanges;
 

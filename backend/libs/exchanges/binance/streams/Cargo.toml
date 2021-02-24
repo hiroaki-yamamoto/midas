@@ -1,5 +1,5 @@
 [package]
-name = "binance_user_stream"
+name = "binance_streams"
 version = "0.1.0"
 authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
 edition = "2018"

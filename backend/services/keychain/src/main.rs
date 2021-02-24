@@ -15,7 +15,7 @@ use ::warp::Filter;
 
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
-use ::exchanges::{APIKey, KeyChain};
+use ::keychain::{APIKey, KeyChain};
 use ::rpc::entities::{InsertOneResult, Status};
 use ::rpc::keychain::ApiRename;
 use ::rpc::keychain::{ApiKey as RPCAPIKey, ApiKeyList as RPCAPIKeyList};

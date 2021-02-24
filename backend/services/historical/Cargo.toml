@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 types = { path = "../../libs/types" }
-exchanges = { path = "../../libs/exchanges" }
+binance_histories = { path = "../../libs/exchanges/binance/histories" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
