@@ -1,7 +1,10 @@
 mod constants;
 mod entities;
-mod fetcher;
+pub mod fetcher;
 mod manager;
-mod recorder;
+pub mod recorder;
+
+pub use ::symbol_fetcher::SymbolFetcher;
+pub use ::symbol_recorder::SymbolRecorder;
 
 pub use entities::ListSymbolStream;

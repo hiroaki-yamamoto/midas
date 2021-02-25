@@ -4,7 +4,7 @@ use ::slog::{o, Logger};
 use ::warp::filters::BoxedFilter;
 use ::warp::{Filter, Rejection, Reply};
 
-use ::binance_symbols::{self as binance, traits::SymbolFetcher};
+use ::binance_symbols::{fetcher as binance, SymbolFetcher};
 use ::num_traits::FromPrimitive;
 use ::rpc::entities::Exchanges;
 
