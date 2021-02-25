@@ -11,7 +11,8 @@ use ::rpc::entities::Exchanges;
 use ::types::{GenericResult, ThreadSafeResult};
 
 use ::base_recorder::Recorder;
-use ::entities::{APIKey, APIKeyEvent};
+pub use ::entities::APIKey;
+use ::entities::APIKeyEvent;
 
 #[derive(Debug, Clone)]
 pub struct KeyChain {
