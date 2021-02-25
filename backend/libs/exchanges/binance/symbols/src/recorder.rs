@@ -7,10 +7,9 @@ use ::serde::Serialize;
 
 use ::types::ThreadSafeResult;
 
-use super::super::entities::{ListSymbolStream, Symbol};
-use crate::traits::{
-  Recorder as RecorderTrait, SymbolRecorder as SymbolRecorderTrait,
-};
+use super::entities::{ListSymbolStream, Symbol};
+use ::base_recorder::Recorder as RecorderTrait;
+use ::symbol_recorder::SymbolRecorder as SymbolRecorderTrait;
 
 #[derive(Debug, Clone)]
 pub struct SymbolRecorder {

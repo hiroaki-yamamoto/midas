@@ -1,9 +1,8 @@
 use ::serde::{Deserialize, Serialize};
 
-use ::futures::stream::BoxStream;
 use ::rpc::entities::SymbolInfo;
 
-use super::Filters;
+use super::filters::Filters;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -42,5 +41,3 @@ impl From<Symbol> for SymbolInfo {
     };
   }
 }
-
-pub type ListSymbolStream<'a> = BoxStream<'a, Symbol>;

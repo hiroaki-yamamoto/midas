@@ -6,18 +6,17 @@ use ::mongodb::Database;
 use ::nats::asynk::Connection as Broker;
 use ::slog::Logger;
 
+use ::binance_clients::constants::REST_ENDPOINT;
 use ::rpc::entities::SymbolInfo;
 use ::types::ThreadSafeResult;
 
-use super::super::constants::REST_ENDPOINT;
-use super::super::entities::{ExchangeInfo, Symbol};
-use super::super::managers::SymbolUpdateEventManager;
-use super::super::recorders::SymbolRecorder;
+use super::entities::{ExchangeInfo, Symbol};
+use super::manager::SymbolUpdateEventManager;
+use super::recorder::SymbolRecorder;
 
-use crate::errors::StatusFailure;
-use crate::traits::{
-  SymbolFetcher as SymbolFetcherTrait, SymbolRecorder as SymbolRecorderTrait,
-};
+use ::errors::StatusFailure;
+use symbol_fetcher::SymbolFetcher as SymbolFetcherTrait;
+use symbol_recorder::SymbolRecorder as SymbolRecorderTrait;
 
 #[derive(Debug, Clone)]
 pub struct SymbolFetcher {
@@ -52,7 +51,7 @@ impl SymbolFetcherTrait for SymbolFetcher {
   async fn refresh(&self) -> ThreadSafeResult<()> {
     let mut url: url::Url = REST_ENDPOINT.parse()?;
     url = url.join("/api/v3/exchangeInfo")?;
-    let resp = reqwest::get(url.clone()).await?;
+    let resp = ::reqwest::get(url.clone()).await?;
     let old_symbols = self.recorder.list(doc! {}).await?;
     let old_symbols: Vec<Symbol> = old_symbols.collect().await;
     let resp_status = resp.status();

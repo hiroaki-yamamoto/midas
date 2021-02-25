@@ -377,13 +377,22 @@ name = "binance_symbols"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "base_recorder",
+ "binance_clients",
+ "errors",
  "futures",
  "mongodb",
  "nats",
+ "reqwest",
+ "rmp-serde",
  "rpc",
  "serde",
+ "serde_json",
  "slog",
+ "symbol_fetcher",
+ "symbol_recorder",
  "types",
+ "url",
 ]
 
 [[package]]
