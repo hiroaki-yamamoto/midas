@@ -8,10 +8,13 @@ edition = "2018"
 
 [dependencies]
 types = { path = "../../libs/types" }
-binance_histories = { path = "../../libs/exchanges/binance/histories" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
+
+history_fetcher = { path = "../../libs/rulesets/history_fetcher" }
+binance_histories = { path = "../../libs/exchanges/binance/histories" }
+binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
 
 serde = {version = "1.0.123", features = ["derive"]}
 rmp-serde = "0.15.4"

@@ -15,10 +15,11 @@ use ::warp::filters::BoxedFilter;
 use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
 
-use binance_histories as binance;
 use ::rpc::entities::{Exchanges, Status};
 use ::rpc::historical::{HistChartFetchReq, HistChartProg, StopRequest};
 use ::types::{GenericResult, ThreadSafeResult};
+use binance_histories::fetcher as binance_hist;
+use binance_symbols::fetcher as binance_sym;
 
 use super::manager::ExchangeManager;
 
@@ -30,7 +31,7 @@ type SubscribeStream =
 #[derive(Debug, Clone)]
 pub struct Service {
   logger: Logger,
-  binance: ExchangeManager<binance::HistoryFetcher>,
+  binance: ExchangeManager<binance_hist::HistoryFetcher>,
 }
 
 impl Service {
@@ -40,11 +41,11 @@ impl Service {
     nats: NatsCon,
   ) -> GenericResult<Self> {
     let log = log.new(o!("scope" => "History Fetch RPC Service"));
-    let binance = binance::HistoryFetcher::new(
+    let binance = binance_hist::HistoryFetcher::new(
       None,
       log.new(o!("exchange" => "Binance", "scope" => "HistoryFetch")),
       nats.clone(),
-      binance::SymbolFetcher::new(
+      binance_sym::SymbolFetcher::new(
         log.new(o!("exchange" => "Binance", "scope" => "SymbolFetch")),
         nats.clone(),
         db.clone(),

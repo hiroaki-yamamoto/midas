@@ -10,6 +10,7 @@ edition = "2018"
 config = { path = "../../libs/config" }
 types = { path = "../../libs/types" }
 binance_histories = { path = "../../libs/exchanges/binance/histories" }
+binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
 
 slog = "2.7.0"
 tokio = { version = "1.2", features = ["rt", "rt-multi-thread", "macros", "signal"] }

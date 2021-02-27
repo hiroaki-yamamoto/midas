@@ -1,7 +1,7 @@
 pub mod constants;
 mod entities;
-mod fetcher;
-mod recorder;
+pub mod fetcher;
+pub mod recorder;
 
-pub use fetcher::HistoryFetcher;
-pub use recorder::HistoryRecorder;
+pub use history_fetcher::HistoryFetcher;
+pub use history_recorder::HistoryRecorder;

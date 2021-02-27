@@ -1290,6 +1290,7 @@ name = "historical-workers"
 version = "0.1.0"
 dependencies = [
  "binance_histories",
+ "binance_symbols",
  "clap",
  "config",
  "futures",
@@ -1307,10 +1308,12 @@ version = "0.1.0"
 dependencies = [
  "async-stream",
  "binance_histories",
+ "binance_symbols",
  "clap",
  "config",
  "csrf",
  "futures",
+ "history_fetcher",
  "http",
  "libc",
  "mongodb",
