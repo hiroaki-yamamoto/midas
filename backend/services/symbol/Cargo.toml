@@ -17,7 +17,7 @@ mongodb = {version = "1.2.0", default-features = false, features = ["async-std-r
 slog = "2.7.0"
 clap = "3.0.0-beta.2"
 tokio = {version = "1.2", features = ["macros", "rt", "rt-multi-thread", "signal"]}
-futures = "0.3.12"
+futures = "0.3.13"
 libc = "0.2.86"
 nats = "0.8.6"
 warp = "0.3.0"
