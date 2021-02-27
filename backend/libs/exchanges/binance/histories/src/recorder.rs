@@ -2,10 +2,8 @@ use ::std::collections::hash_map::HashMap;
 
 use ::async_trait::async_trait;
 use ::futures::future::{join3, join_all};
-use ::futures::{Stream, StreamExt};
-use ::mongodb::bson::{
-  doc, from_document, to_bson, DateTime as MongoDateTime, Document,
-};
+use ::futures::StreamExt;
+use ::mongodb::bson::{doc, from_document, to_bson, DateTime as MongoDateTime};
 use ::mongodb::error::Result as MongoResult;
 use ::mongodb::{Collection, Database};
 use ::nats::asynk::Connection as NatsConnection;
@@ -21,7 +19,7 @@ use super::constants::{
   HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
   HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
 };
-use super::entities::{Kline, Klines, KlinesWithInfo, TradeTime};
+use super::entities::{Klines, KlinesWithInfo, TradeTime};
 
 use base_recorder::Recorder;
 use history_recorder::HistoryRecorder as HistRecTrait;
@@ -225,20 +223,20 @@ impl HistoryRecorder {
     }
   }
 
-  pub(crate) async fn list(
-    &self,
-    query: impl Into<Option<Document>>,
-  ) -> MongoResult<impl Stream<Item = Kline>> {
-    return Ok(
-      self
-        .col
-        .find(query, None)
-        .await?
-        .filter_map(|item| async { item.ok() })
-        .map(|item| from_document::<Kline>(item))
-        .filter_map(|item| async { item.ok() }),
-    );
-  }
+  // pub async fn list(
+  //   &self,
+  //   query: impl Into<Option<Document>>,
+  // ) -> MongoResult<impl Stream<Item = Kline>> {
+  //   return Ok(
+  //     self
+  //       .col
+  //       .find(query, None)
+  //       .await?
+  //       .filter_map(|item| async { item.ok() })
+  //       .map(|item| from_document::<Kline>(item))
+  //       .filter_map(|item| async { item.ok() }),
+  //   );
+  // }
 }
 
 #[async_trait]
