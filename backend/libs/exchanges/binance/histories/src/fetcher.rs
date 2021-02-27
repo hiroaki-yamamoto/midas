@@ -18,6 +18,8 @@ use ::tokio::sync::{broadcast, mpsc};
 use ::tokio::time::sleep;
 use ::url::Url;
 
+use ::binance_clients::reqwest;
+use ::binance_symbols::fetcher::SymbolFetcher;
 use ::config::{
   CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH,
 };
@@ -36,7 +38,6 @@ use super::constants::{
 use super::entities::{
   BinancePayload, Kline, Klines, KlinesWithInfo, Param, Query, TradeTime,
 };
-use super::SymbolFetcher;
 
 #[derive(Debug, Clone)]
 pub struct HistoryFetcher {
@@ -88,7 +89,7 @@ impl HistoryFetcher {
     url.set_query(Some(&param));
     let mut c: i8 = 0;
     while c < 20 {
-      let resp = ::reqwest::get(url.clone()).await?;
+      let resp = reqwest::get(url.clone()).await?;
       let rest_status = resp.status();
       if rest_status.is_success() {
         let values = resp.json::<BinancePayload>().await?;
@@ -107,8 +108,8 @@ impl HistoryFetcher {
           })
           .collect();
         return Ok(ret);
-      } else if rest_status == ::reqwest::StatusCode::IM_A_TEAPOT
-        || rest_status == ::reqwest::StatusCode::TOO_MANY_REQUESTS
+      } else if rest_status == reqwest::StatusCode::IM_A_TEAPOT
+        || rest_status == reqwest::StatusCode::TOO_MANY_REQUESTS
       {
         let mut retry_secs: i64 = resp
           .headers()
@@ -288,7 +289,7 @@ impl HistoryFetcher {
           sec_end_date = end_at;
         }
         let msg = match to_msgpack(
-          HistFetcherParam {
+          Param {
             symbol: symbol.clone(),
             num_symbols: symbols_len as i64,
             entire_data_len,
@@ -361,7 +362,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
     )
     .await;
     let mut param_sub = param_sub?
-      .map(|item| (from_msgpack::<HistFetcherParam>(item.data.as_ref()), item))
+      .map(|item| (from_msgpack::<Param>(item.data.as_ref()), item))
       .boxed();
     let mut ctrl_sub = ctrl_sub?
       .map(|item| from_msgpack::<KlineCtrl>(item.data.as_ref()))

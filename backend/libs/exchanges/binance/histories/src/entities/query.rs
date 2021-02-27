@@ -1,7 +1,5 @@
 use ::serde::Serialize;
 
-pub(crate) use ::trade_observer::TradeDateTime;
-
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Query {

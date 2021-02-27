@@ -1,5 +1,6 @@
 pub mod constants;
 
+pub use ::reqwest;
 use ::reqwest::{header, Client as Req};
 
 use ::types::GenericResult;
