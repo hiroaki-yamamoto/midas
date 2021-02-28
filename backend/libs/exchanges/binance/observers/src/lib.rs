@@ -20,16 +20,13 @@ use ::tokio::time::{interval, sleep};
 use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
 use self::entities::{BookTicker, SubscribeRequest, SubscribeRequestInner};
-use ::binance_symbols::{
-  entities::ListSymbolStream, entities::Symbol, recorder::SymbolRecorder,
-};
+use ::binance_symbols::{recorder::SymbolRecorder, ListSymbolStream, Symbol};
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::types::{GenericResult, ThreadSafeResult};
 
 use self::constants::{
   SYMBOL_ADD_EVENT, SYMBOL_REMOVE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
 };
-use self::entities::{SubscribeRequest, SubscribeRequestInner};
 use ::types::TLSWebSocket;
 
 use ::entities::BookTicker as CommonBookTicker;
