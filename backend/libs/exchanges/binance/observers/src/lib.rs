@@ -32,7 +32,7 @@ use ::types::TLSWebSocket;
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{InitError, MaximumAttemptExceeded, WebsocketError};
 use ::symbol_recorder::SymbolRecorder as SymbolRecorderTrait;
-use ::trade_observer::TradeObserver as TradeObserverTrait;
+pub use ::trade_observer::TradeObserver as TradeObserverTrait;
 
 const NUM_SESSION: usize = 10;
 const EVENT_DELAY: Duration = Duration::from_secs(1);

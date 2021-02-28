@@ -15,7 +15,7 @@ use ::tokio::time::interval;
 use ::warp::ws::Message;
 use ::warp::{Filter, Reply};
 
-use ::binance_streams::{self as binance, traits::TeadeObserver};
+use ::binance_observers::{self as binance, TradeObserverTrait};
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
 use ::rpc::bookticker::BookTicker;
@@ -25,7 +25,7 @@ async fn get_exchange(
   exchange: Exchanges,
   broker: NatsCon,
   logger: Logger,
-) -> Option<impl TradeObserver> {
+) -> Option<impl TradeObserverTrait> {
   return match exchange {
     Exchanges::Binance => {
       Some(binance::TradeObserver::new(None, broker, logger).await)
@@ -35,7 +35,7 @@ async fn get_exchange(
 }
 
 fn handle_websocket(
-  exchange: impl TradeObserver + Send + Sync + 'static,
+  exchange: impl TradeObserverTrait + Send + Sync + 'static,
   ws: ::warp::ws::Ws,
 ) -> impl Reply {
   return ws.on_upgrade(|mut socket: ::warp::ws::WebSocket| async move {

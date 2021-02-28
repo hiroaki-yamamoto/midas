@@ -7,17 +7,17 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-binance_streams = { path = "../../libs/exchanges/binance/streams" }
+binance_observers = { path = "../../libs/exchanges/binance/observers" }
 config = { path = "../../libs/config" }
 rpc = { path = "../../libs/rpc" }
 csrf = { path = "../../libs/csrf" }
 
 futures = "0.3.12"
 nats = "0.8.6"
-warp = "0.3"
+warp = { version =  "0.3", features = ["tls"]}
 clap = "3.0.0-beta.2"
 slog = "2.7.0"
-tokio = { version = "1.2", features = ["macros", "signal", "time"] }
+tokio = { version = "1.2", features = ["macros", "signal", "time", "rt", "rt-multi-thread"] }
 libc = "0.2.86"
 mongodb = {version = "1.1.1", default-features = false, features = ["async-std-runtime"]}
 rmp-serde = "0.15.4"

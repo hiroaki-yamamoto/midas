@@ -2015,7 +2015,7 @@ checksum = "a9a7ab5d64814df0fe4a4b5ead45ed6c5f181ee3ff04ba344313a6c80446c5d4"
 name = "observer_service"
 version = "0.1.0"
 dependencies = [
- "binance_streams",
+ "binance_observers",
  "clap",
  "config",
  "csrf",
@@ -2034,7 +2034,7 @@ dependencies = [
 name = "observer_worker"
 version = "0.1.0"
 dependencies = [
- "binance_streams",
+ "binance_observers",
  "clap",
  "config",
  "futures",
