@@ -1,29 +1,14 @@
-use ::std::num::ParseFloatError;
+use std::num::ParseFloatError;
 
-use ::mongodb::bson::DateTime;
-use ::serde::{Deserialize, Serialize};
+use mongodb::bson::DateTime;
+use serde::{Deserialize, Serialize};
 
-use ::types::errors::VecElementErrs;
-use ::types::GenericResult;
+use types::errors::VecElementErrs;
+use types::GenericResult;
 
 use super::account_update::AccountUpdate;
 use super::balance_update::BalanceUpdate;
 use super::execution_reports::ExecutionReport;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SubscribeRequestInner {
-  pub id: u64,
-  pub params: Vec<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(tag = "method")]
-pub enum SubscribeRequest {
-  #[serde(rename = "SUBSCRIBE")]
-  Subscribe(SubscribeRequestInner),
-  #[serde(rename = "UNSUBSCRIBE")]
-  Unsubscribe(SubscribeRequestInner),
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "e", rename_all = "camelCase")]
