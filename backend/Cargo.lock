@@ -364,6 +364,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "binance_notification"
+version = "0.1.0"
+
+[[package]]
 name = "binance_observers"
 version = "0.1.0"
 dependencies = [
@@ -390,10 +394,6 @@ dependencies = [
 
 [[package]]
 name = "binance_orders"
-version = "0.1.0"
-
-[[package]]
-name = "binance_streams"
 version = "0.1.0"
 
 [[package]]
@@ -1934,10 +1934,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "notification"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "entities",
+ "types",
+]
+
+[[package]]
 name = "notify_worker"
 version = "0.1.0"
 dependencies = [
- "binance_streams",
+ "binance_notification",
  "clap",
  "config",
  "futures",
@@ -3646,15 +3655,6 @@ dependencies = [
  "idna",
  "matches",
  "percent-encoding",
-]
-
-[[package]]
-name = "user_stream"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "entities",
- "types",
 ]
 
 [[package]]

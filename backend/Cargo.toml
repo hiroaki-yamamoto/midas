@@ -10,7 +10,7 @@ members = [
   "libs/rulesets/symbol_fetcher",
   "libs/rulesets/symbol_recorder",
   "libs/rulesets/trade_observer",
-  "libs/rulesets/user_stream",
+  "libs/rulesets/notification",
 
   "libs/csrf",
   "libs/errors",
@@ -25,7 +25,7 @@ members = [
   "libs/exchanges/binance/observers",
   "libs/exchanges/binance/orders",
   "libs/exchanges/binance/symbols",
-  "libs/exchanges/binance/streams",
+  "libs/exchanges/binance/notification",
   "libs/exchanges/binance/clients",
 
   "services/historical",
