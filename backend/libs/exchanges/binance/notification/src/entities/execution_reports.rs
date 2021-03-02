@@ -7,10 +7,10 @@ use ::serde::{Deserialize, Serialize};
 
 use super::order::OrderStatus;
 use super::side::Side;
+use ::entities::{Order as CommonOrder, OrderInner as CommonOrderInner};
 
-use crate::casting::cast_datetime_from_i64;
-use crate::errors::ParseError;
-use crate::{Order as CommonOrder, OrderInner as CommonOrderInner};
+use ::errors::ParseError;
+use ::types::casting::cast_datetime_from_i64;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]

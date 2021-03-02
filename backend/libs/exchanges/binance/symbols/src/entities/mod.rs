@@ -4,7 +4,8 @@ mod symbol;
 
 use ::futures::stream::BoxStream;
 
-pub(crate) use self::info::ExchangeInfo;
+pub use self::filters::Filters;
+pub use self::info::ExchangeInfo;
 pub use self::symbol::Symbol;
 
 pub type ListSymbolStream<'a> = BoxStream<'a, Symbol>;

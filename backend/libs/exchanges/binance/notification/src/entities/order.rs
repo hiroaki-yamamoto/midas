@@ -4,8 +4,9 @@ use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::DateTime;
 use ::serde::{Deserialize, Serialize};
 
-use crate::casting::{cast_datetime_from_i64, ParseError as CastError};
-use crate::errors::ParseError;
+use ::errors::ParseError;
+use ::types::casting::cast_datetime_from_i64;
+use ::types::errors::ParseError as CastError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]

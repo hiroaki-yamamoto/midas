@@ -3,8 +3,7 @@ use ::std::time::Duration;
 
 use ::async_trait::async_trait;
 use ::futures::future::{join3, join_all};
-use ::futures::SinkExt;
-use ::futures::StreamExt;
+use ::futures::{SinkExt, StreamExt};
 use ::nats::asynk::Connection as Broker;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_json::{from_slice as from_json_bin, from_str as from_json_str};
@@ -16,9 +15,9 @@ use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::{
   client::IntoClientRequest, Error as WebSocketError, Message,
 };
+
 use ::types::GenericResult;
 
-use super::client::PubClient;
 use super::constants::{
   REST_ENDPOINT, USER_STREAM_LISTEN_KEY_SUB_NAME,
   USER_STREAM_NOTIFICATION_SUB_NAME, USER_STREAM_REAUTH_SUB_NAME, WS_ENDPOINT,
@@ -26,12 +25,13 @@ use super::constants::{
 use super::entities::{
   CastedUserStreamEvents, ListenKey, ListenKeyPair, RawUserStreamEvents,
 };
+use ::binance_clients::PubClient;
 
-use crate::entities::{APIKey, APIKeyEvent, APIKeyInner};
-use crate::errors::{MaximumAttemptExceeded, WebsocketError};
-use crate::traits::UserStream as UserStreamTrait;
-use crate::types::TLSWebSocket;
-use crate::KeyChain;
+use ::entities::{APIKey, APIKeyEvent, APIKeyInner};
+use ::errors::{MaximumAttemptExceeded, WebsocketError};
+use ::keychain::KeyChain;
+use ::notification::UserStream as UserStreamTrait;
+use ::types::TLSWebSocket;
 
 #[derive(Debug, Clone)]
 pub struct UserStream {

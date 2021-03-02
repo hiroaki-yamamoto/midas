@@ -2,7 +2,7 @@ use ::std::str::FromStr;
 
 use ::serde::{Deserialize, Serialize};
 
-use crate::errors::ParseError;
+use ::errors::ParseError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]

@@ -1,5 +1,5 @@
 pub mod constants;
-mod entities;
+pub mod entities;
 pub mod fetcher;
 pub mod recorder;
 

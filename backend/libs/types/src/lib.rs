@@ -6,16 +6,14 @@ use ::std::result::Result as StdResult;
 
 use ::chrono::{DateTime as ChronoDateTime, Utc};
 use ::tokio::net::TcpStream;
-use ::tokio_native_tls::TlsStream;
-use ::tokio_tungstenite::{stream::Stream, WebSocketStream};
+use ::tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use ::url::{ParseError, Url};
 
 pub type ParseURLResult = StdResult<Url, ParseError>;
 pub type GenericResult<T> = StdResult<T, Box<dyn Error>>;
 pub type ThreadSafeResult<T> = StdResult<T, Box<dyn Error + Send + Sync>>;
 pub type DateTime = ChronoDateTime<Utc>;
-pub type TLSWebSocket =
-  WebSocketStream<Stream<TcpStream, TlsStream<TcpStream>>>;
+pub type TLSWebSocket = WebSocketStream<MaybeTlsStream<TcpStream>>;
 
 #[macro_export]
 macro_rules! reply_on_err {

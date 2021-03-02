@@ -1,5 +1,5 @@
 mod constants;
-mod entities;
+pub mod entities;
 
 use ::std::collections::{HashMap, HashSet};
 use ::std::convert::TryFrom;
@@ -20,7 +20,8 @@ use ::tokio::time::{interval, sleep};
 use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
 use self::entities::{BookTicker, SubscribeRequest, SubscribeRequestInner};
-use ::binance_symbols::{recorder::SymbolRecorder, ListSymbolStream, Symbol};
+use ::binance_symbols::entities::{ListSymbolStream, Symbol};
+use ::binance_symbols::recorder::SymbolRecorder;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::types::{GenericResult, ThreadSafeResult};
 
