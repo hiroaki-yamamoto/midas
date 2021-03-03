@@ -1,11 +1,32 @@
 [workspace]
 members = [
+  "libs/errors",
+  "libs/rulesets/entities",
+  "libs/rulesets/base_recorder",
+  "libs/rulesets/executor",
+  "libs/rulesets/history_recorder",
+  "libs/rulesets/history_fetcher",
+  "libs/rulesets/sign",
+  "libs/rulesets/symbol_fetcher",
+  "libs/rulesets/symbol_recorder",
+  "libs/rulesets/trade_observer",
+  "libs/rulesets/notification",
+
   "libs/csrf",
+  "libs/errors",
+  "libs/keychain",
   "libs/config",
-  "libs/exchanges",
   "libs/slog_builder",
   "libs/rpc",
   "libs/types",
+
+  "libs/exchanges/binance/executors",
+  "libs/exchanges/binance/histories",
+  "libs/exchanges/binance/observers",
+  "libs/exchanges/binance/orders",
+  "libs/exchanges/binance/symbols",
+  "libs/exchanges/binance/notification",
+  "libs/exchanges/binance/clients",
 
   "services/historical",
   "services/symbol",

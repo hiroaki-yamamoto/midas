@@ -1,0 +1,15 @@
+[package]
+name = "entities"
+version = "0.1.0"
+authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rpc = { path = "../../rpc" }
+
+futures-core = "0.3.12"
+num-traits = "0.2.14"
+serde = { version = "1.0.123", features = ["derive"] }
+bson = "1.2.0"

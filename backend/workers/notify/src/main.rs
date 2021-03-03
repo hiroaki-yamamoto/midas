@@ -4,9 +4,9 @@ use ::libc::{SIGINT, SIGTERM};
 use ::nats::asynk::connect as new_broker;
 use ::tokio::signal::unix as signal;
 
+use ::binance_notification as binance;
 use ::config::{CmdArgs, Config};
-use ::exchanges::binance;
-use ::exchanges::UserStream as UserStreamTrait;
+use ::notification::UserStream as UserStreamTrait;
 
 #[::tokio::main]
 async fn main() {

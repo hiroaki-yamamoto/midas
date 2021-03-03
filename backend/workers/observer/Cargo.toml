@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-exchanges = { path = "../../libs/exchanges" }
+binance_observers = { path = "../../libs/exchanges/binance/observers" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 

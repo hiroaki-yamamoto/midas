@@ -4,7 +4,7 @@ use ::futures::{join, StreamExt};
 
 use ::nats::asynk::{Connection as NatsConnection, Subscription as NatsSubsc};
 
-use ::exchanges::HistoryFetcher;
+use ::history_fetcher::HistoryFetcher;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::rpc::entities::Exchanges;
 use ::rpc::historical::HistChartProg;

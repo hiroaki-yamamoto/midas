@@ -8,11 +8,10 @@ use ::slog::{info, o};
 use ::tokio::signal::unix as signal;
 
 use ::config::{CmdArgs, Config};
-use ::exchanges::binance::{
-  HistoryFetcher as BinanceHistoryFetcher,
-  SymbolFetcher as BinanceSymbolFetcher,
-};
-use ::exchanges::HistoryFetcher;
+
+use ::binance_histories::fetcher::HistoryFetcher as BinanceHistoryFetcher;
+use ::binance_histories::HistoryFetcher;
+use ::binance_symbols::fetcher::SymbolFetcher as BinanceSymbolFetcher;
 
 #[tokio::main]
 async fn main() {

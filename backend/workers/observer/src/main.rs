@@ -7,8 +7,8 @@ use ::nats::asynk::connect as new_broker;
 use ::slog::o;
 use ::tokio::signal::unix as signal;
 
+use ::binance_observers::{self as binance, TradeObserverTrait};
 use ::config::{Config, DEFAULT_CONFIG_PATH};
-use ::exchanges::{binance, TradeObserver};
 use ::rpc::entities::Exchanges;
 
 #[derive(Debug, Clap)]
@@ -31,7 +31,7 @@ async fn main() {
       .unwrap()
       .database("midas");
   let logger = config.build_slog();
-  let exchange: Box<dyn TradeObserver> = match cmd_args.exchange {
+  let exchange: Box<dyn TradeObserverTrait> = match cmd_args.exchange {
     Exchanges::Binance => Box::new(
       binance::TradeObserver::new(
         Some(db),

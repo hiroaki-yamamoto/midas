@@ -8,8 +8,9 @@ edition = "2018"
 
 [dependencies]
 config = { path = "../../libs/config" }
-exchanges = { path = "../../libs/exchanges" }
 types = { path = "../../libs/types" }
+binance_histories = { path = "../../libs/exchanges/binance/histories" }
+binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
 
 slog = "2.7.0"
 tokio = { version = "1.2", features = ["rt", "rt-multi-thread", "macros", "signal"] }

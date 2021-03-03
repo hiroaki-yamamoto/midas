@@ -7,9 +7,10 @@ use ::nats::asynk::connect;
 use ::slog::{info, o};
 use ::tokio::signal::unix as signal;
 
+use ::binance_histories::{
+  recorder::HistoryRecorder as BinanceHistoryRecorder, HistoryRecorder,
+};
 use ::config::{CmdArgs, Config};
-use ::exchanges::binance::HistoryRecorder as BinanceHistoryRecorder;
-use ::exchanges::HistoryRecorder;
 
 #[tokio::main]
 async fn main() {
