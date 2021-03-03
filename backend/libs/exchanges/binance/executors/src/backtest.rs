@@ -8,12 +8,12 @@ use ::mongodb::bson::oid::ObjectId;
 use ::rpc::entities::{BackTestPriceBase, Exchanges};
 use ::types::GenericResult;
 
-use crate::binance::recorders::HistoryRecorder;
-use crate::entities::{
+use ::binance_histories::recorder::HistoryRecorder;
+use ::entities::{
   BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
 };
-use crate::errors::ExecutionFailed;
-use crate::traits::{
+use ::errors::ExecutionFailed;
+use ::executor::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
 };
 

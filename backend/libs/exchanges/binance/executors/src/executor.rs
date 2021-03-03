@@ -2,8 +2,9 @@ use ::mongodb::{Collection, Database};
 use ::nats::asynk::Connection as NatsCon;
 use ::ring::hmac;
 
-use crate::traits::Sign;
-use crate::{traits::Executor as ExecutorTrait, KeyChain};
+use ::keychain::KeyChain;
+// use ::executor::Executor as ExecutorTrait;
+use ::sign::Sign;
 
 pub struct Executor {
   keychain: KeyChain,

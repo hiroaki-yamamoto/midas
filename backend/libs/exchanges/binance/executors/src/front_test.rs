@@ -10,16 +10,16 @@ use ::slog::Logger;
 use ::errors::ExecutionFailed;
 use ::types::GenericResult;
 
-use crate::traits::{
+use ::executor::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
-  TradeObserver as TradeObserverTrait,
 };
+use ::trade_observer::TradeObserver as TradeObserverTrait;
 
-use crate::entities::{
+use ::entities::{
   BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
 };
 
-use super::super::TradeObserver;
+use ::binance_observers::TradeObserver;
 
 pub struct Executor {
   observer: TradeObserver,

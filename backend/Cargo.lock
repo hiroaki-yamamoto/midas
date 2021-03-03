@@ -321,14 +321,20 @@ version = "0.1.0"
 dependencies = [
  "async-stream",
  "async-trait",
+ "binance_histories",
+ "binance_observers",
+ "entities",
  "errors",
  "executor",
  "futures",
+ "keychain",
  "mongodb",
  "nats",
  "ring",
  "rpc",
+ "sign",
  "slog",
+ "trade_observer",
  "types",
 ]
 
