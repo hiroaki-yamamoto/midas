@@ -18,6 +18,6 @@ tokio = { version = "1.2.0", features = [
   "rt-multi-thread",
   "signal",
 ]}
-nats = "^0.8.0"
+nats = "^0.8.6"
 libc = "0.2.86"
-futures = "0.3.12"
+futures = "0.3.13"
