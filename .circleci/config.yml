@@ -12,7 +12,6 @@ executors:
       RUSTC_WRAPPER: /usr/local/bin/sccache
       CARGO_INCREMENTAL: '0'
       RUSTFLAGS: "-C link-arg=-fuse-ld=lld"
-      BASH_ENV: /etc/profile
   docker-build:
     docker:
       - image: docker
@@ -23,21 +22,21 @@ jobs:
   build-backend:
     executor: backend-rust
     environment:
-      PIPE_NUM: << pipeline.number >>
+      PREV_REV: << pipeline.git.base_revision >>
     steps:
       - checkout
       - run:
-          name: "Setting Previous Pipeline Number"
+          name: "Show prev revision"
           command: |
-            echo "export PREV_PIPE_NUM=$(expr $PIPE_NUM - 1)" | tee -a $BASH_ENV
+            echo $PREV_REV
       - restore_cache:
-          key: target-cache-{{ .Environment.PREV_PIPE_NUM }}
+          key: target-cache-{{ .Environment.PREV_REV }}
       - restore_cache:
-          key: rustup-{{ .Environment.PREV_PIPE_NUM }}
+          key: rustup-{{ .Environment.PREV_REV }}
       - restore_cache:
-          key: sccache-{{ .Environment.PREV_PIPE_NUM }}
+          key: sccache-{{ .Environment.PREV_REV }}
       - restore_cache:
-          key: cargo-{{ .Environment.PREV_PIPE_NUM }}
+          key: cargo-{{ .Environment.PREV_REV }}
       - run:
           name: "Install musl tools"
           command: "apt-get update && apt-get install -y musl-tools jq curl lld"
