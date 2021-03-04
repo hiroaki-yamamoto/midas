@@ -28,7 +28,7 @@ jobs:
       - run:
           name: "Adjust previous pipeline number"
           command: |
-            PREV_PPL_NUM = `expr ${PREV_PPL_NUM} - 1`
+            PREV_PPL_NUM=`expr ${PREV_PPL_NUM} - 1`
             echo "$PREV_PPL_NUM"
             echo "export PREV_PPL_NUM=${PREV_PPL_NUM}" >> $BASH_ENV
       - restore_cache:
