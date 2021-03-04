@@ -29,9 +29,7 @@ jobs:
       - run:
           name: "Setting Previous Pipeline Number"
           command: |
-            PREV_PIPE_NUM=$(expr $PIPE_NUM - 1)
-            echo $PREV_PIPE_NUM
-            echo "export PREV_PIPE_NUM=$PREV_PIPE_NUM" >> $BASH_ENV
+            echo "export PREV_PIPE_NUM=$(expr $PIPE_NUM - 1)" | tee >> $BASH_ENV
       - restore_cache:
           key: target-cache-{{ .Environment.PREV_PIPE_NUM }}
       - restore_cache:
