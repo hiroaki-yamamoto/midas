@@ -30,13 +30,13 @@ jobs:
           command: |
             echo $PREV_REV
       - restore_cache:
-          key: target-cache-{{ .Environment.PREV_REV }}
+          key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - restore_cache:
-          key: rustup-{{ .Environment.PREV_REV }}
+          key: rustup-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - restore_cache:
-          key: sccache-{{ .Environment.PREV_REV }}
+          key: sccache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - restore_cache:
-          key: cargo-{{ .Environment.PREV_REV }}
+          key: cargo-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - run:
           name: "Install musl tools"
           command: "apt-get update && apt-get install -y musl-tools jq curl lld"
@@ -75,19 +75,19 @@ jobs:
       - save_cache:
           paths:
             - ./backend/target
-          key: target-cache-{{ .Revision }}
+          key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - save_cache:
           paths:
             - ~/.rustup
-          key: rustup-{{ .Revision }}
+          key: rustup-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - save_cache:
           paths:
             - ~/.cache/sccache
-          key: sccache-{{ .Revision }}
+          key: sccache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - save_cache:
           paths:
             - ~/.cargo/registry
-          key: cargo-{{ .Revision }}
+          key: cargo-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - run:
           name: "Collect executable"
           command: |
