@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 rpc = { path = "../../rpc" }
 
-futures-core = "0.3.12"
+futures-core = "0.3.13"
 num-traits = "0.2.14"
 serde = { version = "1.0.123", features = ["derive"] }
 bson = "1.2.0"

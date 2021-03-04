@@ -12,7 +12,7 @@ types = { path = "../types" }
 entities = { path = "../rulesets/entities" }
 base_recorder = { path = "../rulesets/base_recorder" }
 
-futures = "0.3.12"
-mongodb = {version = "1.1.1", default-features = false, features = ["async-std-runtime"]}
+futures = "0.3.13"
+mongodb = { version = "1.2.0", default-features = false, features = ["async-std-runtime"] }
 rmp-serde = "0.15.4"
 nats = "0.8"

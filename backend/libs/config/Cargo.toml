@@ -10,8 +10,8 @@ edition = "2018"
 types = { path = "../types" }
 slog_builder = { path = "../slog_builder" }
 
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0.123", features = ["derive"] }
 serde_yaml = "0.8.17"
 clap = "3.0.0-beta.2"
 slog = "2.7.0"
-reqwest = {version = "0.11.1", features = ["gzip", "brotli", "json", "rustls-tls"]}
+reqwest = { version = "0.11.1", features = ["gzip", "brotli", "json", "rustls-tls"] }

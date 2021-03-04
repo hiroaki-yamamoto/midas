@@ -14,7 +14,7 @@ num-derive = "0.3.3"
 clap = "3.0.0-beta.2"
 http = "0.2.3"
 bson = "1.2.0"
-warp = "0.3"
+warp = "0.3.0"
 
 [build-dependencies]
 prost-build = "0.7.0"
