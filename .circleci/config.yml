@@ -145,6 +145,9 @@ jobs:
     docker:
       - image: ubuntu
     steps:
+      - run:
+          name: "Install musl tools"
+          command: "apt-get update && apt-get install -y jq curl"
       - slack/notify:
           event: always
           ignore_errors: false
