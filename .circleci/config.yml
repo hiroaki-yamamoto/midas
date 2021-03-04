@@ -141,10 +141,6 @@ jobs:
           ignore_errors: false
           template: basic_fail_1
       - run: docker logout https://docker.pkg.github.com
-      - persist_to_workspace:
-          root: .
-          paths:
-            - ./.circleci/slack_template_success.json
   notify:
     docker:
       - image: ubuntu
