@@ -239,4 +239,3 @@ workflows:
             - Trade Observer Service Deployment
             - Keychain Service Deployment
             - Notification Worker Deployment
-            - Deploy Success Notification
