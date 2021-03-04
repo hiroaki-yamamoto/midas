@@ -52,7 +52,9 @@ jobs:
           name: Build the package
           command: |
             export OPENSSL_DIR=${HOME}/openssl-musl/musl
+            ${RUSTC_WRAPPER} --start-server
             cargo build --target x86_64-unknown-linux-musl --release
+            ${RUSTC_WRAPPER} --stop-server
           working_directory: ./backend
           environment:
             PKG_CONFIG_ALLOW_CROSS: '1'
@@ -143,10 +145,11 @@ jobs:
   notify:
     docker:
       - image: ubuntu
+    shell: /bin/sh -leo pipefail
     steps:
       - run:
           name: "Install musl tools"
-          command: "apt-get update && apt-get install -y jq curl"
+          command: "apt-get update && apt-get install -y bash jq curl"
       - run:
           name: "Export slack notification on success"
           command: |
