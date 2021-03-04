@@ -10,7 +10,7 @@ executors:
     environment:
       SCCACHE_VER: v0.2.15
       RUSTC_WRAPPER: /usr/local/bin/sccache
-      CARGO_INCREMENTAL: 'false'
+      CARGO_INCREMENTAL: '0'
       RUSTFLAGS: "-C link-arg=-fuse-ld=lld"
   docker-build:
     docker:
@@ -92,6 +92,9 @@ jobs:
           event: pass
           ignore_errors: false
           template: SLACK_TMPL_PASS
+      - run:
+          name: "Print cache request summary"
+          command: sccache -s
       - persist_to_workspace:
           root: .
           paths:
@@ -136,10 +139,6 @@ jobs:
           event: fail
           ignore_errors: false
           template: basic_fail_1
-      - run:
-          name: "Export slack notification on success"
-          command: |
-            echo 'export SLACK_TMPL_PASS=$(cat ./.circleci/slack_template_success.json)' >> $BASH_ENV
       - run: docker logout https://docker.pkg.github.com
   notify:
     docker:
@@ -148,6 +147,10 @@ jobs:
       - run:
           name: "Install musl tools"
           command: "apt-get update && apt-get install -y jq curl"
+      - run:
+          name: "Export slack notification on success"
+          command: |
+            echo 'export SLACK_TMPL_PASS=$(cat ./.circleci/slack_template_success.json)' >> $BASH_ENV
       - slack/notify:
           event: always
           ignore_errors: false
