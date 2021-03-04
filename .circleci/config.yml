@@ -21,10 +21,22 @@ executors:
 jobs:
   build-backend:
     executor: backend-rust
+    environment:
+      PIPE_NUM: << pipeline.number >>
     steps:
       - checkout
+      - run:
+          name: "Setting Previous Pipeline Number"
+          command: |
+            echo "export PREV_PIPE_NUM=$(expr $PIPE_NUM - 1)" >> $BASH_ENV
       - restore_cache:
-          key: build-cache-{{ checksum "./backend/Cargo.lock" }}
+          key: target-cache-{{ .Environment.PREV_PIPE_NUM }}
+      - restore_cache:
+          key: rustup-{{ .Environment.PREV_PIPE_NUM }}
+      - restore_cache:
+          key: sccache-{{ .Environment.PREV_PIPE_NUM }}
+      - restore_cache:
+          key: cargo-{{ .Environment.PREV_PIPE_NUM }}
       - run:
           name: "Install musl tools"
           command: "apt-get update && apt-get install -y musl-tools jq curl lld"
@@ -63,10 +75,19 @@ jobs:
       - save_cache:
           paths:
             - ./backend/target
+          key: target-cache-{{ .Environment.PIPE_NUM }}
+      - save_cache:
+          paths:
             - ~/.rustup
+          key: rustup-{{ .Environment.PIPE_NUM }}
+      - save_cache:
+          paths:
             - ~/.cache/sccache
+          key: sccache-{{ .Environment.PIPE_NUM }}
+      - save_cache:
+          paths:
             - ~/.cargo/registry
-          key: build-cache-{{ checksum "./backend/Cargo.lock" }}
+          key: cargo-{{ .Environment.PIPE_NUM }}
       - run:
           name: "Collect executable"
           command: |
