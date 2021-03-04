@@ -10,6 +10,8 @@ executors:
     environment:
       SCCACHE_VER: v0.2.15
       RUSTC_WRAPPER: sccache
+      CARGO_INCREMENTAL: 'false'
+      RUSTFLAGS: "-C link-arg=-fuse-ld=ld"
   docker-build:
     docker:
       - image: docker
@@ -25,7 +27,7 @@ jobs:
           key: build-cache-{{ checksum "backend/Cargo.lock" }}
       - run:
           name: "Install musl tools"
-          command: "apt-get update && apt-get install -y musl-tools jq curl"
+          command: "apt-get update && apt-get install -y musl-tools jq curl lld"
       - run: rustup component add rustfmt
       - run:
           name: "Install musl package"
@@ -138,11 +140,15 @@ jobs:
           name: "Export slack notification on success"
           command: |
             echo 'export SLACK_TMPL_PASS=$(cat ./.circleci/slack_template_success.json)' >> $BASH_ENV
+      - run: docker logout https://docker.pkg.github.com
+  notify:
+    docker:
+      - image: ubuntu
+    steps:
       - slack/notify:
-          event: pass
+          event: always
           ignore_errors: false
           template: SLACK_TMPL_PASS
-      - run: docker logout https://docker.pkg.github.com
 
 devel-filter: &devel-filter
   filters:
@@ -219,3 +225,18 @@ workflows:
             branches:
               only: master
           service_name: notify_worker
+      - notify:
+          name: "Deploy Success Notification"
+          filters:
+            branches:
+              only: master
+          requires:
+            - Historical Kline Service Deployment
+            - Historical Kline Fetch Worker Deployment
+            - Historical Kline Record Worker Deployment
+            - Symbol Service Deployment
+            - Trade Observer Worker Deployment
+            - Trade Observer Service Deployment
+            - Keychain Service Deployment
+            - Notification Worker Deployment
+            - Deploy Success Notification
