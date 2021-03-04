@@ -41,6 +41,9 @@ jobs:
       - run:
           name: "Install musl tools"
           command: "apt-get update && apt-get install -y musl-tools jq curl lld"
+      - run:
+          name: "Download rustup"
+          command: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
       - run: rustup component add rustfmt
       - run:
           name: "Install musl package"
