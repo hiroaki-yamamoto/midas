@@ -9,4 +9,4 @@ export \
   OPENSSL_DIR=${HOME}/opt/openssl-musl/musl \
   CARGO_INCREMENTAL=false
 
-cargo build --target x86_64-unknown-linux-musl
+cargo build --target x86_64-unknown-linux-musl $@
