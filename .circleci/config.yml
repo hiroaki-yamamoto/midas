@@ -75,19 +75,19 @@ jobs:
       - save_cache:
           paths:
             - ./backend/target
-          key: target-cache-{{ .Environment.PIPE_NUM }}
+          key: target-cache-{{ .Revision }}
       - save_cache:
           paths:
             - ~/.rustup
-          key: rustup-{{ .Environment.PIPE_NUM }}
+          key: rustup-{{ .Revision }}
       - save_cache:
           paths:
             - ~/.cache/sccache
-          key: sccache-{{ .Environment.PIPE_NUM }}
+          key: sccache-{{ .Revision }}
       - save_cache:
           paths:
             - ~/.cargo/registry
-          key: cargo-{{ .Environment.PIPE_NUM }}
+          key: cargo-{{ .Revision }}
       - run:
           name: "Collect executable"
           command: |
