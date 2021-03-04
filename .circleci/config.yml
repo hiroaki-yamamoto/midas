@@ -52,18 +52,20 @@ jobs:
           name: Build the package
           command: |
             export OPENSSL_DIR=${HOME}/openssl-musl/musl
-            ${RUSTC_WRAPPER} --start-server
             cargo build --target x86_64-unknown-linux-musl --release
-            ${RUSTC_WRAPPER} --stop-server
           working_directory: ./backend
           environment:
             PKG_CONFIG_ALLOW_CROSS: '1'
             OPENSSL_STATIC: 'true'
+      - run:
+          name: "Print cache request summary"
+          command: sccache -s
       - save_cache:
           paths:
             - ./backend/target
             - ~/.rustup
             - ~/.cache/sccache
+            - ~/.cargo/registry
           key: build-cache-{{ checksum "backend/Cargo.lock" }}
       - run:
           name: "Collect executable"
@@ -94,9 +96,6 @@ jobs:
           event: pass
           ignore_errors: false
           template: SLACK_TMPL_PASS
-      - run:
-          name: "Print cache request summary"
-          command: sccache -s
       - persist_to_workspace:
           root: .
           paths:
@@ -142,14 +141,19 @@ jobs:
           ignore_errors: false
           template: basic_fail_1
       - run: docker logout https://docker.pkg.github.com
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./.circleci/slack_template_success.json
   notify:
     docker:
       - image: ubuntu
-    shell: /bin/sh -leo pipefail
+        environment:
+          BASH_ENV: /etc/profile
     steps:
       - run:
-          name: "Install musl tools"
-          command: "apt-get update && apt-get install -y bash jq curl"
+          name: "Install essential tools"
+          command: "apt-get update && apt-get install -y jq curl"
       - run:
           name: "Export slack notification on success"
           command: |
