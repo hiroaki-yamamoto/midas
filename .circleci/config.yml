@@ -12,6 +12,8 @@ executors:
       RUSTC_WRAPPER: /usr/local/bin/sccache
       CARGO_INCREMENTAL: '0'
       RUSTFLAGS: "-C link-arg=-fuse-ld=lld"
+      PREV_PPL_NUM: << pipeline.number >>
+      PPL_NUM: << pipeline.number >>
   docker-build:
     docker:
       - image: docker
@@ -23,8 +25,14 @@ jobs:
     executor: backend-rust
     steps:
       - checkout
+      - run:
+          name: "Adjust previous pipeline number"
+          command: |
+            PREV_PPL_NUM = `expr ${PREV_PPL_NUM} - 1`
+            echo "$PREV_PPL_NUM"
+            echo "export PREV_PPL_NUM=${PREV_PPL_NUM}" >> $BASH_ENV
       - restore_cache:
-          key: build-cache-{{ checksum "backend/Cargo.lock" }}
+          key: build-cache-{{ .Environment.PREV_PPL_NUM }}
       - run:
           name: "Install musl tools"
           command: "apt-get update && apt-get install -y musl-tools jq curl lld"
@@ -66,7 +74,7 @@ jobs:
             - ~/.rustup
             - ~/.cache/sccache
             - ~/.cargo/registry
-          key: build-cache-{{ checksum "backend/Cargo.lock" }}
+          key: build-cache-{{ .Environment.PPL_NUM }}
       - run:
           name: "Collect executable"
           command: |
