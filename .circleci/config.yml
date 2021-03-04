@@ -12,6 +12,7 @@ executors:
       RUSTC_WRAPPER: /usr/local/bin/sccache
       CARGO_INCREMENTAL: '0'
       RUSTFLAGS: "-C link-arg=-fuse-ld=lld"
+      BASH_ENV: /etc/profile
   docker-build:
     docker:
       - image: docker
