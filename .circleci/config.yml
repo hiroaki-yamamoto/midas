@@ -10,8 +10,6 @@ executors:
     environment:
       SCCACHE_VER: v0.2.15
       RUSTC_WRAPPER: /usr/local/bin/sccache
-      CARGO_INCREMENTAL: '0'
-      RUSTFLAGS: "-C link-arg=-fuse-ld=lld"
   docker-build:
     docker:
       - image: docker
