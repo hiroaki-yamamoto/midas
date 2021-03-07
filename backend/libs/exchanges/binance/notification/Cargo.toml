@@ -18,7 +18,7 @@ notification = { path = "../../../rulesets/notification" }
 entities = { path = "../../../rulesets/entities" }
 keychain = { path = "../../../keychain" }
 
-async-trait = "0.1.46"
+async-trait = "0.1.47"
 features = "0.10.0"
 nats = "0.8"
 rmp-serde = "0.15.4"
