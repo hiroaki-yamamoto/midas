@@ -21,7 +21,7 @@ base_recorder = { path = "../../../rulesets/base_recorder" }
 binance_clients = { path = "../clients" }
 binance_symbols = { path = "../symbols" }
 
-async-trait = "0.1.42"
+async-trait = "0.1.46"
 chrono = "0.4.19"
 futures = "0.3.13"
 nats = "0.8"
@@ -32,6 +32,6 @@ serde_qs = "0.8.2"
 url = "2.2.1"
 slog = "2.7.0"
 tokio = { version = "1.2.0", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
-serde = { version = "1.0.123", features = ["derive"] }
+serde = { version = "1.0.124", features = ["derive"] }
 serde_json = "1.0.64"
 num_cpus = "1.13.0"

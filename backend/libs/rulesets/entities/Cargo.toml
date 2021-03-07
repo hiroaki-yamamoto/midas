@@ -11,5 +11,5 @@ rpc = { path = "../../rpc" }
 
 futures-core = "0.3.13"
 num-traits = "0.2.14"
-serde = { version = "1.0.123", features = ["derive"] }
+serde = { version = "1.0.124", features = ["derive"] }
 bson = "1.2.0"
