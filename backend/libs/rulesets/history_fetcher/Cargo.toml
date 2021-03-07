@@ -10,4 +10,4 @@ edition = "2018"
 types = { path = "../../types" }
 nats = "0.8"
 
-async-trait = "0.1.42"
+async-trait = "0.1.46"
