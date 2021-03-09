@@ -1,13 +1,21 @@
+use ::async_stream::try_stream;
+use ::async_trait::async_trait;
+use ::futures::stream::LocalBoxStream;
+use ::futures::StreamExt;
 use ::mongodb::{Collection, Database};
 use ::nats::asynk::Connection as NatsCon;
 use ::ring::hmac;
 use ::slog::Logger;
 
+use ::entities::BookTicker;
 use ::errors::ObjectNotFound;
 use ::executor::Executor as ExecutorTrait;
 use ::keychain::KeyChain;
 use ::rpc::entities::Exchanges;
 use ::sign::Sign;
+use ::types::GenericResult;
+
+use ::binance_observers::{TradeObserver, TradeObserverTrait};
 
 pub struct Executor {
   keychain: KeyChain,
@@ -34,10 +42,24 @@ impl Executor {
   }
 }
 
+#[async_trait]
 impl ExecutorTrait for Executor {
   async fn open(
     &mut self,
   ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>> {
+    let observer = TradeObserver::new(
+      Some(self.db.clone()),
+      self.broker.clone(),
+      self.log.clone(),
+    )
+    .await;
+    let sub = observer.subscribe().await?;
+    let stream = try_stream! {
+      while let Some(book_ticker) = sub.next().await {
+        yield book_ticker;
+      }
+    };
+    return Ok(Box::pin(stream));
   }
 }
 

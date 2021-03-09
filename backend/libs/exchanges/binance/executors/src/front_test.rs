@@ -80,8 +80,7 @@ impl ExecutorTrait for Executor {
   ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>> {
     let observer = self.observer.clone();
     let stream = try_stream! {
-      let mut src_stream =
-        observer.subscribe().await?.map(|ticker| return ticker);
+      let mut src_stream = observer.subscribe().await?;
       while let Some(v) = src_stream.next().await {
         self.cur_trade = Some(v.clone());
         self.execute_order(ExecutionType::Taker)?;
