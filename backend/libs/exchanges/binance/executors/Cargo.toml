@@ -14,6 +14,7 @@ keychain = { path = "../../../keychain" }
 
 binance_histories = { path = "../histories" }
 binance_observers = { path = "../observers" }
+binance_notification = { path = "../notification" }
 
 entities = { path = "../../../rulesets/entities" }
 executor = { path = "../../../rulesets/executor" }

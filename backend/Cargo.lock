@@ -322,6 +322,7 @@ dependencies = [
  "async-stream",
  "async-trait",
  "binance_histories",
+ "binance_notification",
  "binance_observers",
  "entities",
  "errors",
