@@ -77,7 +77,6 @@ impl TestExecutorTrait for Executor {
 impl ExecutorTrait for Executor {
   async fn open(
     &mut self,
-    _: ObjectId,
   ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>> {
     let observer = self.observer.clone();
     let stream = try_stream! {

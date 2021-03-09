@@ -14,7 +14,6 @@ use ::types::GenericResult;
 pub trait Executor {
   async fn open(
     &mut self,
-    api_key_id: ObjectId,
   ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>>;
   async fn create_order(
     &mut self,

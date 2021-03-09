@@ -52,7 +52,6 @@ impl Executor {
 impl ExecutorTrait for Executor {
   async fn open(
     &mut self,
-    _: ObjectId,
   ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>> {
     let half_spread = self.spread / 2.0;
     let price_base = self.price_base_policy.clone();
