@@ -6,7 +6,7 @@ use ::mongodb::bson::DateTime;
 use ::serde::{Deserialize, Serialize};
 
 use super::order::OrderStatus;
-use super::side::Side;
+use ::binance_executors::entities::side::Side;
 use ::entities::{Order as CommonOrder, OrderInner as CommonOrderInner};
 
 use ::errors::ParseError;

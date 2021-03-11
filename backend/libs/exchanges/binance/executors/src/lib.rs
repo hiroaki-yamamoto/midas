@@ -1,4 +1,5 @@
 mod backtest;
+pub mod entities;
 mod executor;
 mod front_test;
 

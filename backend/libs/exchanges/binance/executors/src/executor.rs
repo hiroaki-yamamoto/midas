@@ -2,12 +2,13 @@ use ::async_stream::try_stream;
 use ::async_trait::async_trait;
 use ::futures::stream::LocalBoxStream;
 use ::futures::StreamExt;
+use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::{Collection, Database};
 use ::nats::asynk::Connection as NatsCon;
 use ::ring::hmac;
 use ::slog::Logger;
 
-use ::entities::BookTicker;
+use ::entities::{BookTicker, OrderOption};
 use ::errors::ObjectNotFound;
 use ::executor::Executor as ExecutorTrait;
 use ::keychain::KeyChain;
@@ -60,6 +61,15 @@ impl ExecutorTrait for Executor {
       }
     };
     return Ok(Box::pin(stream));
+  }
+  async fn create_order(
+    &mut self,
+    api_key_id: ObjectId,
+    symbol: String,
+    price: Option<f64>,
+    budget: f64,
+    order_option: Option<OrderOption>,
+  ) -> GenericResult<ObjectId> {
   }
 }
 

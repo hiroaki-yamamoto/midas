@@ -332,6 +332,7 @@ dependencies = [
  "nats",
  "ring",
  "rpc",
+ "serde",
  "sign",
  "slog",
  "trade_observer",
@@ -375,6 +376,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "binance_clients",
+ "binance_executors",
  "binance_histories",
  "binance_symbols",
  "entities",
@@ -419,10 +421,6 @@ dependencies = [
  "trade_observer",
  "types",
 ]
-
-[[package]]
-name = "binance_orders"
-version = "0.1.0"
 
 [[package]]
 name = "binance_symbols"
