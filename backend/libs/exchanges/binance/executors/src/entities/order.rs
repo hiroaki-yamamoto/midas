@@ -39,3 +39,23 @@ pub struct OrderRequest<DT> {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub timestamp: Option<DT>,
 }
+
+impl<DT> OrderRequest<DT> {
+  pub fn new(symbol: String, side: Side, order_type: OrderType) -> Self {
+    return Self {
+      symbol,
+      side,
+      order_type,
+      time_in_force: None,
+      quantity: None,
+      quote_order_qty: None,
+      price: None,
+      client_order_id: None,
+      stop_price: None,
+      iceberg_qty: None,
+      order_response_type: None,
+      recv_window: None,
+      timestamp: None,
+    };
+  }
+}
