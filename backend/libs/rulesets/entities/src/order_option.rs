@@ -1,5 +1,6 @@
 use ::num_traits::pow::pow;
 use ::serde::{Deserialize, Serialize};
+use ::types::stateful_setter;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrderOption {
@@ -28,22 +29,11 @@ impl OrderOption {
   pub fn new() -> Self {
     return Self::default();
   }
-  pub fn iceberg(&mut self, iceberg: bool) -> &mut Self {
-    self.iceberg = iceberg;
-    return self;
-  }
-  pub fn num_ladder(&mut self, num_ladder: u8) -> &mut Self {
-    self.num_ladder = num_ladder;
-    return self;
-  }
-  pub fn price_ratio(&mut self, price_ratio: f64) -> &mut Self {
-    self.price_ratio = price_ratio;
-    return self;
-  }
-  pub fn amount_multiplyer(&mut self, amount_multiplyer: f64) -> &mut Self {
-    self.amount_multiplyer = amount_multiplyer;
-    return self;
-  }
+  stateful_setter!(iceberg, bool);
+  stateful_setter!(num_ladder, u8);
+  stateful_setter!(price_ratio, f64);
+  stateful_setter!(amount_multiplyer, f64);
+
   pub fn calc_trading_amounts(&self, budget: f64) -> Vec<f64> {
     let init_amount =
       budget / pow(self.amount_multiplyer, self.num_ladder as usize);

@@ -18,6 +18,8 @@ use ::types::GenericResult;
 
 use ::binance_observers::{TradeObserver, TradeObserverTrait};
 
+use super::entities::{OrderRequest, OrderType, Side};
+
 pub struct Executor {
   keychain: KeyChain,
   broker: NatsCon,
@@ -70,6 +72,10 @@ impl ExecutorTrait for Executor {
     budget: f64,
     order_option: Option<OrderOption>,
   ) -> GenericResult<ObjectId> {
+    let orders: Vec<OrderRequest> = match order_option {
+      None => vec![OrderRequest::new(symbol, Side::Buy, OrderType::Market)],
+      Some(o) => o.calc_trading_amounts(budget),
+    };
   }
 }
 

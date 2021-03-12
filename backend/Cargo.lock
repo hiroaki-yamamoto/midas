@@ -935,6 +935,7 @@ dependencies = [
  "num-traits",
  "rpc",
  "serde",
+ "types",
 ]
 
 [[package]]

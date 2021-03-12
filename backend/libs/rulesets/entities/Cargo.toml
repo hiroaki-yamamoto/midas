@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 rpc = { path = "../../rpc" }
+types = { path = "../../types" }
 
 futures-core = "0.3.13"
 num-traits = "0.2.14"

@@ -1,6 +1,7 @@
 use ::chrono::Utc;
 use ::mongodb::bson::DateTime;
 use ::serde::{Deserialize, Serialize};
+use ::types::stateful_setter;
 
 use super::order_type::OrderType;
 use super::resp_type::OrderResponseType;
@@ -39,6 +40,19 @@ pub struct OrderRequest<DT> {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub recv_window: Option<i64>,
   pub timestamp: DT,
+}
+
+impl<DT> OrderRequest<DT> {
+  stateful_setter!(time_in_force, Option<TimeInForce>);
+  stateful_setter!(quantity, Option<f64>);
+  stateful_setter!(quote_order_qty, Option<f64>);
+  stateful_setter!(price, Option<f64>);
+  stateful_setter!(client_order_id, Option<String>);
+  stateful_setter!(stop_price, Option<f64>);
+  stateful_setter!(iceberg_qty, Option<f64>);
+  stateful_setter!(order_response_type, Option<OrderResponseType>);
+  stateful_setter!(recv_window, Option<i64>);
+  stateful_setter!(timestamp, DT);
 }
 
 impl OrderRequest<DateTime> {
