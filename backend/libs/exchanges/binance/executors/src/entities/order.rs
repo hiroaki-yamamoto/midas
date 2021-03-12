@@ -1,3 +1,5 @@
+use ::chrono::Utc;
+use ::mongodb::bson::DateTime;
 use ::serde::{Deserialize, Serialize};
 
 use super::order_type::OrderType;
@@ -36,11 +38,10 @@ pub struct OrderRequest<DT> {
   pub order_response_type: Option<OrderResponseType>,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub recv_window: Option<i64>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub timestamp: Option<DT>,
+  pub timestamp: DT,
 }
 
-impl<DT> OrderRequest<DT> {
+impl OrderRequest<DateTime> {
   pub fn new(symbol: String, side: Side, order_type: OrderType) -> Self {
     return Self {
       symbol,
@@ -55,7 +56,33 @@ impl<DT> OrderRequest<DT> {
       iceberg_qty: None,
       order_response_type: None,
       recv_window: None,
-      timestamp: None,
+      timestamp: Utc::now().into(),
+    };
+  }
+}
+
+impl OrderRequest<i64> {
+  pub fn new(symbol: String, side: Side, order_type: OrderType) -> Self {
+    return OrderRequest::<DateTime>::new(symbol, side, order_type).into();
+  }
+}
+
+impl From<OrderRequest<DateTime>> for OrderRequest<i64> {
+  fn from(v: OrderRequest<DateTime>) -> Self {
+    return OrderRequest::<i64> {
+      symbol: v.symbol,
+      side: v.side,
+      order_type: v.order_type,
+      time_in_force: v.time_in_force,
+      quantity: v.quantity,
+      quote_order_qty: v.quote_order_qty,
+      price: v.price,
+      client_order_id: v.client_order_id,
+      stop_price: v.stop_price,
+      iceberg_qty: v.iceberg_qty,
+      order_response_type: v.order_response_type,
+      recv_window: v.recv_window,
+      timestamp: v.timestamp.timestamp_millis(),
     };
   }
 }

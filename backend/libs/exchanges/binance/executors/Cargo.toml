@@ -28,3 +28,4 @@ nats = "0.8"
 slog = "2.7.0"
 ring = "0.16.20"
 serde = { version = "1.0.124", features = ["derive"] }
+chrono = "0.4.19"
