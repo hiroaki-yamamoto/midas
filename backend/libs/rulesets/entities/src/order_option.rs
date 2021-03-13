@@ -6,9 +6,6 @@ use ::types::stateful_setter;
 pub struct OrderOption {
   pub iceberg: bool,
   pub num_ladder: u8,
-  // Note: order_price[n] =
-  //   order_price[n - 1] * (price_ratio)^n,
-  //   where n in N & n > 0
   pub price_ratio: f64,
   // Note: base_asset_amount[n] = base_asset_amount[n-1] * amount_multiplyer
   pub amount_multiplyer: f64,
@@ -33,6 +30,10 @@ impl OrderOption {
   stateful_setter!(num_ladder, u8);
   stateful_setter!(price_ratio, f64);
   stateful_setter!(amount_multiplyer, f64);
+
+  pub fn calc_order_price(&self, price: f64, num: usize) -> f64 {
+    return price * pow(self.price_ratio, num);
+  }
 
   pub fn calc_trading_amounts(&self, budget: f64) -> Vec<f64> {
     let init_amount =

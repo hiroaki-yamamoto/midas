@@ -107,20 +107,18 @@ pub trait TestExecutor {
         price,
         qty: budget / price,
       }],
-      Some(v) => {
-        let price_diff = price * v.price_ratio;
-        v.calc_trading_amounts(budget)
-          .into_iter()
-          .enumerate()
-          .map(|(index, amount)| {
-            let order_price = (price - price_diff) * ((index + 1) as f64);
-            OrderInner {
-              price: order_price.clone(),
-              qty: amount / order_price,
-            }
-          })
-          .collect()
-      }
+      Some(v) => v
+        .calc_trading_amounts(budget)
+        .into_iter()
+        .enumerate()
+        .map(|(index, amount)| {
+          let order_price = v.calc_order_price(price, index);
+          OrderInner {
+            price: order_price.clone(),
+            qty: amount / order_price,
+          }
+        })
+        .collect(),
     };
     let orders = Order::new(symbol, orders);
     let mut order_dict = self.get_orders();
