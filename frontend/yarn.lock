@@ -148,10 +148,10 @@
     ora "5.3.0"
     rxjs "6.6.3"
 
-"@angular-eslint/builder@2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@angular-eslint/builder/-/builder-2.0.0.tgz#6fafdc4d8c9963f51f3268c1749056df24fe5356"
-  integrity sha512-wC3JyegfBg+cv3r9Sh/AUC/38o//JFfzvSUWCAtr36QDInyiiwlA5IaWJrhK1trto8w21XMH28q4v0RY6elXVQ==
+"@angular-eslint/builder@2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/builder/-/builder-2.0.1.tgz#d65799a342d0f7b894f416156a3a455124b5f4d8"
+  integrity sha512-qZqTONCCBG7hzv5xpjieaGnXOgYJdaY3FwVlg5fmfPaUwP7lm+La3A8yBKJwpG7h1D9Se4/qa70SCaDGmXyTXA==
 
 "@angular-eslint/eslint-plugin-template@2.0.0":
   version "2.0.0"
@@ -195,10 +195,10 @@
     strip-json-comments "3.1.1"
     tslint-to-eslint-config "2.2.0"
 
-"@angular-eslint/template-parser@2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@angular-eslint/template-parser/-/template-parser-2.0.0.tgz#c8589b5ffa18650cba833f9dd39236c25a0f1def"
-  integrity sha512-7TxmIl0oi8k2pQn/knpqczDTCisqyujK4TRaNn+kLilYNs08ZD2szUTOKmA8NSDkNSXQD2Dcd8XBmowfCqPpjw==
+"@angular-eslint/template-parser@2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/template-parser/-/template-parser-2.0.1.tgz#f61991f756762ad46de669e4cb3d6373d5005966"
+  integrity sha512-VP6qj7ECwKj/KL8c0+CvGldIIbNZRCAScs+C1DmrlXjFsXuL0+D6nDzd0xnLF2eek3apMWJ6fwRznPHNnsDEeQ==
   dependencies:
     eslint-scope "^5.1.0"
 
