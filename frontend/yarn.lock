@@ -162,6 +162,15 @@
     aria-query "^4.2.2"
     axobject-query "^2.2.0"
 
+"@angular-eslint/eslint-plugin-template@2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/eslint-plugin-template/-/eslint-plugin-template-2.0.1.tgz#81c47e8c9c4b288702984282c64b76595bcde1bb"
+  integrity sha512-tKdfa6cf1nzUAiEMHOOkE7wv/YxwCNpFw/MEfK21ecMzy59Mv9zgAULobCQIEfmbGTsjSNiIqaRAc+klRI3q6A==
+  dependencies:
+    "@typescript-eslint/experimental-utils" "4.16.1"
+    aria-query "^4.2.2"
+    axobject-query "^2.2.0"
+
 "@angular-eslint/eslint-plugin@2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@angular-eslint/eslint-plugin/-/eslint-plugin-2.0.0.tgz#5127b980420e168d9035ed820de17202b63e500e"
@@ -169,13 +178,20 @@
   dependencies:
     "@typescript-eslint/experimental-utils" "4.16.1"
 
-"@angular-eslint/schematics@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@angular-eslint/schematics/-/schematics-2.0.0.tgz#56c467ee8ddd5a044f12bf1ca64164cd0cbbea63"
-  integrity sha512-aV5ZEQ/zPv1iZ7D26B0BnfPxjO5YOzqQhf5Ftsf9Qiy/sC87ZByfX1dFjOUAsrGarSC8Y9P10lrVPF6c2ATseg==
+"@angular-eslint/eslint-plugin@2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/eslint-plugin/-/eslint-plugin-2.0.1.tgz#5f887e254fdcee938b1975db5b4c84946837f0d0"
+  integrity sha512-GWVT4nGO7CX42NA1dmhbd1myFv/dz32hm8fKwgbpeiO0nKbpKX0u9iPk0T47S/Hwk4uBifqO/kw4N1nvjbCfbg==
   dependencies:
-    "@angular-eslint/eslint-plugin" "2.0.0"
-    "@angular-eslint/eslint-plugin-template" "2.0.0"
+    "@typescript-eslint/experimental-utils" "4.16.1"
+
+"@angular-eslint/schematics@^2.0.0":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/schematics/-/schematics-2.0.1.tgz#6f85191c656a4a710b5b85ab86e41b09cb773823"
+  integrity sha512-HRQiZptU0vIldDHlDkOPgdbDarioccP6967jHSSyh9P/fbfMKx+OSjAwTGmJXVQSn6NOqVzHmFOMugsSLz2qow==
+  dependencies:
+    "@angular-eslint/eslint-plugin" "2.0.1"
+    "@angular-eslint/eslint-plugin-template" "2.0.1"
     strip-json-comments "3.1.1"
     tslint-to-eslint-config "2.2.0"
 
