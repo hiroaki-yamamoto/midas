@@ -72,9 +72,26 @@ impl ExecutorTrait for Executor {
     budget: f64,
     order_option: Option<OrderOption>,
   ) -> GenericResult<ObjectId> {
-    let orders: Vec<OrderRequest> = match order_option {
-      None => vec![OrderRequest::new(symbol, Side::Buy, OrderType::Market)],
-      Some(o) => o.calc_trading_amounts(budget),
+    let order_type = order_option
+      .map(|_| OrderType::Limit)
+      .unwrap_or(OrderType::Market);
+    let orders: Vec<OrderRequest<i64>> = match order_option {
+      None => vec![OrderRequest::<i64>::new(symbol, Side::Buy, order_type)],
+      Some(o) => o
+        .calc_trading_amounts(budget)
+        .into_iter()
+        .enumerate()
+        .map(|(index, tr_amount)| {
+          let mut order =
+            OrderRequest::<i64>::new(symbol, Side::Buy, order_type);
+          if o.iceberg {
+            order.iceberg_qty(Some(tr_amount));
+          } else {
+            order.quantity(Some(tr_amount));
+          }
+          return order;
+        })
+        .collect(),
     };
   }
 }
