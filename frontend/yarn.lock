@@ -153,15 +153,6 @@
   resolved "https://registry.yarnpkg.com/@angular-eslint/builder/-/builder-2.0.1.tgz#d65799a342d0f7b894f416156a3a455124b5f4d8"
   integrity sha512-qZqTONCCBG7hzv5xpjieaGnXOgYJdaY3FwVlg5fmfPaUwP7lm+La3A8yBKJwpG7h1D9Se4/qa70SCaDGmXyTXA==
 
-"@angular-eslint/eslint-plugin-template@2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@angular-eslint/eslint-plugin-template/-/eslint-plugin-template-2.0.0.tgz#cf206a96484407f952ec0269efd5be9af4fe1d70"
-  integrity sha512-pIPKipBRptg4z6KXIsnYWC4TH+xZM1KcUxiNbipa/bJ6R3ig+tX6CaYStSRxPkohE9877ztkbiY/fHoej7qiKg==
-  dependencies:
-    "@typescript-eslint/experimental-utils" "4.16.1"
-    aria-query "^4.2.2"
-    axobject-query "^2.2.0"
-
 "@angular-eslint/eslint-plugin-template@2.0.1":
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@angular-eslint/eslint-plugin-template/-/eslint-plugin-template-2.0.1.tgz#81c47e8c9c4b288702984282c64b76595bcde1bb"
@@ -170,13 +161,6 @@
     "@typescript-eslint/experimental-utils" "4.16.1"
     aria-query "^4.2.2"
     axobject-query "^2.2.0"
-
-"@angular-eslint/eslint-plugin@2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@angular-eslint/eslint-plugin/-/eslint-plugin-2.0.0.tgz#5127b980420e168d9035ed820de17202b63e500e"
-  integrity sha512-lQRmNBxihsB+HVz7lSXoWv2oJJRowe0ZwjnuJEp46KQp0AfXq1VFUeT4pHAz88EQrWSyfLcwNNmVn4dnQGeT6A==
-  dependencies:
-    "@typescript-eslint/experimental-utils" "4.16.1"
 
 "@angular-eslint/eslint-plugin@2.0.1":
   version "2.0.1"
@@ -2754,9 +2738,9 @@ caniuse-api@^3.0.0:
     lodash.uniq "^4.5.0"
 
 caniuse-lite@^1.0.0, caniuse-lite@^1.0.30001032, caniuse-lite@^1.0.30001181:
-  version "1.0.30001199"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001199.tgz#062afccaad21023e2e647d767bac4274b8b8fd7f"
-  integrity sha512-ifbK2eChUCFUwGhlEzIoVwzFt1+iriSjyKKFYNfv6hN34483wyWpLLavYQXhnR036LhkdUYaSDpHg1El++VgHQ==
+  version "1.0.30001200"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001200.tgz#25435af6ba907c2a9c86d21ce84950d4824e6620"
+  integrity sha512-ic/jXfa6tgiPBAISWk16jRI2q8YfjxHnSG7ddSL1ptrIP8Uy11SayFrjXRAk3NumHpDb21fdTkbTxb/hOrFrnQ==
 
 canonical-path@1.0.0:
   version "1.0.0"
@@ -8575,9 +8559,9 @@ rework@1.0.1:
     css "^2.0.0"
 
 rfdc@^1.1.4:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/rfdc/-/rfdc-1.2.0.tgz#9e9894258f48f284b43c3143c68070a4f373b949"
-  integrity sha512-ijLyszTMmUrXvjSooucVQwimGUk84eRcmCuLV8Xghe3UO85mjUtRAHRyoMM6XtyqbECaXuBWx18La3523sXINA==
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/rfdc/-/rfdc-1.3.0.tgz#d0b7c441ab2720d05dc4cf26e01c89631d9da08b"
+  integrity sha512-V2hovdzFbOi77/WajaSMXk2OLm+xNIeQdMMuB7icj7bk6zi2F8GGAxigcnDFpJHbNyNcgyJDiP+8nOrY5cZGrA==
 
 rgb-regex@^1.0.1:
   version "1.0.1"
