@@ -10,20 +10,25 @@ use super::OrderType;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderResponse<DT> {
-  #[serde(rename = "_id")]
-  pub id: ObjectId,
-  pub bot_id: ObjectId,
+  #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
+  pub id: Option<ObjectId>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub bot_id: Option<ObjectId>,
   pub symbol: String,
   pub order_id: u64,
   pub order_list_id: i64,
   pub client_order_id: String,
   pub transact_time: DT,
-  pub price: f64,
-  pub orig_qty: f64,
-  pub executed_qty: f64,
-  pub cummulative_quote_qty: f64,
-  #[serde(rename = "type")]
-  pub order_type: OrderType,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub price: Option<f64>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub orig_qty: Option<f64>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub executed_qty: Option<f64>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub cummulative_quote_qty: Option<f64>,
+  #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+  pub order_type: Option<OrderType>,
 }
 
 impl From<OrderResponse<i64>> for Result<OrderResponse<DateTime>, CastError> {
