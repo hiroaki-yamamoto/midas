@@ -1,3 +1,4 @@
+mod fill;
 mod order_request;
 mod order_response;
 mod order_status;
@@ -6,6 +7,7 @@ mod resp_type;
 mod side;
 mod tif;
 
+pub use self::fill::Fill;
 pub use self::order_request::OrderRequest;
 pub use self::order_response::OrderResponse;
 pub use self::order_status::OrderStatus;
