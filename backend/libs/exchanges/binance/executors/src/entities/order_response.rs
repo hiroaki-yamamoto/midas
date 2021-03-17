@@ -10,7 +10,7 @@ use types::errors::ParseError as CastError;
 use super::{Fill, OrderType, Side};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase")]
 pub struct OrderResponse<FT, DT> {
   #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
   pub id: Option<ObjectId>,

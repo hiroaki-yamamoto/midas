@@ -2,7 +2,7 @@ use ::async_stream::try_stream;
 use ::async_trait::async_trait;
 use ::futures::stream::LocalBoxStream;
 use ::futures::StreamExt;
-use ::mongodb::bson::oid::ObjectId;
+use ::mongodb::bson::{oid::ObjectId, DateTime};
 use ::mongodb::{Collection, Database};
 use ::nats::asynk::Connection as NatsCon;
 use ::ring::hmac;
@@ -20,7 +20,9 @@ use ::types::GenericResult;
 use ::binance_clients::{constants::REST_ENDPOINT, PubClient};
 use ::binance_observers::{TradeObserver, TradeObserverTrait};
 
-use super::entities::{OrderRequest, OrderResponseType, OrderType, Side};
+use super::entities::{
+  OrderRequest, OrderResponse, OrderResponseType, OrderType, Side,
+};
 
 pub struct Executor {
   keychain: KeyChain,
@@ -117,7 +119,8 @@ impl ExecutorTrait for Executor {
             .send()
             .await;
           if let Ok(resp) = resp {
-            let payload = resp.json().await;
+            let payload: OrderResponse<String, i64> = resp.json().await?;
+            let payload: OrderResponse<f64, DateTime> = payload.into()?;
           }
         }
         return Ok(());
