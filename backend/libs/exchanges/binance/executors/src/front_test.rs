@@ -8,7 +8,7 @@ use ::nats::asynk::Connection as NatsCon;
 use ::slog::Logger;
 
 use ::errors::ExecutionFailed;
-use ::types::GenericResult;
+use ::types::{GenericResult, ThreadSafeResult};
 
 use ::executor::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
@@ -98,7 +98,7 @@ impl ExecutorTrait for Executor {
     _: Option<f64>,
     _: f64,
     _: Option<OrderOption>,
-  ) -> GenericResult<ObjectId> {
+  ) -> ThreadSafeResult<ObjectId> {
     return Err(Box::new(ExecutionFailed::new(
       "Call create_order from TestExecutorTrait.",
     )));

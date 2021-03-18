@@ -6,7 +6,7 @@ use ::futures::stream::{LocalBoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 
 use ::rpc::entities::{BackTestPriceBase, Exchanges};
-use ::types::GenericResult;
+use ::types::{GenericResult, ThreadSafeResult};
 
 use ::binance_histories::recorder::HistoryRecorder;
 use ::entities::{
@@ -103,7 +103,7 @@ impl ExecutorTrait for Executor {
     _: Option<f64>,
     _: f64,
     _: Option<OrderOption>,
-  ) -> GenericResult<ObjectId> {
+  ) -> ThreadSafeResult<ObjectId> {
     return Err(Box::new(ExecutionFailed::new(
       "Call create_order from TestExecutorTrait.",
     )));

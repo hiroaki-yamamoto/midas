@@ -3,10 +3,10 @@ pub mod constants;
 pub use ::reqwest;
 use ::reqwest::{header, Client as Req};
 
-use ::types::GenericResult;
+use ::types::ThreadSafeResult;
 
 pub trait PubClient {
-  fn get_client<T>(&self, pub_key: T) -> GenericResult<Req>
+  fn get_client<T>(&self, pub_key: T) -> ThreadSafeResult<Req>
   where
     T: AsRef<str>,
   {

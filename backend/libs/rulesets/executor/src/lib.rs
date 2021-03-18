@@ -8,7 +8,7 @@ use ::entities::{
   BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
 };
 use ::errors::ExecutionFailed;
-use ::types::GenericResult;
+use ::types::{GenericResult, ThreadSafeResult};
 
 #[async_trait]
 pub trait Executor {
@@ -22,7 +22,7 @@ pub trait Executor {
     price: Option<f64>,
     budget: f64,
     order_option: Option<OrderOption>,
-  ) -> GenericResult<ObjectId>;
+  ) -> ThreadSafeResult<ObjectId>;
 
   async fn remove_order(
     &mut self,

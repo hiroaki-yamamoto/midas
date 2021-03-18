@@ -20,6 +20,7 @@ entities = { path = "../../../rulesets/entities" }
 executor = { path = "../../../rulesets/executor" }
 trade_observer = { path = "../../../rulesets/trade_observer" }
 sign = { path = "../../../rulesets/sign" }
+base_recorder = { path = "../../../rulesets/base_recorder" }
 
 async-stream = "0.3.0"
 async-trait = "0.1.48"

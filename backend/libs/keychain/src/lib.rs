@@ -78,7 +78,7 @@ impl KeyChain {
     &self,
     exchange: Exchanges,
     id: ObjectId,
-  ) -> GenericResult<Option<APIKey>> {
+  ) -> ThreadSafeResult<Option<APIKey>> {
     let key = self
       .col
       .find_one(

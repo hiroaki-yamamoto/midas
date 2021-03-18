@@ -15,6 +15,8 @@ pub struct OrderResponse<FT, DT> {
   #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
   pub id: Option<ObjectId>,
   #[serde(skip_serializing_if = "Option::is_none")]
+  pub position_group_id: Option<ObjectId>,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub bot_id: Option<ObjectId>,
   pub symbol: String,
   pub order_id: u64,
@@ -37,12 +39,12 @@ pub struct OrderResponse<FT, DT> {
   pub fills: Option<Vec<Fill<FT>>>,
 }
 
-impl From<OrderResponse<String, i64>>
-  for Result<OrderResponse<f64, DateTime>, CastError>
-{
-  fn from(from: OrderResponse<String, i64>) -> Self {
+impl TryFrom<OrderResponse<String, i64>> for OrderResponse<f64, DateTime> {
+  type Error = CastError;
+  fn try_from(from: OrderResponse<String, i64>) -> Result<Self, Self::Error> {
     return Ok(OrderResponse::<f64, DateTime> {
       id: from.id,
+      position_group_id: from.position_group_id,
       bot_id: from.bot_id,
       symbol: from.symbol,
       order_id: from.order_id,
