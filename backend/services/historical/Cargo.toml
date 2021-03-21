@@ -22,12 +22,12 @@ nats = "0.8"
 mongodb = { version = "1.2.0", default-features = false, features = ["async-std-runtime"] }
 clap = "3.0.0-beta.2"
 serde_yaml = "0.8.17"
-tokio = { version = "1.3.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
+tokio = { version = "1.4.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
 slog = "2.7.0"
 async-stream = "0.3.0"
 futures = "0.3.13"
 num-traits = "0.2.14"
-libc = "0.2.88"
+libc = "0.2.90"
 warp = { version = "0.3.0", features = ["tls"] }
 serde_json = "1.0.64"
 http = "0.2.3"
