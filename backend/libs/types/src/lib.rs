@@ -1,5 +1,6 @@
 pub mod casting;
 pub mod errors;
+pub mod retry;
 pub mod stateful_setter;
 
 use ::std::error::Error;

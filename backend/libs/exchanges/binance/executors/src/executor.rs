@@ -1,11 +1,11 @@
 use ::std::error::Error;
-use std::convert::TryFrom;
+use std::{convert::TryFrom, thread::Thread};
 
 use ::async_stream::try_stream;
 use ::async_trait::async_trait;
 use ::futures::future::{join_all, BoxFuture};
 use ::futures::stream::LocalBoxStream;
-use ::futures::{Future, FutureExt, StreamExt};
+use ::futures::{FutureExt, StreamExt};
 use ::mongodb::bson::{doc, oid::ObjectId, to_document, DateTime};
 use ::mongodb::options::{UpdateModifications, UpdateOptions};
 use ::mongodb::{Collection, Database};
@@ -15,12 +15,13 @@ use ::serde_qs::to_string as to_qs;
 use ::slog::Logger;
 
 use ::base_recorder::Recorder as RecorderTrait;
-use ::entities::{BookTicker, OrderOption};
+use ::entities::{BookTicker, ExecutionResult, OrderOption};
 use ::errors::ObjectNotFound;
 use ::executor::Executor as ExecutorTrait;
 use ::keychain::KeyChain;
 use ::rpc::entities::Exchanges;
 use ::sign::Sign;
+use ::types::retry::retry_async;
 use ::types::{GenericResult, ThreadSafeResult};
 
 use ::binance_clients::{constants::REST_ENDPOINT, PubClient};
@@ -49,7 +50,13 @@ impl Executor {
       log,
       positions,
     };
-    me.update_indices(&["orderId", "clientOrderId"]).await;
+    me.update_indices(&[
+      "orderId",
+      "clientOrderId",
+      "settlementGid",
+      "positionGroupId",
+    ])
+    .await;
     return me;
   }
 }
@@ -130,13 +137,12 @@ impl ExecutorTrait for Executor {
             let signature = self.sign(qs, key.prv_key);
             let qs = format!("{}&signature={}", qs, signature);
             let cli = self.get_client(key.pub_key)?;
-            let mut err: Box<dyn ::std::error::Error + Send + Sync>;
-            for _ in 0usize..5 {
+            return retry_async(5, || async {
               let resp = cli
                 .post(format!("{}/api/v3/order?{}", REST_ENDPOINT, qs))
                 .send()
                 .await;
-              match resp {
+              let resp: ThreadSafeResult<()> = match resp {
                 Ok(resp) => {
                   let payload: OrderResponse<String, i64> = resp.json().await?;
                   let mut payload =
@@ -150,15 +156,13 @@ impl ExecutorTrait for Executor {
                       UpdateOptions::builder().upsert(true).build(),
                     )
                     .await;
-                  return Ok(());
+                  Ok(())
                 }
-                Err(e) => {
-                  err = Box::new(e);
-                  continue;
-                }
-              }
-            }
-            return Err(err);
+                Err(e) => Err(Box::new(e)),
+              };
+              return resp;
+            })
+            .await;
           }
           .boxed()
         })
@@ -171,6 +175,18 @@ impl ExecutorTrait for Executor {
       Some(e) => Err(e.unwrap_err()),
       None => Ok(pos_gid),
     };
+  }
+
+  async fn remove_order(
+    &mut self,
+    api_key_id: ObjectId,
+    id: ObjectId,
+  ) -> GenericResult<ExecutionResult> {
+    let api_key = self.keychain.get(Exchanges::Binance, api_key_id).await?;
+    let position = self
+      .positions
+      .find(doc! {"positionGroupId": id}, None)
+      .await?;
   }
 }
 
