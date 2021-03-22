@@ -1,5 +1,5 @@
 use ::std::error::Error;
-use std::{convert::TryFrom, thread::Thread};
+use std::convert::TryFrom;
 
 use ::async_stream::try_stream;
 use ::async_trait::async_trait;
