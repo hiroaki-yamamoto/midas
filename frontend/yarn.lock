@@ -1317,9 +1317,11 @@
     schema-utils "^2.7.0"
 
 "@msgpack/msgpack@^2.3.0":
-  version "2.4.1"
-  resolved "https://registry.yarnpkg.com/@msgpack/msgpack/-/msgpack-2.4.1.tgz#b3df36494b73a021242207e320af2c054145e4fe"
-  integrity sha512-AcfV3ZlyAzX2cqpuvcrV8Cbhpe0GxoNOdVIejqKWrqNtO3sYj+AI5fzoreRIjfDV1usE+NUes2AeKcG9tGanGQ==
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@msgpack/msgpack/-/msgpack-2.5.1.tgz#758de4db603dd48832029e68f15dd6cf83ddfa80"
+  integrity sha512-l44t7u0VxuHZT5D2zCdsRbkUPkrAJMu4wyXTvHr75eXICklf38NZncRqPYA4g9t7rprPuRCPYT5+pTLihuSKRA==
+  dependencies:
+    tslib ">=2.0.0"
 
 "@ngtools/webpack@11.2.5":
   version "11.2.5"
@@ -9838,7 +9840,7 @@ ts-pnp@^1.1.6:
   resolved "https://registry.yarnpkg.com/ts-pnp/-/ts-pnp-1.2.0.tgz#a500ad084b0798f1c3071af391e65912c86bca92"
   integrity sha512-csd+vJOb/gkzvcCHgTGSChYpy5f1/XKNsmvBGO4JXS+z1v2HobugDz4s1IeFXM3wZB44uczs+eazB5Q/ccdhQw==
 
-tslib@2.1.0, tslib@^2.0.0, tslib@^2.0.1, tslib@^2.1.0:
+tslib@2.1.0, tslib@>=2.0.0, tslib@^2.0.0, tslib@^2.0.1, tslib@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.1.0.tgz#da60860f1c2ecaa5703ab7d39bc05b6bf988b97a"
   integrity sha512-hcVC3wYEziELGGmEEXue7D75zbwIIVUMWAVbHItGPx0ziyXxrOMQx4rQEVEV45Ut/1IotuEvwqPopzIOkDMf0A==
