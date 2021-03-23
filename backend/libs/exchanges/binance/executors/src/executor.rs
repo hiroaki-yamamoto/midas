@@ -6,7 +6,9 @@ use ::async_trait::async_trait;
 use ::futures::future::{join_all, BoxFuture};
 use ::futures::stream::LocalBoxStream;
 use ::futures::{FutureExt, StreamExt};
-use ::mongodb::bson::{doc, oid::ObjectId, to_document, DateTime};
+use ::mongodb::bson::{
+  doc, from_document, oid::ObjectId, to_document, DateTime, Document,
+};
 use ::mongodb::options::{UpdateModifications, UpdateOptions};
 use ::mongodb::{Collection, Database};
 use ::nats::asynk::Connection as NatsCon;
@@ -28,7 +30,8 @@ use ::binance_clients::{constants::REST_ENDPOINT, PubClient};
 use ::binance_observers::{TradeObserver, TradeObserverTrait};
 
 use super::entities::{
-  OrderRequest, OrderResponse, OrderResponseType, OrderType, Side,
+  CancelOrderRequest, OrderRequest, OrderResponse, OrderResponseType,
+  OrderType, Side,
 };
 
 pub struct Executor {
@@ -106,6 +109,7 @@ impl ExecutorTrait for Executor {
     let order_type = order_option
       .map(|_| OrderType::Limit)
       .unwrap_or(OrderType::Market);
+    let cli = self.get_client(key.pub_key)?;
     let req_lst: Vec<BoxFuture<Result<(), Box<dyn Error + Send + Sync>>>> =
       order_option
         .map(|o| {
@@ -136,7 +140,6 @@ impl ExecutorTrait for Executor {
             let qs = to_qs(&order)?;
             let signature = self.sign(qs, key.prv_key);
             let qs = format!("{}&signature={}", qs, signature);
-            let cli = self.get_client(key.pub_key)?;
             return retry_async(5, || async {
               let resp = cli
                 .post(format!("{}/api/v3/order?{}", REST_ENDPOINT, qs))
@@ -180,13 +183,34 @@ impl ExecutorTrait for Executor {
   async fn remove_order(
     &mut self,
     api_key_id: ObjectId,
-    id: ObjectId,
+    gid: ObjectId,
   ) -> GenericResult<ExecutionResult> {
-    let api_key = self.keychain.get(Exchanges::Binance, api_key_id).await?;
-    let position = self
+    let api_key = self
+      .keychain
+      .get(Exchanges::Binance, api_key_id)
+      .await?
+      .ok_or(ObjectNotFound::new("API key".to_string()))?
+      .inner();
+    let positions = self
       .positions
-      .find(doc! {"positionGroupId": id}, None)
-      .await?;
+      .find(doc! {"positionGroupId": gid}, None)
+      .await?
+      .filter_map(|pos| async { pos.ok() })
+      .filter_map(|pos| async {
+        from_document::<OrderResponse<f64, DateTime>>(pos).ok()
+      })
+      .boxed_local();
+    let cli = self.get_client(api_key.pub_key);
+    while let Some(pos) = positions.next().await {
+      let mut rev_pos_req = vec![];
+      rev_pos_req.push(async {
+        let req = CancelOrderRequest::<i64>::new(pos.symbol)
+          .order_id(Some(pos.order_id));
+        let qs = to_qs(&req)?;
+        let qs = format!("{}&signature={}", qs, self.sign(qs, api_key.prv_key));
+      });
+    }
+    return Err(());
   }
 }
 

@@ -21,7 +21,7 @@ pub struct OrderResponse<FT, DT> {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub bot_id: Option<ObjectId>,
   pub symbol: String,
-  pub order_id: u64,
+  pub order_id: i64,
   pub order_list_id: i64,
   pub client_order_id: String,
   pub transact_time: DT,
