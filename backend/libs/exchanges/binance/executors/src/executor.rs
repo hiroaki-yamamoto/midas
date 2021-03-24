@@ -134,9 +134,12 @@ impl ExecutorTrait for Executor {
             .collect::<Vec<OrderRequest<i64>>>()
         })
         .unwrap_or_else(|| {
-          vec![*OrderRequest::<i64>::new(symbol, Side::Buy, order_type)
-            .price(price)
-            .order_response_type(Some(OrderResponseType::RESULT))]
+          let order = OrderRequest::<i64>::new(symbol, Side::Buy, order_type)
+            .order_response_type(Some(OrderResponseType::RESULT));
+          if order_type == OrderType::Limit {
+            order.price(price);
+          }
+          return vec![*order];
         })
         .into_iter()
         .map(|order| {
