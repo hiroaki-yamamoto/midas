@@ -1,8 +1,10 @@
 use std::convert::TryFrom;
 
+use ::entities::OrderInner;
 use ::errors::ParseError;
 use ::serde::{Deserialize, Serialize};
-use entities::OrderInner;
+
+use super::side::Side;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Fill<FT> {
@@ -13,10 +15,10 @@ pub struct Fill<FT> {
 }
 
 impl Fill<f64> {
-  pub fn as_order_inner(&self, sell_mode: bool) -> OrderInner {
-    let qty = match sell_mode {
-      true => ((self.price * self.qty) - self.commission) / self.price,
-      false => self.qty - self.commission,
+  pub fn as_order_inner(&self, side: Side) -> OrderInner {
+    let qty = match side {
+      Side::Sell => ((self.price * self.qty) - self.commission) / self.price,
+      Side::Buy => self.qty - self.commission,
     };
     return OrderInner {
       price: self.price,
