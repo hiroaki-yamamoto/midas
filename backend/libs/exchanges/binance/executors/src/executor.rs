@@ -107,7 +107,7 @@ impl ExecutorTrait for Executor {
       .ok_or(ObjectNotFound::new("API KeyPair".to_string()))?
       .inner();
     let order_type = order_option
-      .map(|_| OrderType::Limit)
+      .map(|_| price.map(|_| OrderType::Limit).unwrap_or(OrderType::Market))
       .unwrap_or(OrderType::Market);
     let cli = self.get_client(key.pub_key)?;
     let req_lst: Vec<BoxFuture<Result<(), Box<dyn Error + Send + Sync>>>> =
@@ -124,6 +124,9 @@ impl ExecutorTrait for Executor {
               } else {
                 order.quantity(Some(tr_amount));
               }
+              if order_type == OrderType::Limit {
+                order.price(Some(o.calc_order_price(price.unwrap(), index)));
+              }
               order =
                 *order.order_response_type(Some(OrderResponseType::RESULT));
               return order;
@@ -132,6 +135,7 @@ impl ExecutorTrait for Executor {
         })
         .unwrap_or_else(|| {
           vec![*OrderRequest::<i64>::new(symbol, Side::Buy, order_type)
+            .price(price)
             .order_response_type(Some(OrderResponseType::RESULT))]
         })
         .into_iter()

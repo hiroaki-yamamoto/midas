@@ -4,7 +4,7 @@ use ::serde::{Deserialize, Serialize};
 
 use ::errors::ParseError;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum OrderType {
   Limit,
