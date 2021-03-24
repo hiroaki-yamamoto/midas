@@ -4,6 +4,7 @@ use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
+use ::entities::Order;
 use ::types::casting::cast_datetime_from_i64;
 use ::types::errors::ParseError as CastError;
 
@@ -69,5 +70,22 @@ impl TryFrom<OrderResponse<String, i64>> for OrderResponse<f64, DateTime> {
           .collect()
       }),
     });
+  }
+}
+
+impl<DT> From<OrderResponse<f64, DT>> for Order {
+  fn from(from: OrderResponse<f64, DT>) -> Self {
+    return Self {
+      symbol: from.symbol,
+      inner: from
+        .fills
+        .map(|item| {
+          item
+            .into_iter()
+            .map(|item| item.as_order_inner(from.side.unwrap_or(Side::Buy)))
+            .collect()
+        })
+        .unwrap_or(vec![]),
+    };
   }
 }
