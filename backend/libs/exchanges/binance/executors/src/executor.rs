@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 
 use ::async_stream::try_stream;
 use ::async_trait::async_trait;
-use ::futures::future::{join_all, BoxFuture};
+use ::futures::future::{join, join_all, BoxFuture};
 use ::futures::stream::LocalBoxStream;
 use ::futures::{FutureExt, StreamExt};
 use ::mongodb::bson::{
@@ -18,7 +18,7 @@ use ::slog::Logger;
 
 use ::base_recorder::Recorder as RecorderTrait;
 use ::entities::{BookTicker, ExecutionResult, OrderOption};
-use ::errors::ObjectNotFound;
+use ::errors::{ObjectNotFound, StatusFailure};
 use ::executor::Executor as ExecutorTrait;
 use ::keychain::KeyChain;
 use ::rpc::entities::Exchanges;
@@ -200,15 +200,71 @@ impl ExecutorTrait for Executor {
         from_document::<OrderResponse<f64, DateTime>>(pos).ok()
       })
       .boxed_local();
-    let cli = self.get_client(api_key.pub_key);
+    let cli = self.get_client(api_key.pub_key)?;
+    let order_cancel_vec = vec![];
+    let position_reverse_vec = vec![];
     while let Some(pos) = positions.next().await {
-      let mut rev_pos_req = vec![];
-      rev_pos_req.push(async {
+      // Cancel Order
+      let cancel_order = async {
         let req = CancelOrderRequest::<i64>::new(pos.symbol)
           .order_id(Some(pos.order_id));
         let qs = to_qs(&req)?;
         let qs = format!("{}&signature={}", qs, self.sign(qs, api_key.prv_key));
-      });
+        order_cancel_vec.push(retry_async(5, || async {
+          let resp = cli
+            .delete(format!("{}/api/v3/order?{}", REST_ENDPOINT, qs))
+            .send()
+            .await?;
+          let status = resp.status();
+          if !status.is_success() {
+            return Err(Box::new(StatusFailure {
+              url: *resp.url(),
+              code: status.as_u16(),
+              text: resp
+                .text()
+                .await
+                .unwrap_or("Failed to get the text".to_string()),
+            }) as Box<dyn ::std::error::Error>);
+          }
+          return Ok(resp);
+        }));
+        Ok(())
+      };
+      if let Some(fills) = pos.fills {
+        // Sell the position
+        let qty_to_reverse =
+          fills.into_iter().map(|item| item.qty).sum::<f64>();
+        let req =
+          OrderRequest::<i64>::new(pos.symbol, Side::Sell, OrderType::Market)
+            .quantity(Some(qty_to_reverse));
+        let qs = to_qs(&req)?;
+        position_reverse_vec.push(retry_async(5, || async {
+          let resp = cli
+            .post(format!("{}/api/v3/order?{}", REST_ENDPOINT, qs))
+            .send()
+            .await?;
+          let status = resp.status();
+          if !status.is_success() {
+            return Err(Box::new(StatusFailure {
+              url: *resp.url(),
+              code: status.as_u16(),
+              text: resp
+                .text()
+                .await
+                .unwrap_or("Failed to get the text".to_string()),
+            }) as Box<dyn ::std::error::Error>);
+          }
+          return Ok(resp);
+        }));
+      };
+    }
+    let (order_res, position_res) =
+      join(join_all(order_cancel_vec), join_all(position_reverse_vec)).await;
+    for order_res in order_res {
+      order_res?;
+    }
+    for position_res in position_res {
+      position_res?;
     }
     return Err(());
   }

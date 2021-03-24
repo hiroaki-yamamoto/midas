@@ -3,6 +3,8 @@ use std::convert::TryFrom;
 use ::errors::ParseError;
 use ::serde::{Deserialize, Serialize};
 
+use ::entities::OrderInner;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Fill<FT> {
   pub price: FT,

@@ -4,8 +4,8 @@ use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
-use types::casting::cast_datetime_from_i64;
-use types::errors::ParseError as CastError;
+use ::types::casting::cast_datetime_from_i64;
+use ::types::errors::ParseError as CastError;
 
 use super::{Fill, OrderType, Side};
 
