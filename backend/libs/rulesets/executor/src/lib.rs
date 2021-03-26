@@ -142,15 +142,8 @@ pub trait TestExecutor {
       None => ExecutionResult::default(),
       Some(v) => {
         let qty = v.qty * (1.0 - fee);
-        let profit = ((qty * price) - (v.qty * v.price)) / qty;
-        let profit_ratio = profit / v.price;
-        ExecutionResult {
-          id: id.clone(),
-          price,
-          profit,
-          profit_ratio,
-          qty: v.qty,
-        }
+        let sell_trade = OrderInner { price, qty };
+        ExecutionResult::calculate_profit(&sell_trade, v)
       }
     };
     orders.remove(&id);

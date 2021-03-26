@@ -17,7 +17,7 @@ use ::serde_qs::to_string as to_qs;
 use ::slog::Logger;
 
 use ::base_recorder::Recorder as RecorderTrait;
-use ::entities::{BookTicker, ExecutionResult, OrderOption};
+use ::entities::{BookTicker, ExecutionResult, Order, OrderInner, OrderOption};
 use ::errors::{ObjectNotFound, StatusFailure};
 use ::executor::Executor as ExecutorTrait;
 use ::keychain::KeyChain;
@@ -261,7 +261,12 @@ impl ExecutorTrait for Executor {
                 .unwrap_or("Failed to get the text".to_string()),
             }) as Box<dyn ::std::error::Error>);
           }
-          return Ok(resp);
+          let rev_order_resp: OrderResponse<String, i64> = resp.json().await?;
+          let rev_order_resp =
+            OrderResponse::<f64, DateTime>::try_from(rev_order_resp)?;
+          let rev_pos_price: OrderInner = rev_order_resp.into().sum();
+          let pos_pur_price: OrderInner = pos.into().sum();
+          return Ok((pos_pur_price, rev_pos_price));
         }));
       };
     }
@@ -270,10 +275,14 @@ impl ExecutorTrait for Executor {
     for order_res in order_res {
       order_res?;
     }
+    let mut pur_order = OrderInner::default();
+    let mut sell_order = OrderInner::default();
     for position_res in position_res {
-      position_res?;
+      let (pur, sell) = position_res?;
+      pur_order += pur;
+      sell_order += sell;
     }
-    return Err(());
+    return Ok(ExecutionResult::calculate_profit(&sell_order, &pur_order));
   }
 }
 
