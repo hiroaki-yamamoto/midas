@@ -2,7 +2,7 @@ use ::std::collections::HashMap;
 
 use ::async_stream::try_stream;
 use ::async_trait::async_trait;
-use ::futures::stream::{LocalBoxStream, StreamExt};
+use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 
 use ::rpc::entities::{BackTestPriceBase, Exchanges};
@@ -52,7 +52,7 @@ impl Executor {
 impl ExecutorTrait for Executor {
   async fn open(
     &mut self,
-  ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>> {
+  ) -> ThreadSafeResult<BoxStream<ThreadSafeResult<BookTicker>>> {
     let half_spread = self.spread / 2.0;
     let price_base = self.price_base_policy.clone();
     let mut db_stream = self
@@ -93,7 +93,7 @@ impl ExecutorTrait for Executor {
       }
       self.cur_trade = None;
     };
-    return Ok(Box::pin(stream));
+    return Ok(stream.boxed());
   }
 
   async fn create_order(
@@ -113,7 +113,7 @@ impl ExecutorTrait for Executor {
     &mut self,
     _: ObjectId,
     _: ObjectId,
-  ) -> GenericResult<ExecutionResult> {
+  ) -> ThreadSafeResult<ExecutionResult> {
     return Err(Box::new(ExecutionFailed::new(
       "Call remove_position from TestExecutorTrait.",
     )));

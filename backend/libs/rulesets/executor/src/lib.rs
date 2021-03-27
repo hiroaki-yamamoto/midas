@@ -2,7 +2,7 @@ use ::std::collections::HashMap;
 
 use ::async_trait::async_trait;
 use ::bson::oid::ObjectId;
-use ::futures_core::stream::LocalBoxStream;
+use ::futures_core::stream::BoxStream;
 
 use ::entities::{
   BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
@@ -14,7 +14,7 @@ use ::types::{GenericResult, ThreadSafeResult};
 pub trait Executor {
   async fn open(
     &mut self,
-  ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>>;
+  ) -> ThreadSafeResult<BoxStream<ThreadSafeResult<BookTicker>>>;
   async fn create_order(
     &mut self,
     api_key_id: ObjectId,
@@ -28,7 +28,7 @@ pub trait Executor {
     &mut self,
     api_key_id: ObjectId,
     id: ObjectId,
-  ) -> GenericResult<ExecutionResult>;
+  ) -> ThreadSafeResult<ExecutionResult>;
 }
 
 pub trait TestExecutor {

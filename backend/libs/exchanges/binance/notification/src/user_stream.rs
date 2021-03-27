@@ -16,7 +16,7 @@ use ::tokio_tungstenite::tungstenite::{
   client::IntoClientRequest, Error as WebSocketError, Message,
 };
 
-use ::types::GenericResult;
+use ::types::{GenericResult, ThreadSafeResult};
 
 use super::constants::{
   REST_ENDPOINT, USER_STREAM_LISTEN_KEY_SUB_NAME,
@@ -173,7 +173,10 @@ impl PubClient for UserStream {}
 
 #[async_trait]
 impl UserStreamTrait for UserStream {
-  async fn get_listen_key(&self, api_key: &APIKeyInner) -> GenericResult<()> {
+  async fn get_listen_key(
+    &self,
+    api_key: &APIKeyInner,
+  ) -> ThreadSafeResult<()> {
     let pub_key = &api_key.pub_key;
     let client = self.get_client(pub_key)?;
     let resp: ListenKey = client
@@ -194,7 +197,7 @@ impl UserStreamTrait for UserStream {
     &self,
     api_key: &APIKeyInner,
     listen_key: &String,
-  ) -> GenericResult<()> {
+  ) -> ThreadSafeResult<()> {
     let pub_key = &api_key.pub_key;
     let client = self.get_client(pub_key)?;
     let _ = client

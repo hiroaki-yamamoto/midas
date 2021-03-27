@@ -1,15 +1,7 @@
-use ::std::error::Error;
-use ::std::fmt::{Debug, Display, Formatter, Result as FormatResult};
+use ::err_derive::Error;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
+#[error(display = "Field {} is required, but it's empty", field)]
 pub struct EmptyError {
   pub field: String,
 }
-
-impl Display for EmptyError {
-  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-    return write!(f, "Field {} is required, but it's empty", self.field);
-  }
-}
-
-impl Error for EmptyError {}

@@ -2,13 +2,13 @@ use ::std::collections::HashMap;
 
 use ::async_stream::try_stream;
 use ::async_trait::async_trait;
-use ::futures::stream::{LocalBoxStream, StreamExt};
+use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 use ::nats::asynk::Connection as NatsCon;
 use ::slog::Logger;
 
 use ::errors::ExecutionFailed;
-use ::types::{GenericResult, ThreadSafeResult};
+use ::types::ThreadSafeResult;
 
 use ::executor::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
@@ -77,7 +77,7 @@ impl TestExecutorTrait for Executor {
 impl ExecutorTrait for Executor {
   async fn open(
     &mut self,
-  ) -> GenericResult<LocalBoxStream<'_, GenericResult<BookTicker>>> {
+  ) -> ThreadSafeResult<BoxStream<ThreadSafeResult<BookTicker>>> {
     let observer = self.observer.clone();
     let stream = try_stream! {
       let mut src_stream = observer.subscribe().await?;
@@ -108,7 +108,7 @@ impl ExecutorTrait for Executor {
     &mut self,
     _: ObjectId,
     _: ObjectId,
-  ) -> GenericResult<ExecutionResult> {
+  ) -> ThreadSafeResult<ExecutionResult> {
     return Err(Box::new(ExecutionFailed::new(
       "Call remove_position from TestExecutorTrait.",
     )));

@@ -5,8 +5,7 @@ use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::DateTime;
 use ::serde::{Deserialize, Serialize};
 
-use super::order::OrderStatus;
-use ::binance_executors::entities::side::Side;
+use ::binance_executors::entities::{OrderStatus, Side};
 use ::entities::{Order as CommonOrder, OrderInner as CommonOrderInner};
 
 use ::errors::ParseError;

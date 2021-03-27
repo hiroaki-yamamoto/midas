@@ -1,7 +1,7 @@
-use std::error::Error;
-use std::fmt::{Debug, Display, Formatter, Result as FormatResult};
+use ::err_derive::Error;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
+#[error(display = "Trade Execution Failed. Reason: {}", reason)]
 pub struct ExecutionFailed {
   pub reason: String,
 }
@@ -16,11 +16,3 @@ impl ExecutionFailed {
     };
   }
 }
-
-impl Display for ExecutionFailed {
-  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-    return write!(f, "Trade Execution Failed. Reason: {}", self.reason);
-  }
-}
-
-impl Error for ExecutionFailed {}

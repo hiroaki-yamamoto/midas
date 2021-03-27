@@ -7,11 +7,12 @@ use ::serde::{Deserialize, Serialize};
 use super::side::Side;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Fill<FT> {
   pub price: FT,
   pub qty: FT,
   pub commission: FT,
-  pub commissionAsset: String,
+  pub commission_asset: String,
 }
 
 impl Fill<f64> {
@@ -34,16 +35,16 @@ impl TryFrom<Fill<String>> for Fill<f64> {
       price: v
         .price
         .parse()
-        .map_err(|e| ParseError::new(format!("price: {}", v.price)))?,
+        .map_err(|_| ParseError::new(format!("price: {}", v.price)))?,
       qty: v
         .qty
         .parse()
-        .map_err(|e| ParseError::new(format!("qty: {}", v.qty)))?,
+        .map_err(|_| ParseError::new(format!("qty: {}", v.qty)))?,
       commission: v
         .commission
         .parse()
-        .map_err(|e| ParseError::new(format!("commission: {}", v.qty)))?,
-      commissionAsset: v.commissionAsset,
+        .map_err(|_| ParseError::new(format!("commission: {}", v.qty)))?,
+      commission_asset: v.commission_asset,
     });
   }
 }

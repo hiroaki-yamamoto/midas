@@ -1,13 +1,5 @@
-use ::std::error::Error;
-use ::std::fmt::{Debug, Display, Formatter, Result as FormatResult};
+use ::err_derive::Error;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Error)]
+#[error(display = "Maximum retrieving count exceeded.")]
 pub struct MaximumAttemptExceeded;
-
-impl Display for MaximumAttemptExceeded {
-  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-    return write!(f, "Maximum retrieving count exceeded.");
-  }
-}
-
-impl Error for MaximumAttemptExceeded {}

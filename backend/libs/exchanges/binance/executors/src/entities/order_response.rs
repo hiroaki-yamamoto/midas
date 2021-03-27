@@ -75,17 +75,20 @@ impl TryFrom<OrderResponse<String, i64>> for OrderResponse<f64, DateTime> {
 
 impl<DT> From<OrderResponse<f64, DT>> for Order {
   fn from(from: OrderResponse<f64, DT>) -> Self {
+    let side = from.side;
+    let inner = from
+      .fills
+      .map(|fills| {
+        fills
+          .clone()
+          .into_iter()
+          .map(|fill| fill.as_order_inner(side.clone().unwrap_or(Side::Buy)))
+          .collect()
+      })
+      .unwrap_or(vec![]);
     return Self {
       symbol: from.symbol,
-      inner: from
-        .fills
-        .map(|item| {
-          item
-            .into_iter()
-            .map(|item| item.as_order_inner(from.side.unwrap_or(Side::Buy)))
-            .collect()
-        })
-        .unwrap_or(vec![]),
+      inner,
     };
   }
 }

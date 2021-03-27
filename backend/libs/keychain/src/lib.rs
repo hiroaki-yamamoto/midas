@@ -2,6 +2,7 @@ use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{doc, from_document, to_document, Document};
+use ::mongodb::error::Result;
 use ::mongodb::options::UpdateModifications;
 use ::mongodb::{Collection, Database};
 use ::nats::asynk::{Connection as NatsCon, Subscription as NatsSub};
@@ -78,7 +79,7 @@ impl KeyChain {
     &self,
     exchange: Exchanges,
     id: ObjectId,
-  ) -> ThreadSafeResult<Option<APIKey>> {
+  ) -> Result<Option<APIKey>> {
     let key = self
       .col
       .find_one(
