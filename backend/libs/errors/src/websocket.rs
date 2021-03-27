@@ -1,19 +1,11 @@
-use std::error::Error;
-use std::fmt::{Debug, Display, Formatter, Result as FormatResult};
+use ::err_derive::Error;
 
 use ::serde::Serialize;
 use ::slog_derive::KV;
 
-#[derive(Debug, Clone, Serialize, Default, KV)]
+#[derive(Debug, Clone, Serialize, Default, KV, Error)]
+#[error(display = "Websocket Error (status: {:?}, msg: {:?})", status, msg)]
 pub struct WebsocketError {
   pub status: Option<u16>,
   pub msg: Option<String>,
 }
-
-impl Display for WebsocketError {
-  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-    return write!(f, "Websocket Error");
-  }
-}
-
-impl Error for WebsocketError {}

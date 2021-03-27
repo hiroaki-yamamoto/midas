@@ -35,15 +35,15 @@ impl TryFrom<Fill<String>> for Fill<f64> {
       price: v
         .price
         .parse()
-        .map_err(|_| ParseError::new(format!("price: {}", v.price)))?,
+        .map_err(|_| ParseError::new(Some("price"), Some(&v.price)))?,
       qty: v
         .qty
         .parse()
-        .map_err(|_| ParseError::new(format!("qty: {}", v.qty)))?,
+        .map_err(|_| ParseError::new(Some("qty"), Some(&v.qty)))?,
       commission: v
         .commission
         .parse()
-        .map_err(|_| ParseError::new(format!("commission: {}", v.qty)))?,
+        .map_err(|_| ParseError::new(Some("commission"), Some(&v.qty)))?,
       commission_asset: v.commission_asset,
     });
   }

@@ -1,7 +1,7 @@
-use ::std::error::Error;
-use ::std::fmt::{Debug, Display, Formatter, Result as FormatResult};
+use ::err_derive::Error;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
+#[error(display = "Entity {} Not Found", entity)]
 pub struct ObjectNotFound {
   entity: String,
 }
@@ -11,11 +11,3 @@ impl ObjectNotFound {
     return Self { entity };
   }
 }
-
-impl Display for ObjectNotFound {
-  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-    return write!(f, "Entity {} Not Found", self.entity);
-  }
-}
-
-impl Error for ObjectNotFound {}

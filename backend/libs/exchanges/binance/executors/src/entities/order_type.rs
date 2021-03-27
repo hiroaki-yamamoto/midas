@@ -27,7 +27,7 @@ impl FromStr for OrderType {
       "TAKE_PROFIT" => Ok(Self::TakeProfit),
       "TAKE_PROFIT_LIMIT" => Ok(Self::TakeProfitLimit),
       "LIMIT_MAKER" => Ok(Self::LimitMaker),
-      _ => Err(ParseError::new(s.to_string())),
+      _ => Err(ParseError::new::<&str, String>(Some(s), None)),
     };
   }
 }

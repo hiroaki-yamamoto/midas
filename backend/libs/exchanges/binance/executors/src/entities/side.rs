@@ -22,7 +22,7 @@ impl FromStr for Side {
         return Ok(Self::Sell);
       }
       _ => {
-        return Err(ParseError::new(s.to_string()));
+        return Err(ParseError::new::<&str, String>(Some(s), None));
       }
     };
   }
