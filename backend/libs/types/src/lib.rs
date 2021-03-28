@@ -1,5 +1,4 @@
 pub mod casting;
-pub mod errors;
 pub mod retry;
 pub mod stateful_setter;
 
