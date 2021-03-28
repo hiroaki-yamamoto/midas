@@ -3,7 +3,7 @@ use std::num::ParseFloatError;
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
-use types::errors::VecElementErrs;
+use ::errors::VecElementErrs;
 use types::GenericResult;
 
 use super::account_update::AccountUpdate;

@@ -5,8 +5,8 @@ use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
 use ::entities::Order;
+use ::errors::ParseError;
 use ::types::casting::cast_datetime_from_i64;
-use ::types::errors::ParseError as CastError;
 
 use super::{Fill, OrderType, Side};
 
@@ -43,7 +43,7 @@ pub struct OrderResponse<FT, DT> {
 }
 
 impl TryFrom<OrderResponse<String, i64>> for OrderResponse<f64, DateTime> {
-  type Error = CastError;
+  type Error = ParseError;
   fn try_from(from: OrderResponse<String, i64>) -> Result<Self, Self::Error> {
     return Ok(OrderResponse::<f64, DateTime> {
       id: from.id,

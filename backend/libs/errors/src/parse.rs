@@ -1,21 +1,23 @@
-use ::std::error::Error;
-use ::std::fmt::{Debug, Display, Formatter, Result as FormatResult};
+use ::std::fmt::Debug;
 
-#[derive(Debug)]
+use ::err_derive::Error;
+
+#[derive(Debug, Default, Clone, Error)]
+#[error(display = "Failed to parse: (field: {:?}, input: {:?})", field, input)]
 pub struct ParseError {
-  raw_input: String,
+  field: Option<String>,
+  input: Option<String>,
 }
 
 impl ParseError {
-  pub fn new(raw_input: String) -> Self {
-    return Self { raw_input };
+  pub fn new<S, T>(field: Option<S>, input: Option<T>) -> Self
+  where
+    S: AsRef<str>,
+    T: AsRef<str>,
+  {
+    return Self {
+      field: field.map(|s| s.as_ref().to_string()),
+      input: input.map(|s| s.as_ref().to_string()),
+    };
   }
 }
-
-impl Display for ParseError {
-  fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-    return write!(f, "Invalid: {}", self.raw_input);
-  }
-}
-
-impl Error for ParseError {}

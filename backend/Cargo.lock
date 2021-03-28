@@ -3652,6 +3652,7 @@ name = "types"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "errors",
  "futures",
  "serde",
  "serde_json",
