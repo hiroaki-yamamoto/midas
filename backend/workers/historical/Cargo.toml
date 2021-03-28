@@ -16,7 +16,7 @@ slog = "2.7.0"
 tokio = { version = "1.4.0", features = ["rt", "rt-multi-thread", "macros", "signal"] }
 nats = "0.8"
 clap = "3.0.0-beta.2"
-mongodb = { version = "1.2.0", default-features = false, features = ["async-std-runtime"] }
+mongodb = "1.2.0"
 futures = "0.3.13"
 libc = "0.2.91"
 

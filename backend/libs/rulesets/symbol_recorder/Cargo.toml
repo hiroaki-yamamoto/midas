@@ -11,5 +11,5 @@ types = { path = "../../types" }
 
 async-trait = "0.1.48"
 futures-core = "0.3.13"
-mongodb = { version = "1.2.0", default-features = false, features = ["async-std-runtime"] }
+mongodb = "1.2.0"
 serde = "1.0.125"

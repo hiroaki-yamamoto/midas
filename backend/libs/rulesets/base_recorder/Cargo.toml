@@ -9,4 +9,4 @@ edition = "2018"
 [dependencies]
 async-trait = "0.1.48"
 futures = "0.3.13"
-mongodb = { version = "1.2.0", default-features = false, features = ["async-std-runtime"] }
+mongodb = "1.2.0"

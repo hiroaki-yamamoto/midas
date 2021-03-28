@@ -19,7 +19,7 @@ binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
 serde = { version = "1.0.125", features = ["derive"] }
 rmp-serde = "0.15.4"
 nats = "0.8"
-mongodb = { version = "1.2.0", default-features = false, features = ["async-std-runtime"] }
+mongodb = "1.2.0"
 clap = "3.0.0-beta.2"
 serde_yaml = "0.8.17"
 tokio = { version = "1.4.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
