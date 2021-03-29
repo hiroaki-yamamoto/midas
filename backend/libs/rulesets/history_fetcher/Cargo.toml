@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 types = { path = "../../types" }
-nats = "0.8"
+rpc = { path = "../../rpc" }
 
 async-trait = "0.1.48"
+futures-core = "0.3.13"

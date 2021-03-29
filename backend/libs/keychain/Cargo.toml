@@ -15,4 +15,4 @@ base_recorder = { path = "../rulesets/base_recorder" }
 futures = "0.3.13"
 mongodb = "1.2.0"
 rmp-serde = "0.15.4"
-nats = "0.8"
+nats = "0.9.8"

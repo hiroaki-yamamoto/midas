@@ -11,7 +11,7 @@ use ::futures::sink::SinkExt;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::doc;
 use ::mongodb::Database;
-use ::nats::asynk::Connection as Broker;
+use ::nats::Connection as Broker;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
@@ -23,6 +23,7 @@ use self::entities::{BookTicker, SubscribeRequest, SubscribeRequestInner};
 use ::binance_symbols::entities::{ListSymbolStream, Symbol};
 use ::binance_symbols::recorder::SymbolRecorder;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
+use ::subscribe::to_stream as nats_to_stream;
 use ::types::{GenericResult, ThreadSafeResult};
 
 use self::constants::{
@@ -257,7 +258,7 @@ impl TradeObserver {
       }
       Ok(v) => v,
     };
-    let _ = self.broker.publish(TRADE_OBSERVER_SUB_NAME, &msg[..]).await;
+    let _ = self.broker.publish(TRADE_OBSERVER_SUB_NAME, &msg[..]);
   }
 
   async fn handle_websocket_message(
@@ -330,15 +331,13 @@ impl TradeObserver {
     socket: &mut TLSWebSocket,
   ) -> ThreadSafeResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
-    let (symbol_add_event, symbol_remove_evnet) = join(
+    let (_, mut symbol_add_event) = nats_to_stream(
       self
         .broker
-        .queue_subscribe(SYMBOL_ADD_EVENT, "trade_observer"),
-      self.broker.subscribe(SYMBOL_REMOVE_EVENT),
-    )
-    .await;
-    let (mut symbol_add_event, mut symbol_remove_evnet) =
-      (symbol_add_event?, symbol_remove_evnet?);
+        .queue_subscribe(SYMBOL_ADD_EVENT, "trade_observer")?,
+    );
+    let (_, mut symbol_remove_evnet) =
+      nats_to_stream(self.broker.subscribe(SYMBOL_REMOVE_EVENT)?);
     let mut clear_sym_map_flag = false;
     let mut initial_symbols_stream = self.init().await?;
     loop {

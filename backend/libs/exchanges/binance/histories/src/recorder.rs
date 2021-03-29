@@ -8,7 +8,7 @@ use ::mongodb::bson::{
 };
 use ::mongodb::error::Result as MongoResult;
 use ::mongodb::{Collection, Database};
-use ::nats::asynk::Connection as NatsConnection;
+use ::nats::Connection as NatsConnection;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::slog::{crit, error, warn, Logger};
 use ::tokio::select;
@@ -16,6 +16,9 @@ use ::tokio::sync::mpsc;
 use ::tokio::task::block_in_place;
 
 use ::rpc::historical::HistChartProg;
+use ::subscribe::{
+  to_stream as nats_to_stream, to_stream_msg as nats_to_stream_msg,
+};
 
 use super::constants::{
   HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
@@ -118,10 +121,9 @@ impl HistoryRecorder {
     &self,
     senders: Vec<mpsc::UnboundedSender<Klines>>,
   ) {
-    let value_sub = match self
+    let (_, value_sub) = match self
       .broker
       .queue_subscribe(HIST_FETCHER_FETCH_RESP_SUB_NAME, "recorder")
-      .await
     {
       Err(e) => {
         crit!(
@@ -131,11 +133,8 @@ impl HistoryRecorder {
         );
         return;
       }
-      Ok(v) => v,
-    }
-    .filter_map(|item| async move {
-      return from_msgpack::<KlinesWithInfo>(item.data.as_slice()).ok();
-    });
+      Ok(v) => nats_to_stream::<KlinesWithInfo>(v),
+    };
     let mut value_sub = Box::pin(value_sub);
     let senders = senders.clone();
     let broker = self.broker.clone();
@@ -160,7 +159,7 @@ impl HistoryRecorder {
           };
           let _ = broker.publish(
             HIST_FETCHER_FETCH_PROG_SUB_NAME, prog_msg.as_slice()
-          ).await;
+          );
           let _ = senders[counter].send(klines.klines);
           counter = (counter + 1) % senders.len();
         },
@@ -171,10 +170,9 @@ impl HistoryRecorder {
 
   async fn spawn_latest_trade_time_request(&self) {
     let me = self.clone();
-    let mut sub = match me
+    let (_, sub) = match me
       .broker
       .queue_subscribe(HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME, "recorder")
-      .await
     {
       Err(e) => {
         error!(
@@ -184,13 +182,9 @@ impl HistoryRecorder {
         );
         return;
       }
-      Ok(v) => v,
-    }
-    .map(|msg| {
-      return (from_msgpack::<Vec<String>>(&msg.data[..]), msg);
-    })
-    .filter_map(|(item, msg)| async move { Some((item.ok()?, msg)) })
-    .boxed();
+      Ok(v) => nats_to_stream_msg::<Vec<String>>(v),
+    };
+    let mut sub = sub.boxed();
     loop {
       let logger = self.logger.clone();
       let me = self.clone();
@@ -212,7 +206,7 @@ impl HistoryRecorder {
                 },
                 Ok(v) => v
               };
-              let _ = msg.respond(resp).await;
+              let _ = msg.respond(resp);
             },
             None => {
               warn!(logger, "The request doesn't have reply subject.");

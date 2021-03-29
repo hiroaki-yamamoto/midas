@@ -1,8 +1,8 @@
 use ::std::collections::HashMap;
 
-use ::futures::{join, StreamExt};
+use ::futures::StreamExt;
 
-use ::nats::asynk::{Connection as NatsConnection, Subscription as NatsSubsc};
+use ::nats::{Connection as NatsConnection, Subscription as NatsSubsc};
 
 use ::history_fetcher::HistoryFetcher;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
@@ -45,19 +45,19 @@ where
     &self,
     symbols: Vec<String>,
   ) -> ThreadSafeResult<()> {
-    let mut prog =
-      Box::pin(
-        self.history_fetcher.refresh(symbols).await?.filter_map(
-          |msg| async move {
-            from_msgpack::<HistChartProg>(msg.data.as_slice()).ok()
-          },
-        ),
-      );
+    let mut prog = self
+      .history_fetcher
+      .refresh(symbols)
+      .await?
+      .filter_map(|msg| async move {
+        from_msgpack::<HistChartProg>(msg.data.as_slice()).ok()
+      })
+      .boxed();
     let logger_in_thread = self
       .logger
       .new(o!("scope" => "refresh_historical_klines.thread"));
     let nats_con = self.nats.clone();
-    let exchange = self.exchange;
+    let exchange = self.exchange.clone();
     ::tokio::spawn(async move {
       let mut hist_fetch_prog = HashMap::new();
       while let Some(prog) = prog.next().await {
@@ -84,7 +84,7 @@ where
   }
 
   pub async fn subscribe(&self) -> ThreadSafeResult<NatsSubsc> {
-    return match self.nats.subscribe("kline.progress").await {
+    return match self.nats.subscribe("kline.progress") {
       Err(err) => Err(Box::new(err)),
       Ok(v) => Ok(v),
     };
@@ -94,9 +94,7 @@ where
     let status = KlineFetchStatus::Stop;
     let msg = to_msgpack(&status)?;
     let stop_progress = self.nats.publish("kline.progress", &msg[..]);
-    let stop_hist_fetch = self.history_fetcher.stop();
-    let (stop_progress, stop_hist_fetch) =
-      join!(stop_progress, stop_hist_fetch);
+    let stop_hist_fetch = self.history_fetcher.stop().await;
     let _ = stop_progress.or(stop_hist_fetch)?;
     return Ok(());
   }
@@ -120,7 +118,7 @@ async fn nats_broadcast_status(
       return;
     }
   };
-  match con.publish("kline.progress", &msg[..]).await {
+  match con.publish("kline.progress", &msg[..]) {
     Err(err) => {
       error!(
         log,

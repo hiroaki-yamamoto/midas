@@ -5,7 +5,7 @@ use ::futures::executor::block_on;
 use ::futures::future::join_all;
 use ::futures::{SinkExt, Stream, StreamExt};
 use ::mongodb::Database;
-use ::nats::asynk::Connection as NatsCon;
+use ::nats::Connection as NatsCon;
 use ::num_traits::FromPrimitive;
 use ::rmp_serde::from_slice as read_msgpack;
 use ::serde_json::to_string as jsonify;

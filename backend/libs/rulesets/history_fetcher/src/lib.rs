@@ -1,5 +1,6 @@
 use ::async_trait::async_trait;
-use ::nats::asynk::Subscription;
+use ::futures_core::stream::BoxStream;
+use ::rpc::historical::HistChartProg;
 
 use ::types::ThreadSafeResult;
 
@@ -8,7 +9,7 @@ pub trait HistoryFetcher {
   async fn refresh(
     &self,
     symbols: Vec<String>,
-  ) -> ThreadSafeResult<Subscription>;
+  ) -> ThreadSafeResult<BoxStream<HistChartProg>>;
   async fn stop(&self) -> ThreadSafeResult<()>;
   async fn spawn(&self) -> ThreadSafeResult<()>;
 }
