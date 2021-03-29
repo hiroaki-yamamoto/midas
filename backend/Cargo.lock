@@ -269,7 +269,7 @@ dependencies = [
  "futures",
  "keychain",
  "mongodb",
- "nats",
+ "nats 0.8.6",
  "reqwest 0.11.2",
  "ring",
  "rpc",
@@ -297,7 +297,7 @@ dependencies = [
  "history_fetcher",
  "history_recorder",
  "mongodb",
- "nats",
+ "nats 0.8.6",
  "num_cpus",
  "rand 0.8.3",
  "rmp-serde",
@@ -327,7 +327,7 @@ dependencies = [
  "futures",
  "keychain",
  "mongodb",
- "nats",
+ "nats 0.8.6",
  "notification",
  "rmp-serde",
  "serde",
@@ -351,7 +351,7 @@ dependencies = [
  "errors",
  "futures",
  "mongodb",
- "nats",
+ "nats 0.8.6",
  "rmp-serde",
  "rpc",
  "serde",
@@ -374,7 +374,7 @@ dependencies = [
  "errors",
  "futures",
  "mongodb",
- "nats",
+ "nats 0.8.6",
  "reqwest 0.11.2",
  "rmp-serde",
  "rpc",
@@ -667,6 +667,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81156fece84ab6a9f2afdb109ce3ae577e42b1228441eded99bd77f627953b1a"
 dependencies = [
  "cfg-if 1.0.0",
+]
+
+[[package]]
+name = "crossbeam-channel"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dca26ee1f8d361640700bde38b2c37d8c22b3ce2d360e1fc1c74ea4b0aa7d775"
+dependencies = [
+ "cfg-if 1.0.0",
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-utils"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7e9d99fa91428effe99c5c6d4634cdeba32b8cf784fc428a2a687f61a952c49"
+dependencies = [
+ "autocfg",
+ "cfg-if 1.0.0",
+ "lazy_static",
 ]
 
 [[package]]
@@ -1283,7 +1304,7 @@ dependencies = [
  "futures",
  "libc",
  "mongodb",
- "nats",
+ "nats 0.8.6",
  "slog",
  "tokio 1.4.0",
  "types",
@@ -1304,7 +1325,7 @@ dependencies = [
  "http",
  "libc",
  "mongodb",
- "nats",
+ "nats 0.8.6",
  "num-traits",
  "rmp-serde",
  "rpc",
@@ -1322,7 +1343,7 @@ name = "history_fetcher"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "nats",
+ "nats 0.8.6",
  "types",
 ]
 
@@ -1610,7 +1631,7 @@ dependencies = [
  "entities",
  "futures",
  "mongodb",
- "nats",
+ "nats 0.8.6",
  "rmp-serde",
  "rpc",
  "types",
@@ -1628,7 +1649,7 @@ dependencies = [
  "keychain",
  "libc",
  "mongodb",
- "nats",
+ "nats 0.8.6",
  "num-traits",
  "rpc",
  "serde",
@@ -1654,6 +1675,15 @@ name = "linked-hash-map"
 version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fb9b38af92608140b86b693604b9ffcc5824240a484d1ecd4795bacb2fe88f3"
+
+[[package]]
+name = "lock_api"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd96ffd135b2fd7b973ac026d28085defbe8983df057ced3eb4f2130b0831312"
+dependencies = [
+ "scopeguard",
+]
 
 [[package]]
 name = "log"
@@ -1891,7 +1921,33 @@ dependencies = [
  "nuid",
  "once_cell",
  "regex",
- "rustls-native-certs",
+ "rustls-native-certs 0.4.0",
+]
+
+[[package]]
+name = "nats"
+version = "0.9.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0a66112871fe8cfc962ee3792188dc164ac306ed691cf9939756ceff84e0d16d"
+dependencies = [
+ "base64 0.13.0",
+ "base64-url",
+ "crossbeam-channel",
+ "fastrand",
+ "itoa",
+ "json",
+ "libc",
+ "log",
+ "memchr",
+ "nkeys",
+ "nuid",
+ "once_cell",
+ "parking_lot",
+ "regex",
+ "rustls 0.19.0",
+ "rustls-native-certs 0.5.0",
+ "webpki",
+ "winapi 0.3.9",
 ]
 
 [[package]]
@@ -1947,7 +2003,7 @@ dependencies = [
  "config",
  "futures",
  "libc",
- "nats",
+ "nats 0.8.6",
  "notification",
  "tokio 1.4.0",
 ]
@@ -2028,7 +2084,7 @@ dependencies = [
  "futures",
  "libc",
  "mongodb",
- "nats",
+ "nats 0.8.6",
  "rmp-serde",
  "rpc",
  "slog",
@@ -2046,7 +2102,7 @@ dependencies = [
  "futures",
  "libc",
  "mongodb",
- "nats",
+ "nats 0.8.6",
  "rpc",
  "slog",
  "tokio 1.4.0",
@@ -2124,6 +2180,31 @@ name = "parking"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "427c3892f9e783d91cc128285287e70a59e206ca452770ece88a76f7a3eddd72"
+
+[[package]]
+name = "parking_lot"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d7744ac029df22dca6284efe4e898991d28e3085c706c972bcd7da4a27a15eb"
+dependencies = [
+ "instant",
+ "lock_api",
+ "parking_lot_core",
+]
+
+[[package]]
+name = "parking_lot_core"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa7a782938e745763fe6907fc6ba86946d72f49fe7e21de074e08128a99fb018"
+dependencies = [
+ "cfg-if 1.0.0",
+ "instant",
+ "libc",
+ "redox_syscall",
+ "smallvec",
+ "winapi 0.3.9",
+]
 
 [[package]]
 name = "pbkdf2"
@@ -2666,6 +2747,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustls-native-certs"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a07b7c1885bd8ed3831c289b7870b13ef46fe0e856d288c30d9cc17d75a2092"
+dependencies = [
+ "openssl-probe",
+ "rustls 0.19.0",
+ "schannel",
+ "security-framework 2.1.2",
+]
+
+[[package]]
 name = "rustversion"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2698,6 +2791,12 @@ name = "scoped-tls"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea6a9290e3c9cf0f18145ef7ffa62d68ee0bf5fcd651017e586dc7fd5da448c2"
+
+[[package]]
+name = "scopeguard"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "sct"
@@ -3125,6 +3224,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
+name = "subscribe"
+version = "0.1.0"
+dependencies = [
+ "futures-core",
+ "nats 0.9.8",
+ "tokio 1.4.0",
+ "tokio-stream",
+]
+
+[[package]]
 name = "subtle"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3175,7 +3284,7 @@ dependencies = [
  "futures",
  "libc",
  "mongodb",
- "nats",
+ "nats 0.8.6",
  "num-traits",
  "rpc",
  "slog",

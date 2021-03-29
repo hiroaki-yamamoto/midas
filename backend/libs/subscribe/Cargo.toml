@@ -1,0 +1,13 @@
+[package]
+name = "subscribe"
+version = "0.1.0"
+authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+futures-core = "0.3.13"
+nats = "0.9.8"
+tokio = {version = "1.4.0", features = ["sync"]}
+tokio-stream = "0.1.5"
