@@ -10,7 +10,7 @@ use ::tokio_stream::wrappers::UnboundedReceiverStream;
 
 pub fn to_stream_raw(
   sub: Subscription,
-) -> (Handler, impl Stream<Item = Message>) {
+) -> (Handler, impl Stream<Item = Message> + Send + Sync) {
   let (sender, receiver) = unbounded_channel();
   let handler = sub.with_handler(move |msg| {
     return sender
@@ -23,9 +23,9 @@ pub fn to_stream_raw(
 
 pub fn to_stream_msg<T>(
   sub: Subscription,
-) -> (Handler, impl Stream<Item = (T, Message)>)
+) -> (Handler, impl Stream<Item = (T, Message)> + Send + Sync)
 where
-  T: DeserializeOwned,
+  T: DeserializeOwned + Send + Sync,
 {
   let (handler, stream) = to_stream_raw(sub);
   let stream = stream
@@ -34,9 +34,11 @@ where
   return (handler, stream);
 }
 
-pub fn to_stream<T>(sub: Subscription) -> (Handler, impl Stream<Item = T>)
+pub fn to_stream<T>(
+  sub: Subscription,
+) -> (Handler, impl Stream<Item = T> + Send + Sync)
 where
-  T: DeserializeOwned,
+  T: DeserializeOwned + Send + Sync,
 {
   let (handler, stream) = to_stream_raw(sub);
   let stream = stream

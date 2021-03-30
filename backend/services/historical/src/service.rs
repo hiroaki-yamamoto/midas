@@ -3,6 +3,7 @@ use ::std::pin::Pin;
 
 use ::futures::executor::block_on;
 use ::futures::future::join_all;
+use ::futures::stream::BoxStream;
 use ::futures::{SinkExt, Stream, StreamExt};
 use ::mongodb::Database;
 use ::nats::Connection as NatsCon;
@@ -24,8 +25,7 @@ use super::manager::ExchangeManager;
 
 use super::entities::KlineFetchStatus;
 
-type SubscribeStream =
-  Pin<Box<dyn Stream<Item = HistChartProg> + Send + Sync + 'static>>;
+type SubscribeStream<'a> = BoxStream<'a, HistChartProg>;
 
 #[derive(Debug, Clone)]
 pub struct Service {
@@ -52,12 +52,7 @@ impl Service {
       .await,
     )
     .await?;
-    let binance = ExchangeManager::new(
-      Exchanges::Binance,
-      binance,
-      nats,
-      log.new(o!("scope" => "Binance Exchange Manager")),
-    );
+    let binance = ExchangeManager::new(Exchanges::Binance, binance, nats);
     let ret = Self {
       logger: log.clone(),
       binance,
@@ -80,7 +75,7 @@ impl Service {
       .map(move |ws: Ws| {
         let ws_svc = ws_svc.clone();
         return ws.on_upgrade(|mut sock: WebSocket| async move {
-          let subsc = ws_svc.subscribe().await;
+          let subsc = ws_svc.subscribe();
           match subsc {
             Err(e) => {
               let msg = format!(
@@ -120,20 +115,26 @@ impl Service {
       .boxed();
   }
 
-  async fn subscribe(&self) -> ThreadSafeResult<SubscribeStream> {
+  fn subscribe(&self) -> GenericResult<SubscribeStream> {
     let stream_logger = self.logger.new(o!("scope" => "Stream Logger"));
-    let (handler, mut subscriber) = self.binance.subscribe().await?;
-    let out = ::async_stream::stream! {
-      while let Some(status) = subscriber.next().await {
+    let (handler, subscriber) = self.binance.subscribe()?;
+    let subscriber = subscriber
+      .map(|status| {
         match status {
-          KlineFetchStatus::Progress{exchange: _, progress} => {yield progress;},
-          KlineFetchStatus::Stop => {break;},
-          // _ => {continue;}
+          KlineFetchStatus::Progress {
+            exchange: _,
+            progress,
+          } => {
+            return Some(progress);
+          }
+          KlineFetchStatus::Stop => {
+            handler.unsubscribe();
+            return None;
+          } // _ => {continue;}
         };
-      }
-      handler.unsubscribe();
-    };
-    return Ok(Box::pin(out) as SubscribeStream);
+      })
+      .filter_map(|o| async { o });
+    return Ok(subscriber.boxed() as SubscribeStream);
   }
 
   fn empty_or_err(&self, res: ThreadSafeResult<()>) -> impl Reply {
