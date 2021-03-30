@@ -115,7 +115,7 @@ impl Service {
       .boxed();
   }
 
-  fn subscribe(&self) -> GenericResult<SubscribeStream> {
+  fn subscribe(&self) -> ThreadSafeResult<SubscribeStream> {
     let stream_logger = self.logger.new(o!("scope" => "Stream Logger"));
     let (handler, subscriber) = self.binance.subscribe()?;
     let subscriber = subscriber
