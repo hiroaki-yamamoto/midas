@@ -1,13 +1,13 @@
 use ::std::collections::HashMap;
+use ::std::io::Result as IOResult;
 
 use ::futures::StreamExt;
 
 use ::nats::{Connection as NatsConnection, Subscription as NatsSubsc};
 
 use ::history_fetcher::HistoryFetcher;
-use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
+use ::rmp_serde::to_vec as to_msgpack;
 use ::rpc::entities::Exchanges;
-use ::rpc::historical::HistChartProg;
 use ::slog::{error, o, Logger};
 use ::types::ThreadSafeResult;
 
@@ -16,7 +16,7 @@ use crate::entities::KlineFetchStatus;
 #[derive(Debug, Clone)]
 pub(crate) struct ExchangeManager<T>
 where
-  T: HistoryFetcher + Send,
+  T: HistoryFetcher + Send + Sync,
 {
   pub history_fetcher: T,
   exchange: Exchanges,
@@ -26,7 +26,7 @@ where
 
 impl<T> ExchangeManager<T>
 where
-  T: HistoryFetcher + Send,
+  T: HistoryFetcher + Send + Sync,
 {
   pub fn new(
     exchange: Exchanges,
@@ -45,14 +45,7 @@ where
     &self,
     symbols: Vec<String>,
   ) -> ThreadSafeResult<()> {
-    let mut prog = self
-      .history_fetcher
-      .refresh(symbols)
-      .await?
-      .filter_map(|msg| async move {
-        from_msgpack::<HistChartProg>(msg.data.as_slice()).ok()
-      })
-      .boxed();
+    let mut prog = self.history_fetcher.refresh(symbols).await?.boxed();
     let logger_in_thread = self
       .logger
       .new(o!("scope" => "refresh_historical_klines.thread"));
@@ -83,11 +76,8 @@ where
     return Ok(());
   }
 
-  pub async fn subscribe(&self) -> ThreadSafeResult<NatsSubsc> {
-    return match self.nats.subscribe("kline.progress") {
-      Err(err) => Err(Box::new(err)),
-      Ok(v) => Ok(v),
-    };
+  pub async fn subscribe(&self) -> IOResult<NatsSubsc> {
+    return self.nats.subscribe("kline.progress");
   }
 
   pub async fn stop(&self) -> ThreadSafeResult<()> {

@@ -306,18 +306,7 @@ impl TradeObserver {
     }
   }
 
-  fn handle_add_symbol(&self, data: &[u8]) -> Option<String> {
-    let symbol: Symbol = match from_msgpack(data) {
-      Err(e) => {
-        ::slog::warn!(
-          self.logger,
-          "Failed to read symbol add event payload: {}",
-          e
-        );
-        return None;
-      }
-      Ok(o) => o,
-    };
+  fn handle_add_symbol(&self, symbol: &Symbol) -> Option<String> {
     if symbol.status != "TRADING"
       || self.get_symbol_index(&symbol.symbol).is_some()
     {
@@ -331,13 +320,15 @@ impl TradeObserver {
     socket: &mut TLSWebSocket,
   ) -> ThreadSafeResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
-    let (_, mut symbol_add_event) = nats_to_stream(
+    let (_, symbol_add_event) = nats_to_stream::<Symbol>(
       self
         .broker
         .queue_subscribe(SYMBOL_ADD_EVENT, "trade_observer")?,
     );
-    let (_, mut symbol_remove_evnet) =
-      nats_to_stream(self.broker.subscribe(SYMBOL_REMOVE_EVENT)?);
+    let (_, symbol_remove_evnet) =
+      nats_to_stream::<Symbol>(self.broker.subscribe(SYMBOL_REMOVE_EVENT)?);
+    let (mut symbol_add_event, mut symbol_remove_evnet) =
+      (symbol_add_event.boxed(), symbol_remove_evnet.boxed());
     let mut clear_sym_map_flag = false;
     let mut initial_symbols_stream = self.init().await?;
     loop {
@@ -346,23 +337,12 @@ impl TradeObserver {
         Some(symbol) = initial_symbols_stream.next() => {
           add_buf.insert(symbol.symbol);
         }
-        Some(msg) = symbol_add_event.next() => {
-          if let Some(symb) = self.handle_add_symbol(&msg.data[..]) {
+        Some(symbol) = symbol_add_event.next() => {
+          if let Some(symb) = self.handle_add_symbol(&symbol) {
             add_buf.insert(symb);
           }
         },
-        Some(msg) = symbol_remove_evnet.next() => {
-          let symbol: Symbol = match from_msgpack(&msg.data[..]) {
-            Err(e) => {
-              ::slog::warn!(
-                self.logger,
-                "Failed to read symbol removal event payload: {}",
-                e
-              );
-              continue;
-            },
-            Ok(o) => o
-          };
+        Some(symbol) = symbol_remove_evnet.next() => {
           del_buf.insert(symbol.symbol);
         },
         _ = event_delay => {
