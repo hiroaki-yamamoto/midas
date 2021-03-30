@@ -9,7 +9,7 @@ use ::mongodb::bson::{
 use ::mongodb::error::Result as MongoResult;
 use ::mongodb::{Collection, Database};
 use ::nats::Connection as NatsConnection;
-use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
+use ::rmp_serde::to_vec as to_msgpack;
 use ::slog::{crit, error, warn, Logger};
 use ::tokio::select;
 use ::tokio::sync::mpsc;

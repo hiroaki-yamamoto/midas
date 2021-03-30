@@ -3,7 +3,7 @@ use ::futures::future::{join_all, select};
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::options::ClientOptions as MongoDBCliOpt;
 use ::mongodb::Client as DBCli;
-use ::nats::asynk::connect;
+use ::nats::connect;
 use ::slog::{info, o};
 use ::tokio::signal::unix as signal;
 
@@ -18,7 +18,7 @@ async fn main() {
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
   let logger = cfg.build_slog();
   info!(logger, "Kline fetch worker");
-  let broker = connect(&cfg.broker_url).await.unwrap();
+  let broker = connect(&cfg.broker_url).unwrap();
   let db =
     DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await.unwrap())
       .unwrap()

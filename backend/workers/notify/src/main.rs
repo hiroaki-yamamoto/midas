@@ -1,7 +1,7 @@
 use ::clap::Clap;
 use ::futures::future::{select, Either};
 use ::libc::{SIGINT, SIGTERM};
-use ::nats::asynk::connect as new_broker;
+use ::nats::connect as new_broker;
 use ::tokio::signal::unix as signal;
 
 use ::binance_notification as binance;
@@ -13,7 +13,7 @@ async fn main() {
   let args: CmdArgs = CmdArgs::parse();
   let config = Config::from_fpath(Some(args.config)).unwrap();
   let logger = config.build_slog();
-  let broker = new_broker(config.broker_url.as_str()).await.unwrap();
+  let broker = new_broker(config.broker_url.as_str()).unwrap();
   let binance = binance::UserStream::new(broker, logger);
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();

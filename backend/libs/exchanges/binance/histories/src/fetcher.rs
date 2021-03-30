@@ -5,11 +5,10 @@ use ::std::time::Duration as StdDur;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use ::futures::future::join;
 use ::futures::stream::BoxStream;
-use ::futures::{Stream, StreamExt};
+use ::futures::StreamExt;
 use ::mongodb::bson::{doc, DateTime as MongoDateTime, Document};
-use ::nats::{Connection, Message};
+use ::nats::Connection;
 use ::rand::random;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;

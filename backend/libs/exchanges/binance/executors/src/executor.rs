@@ -11,7 +11,7 @@ use ::mongodb::bson::{
 };
 use ::mongodb::options::{UpdateModifications, UpdateOptions};
 use ::mongodb::{Collection, Database};
-use ::nats::asynk::Connection as NatsCon;
+use ::nats::Connection as NatsCon;
 use ::ring::hmac;
 use ::serde_qs::to_string as to_qs;
 use ::slog::Logger;

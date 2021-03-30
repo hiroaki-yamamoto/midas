@@ -2,10 +2,10 @@ use ::std::collections::HashMap;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::futures::future::{join3, join_all};
+use ::futures::future::join_all;
 use ::futures::{SinkExt, StreamExt};
-use ::nats::asynk::Connection as Broker;
-use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
+use ::nats::Connection as Broker;
+use ::rmp_serde::to_vec as to_msgpack;
 use ::serde_json::{from_slice as from_json_bin, from_str as from_json_str};
 use ::slog::Logger;
 use ::tokio::select;
@@ -15,8 +15,6 @@ use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::{
   client::IntoClientRequest, Error as WebSocketError, Message,
 };
-
-use ::types::{GenericResult, ThreadSafeResult};
 
 use super::constants::{
   REST_ENDPOINT, USER_STREAM_LISTEN_KEY_SUB_NAME,
@@ -31,7 +29,8 @@ use ::entities::{APIKey, APIKeyEvent, APIKeyInner};
 use ::errors::{MaximumAttemptExceeded, WebsocketError};
 use ::keychain::KeyChain;
 use ::notification::UserStream as UserStreamTrait;
-use ::types::TLSWebSocket;
+use ::subscribe::{to_stream as nats_to_stream, to_stream_raw as n2s_raw};
+use ::types::{GenericResult, TLSWebSocket, ThreadSafeResult};
 
 #[derive(Debug, Clone)]
 pub struct UserStream {
@@ -68,14 +67,11 @@ impl UserStream {
     &self,
     uds: RawUserStreamEvents,
   ) -> GenericResult<()> {
-    self
-      .broker
-      .publish(USER_STREAM_NOTIFICATION_SUB_NAME, {
-        let casted: GenericResult<CastedUserStreamEvents> = uds.into();
-        let casted = casted?;
-        to_msgpack(&casted)?
-      })
-      .await?;
+    self.broker.publish(USER_STREAM_NOTIFICATION_SUB_NAME, {
+      let casted: GenericResult<CastedUserStreamEvents> = uds.into();
+      let casted = casted?;
+      to_msgpack(&casted)?
+    })?;
     return Ok(());
   }
   async fn handle_message(
@@ -102,10 +98,7 @@ impl UserStream {
         let _ = socket.close(None).await;
       }
       listen_keys.remove(api_key);
-      let _ = self
-        .broker
-        .publish(USER_STREAM_REAUTH_SUB_NAME, api_key)
-        .await;
+      let _ = self.broker.publish(USER_STREAM_REAUTH_SUB_NAME, api_key);
       return Ok(());
     }
     let socket_opt = sockets
@@ -189,8 +182,7 @@ impl UserStreamTrait for UserStream {
     let key = ListenKeyPair::new(resp.listen_key, pub_key.clone());
     let _ = self
       .broker
-      .publish(USER_STREAM_LISTEN_KEY_SUB_NAME, to_msgpack(&key)?)
-      .await?;
+      .publish(USER_STREAM_LISTEN_KEY_SUB_NAME, to_msgpack(&key)?)?;
     return Ok(());
   }
   async fn clise_listen_key(
@@ -209,23 +201,18 @@ impl UserStreamTrait for UserStream {
     return Ok(());
   }
   async fn start(&self) -> GenericResult<()> {
-    let (keychain_sub, listen_key_sub, reauth_sub) = join3(
-      KeyChain::subscribe_event(&self.broker),
+    let (_, keychain_sub) = KeyChain::subscribe_event(&self.broker).await?;
+    let (_, listen_key_sub) = nats_to_stream::<ListenKeyPair>(
       self
         .broker
-        .queue_subscribe(USER_STREAM_LISTEN_KEY_SUB_NAME, "user_stream"),
+        .queue_subscribe(USER_STREAM_LISTEN_KEY_SUB_NAME, "user_stream")?,
+    );
+    let (_, reauth_sub) = n2s_raw(
       self
         .broker
-        .queue_subscribe(USER_STREAM_REAUTH_SUB_NAME, "user_stream"),
-    )
-    .await;
-    let keychain_sub = keychain_sub?
-      .map(|msg| from_msgpack::<APIKeyEvent>(&msg.data))
-      .filter_map(|msg| async { msg.ok() });
-    let listen_key_sub = listen_key_sub?
-      .map(|msg| from_msgpack::<ListenKeyPair>(&msg.data))
-      .filter_map(|msg| async { msg.ok() });
-    let reauth_sub = reauth_sub?
+        .queue_subscribe(USER_STREAM_REAUTH_SUB_NAME, "user_stream")?,
+    );
+    let reauth_sub = reauth_sub
       .map(|msg| String::from_utf8(msg.data))
       .filter_map(|msg| async { msg.ok() });
     let mut keychain_sub = keychain_sub.boxed();
@@ -308,7 +295,7 @@ impl UserStreamTrait for UserStream {
                   let _ = me.broker.publish(
                     USER_STREAM_REAUTH_SUB_NAME,
                     api_key
-                  ).await;
+                  );
                 },
                 _ => ::slog::warn!(me.logger, "Failed to receive payload: {}", e),
               }

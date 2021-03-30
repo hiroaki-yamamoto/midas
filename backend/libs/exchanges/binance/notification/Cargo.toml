@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 errors = { path = "../../../errors" }
 types = { path = "../../../types" }
+subscribe = { path = "../../../subscribe" }
 
 binance_clients = { path = "../clients" }
 binance_symbols = { path = "../symbols" }

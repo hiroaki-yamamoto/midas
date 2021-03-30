@@ -245,6 +245,7 @@ dependencies = [
  "serde",
  "serde_json",
  "slog",
+ "subscribe",
  "tokio 1.4.0",
  "tokio-stream",
  "tokio-tungstenite 0.14.0",
@@ -1180,6 +1181,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "slog",
+ "subscribe",
  "tokio 1.4.0",
  "types",
  "warp",
@@ -1482,6 +1484,7 @@ dependencies = [
  "nats",
  "rmp-serde",
  "rpc",
+ "subscribe",
  "types",
 ]
 

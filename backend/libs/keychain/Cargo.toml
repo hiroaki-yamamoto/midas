@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 rpc = { path = "../rpc" }
 types = { path = "../types" }
+subscribe = { path = "../subscribe" }
 entities = { path = "../rulesets/entities" }
 base_recorder = { path = "../rulesets/base_recorder" }
 

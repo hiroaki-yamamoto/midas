@@ -1,6 +1,5 @@
 use ::std::collections::HashSet;
 
-use ::futures::future::join_all;
 use ::nats::Connection as NatsCon;
 use ::rmp_serde::to_vec as to_msgpack;
 use ::slog::Logger;

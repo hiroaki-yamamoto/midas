@@ -11,6 +11,7 @@ types = { path = "../../libs/types" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
+subscribe = { path = "../../libs/subscribe" }
 
 history_fetcher = { path = "../../libs/rulesets/history_fetcher" }
 binance_histories = { path = "../../libs/exchanges/binance/histories" }

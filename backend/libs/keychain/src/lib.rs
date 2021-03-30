@@ -5,10 +5,12 @@ use ::mongodb::bson::{doc, from_document, to_document, Document};
 use ::mongodb::error::Result;
 use ::mongodb::options::UpdateModifications;
 use ::mongodb::{Collection, Database};
-use ::nats::{Connection as NatsCon, Subscription as NatsSub};
+use ::nats::subscription::Handler;
+use ::nats::Connection as NatsCon;
 use ::rmp_serde::to_vec as to_msgpack;
 
 use ::rpc::entities::Exchanges;
+use ::subscribe::to_stream as n2s;
 use ::types::{GenericResult, ThreadSafeResult};
 
 use ::base_recorder::Recorder;
@@ -107,8 +109,11 @@ impl KeyChain {
     return Ok(());
   }
 
-  pub async fn subscribe_event(broker: &NatsCon) -> ::std::io::Result<NatsSub> {
-    return broker.subscribe("apikey");
+  pub async fn subscribe_event(
+    broker: &NatsCon,
+  ) -> ::std::io::Result<(Handler, BoxStream<'_, APIKeyEvent>)> {
+    let (handler, st) = n2s::<APIKeyEvent>(broker.subscribe("apikey")?);
+    return Ok((handler, st.boxed()));
   }
 }
 

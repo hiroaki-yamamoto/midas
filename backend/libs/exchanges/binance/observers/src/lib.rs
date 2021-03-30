@@ -6,13 +6,12 @@ use ::std::convert::TryFrom;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::futures::future::join;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::doc;
 use ::mongodb::Database;
 use ::nats::Connection as Broker;
-use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
+use ::rmp_serde::to_vec as to_msgpack;
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
 use ::tokio::select;
@@ -24,12 +23,11 @@ use ::binance_symbols::entities::{ListSymbolStream, Symbol};
 use ::binance_symbols::recorder::SymbolRecorder;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::subscribe::to_stream as nats_to_stream;
-use ::types::{GenericResult, ThreadSafeResult};
+use ::types::{GenericResult, TLSWebSocket, ThreadSafeResult};
 
 use self::constants::{
   SYMBOL_ADD_EVENT, SYMBOL_REMOVE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
 };
-use ::types::TLSWebSocket;
 
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{InitError, MaximumAttemptExceeded, WebsocketError};
@@ -312,7 +310,7 @@ impl TradeObserver {
     {
       return None;
     }
-    return Some(symbol.symbol);
+    return Some(symbol.symbol.clone());
   }
 
   async fn handle_event(
@@ -409,15 +407,13 @@ impl TradeObserverTrait for TradeObserver {
   async fn subscribe(
     &self,
   ) -> ::std::io::Result<BoxStream<'_, CommonBookTicker>> {
-    return Ok(
-      self
-        .broker
-        .subscribe(TRADE_OBSERVER_SUB_NAME)
-        .await?
-        .map(|msg| from_msgpack::<BookTicker<f64>>(&msg.data[..]))
-        .filter_map(|res| async { res.ok() })
-        .map(|item| item.into())
-        .boxed(),
+    let (_, st) = nats_to_stream::<BookTicker<f64>>(
+      self.broker.subscribe(TRADE_OBSERVER_SUB_NAME)?,
     );
+    let st = st.map(|item| {
+      let ret: CommonBookTicker = item.into();
+      return ret;
+    });
+    return Ok(st.boxed());
   }
 }

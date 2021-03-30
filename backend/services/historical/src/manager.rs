@@ -1,14 +1,17 @@
 use ::std::collections::HashMap;
 use ::std::io::Result as IOResult;
 
+use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 
-use ::nats::{Connection as NatsConnection, Subscription as NatsSubsc};
+use ::nats::subscription::Handler;
+use ::nats::Connection as NatsConnection;
 
 use ::history_fetcher::HistoryFetcher;
 use ::rmp_serde::to_vec as to_msgpack;
 use ::rpc::entities::Exchanges;
 use ::slog::{error, o, Logger};
+use ::subscribe::to_stream as nats_to_stream;
 use ::types::ThreadSafeResult;
 
 use crate::entities::KlineFetchStatus;
@@ -76,8 +79,13 @@ where
     return Ok(());
   }
 
-  pub async fn subscribe(&self) -> IOResult<NatsSubsc> {
-    return self.nats.subscribe("kline.progress");
+  pub async fn subscribe(
+    &self,
+  ) -> IOResult<(Handler, BoxStream<'_, KlineFetchStatus>)> {
+    let (handler, st) = nats_to_stream::<KlineFetchStatus>(
+      self.nats.subscribe("kline.progress")?,
+    );
+    return Ok((handler, st.boxed()));
   }
 
   pub async fn stop(&self) -> ThreadSafeResult<()> {

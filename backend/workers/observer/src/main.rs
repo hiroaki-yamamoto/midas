@@ -3,7 +3,7 @@ use ::futures::future::{select, Either};
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::options::ClientOptions as MongoDBCliOpt;
 use ::mongodb::Client as DBCli;
-use ::nats::asynk::connect as new_broker;
+use ::nats::connect as new_broker;
 use ::slog::o;
 use ::tokio::signal::unix as signal;
 
@@ -25,7 +25,7 @@ async fn main() {
   let cmd_args: CmdArgs = CmdArgs::parse();
   let config = Config::from_fpath(Some(cmd_args.config)).unwrap();
 
-  let broker = new_broker(&config.broker_url).await.unwrap();
+  let broker = new_broker(&config.broker_url).unwrap();
   let db =
     DBCli::with_options(MongoDBCliOpt::parse(&config.db_url).await.unwrap())
       .unwrap()

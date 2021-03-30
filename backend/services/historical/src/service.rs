@@ -7,9 +7,8 @@ use ::futures::{SinkExt, Stream, StreamExt};
 use ::mongodb::Database;
 use ::nats::Connection as NatsCon;
 use ::num_traits::FromPrimitive;
-use ::rmp_serde::from_slice as read_msgpack;
 use ::serde_json::to_string as jsonify;
-use ::slog::{error, o, Logger};
+use ::slog::{o, Logger};
 use ::tokio::select;
 use ::warp::filters::BoxedFilter;
 use ::warp::ws::{Message, WebSocket, Ws};
@@ -123,28 +122,16 @@ impl Service {
 
   async fn subscribe(&self) -> ThreadSafeResult<SubscribeStream> {
     let stream_logger = self.logger.new(o!("scope" => "Stream Logger"));
-    let mut subscriber = self.binance.subscribe().await?;
+    let (handler, mut subscriber) = self.binance.subscribe().await?;
     let out = ::async_stream::stream! {
-      while let Some(msg) = subscriber.next().await {
-        match read_msgpack(&msg.data[..]) {
-          Err(e) => {
-            error!(
-              stream_logger,
-              "Got an error while deserializing HistFetch Prog. {}",
-              e
-            );
-            continue;
-          },
-          Ok(v) => {
-            match v {
-              KlineFetchStatus::Progress{exchange: _, progress} => {yield progress;},
-              KlineFetchStatus::Stop => {break;},
-              // _ => {continue;}
-            }
-          },
+      while let Some(status) = subscriber.next().await {
+        match status {
+          KlineFetchStatus::Progress{exchange: _, progress} => {yield progress;},
+          KlineFetchStatus::Stop => {break;},
+          // _ => {continue;}
         };
       }
-      let _ = subscriber.unsubscribe();
+      handler.unsubscribe();
     };
     return Ok(Box::pin(out) as SubscribeStream);
   }

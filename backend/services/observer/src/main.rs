@@ -5,7 +5,7 @@ use ::std::time::Duration;
 use ::clap::Clap;
 use ::futures::{FutureExt, SinkExt, StreamExt};
 use ::libc::{SIGINT, SIGTERM};
-use ::nats::asynk::{connect as broker_con, Connection as NatsCon};
+use ::nats::{connect as broker_con, Connection as NatsCon};
 use ::rmp_serde::to_vec_named as to_msgpack;
 use ::rpc::entities::Status;
 use ::slog::{o, Logger};
@@ -93,7 +93,7 @@ fn handle_websocket(
 async fn main() {
   let cmd: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(cmd.config)).unwrap();
-  let broker = broker_con(cfg.broker_url.as_str()).await.unwrap();
+  let broker = broker_con(cfg.broker_url.as_str()).unwrap();
   let logger = cfg.build_slog();
   let route_logger = logger.clone();
   let csrf = CSRF::new(CSRFOption::builder());

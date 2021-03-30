@@ -1,7 +1,6 @@
 use ::std::net::SocketAddr;
 
 use ::clap::Clap;
-use ::futures::future::join;
 use ::futures::FutureExt;
 use ::futures::StreamExt;
 use ::http::StatusCode;
