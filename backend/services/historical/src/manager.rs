@@ -3,6 +3,7 @@ use ::std::io::Result as IOResult;
 
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
+use ::tokio::sync::oneshot::channel;
 
 use ::nats::subscription::Handler;
 use ::nats::Connection as NatsConnection;
@@ -65,19 +66,21 @@ where
           exchange: Exchanges::Binance,
           progress: result.clone(),
         };
-        self.nats_broadcast_status(&result);
         return result;
       })
       .boxed();
+    let (st_send, st_recv) = channel();
+    st_send.send((self.nats.clone(), prog_stream));
+    ::tokio::spawn(async move {
+      if let Ok((nats, st)) = st_recv.await {
+        // while let Some(prog) = st.next().await {
+        //   if let Ok(msg) = to_msgpack(&prog) {
+        //     nats.publish("kline.progress", &msg[..]);
+        //   }
+        // }
+      }
+    });
     return Ok(());
-  }
-
-  fn nats_broadcast_status(
-    &self,
-    status: &KlineFetchStatus,
-  ) -> GenericResult<()> {
-    let msg = to_msgpack(status)?;
-    return Ok(self.nats.publish("kline.progress", &msg[..])?);
   }
 
   pub fn subscribe(
