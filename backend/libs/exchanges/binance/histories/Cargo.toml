@@ -14,8 +14,7 @@ config = { path = "../../../config" }
 subscribe = { path = "../../../subscribe" }
 
 entities = { path = "../../../rulesets/entities" }
-history_fetcher = { path = "../../../rulesets/history_fetcher" }
-history_recorder = { path = "../../../rulesets/history_recorder" }
+history = { path = "../../../rulesets/history" }
 trade_observer = { path = "../../../rulesets/trade_observer" }
 base_recorder = { path = "../../../rulesets/base_recorder" }
 

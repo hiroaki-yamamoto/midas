@@ -1,5 +1,6 @@
 use ::std::collections::HashMap;
 use ::std::fmt::Debug;
+use ::std::io::Result as IOResult;
 use ::std::iter::FromIterator;
 use ::std::time::Duration as StdDur;
 
@@ -8,6 +9,7 @@ use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::{doc, DateTime as MongoDateTime, Document};
+use ::nats::subscription::Handler;
 use ::nats::Connection;
 use ::rand::random;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
@@ -25,7 +27,7 @@ use ::config::{
 };
 use ::entities::KlineCtrl;
 use ::errors::{EmptyError, MaximumAttemptExceeded};
-use ::history_fetcher::HistoryFetcher as HistoryFetcherTrait;
+use ::history::HistoryFetcher as HistoryFetcherTrait;
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
 use ::subscribe::{
@@ -307,18 +309,12 @@ impl HistoryFetcher {
 
 #[async_trait]
 impl HistoryFetcherTrait for HistoryFetcher {
-  async fn refresh(
-    &self,
-    symbol: Vec<String>,
-  ) -> ThreadSafeResult<BoxStream<HistChartProg>> {
+  async fn refresh(&self, symbol: Vec<String>) -> ThreadSafeResult<()> {
     if symbol.len() < 1 {
       return Err(Box::new(EmptyError {
         field: String::from("symbol"),
       }));
     }
-    let (_, prog_sub) = nats_to_stream::<HistChartProg>(
-      self.broker.subscribe(HIST_FETCHER_FETCH_PROG_SUB_NAME)?,
-    );
     let (_, stop_sub) =
       nats_to_stream::<KlineCtrl>(self.broker.subscribe("binance.kline.ctrl")?);
     let mut stop_sub = stop_sub.boxed();
@@ -337,7 +333,16 @@ impl HistoryFetcherTrait for HistoryFetcher {
     let _ = tokio::spawn(async move {
       let _ = me.push_fetch_request(&symbols, &mut stop_recv).await;
     });
-    return Ok(prog_sub.boxed());
+    return Ok(());
+  }
+
+  fn subscribe_progress(
+    &self,
+  ) -> IOResult<(Handler, BoxStream<HistChartProg>)> {
+    let (handler, st) = nats_to_stream::<HistChartProg>(
+      self.broker.subscribe(HIST_FETCHER_FETCH_PROG_SUB_NAME)?,
+    );
+    return Ok((handler, st.boxed()));
   }
 
   async fn spawn(&self) -> ThreadSafeResult<()> {

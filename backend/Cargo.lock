@@ -205,8 +205,7 @@ dependencies = [
  "entities",
  "errors",
  "futures",
- "history_fetcher",
- "history_recorder",
+ "history",
  "mongodb",
  "nats",
  "num_cpus",
@@ -1169,7 +1168,7 @@ dependencies = [
  "config",
  "csrf",
  "futures",
- "history_fetcher",
+ "history",
  "http",
  "libc",
  "mongodb",
@@ -1188,20 +1187,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "history_fetcher"
+name = "history"
 version = "0.1.0"
 dependencies = [
  "async-trait",
  "futures-core",
+ "nats",
  "rpc",
  "types",
-]
-
-[[package]]
-name = "history_recorder"
-version = "0.1.0"
-dependencies = [
- "async-trait",
 ]
 
 [[package]]

@@ -27,7 +27,7 @@ use super::constants::{
 use super::entities::{Kline, Klines, KlinesWithInfo, TradeTime};
 
 use base_recorder::Recorder;
-use history_recorder::HistoryRecorder as HistRecTrait;
+use history::HistoryRecorder as HistRecTrait;
 
 #[derive(Debug, Clone)]
 pub struct HistoryRecorder {

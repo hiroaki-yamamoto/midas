@@ -13,7 +13,7 @@ config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 subscribe = { path = "../../libs/subscribe" }
 
-history_fetcher = { path = "../../libs/rulesets/history_fetcher" }
+history = { path = "../../libs/rulesets/history" }
 binance_histories = { path = "../../libs/exchanges/binance/histories" }
 binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
 
