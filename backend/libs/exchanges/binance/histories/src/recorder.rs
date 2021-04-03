@@ -17,7 +17,7 @@ use ::tokio::task::block_in_place;
 
 use ::rpc::historical::HistChartProg;
 use ::subscribe::{
-  to_stream as nats_to_stream, to_stream_msg as nats_to_stream_msg,
+  to_stream as nats_to_stream, to_stream_msg as nats_to_stream_msg, PubSub,
 };
 
 use super::constants::{
@@ -25,6 +25,7 @@ use super::constants::{
   HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
 };
 use super::entities::{Kline, Klines, KlinesWithInfo, TradeTime};
+use super::pubsub::HistProgPartPubSub;
 
 use base_recorder::Recorder;
 use history::HistoryRecorder as HistRecTrait;
@@ -138,8 +139,8 @@ impl HistoryRecorder {
     let mut value_sub = Box::pin(value_sub);
     let senders = senders.clone();
     let broker = self.broker.clone();
-    let logger = self.logger.clone();
     let mut counter: usize = 0;
+    let pubsub = HistProgPartPubSub::new(broker);
     loop {
       select! {
         Some(klines) = value_sub.next() => {
@@ -150,16 +151,7 @@ impl HistoryRecorder {
               num_objects: klines.entire_data_len,
               cur_object_num: 1,
             };
-          let prog_msg = match to_msgpack(&prog) {
-            Err(e) => {
-              error!(logger, "Failed to encode the prog msg: {}", e);
-              return;
-            },
-            Ok(v) => v
-          };
-          let _ = broker.publish(
-            HIST_FETCHER_FETCH_PROG_SUB_NAME, prog_msg.as_slice()
-          );
+          let _ = pubsub.publish(&prog);
           let _ = senders[counter].send(klines.klines);
           counter = (counter + 1) % senders.len();
         },
