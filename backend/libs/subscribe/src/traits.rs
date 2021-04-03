@@ -22,8 +22,20 @@ where
       to_msgpack(prog).map_err(|e| IOError::new(IOErrKind::Other, e))?;
     return self.get_broker().publish(self.get_subject(), msg);
   }
+
   fn subscribe(&self) -> IOResult<(Handler, BoxStream<T>)> {
     let sub = self.get_broker().subscribe(self.get_subject())?;
+    let (handler, st) = to_stream::<T>(sub);
+    return Ok((handler, st.boxed()));
+  }
+
+  fn queue_subscribe(
+    &self,
+    queue_name: &str,
+  ) -> IOResult<(Handler, BoxStream<T>)> {
+    let sub = self
+      .get_broker()
+      .queue_subscribe(self.get_subject(), queue_name)?;
     let (handler, st) = to_stream::<T>(sub);
     return Ok((handler, st.boxed()));
   }
