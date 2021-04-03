@@ -6,9 +6,11 @@ use ::nats::Message;
 use ::rmp_serde::from_slice as from_msgpack;
 use ::serde::de::DeserializeOwned;
 
-pub fn handle<F, T>(sub: Subscription, func: F) -> Handler
+pub fn handle<T>(
+  sub: Subscription,
+  func: impl Fn(T, Message) -> IOResult<()> + Send + 'static,
+) -> Handler
 where
-  F: Fn(T, Message) -> IOResult<()> + Send + 'static,
   T: DeserializeOwned,
 {
   return sub.with_handler(move |msg| {

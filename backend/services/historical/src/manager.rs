@@ -46,40 +46,30 @@ where
   ) -> ThreadSafeResult<()> {
     self.history_fetcher.refresh(symbols).await?;
     let exchange = self.exchange.clone();
-    let (_, prog_stream) = self.history_fetcher.subscribe_progress()?;
+    let nats = self.nats.clone();
     let mut prog_map = HashMap::new();
-    let prog_stream = prog_stream
-      .map(move |prog| {
-        let result = match prog_map.get_mut(&prog.symbol) {
-          None => {
-            let mut prog_clone = prog.clone();
-            prog_clone.cur_symbol_num = (prog_map.len() + 1) as i64;
-            prog_map.insert(prog.symbol.clone(), prog_clone);
-            &prog
-          }
-          Some(v) => {
-            v.cur_object_num += prog.cur_object_num;
-            v
-          }
-        };
-        let result = KlineFetchStatus::Progress {
-          exchange: Exchanges::Binance,
-          progress: result.clone(),
-        };
-        return result;
-      })
-      .boxed();
-    let (st_send, st_recv) = channel();
-    st_send.send((self.nats.clone(), prog_stream));
-    ::tokio::spawn(async move {
-      if let Ok((nats, st)) = st_recv.await {
-        // while let Some(prog) = st.next().await {
-        //   if let Ok(msg) = to_msgpack(&prog) {
-        //     nats.publish("kline.progress", &msg[..]);
-        //   }
-        // }
+    let _ = self.history_fetcher.subscribe_progress(move |prog, _| {
+      let result = match prog_map.get_mut(&prog.symbol) {
+        None => {
+          let mut prog_clone = prog.clone();
+          prog_clone.cur_symbol_num = (prog_map.len() + 1) as i64;
+          prog_map.insert(prog.symbol.clone(), prog_clone);
+          &prog
+        }
+        Some(v) => {
+          v.cur_object_num += prog.cur_object_num;
+          v
+        }
+      };
+      let result = KlineFetchStatus::Progress {
+        exchange: Exchanges::Binance,
+        progress: result.clone(),
+      };
+      if let Ok(msg) = to_msgpack(&prog) {
+        let _ = nats.publish("kline.progress", &msg[..])?;
       }
-    });
+      return Ok(());
+    })?;
     return Ok(());
   }
 

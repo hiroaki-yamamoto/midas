@@ -6,11 +6,10 @@ use ::std::time::Duration as StdDur;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::{doc, DateTime as MongoDateTime, Document};
 use ::nats::subscription::Handler;
-use ::nats::Connection;
+use ::nats::{Connection, Message};
 use ::rand::random;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
@@ -31,7 +30,7 @@ use ::history::HistoryFetcher as HistoryFetcherTrait;
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
 use ::subscribe::{
-  to_stream as nats_to_stream, to_stream_msg as nats_to_stream_msg,
+  handle, to_stream as nats_to_stream, to_stream_msg as nats_to_stream_msg,
 };
 use ::types::{GenericResult, ThreadSafeResult};
 
@@ -336,13 +335,15 @@ impl HistoryFetcherTrait for HistoryFetcher {
     return Ok(());
   }
 
-  fn subscribe_progress(
-    &self,
-  ) -> IOResult<(Handler, BoxStream<HistChartProg>)> {
-    let (handler, st) = nats_to_stream::<HistChartProg>(
+  fn subscribe_progress<T>(&self, func: T) -> IOResult<Handler>
+  where
+    T: Fn(HistChartProg, Message) -> IOResult<()> + Send + 'static,
+  {
+    let handler = handle(
       self.broker.subscribe(HIST_FETCHER_FETCH_PROG_SUB_NAME)?,
+      func,
     );
-    return Ok((handler, st.boxed()));
+    return Ok(handler);
   }
 
   async fn spawn(&self) -> ThreadSafeResult<()> {
