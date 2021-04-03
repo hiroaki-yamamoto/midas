@@ -10,5 +10,6 @@ pub enum KlineFetchStatus {
     exchange: Exchanges,
     progress: HistChartProg,
   },
+  Done(String),
   Stop,
 }

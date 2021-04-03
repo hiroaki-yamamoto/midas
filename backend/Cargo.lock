@@ -1194,6 +1194,8 @@ dependencies = [
  "futures-core",
  "nats",
  "rpc",
+ "serde",
+ "subscribe",
  "types",
 ]
 
