@@ -9,6 +9,10 @@ edition = "2018"
 [dependencies]
 config = { path = "../../libs/config" }
 types = { path = "../../libs/types" }
+rpc = { path = "../../libs/rpc" }
+
+history = { path = "../../libs/rulesets/history" }
+
 binance_histories = { path = "../../libs/exchanges/binance/histories" }
 binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
 
@@ -27,3 +31,7 @@ path = "src/main_fetcher.rs"
 [[bin]]
 name = "historical_record_worker"
 path = "src/main_recorder.rs"
+
+[[bin]]
+name = "historical_aggregator"
+path = "src/main_aggregator.rs"
