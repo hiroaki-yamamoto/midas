@@ -1155,6 +1155,7 @@ dependencies = [
  "nats",
  "rpc",
  "slog",
+ "subscribe",
  "tokio 1.4.0",
  "types",
 ]
