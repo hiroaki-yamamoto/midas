@@ -47,29 +47,6 @@ where
     self.history_fetcher.refresh(symbols).await?;
     let exchange = self.exchange.clone();
     let nats = self.nats.clone();
-    let mut prog_map = HashMap::new();
-    let _ = self.history_fetcher.subscribe_progress(move |prog, _| {
-      let result = match prog_map.get_mut(&prog.symbol) {
-        None => {
-          let mut prog_clone = prog.clone();
-          prog_clone.cur_symbol_num = (prog_map.len() + 1) as i64;
-          prog_map.insert(prog.symbol.clone(), prog_clone);
-          &prog
-        }
-        Some(v) => {
-          v.cur_object_num += prog.cur_object_num;
-          v
-        }
-      };
-      let result = KlineFetchStatus::Progress {
-        exchange: Exchanges::Binance,
-        progress: result.clone(),
-      };
-      if let Ok(msg) = to_msgpack(&prog) {
-        let _ = nats.publish("kline.progress", &msg[..])?;
-      }
-      return Ok(());
-    })?;
     return Ok(());
   }
 

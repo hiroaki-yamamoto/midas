@@ -39,7 +39,7 @@ async fn main() {
   loop {
     select! {
       Some((exchange, part)) = part_stream.next() => {
-        let mut prog_map = kvs.entry(exchange).or_insert(HashMap::new());
+        let prog_map = kvs.entry(exchange).or_insert(HashMap::new());
         let prev = prog_map.get(&part.symbol).cloned();
         let result = match prog_map.get_mut(&part.symbol) {
         None => {
