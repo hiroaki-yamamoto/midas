@@ -1157,6 +1157,7 @@ dependencies = [
  "slog",
  "subscribe",
  "tokio 1.4.0",
+ "tokio-stream",
  "types",
 ]
 

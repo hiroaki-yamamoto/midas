@@ -8,7 +8,7 @@ use ::rpc::historical::HistChartProg;
 pub enum KlineFetchStatus {
   ProgressChanged {
     exchange: Exchanges,
-    previous: HistChartProg,
+    previous: Option<HistChartProg>,
     current: HistChartProg,
   },
   Report {
