@@ -11,5 +11,5 @@ types = { path = "../../types" }
 entities = { path = "../entities" }
 
 chrono = "0.4.19"
-futures-core = "0.3.13"
+futures-core = "0.3.14"
 async-trait = "0.1.48"
