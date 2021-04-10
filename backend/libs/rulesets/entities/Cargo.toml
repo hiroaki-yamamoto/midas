@@ -13,6 +13,6 @@ types = { path = "../../types" }
 futures-core = "0.3.13"
 num-traits = "0.2.14"
 serde = { version = "1.0.125", features = ["derive"] }
-bson = "1.2.0"
+bson = "1.2.2"
 bytes = "1.0.1"
 ring = "0.16.20"

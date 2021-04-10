@@ -13,13 +13,13 @@ config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 
 clap = "3.0.0-beta.2"
-mongodb = "1.2.0"
+mongodb = "1.2.1"
 tokio = { version = "1.4.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
 warp = { version = "0.3.1", features = ["tls"] }
 slog = "2.7.0"
 futures = "0.3.13"
 serde = "1.0.125"
-libc = "0.2.92"
+libc = "0.2.93"
 num-traits = "0.2.14"
-http = "0.2.3"
+http = "0.2.4"
 nats = "0.8"
