@@ -20,7 +20,7 @@ binance_clients = { path = "../clients" }
 binance_symbols = { path = "../symbols" }
 
 async-trait = "0.1.48"
-futures = "0.3.13"
+futures = "0.3.14"
 mongodb = "1.2.1"
 nats = "0.8"
 rmp-serde = "0.15.4"

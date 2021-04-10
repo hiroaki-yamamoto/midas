@@ -10,7 +10,7 @@ edition = "2018"
 rpc = { path = "../../rpc" }
 types = { path = "../../types" }
 
-futures-core = "0.3.13"
+futures-core = "0.3.14"
 num-traits = "0.2.14"
 serde = { version = "1.0.125", features = ["derive"] }
 bson = "1.2.2"

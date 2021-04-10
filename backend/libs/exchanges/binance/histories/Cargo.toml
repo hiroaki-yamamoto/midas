@@ -23,7 +23,7 @@ binance_symbols = { path = "../symbols" }
 
 async-trait = "0.1.48"
 chrono = "0.4.19"
-futures = "0.3.13"
+futures = "0.3.14"
 nats = "0.8"
 rand = "0.8.3"
 mongodb = "1.2.1"
