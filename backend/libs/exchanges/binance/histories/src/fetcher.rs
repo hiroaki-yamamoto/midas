@@ -1,6 +1,5 @@
 use ::std::collections::HashMap;
 use ::std::fmt::Debug;
-use ::std::io::Result as IOResult;
 use ::std::iter::FromIterator;
 use ::std::time::Duration as StdDur;
 
@@ -8,8 +7,7 @@ use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::futures::StreamExt;
 use ::mongodb::bson::{doc, DateTime as MongoDateTime, Document};
-use ::nats::subscription::Handler;
-use ::nats::{Connection, Message};
+use ::nats::Connection;
 use ::rand::random;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
@@ -30,7 +28,7 @@ use ::history::HistoryFetcher as HistoryFetcherTrait;
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
 use ::subscribe::{
-  handle, to_stream as nats_to_stream, to_stream_msg as nats_to_stream_msg,
+  to_stream as nats_to_stream, to_stream_msg as nats_to_stream_msg,
 };
 use ::types::{GenericResult, ThreadSafeResult};
 
@@ -333,17 +331,6 @@ impl HistoryFetcherTrait for HistoryFetcher {
       let _ = me.push_fetch_request(&symbols, &mut stop_recv).await;
     });
     return Ok(());
-  }
-
-  fn subscribe_progress<T>(&self, func: T) -> IOResult<Handler>
-  where
-    T: Fn(HistChartProg, Message) -> IOResult<()> + Send + 'static,
-  {
-    let handler = handle(
-      self.broker.subscribe(HIST_FETCHER_FETCH_PROG_SUB_NAME)?,
-      func,
-    );
-    return Ok(handler);
   }
 
   async fn spawn(&self) -> ThreadSafeResult<()> {

@@ -1,19 +1,11 @@
-use ::std::collections::HashMap;
-use ::std::io::Result as IOResult;
-
-use ::futures::stream::BoxStream;
-use ::futures::StreamExt;
-use ::tokio::sync::oneshot::channel;
-
-use ::nats::subscription::Handler;
 use ::nats::Connection as NatsConnection;
 
 use ::history::HistoryFetcher;
 use ::rmp_serde::to_vec as to_msgpack;
 use ::rpc::entities::Exchanges;
-use ::types::{GenericResult, ThreadSafeResult};
+use ::types::ThreadSafeResult;
 
-use crate::entities::KlineFetchStatus;
+use history::entities::KlineFetchStatus;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ExchangeManager<T>
@@ -45,40 +37,7 @@ where
     symbols: Vec<String>,
   ) -> ThreadSafeResult<()> {
     self.history_fetcher.refresh(symbols).await?;
-    let exchange = self.exchange.clone();
-    let nats = self.nats.clone();
     return Ok(());
-  }
-
-  pub fn subscribe(
-    &self,
-  ) -> IOResult<(Handler, BoxStream<'_, KlineFetchStatus>)> {
-    let exchange = self.exchange.clone();
-    let mut prog_map = HashMap::new();
-    let (handler, st) = self.history_fetcher.subscribe_progress()?;
-    let prog_stream = st
-      .map(move |prog| {
-        let result = match prog_map.get_mut(&prog.symbol) {
-          None => {
-            let mut prog_clone = prog.clone();
-            prog_clone.cur_symbol_num = (prog_map.len() + 1) as i64;
-            prog_map.insert(prog.symbol.clone(), prog_clone);
-            &prog
-          }
-          Some(v) => {
-            v.cur_object_num += prog.cur_object_num;
-            v
-          }
-        };
-        let result = KlineFetchStatus::Progress {
-          exchange,
-          progress: result.to_owned(),
-        };
-        self.nats_broadcast_status(&result);
-        return result;
-      })
-      .boxed();
-    return Ok((handler, prog_stream));
   }
 
   pub async fn stop(&self) -> ThreadSafeResult<()> {

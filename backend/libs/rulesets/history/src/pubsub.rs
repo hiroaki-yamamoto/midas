@@ -5,6 +5,7 @@ use ::types::stateful_setter;
 
 use super::entities::KlineFetchStatus;
 
+#[derive(Debug, Clone)]
 pub struct FetchStatusPubSub {
   con: Broker,
 }

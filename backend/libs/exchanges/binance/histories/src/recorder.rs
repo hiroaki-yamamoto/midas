@@ -21,8 +21,7 @@ use ::subscribe::{
 };
 
 use super::constants::{
-  HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
-  HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
+  HIST_FETCHER_FETCH_RESP_SUB_NAME, HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
 };
 use super::entities::{Kline, Klines, KlinesWithInfo, TradeTime};
 use super::pubsub::HistProgPartPubSub;

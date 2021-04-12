@@ -1,10 +1,8 @@
 use ::std::fmt::Debug;
-use ::std::pin::Pin;
 
 use ::futures::executor::block_on;
 use ::futures::future::join_all;
-use ::futures::stream::BoxStream;
-use ::futures::{SinkExt, Stream, StreamExt};
+use ::futures::{SinkExt, StreamExt};
 use ::mongodb::Database;
 use ::nats::Connection as NatsCon;
 use ::num_traits::FromPrimitive;
@@ -14,23 +12,23 @@ use ::tokio::select;
 use ::warp::filters::BoxedFilter;
 use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
+use subscribe::PubSub;
 
+use ::binance_histories::fetcher as binance_hist;
+use ::binance_symbols::fetcher as binance_sym;
+use ::history::entities::KlineFetchStatus;
+use ::history::FetchStatusPubSub;
 use ::rpc::entities::{Exchanges, Status};
-use ::rpc::historical::{HistChartFetchReq, HistChartProg, StopRequest};
+use ::rpc::historical::{HistChartFetchReq, StopRequest};
 use ::types::{GenericResult, ThreadSafeResult};
-use binance_histories::fetcher as binance_hist;
-use binance_symbols::fetcher as binance_sym;
 
 use super::manager::ExchangeManager;
-
-use super::entities::KlineFetchStatus;
-
-type SubscribeStream<'a> = BoxStream<'a, HistChartProg>;
 
 #[derive(Debug, Clone)]
 pub struct Service {
   logger: Logger,
   binance: ExchangeManager<binance_hist::HistoryFetcher>,
+  status: FetchStatusPubSub,
 }
 
 impl Service {
@@ -52,10 +50,12 @@ impl Service {
       .await,
     )
     .await?;
-    let binance = ExchangeManager::new(Exchanges::Binance, binance, nats);
+    let binance =
+      ExchangeManager::new(Exchanges::Binance, binance, nats.clone());
     let ret = Self {
       logger: log.clone(),
       binance,
+      status: FetchStatusPubSub::new(nats.clone()),
     };
     return Ok(ret);
   }
@@ -75,7 +75,7 @@ impl Service {
       .map(move |ws: Ws| {
         let ws_svc = ws_svc.clone();
         return ws.on_upgrade(|mut sock: WebSocket| async move {
-          let subsc = ws_svc.subscribe();
+          let subsc = ws_svc.status.subscribe();
           match subsc {
             Err(e) => {
               let msg = format!(
@@ -85,56 +85,42 @@ impl Service {
               let _ = sock.send(Message::close_with(1011 as u16, msg)).await;
               let _ = sock.flush().await;
             }
-            Ok(resp) => {
-              let mut stream = resp
-                .map(|r| {
-                  return jsonify(&r).unwrap_or(String::from(
-                    "Failed to serialize the progress data.",
-                  ));
-                })
-                .map(|txt| Message::text(txt));
-              loop {
-                select! {
-                  Some(item) = stream.next() => {
-                    let _ = sock.send(item).await;
-                    let _ = sock.flush().await;
-                  },
-                  Some(msg) = sock.next() => {
-                    let msg = msg.unwrap_or(::warp::ws::Message::close());
-                    if msg.is_close() {
+            Ok((subsc_handler, mut resp)) => loop {
+              select! {
+                Some(item) = resp.next() => {
+                  match item {
+                    KlineFetchStatus::ProgressChanged {
+                      exchange: _,
+                      previous: _,
+                      current,
+                    } => {
+                      let payload = jsonify(&current).unwrap_or(String::from(
+                        "Failed to serialize the progress data.",
+                      ));
+                      let payload = Message::text(payload);
+                      let _ = sock.send(payload).await;
+                    },
+                    KlineFetchStatus::Stop => {
+                      let _ = subsc_handler.unsubscribe();
                       break;
-                    }
+                    },
+                    _ => {}
                   }
-                }
+                  let _ = sock.flush().await;
+                },
+                Some(msg) = sock.next() => {
+                  let msg = msg.unwrap_or(::warp::ws::Message::close());
+                  if msg.is_close() {
+                    break;
+                  }
+                },
               }
-            }
+            },
           };
           let _ = sock.close().await;
         });
       })
       .boxed();
-  }
-
-  fn subscribe(&self) -> ThreadSafeResult<SubscribeStream> {
-    let stream_logger = self.logger.new(o!("scope" => "Stream Logger"));
-    let (handler, subscriber) = self.binance.subscribe()?;
-    let subscriber = subscriber
-      .map(|status| {
-        match status {
-          KlineFetchStatus::Progress {
-            exchange: _,
-            progress,
-          } => {
-            return Some(progress);
-          }
-          KlineFetchStatus::Stop => {
-            handler.unsubscribe();
-            return None;
-          } // _ => {continue;}
-        };
-      })
-      .filter_map(|o| async { o });
-    return Ok(subscriber.boxed() as SubscribeStream);
   }
 
   fn empty_or_err(&self, res: ThreadSafeResult<()>) -> impl Reply {

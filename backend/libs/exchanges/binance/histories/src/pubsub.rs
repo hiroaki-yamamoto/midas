@@ -1,6 +1,5 @@
 use ::nats::Connection as Broker;
 
-use ::history::entities::KlineFetchStatus;
 use ::rpc::historical::HistChartProg;
 use ::subscribe::PubSub;
 use ::types::stateful_setter;
