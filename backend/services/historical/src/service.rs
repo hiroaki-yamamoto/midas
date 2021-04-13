@@ -111,6 +111,7 @@ impl Service {
                 Some(msg) = sock.next() => {
                   let msg = msg.unwrap_or(::warp::ws::Message::close());
                   if msg.is_close() {
+                    let _ = subsc_handler.unsubscribe();
                     break;
                   }
                 },

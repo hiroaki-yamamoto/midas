@@ -11,10 +11,9 @@ pub enum KlineFetchStatus {
     previous: Option<HistChartProg>,
     current: HistChartProg,
   },
-  Report {
+  Done {
     exchange: Exchanges,
-    progress: HistChartProg,
+    symbol: String,
   },
-  Done(String),
   Stop,
 }

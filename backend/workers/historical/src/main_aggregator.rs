@@ -63,7 +63,16 @@ async fn main() {
       },
       Some(status) = status_st.next() => {
         match status {
-          KlineFetchStatus::ProgressChanged(status) => {},
+          KlineFetchStatus::ProgressChanged{
+            exchange,
+            previous,
+            current: remote_current} => {
+              let local_current = kvs.get_mut(&exchange).unwrap_or(&mut HashMap::new()).get(&remote_current.symbol);
+          },
+          KlineFetchStatus::Done{exchange, symbol} => {
+            let _ = kvs.get_mut(&exchange).unwrap_or(&mut HashMap::new()).remove(&symbol);
+          },
+          _ => {},
         }
       },
       _ = stop.recv() => {
