@@ -67,7 +67,29 @@ async fn main() {
             exchange,
             previous,
             current: remote_current} => {
-              let local_current = kvs.get_mut(&exchange).unwrap_or(&mut HashMap::new()).get(&remote_current.symbol);
+              let local = kvs.entry(exchange).or_insert(HashMap::new());
+              let local_current = local
+                .get(&remote_current.symbol);
+              let diff = match previous {
+                Some(prev) => { &remote_current - &prev },
+                None => { Ok(remote_current.clone()) },
+              };
+              let diff = match diff {
+                Err(e) => {
+                  ::slog::error!(logger, "Failed to take the diff: {:?}", e);
+                  continue;
+                },
+                Ok(o) => o
+              };
+              let prog_candidate = match local_current {
+                None => {
+                  local.insert(remote_current.symbol.clone(), remote_current);
+                  continue;
+                },
+                Some(local_current) => {
+                  local_current + &diff
+                },
+              };
           },
           KlineFetchStatus::Done{exchange, symbol} => {
             let _ = kvs.get_mut(&exchange).unwrap_or(&mut HashMap::new()).remove(&symbol);
