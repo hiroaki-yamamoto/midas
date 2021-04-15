@@ -1,5 +1,6 @@
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(Eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct HistChartProg {
     #[prost(string, tag="1")]

@@ -1,3 +1,4 @@
+use ::std::cmp::{Ord, Ordering, PartialOrd};
 use ::std::ops::{Add, Sub};
 
 use ::http::status::StatusCode;
@@ -54,5 +55,21 @@ impl Add for HistChartProg {
   type Output = Result<HistChartProg, Status>;
   fn add(self, rhs: Self) -> Self::Output {
     return &self + &rhs;
+  }
+}
+
+impl Ord for HistChartProg {
+  fn cmp(&self, other: &Self) -> Ordering {
+    let symbol_cmp = self.cur_symbol_num.cmp(&other.cur_symbol_num);
+    if symbol_cmp != Ordering::Equal {
+      return symbol_cmp;
+    }
+    return self.cur_object_num.cmp(&other.cur_object_num);
+  }
+}
+
+impl PartialOrd for HistChartProg {
+  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    return Some(self.cmp(other));
   }
 }

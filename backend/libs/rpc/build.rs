@@ -21,6 +21,7 @@ fn main() {
       "entities.BackTestPriceBase",
       "#[derive(::num_derive::FromPrimitive, ::clap::Clap)]",
     )
+    .type_attribute("historical.HistChartProg", "#[derive(Eq)]")
     .field_attribute(
       "historical.HistChartFetchReq.symbols",
       "#[serde(rename = \"symbolsList\")]",
