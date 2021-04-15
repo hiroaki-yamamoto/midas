@@ -1,7 +1,6 @@
 use ::std::collections::HashMap;
 
 use ::clap::Clap;
-use ::futures::future::{join_all, select};
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
 use ::nats::connect;
@@ -90,6 +89,26 @@ async fn main() {
                   local_current + &diff
                 },
               };
+              let prog_candidate = match prog_candidate {
+                Err(e) => {
+                  ::slog::error!(logger, "Failed to apply the diff: {:?}", e);
+                  continue;
+                },
+                Ok(o) => o,
+              };
+              if remote_current > prog_candidate {
+                local.insert(remote_current.symbol.clone(), remote_current);
+              } else {
+                local.insert(
+                  prog_candidate.symbol.clone(),
+                  prog_candidate.clone()
+                );
+                let _ = status_pubsub.publish(&KlineFetchStatus::ProgressChanged {
+                  exchange: Exchanges::Binance,
+                  previous: Some(prog_candidate.clone()),
+                  current: prog_candidate
+                });
+              }
           },
           KlineFetchStatus::Done{exchange, symbol} => {
             let _ = kvs.get_mut(&exchange).unwrap_or(&mut HashMap::new()).remove(&symbol);
