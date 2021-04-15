@@ -37,36 +37,6 @@ export namespace HistChartProg {
   }
 }
 
-export class HistChartProgDiff extends jspb.Message {
-  getNumSymbols(): number;
-  setNumSymbols(value: number): HistChartProgDiff;
-
-  getCurSymbolNum(): number;
-  setCurSymbolNum(value: number): HistChartProgDiff;
-
-  getNumObjects(): number;
-  setNumObjects(value: number): HistChartProgDiff;
-
-  getCurObjectNum(): number;
-  setCurObjectNum(value: number): HistChartProgDiff;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): HistChartProgDiff.AsObject;
-  static toObject(includeInstance: boolean, msg: HistChartProgDiff): HistChartProgDiff.AsObject;
-  static serializeBinaryToWriter(message: HistChartProgDiff, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): HistChartProgDiff;
-  static deserializeBinaryFromReader(message: HistChartProgDiff, reader: jspb.BinaryReader): HistChartProgDiff;
-}
-
-export namespace HistChartProgDiff {
-  export type AsObject = {
-    numSymbols: number,
-    curSymbolNum: number,
-    numObjects: number,
-    curObjectNum: number,
-  }
-}
-
 export class HistChartFetchReq extends jspb.Message {
   getSymbolsList(): Array<string>;
   setSymbolsList(value: Array<string>): HistChartFetchReq;
