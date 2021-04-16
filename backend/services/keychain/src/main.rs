@@ -1,14 +1,13 @@
 use ::std::net::SocketAddr;
 
 use ::clap::Clap;
-use ::futures::future::join;
 use ::futures::FutureExt;
 use ::futures::StreamExt;
 use ::http::StatusCode;
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::bson::{doc, oid::ObjectId};
 use ::mongodb::Client;
-use ::nats::asynk::connect;
+use ::nats::connect;
 use ::slog::Logger;
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
@@ -27,12 +26,8 @@ async fn main() {
   let config = Config::from_fpath(Some(opts.config)).unwrap();
   let logger = config.build_slog();
   let logger_in_handler = logger.clone();
-  let (broker, db_cli) = join(
-    connect(config.broker_url.as_str()),
-    Client::with_uri_str(&config.db_url),
-  )
-  .await;
-  let (broker, db_cli) = (broker.unwrap(), db_cli.unwrap());
+  let broker = connect(config.broker_url.as_str()).unwrap();
+  let db_cli = Client::with_uri_str(&config.db_url).await.unwrap();
   let db = db_cli.database("midas");
   let keychain = KeyChain::new(broker, db).await;
 

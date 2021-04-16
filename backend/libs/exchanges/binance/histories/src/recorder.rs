@@ -8,23 +8,26 @@ use ::mongodb::bson::{
 };
 use ::mongodb::error::Result as MongoResult;
 use ::mongodb::{Collection, Database};
-use ::nats::asynk::Connection as NatsConnection;
-use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
+use ::nats::Connection as NatsConnection;
+use ::rmp_serde::to_vec as to_msgpack;
 use ::slog::{crit, error, warn, Logger};
 use ::tokio::select;
 use ::tokio::sync::mpsc;
 use ::tokio::task::block_in_place;
 
 use ::rpc::historical::HistChartProg;
+use ::subscribe::{
+  to_stream as nats_to_stream, to_stream_msg as nats_to_stream_msg, PubSub,
+};
 
 use super::constants::{
-  HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
-  HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
+  HIST_FETCHER_FETCH_RESP_SUB_NAME, HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
 };
 use super::entities::{Kline, Klines, KlinesWithInfo, TradeTime};
+use super::pubsub::HistProgPartPubSub;
 
 use base_recorder::Recorder;
-use history_recorder::HistoryRecorder as HistRecTrait;
+use history::HistoryRecorder as HistRecTrait;
 
 #[derive(Debug, Clone)]
 pub struct HistoryRecorder {
@@ -118,10 +121,9 @@ impl HistoryRecorder {
     &self,
     senders: Vec<mpsc::UnboundedSender<Klines>>,
   ) {
-    let value_sub = match self
+    let (_, value_sub) = match self
       .broker
       .queue_subscribe(HIST_FETCHER_FETCH_RESP_SUB_NAME, "recorder")
-      .await
     {
       Err(e) => {
         crit!(
@@ -131,16 +133,13 @@ impl HistoryRecorder {
         );
         return;
       }
-      Ok(v) => v,
-    }
-    .filter_map(|item| async move {
-      return from_msgpack::<KlinesWithInfo>(item.data.as_slice()).ok();
-    });
+      Ok(v) => nats_to_stream::<KlinesWithInfo>(v),
+    };
     let mut value_sub = Box::pin(value_sub);
     let senders = senders.clone();
     let broker = self.broker.clone();
-    let logger = self.logger.clone();
     let mut counter: usize = 0;
+    let pubsub = HistProgPartPubSub::new(broker);
     loop {
       select! {
         Some(klines) = value_sub.next() => {
@@ -151,16 +150,7 @@ impl HistoryRecorder {
               num_objects: klines.entire_data_len,
               cur_object_num: 1,
             };
-          let prog_msg = match to_msgpack(&prog) {
-            Err(e) => {
-              error!(logger, "Failed to encode the prog msg: {}", e);
-              return;
-            },
-            Ok(v) => v
-          };
-          let _ = broker.publish(
-            HIST_FETCHER_FETCH_PROG_SUB_NAME, prog_msg.as_slice()
-          ).await;
+          let _ = pubsub.publish(&prog);
           let _ = senders[counter].send(klines.klines);
           counter = (counter + 1) % senders.len();
         },
@@ -171,10 +161,9 @@ impl HistoryRecorder {
 
   async fn spawn_latest_trade_time_request(&self) {
     let me = self.clone();
-    let mut sub = match me
+    let (_, sub) = match me
       .broker
       .queue_subscribe(HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME, "recorder")
-      .await
     {
       Err(e) => {
         error!(
@@ -184,13 +173,9 @@ impl HistoryRecorder {
         );
         return;
       }
-      Ok(v) => v,
-    }
-    .map(|msg| {
-      return (from_msgpack::<Vec<String>>(&msg.data[..]), msg);
-    })
-    .filter_map(|(item, msg)| async move { Some((item.ok()?, msg)) })
-    .boxed();
+      Ok(v) => nats_to_stream_msg::<Vec<String>>(v),
+    };
+    let mut sub = sub.boxed();
     loop {
       let logger = self.logger.clone();
       let me = self.clone();
@@ -212,7 +197,7 @@ impl HistoryRecorder {
                 },
                 Ok(v) => v
               };
-              let _ = msg.respond(resp).await;
+              let _ = msg.respond(resp);
             },
             None => {
               warn!(logger, "The request doesn't have reply subject.");

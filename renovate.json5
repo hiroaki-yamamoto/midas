@@ -25,10 +25,6 @@
     {
       packageNames: ["typescript"],
       "allowedVersions": "<4.1.0"
-    },
-    {
-      "packageNames": ["nats"],
-      "allowedVersions": "<0.9"
     }
   ]
 }

@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BookTicker } from '../rpc/bookticker_pb';
 import { MidasSocket } from '../websocket';
-import { decodeAsync } from '@msgpack/msgpack';
 
 type BookTickers = {[symbol: string]: BookTicker.AsObject};
 
@@ -15,16 +14,13 @@ export class TradeObserverService {
   constructor() {
     this.binance = {};
   }
-  private handle(exchange: string): (ev: MessageEvent<Blob>) => void {
-    return (ev: MessageEvent<Blob>) => {
-      decodeAsync(ev.data.stream()).then(
-        (obj: BookTicker.AsObject) => {
-          this[exchange] = Object.assign(this[exchange], obj);
-          if (this.onChanged !== undefined) {
-            this.onChanged(exchange);
-          }
-        }
-      );
+  private handle(exchange: string): (ev: MessageEvent<string>) => void {
+    return (ev: MessageEvent<string>) => {
+      const obj: BookTicker.AsObject = JSON.parse(ev.data);
+      this[exchange] = Object.assign(this[exchange], obj);
+      if (this.onChanged !== undefined) {
+        this.onChanged(exchange);
+      }
     };
   }
   public connect() {

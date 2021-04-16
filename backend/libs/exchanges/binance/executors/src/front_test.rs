@@ -4,7 +4,7 @@ use ::async_stream::try_stream;
 use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
-use ::nats::asynk::Connection as NatsCon;
+use ::nats::Connection as NatsCon;
 use ::slog::Logger;
 
 use ::errors::ExecutionFailed;

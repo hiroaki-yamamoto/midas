@@ -11,18 +11,19 @@ types = { path = "../../libs/types" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
+subscribe = { path = "../../libs/subscribe" }
 
-history_fetcher = { path = "../../libs/rulesets/history_fetcher" }
+history = { path = "../../libs/rulesets/history" }
 binance_histories = { path = "../../libs/exchanges/binance/histories" }
 binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
 
 serde = { version = "1.0.125", features = ["derive"] }
 rmp-serde = "0.15.4"
-nats = "0.8"
-mongodb = "1.2.1"
+nats = "0.9.8"
+mongodb = { version = "1.2.1", default-features = false, features = ["async-std-runtime"] }
 clap = "3.0.0-beta.2"
 serde_yaml = "0.8.17"
-tokio = { version = "1.4.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
+tokio = { version = "1.4.0", features = ["macros", "rt", "rt-multi-thread", "signal", "sync"] }
 slog = "2.7.0"
 async-stream = "0.3.0"
 futures = "0.3.14"

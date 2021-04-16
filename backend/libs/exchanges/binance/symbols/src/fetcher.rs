@@ -3,7 +3,7 @@ use ::futures::future::join;
 use ::futures::stream::StreamExt;
 use ::mongodb::bson::{doc, Document};
 use ::mongodb::Database;
-use ::nats::asynk::Connection as Broker;
+use ::nats::Connection as Broker;
 use ::slog::Logger;
 
 use ::binance_clients::constants::REST_ENDPOINT;

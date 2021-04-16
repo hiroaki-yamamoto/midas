@@ -24,9 +24,9 @@ base_recorder = { path = "../../../rulesets/base_recorder" }
 
 async-stream = "0.3.0"
 async-trait = "0.1.48"
-futures = "0.3.14"
-mongodb = "1.2.1"
-nats = "0.8"
+futures = "0.3.13"
+mongodb = { version = "1.2.1", default-features = false, features = ["async-std-runtime"] }
+nats = "0.9.8"
 slog = "2.7.0"
 ring = "0.16.20"
 serde = { version = "1.0.125", features = ["derive"] }

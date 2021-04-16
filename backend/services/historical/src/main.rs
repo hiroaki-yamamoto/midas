@@ -1,4 +1,3 @@
-mod entities;
 mod manager;
 mod service;
 
@@ -34,7 +33,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
   let cfg = Config::from_fpath(Some(args.config))?;
   let logger = cfg.build_slog();
   info!(logger, "Historical Kline Service");
-  let broker = ::nats::asynk::connect(&cfg.broker_url).await?;
+  let broker = ::nats::connect(&cfg.broker_url)?;
   let db = DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await?)?
     .database("midas");
   let host: SocketAddr = cfg.host.parse()?;

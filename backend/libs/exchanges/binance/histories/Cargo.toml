@@ -11,10 +11,10 @@ types = { path = "../../../types" }
 errors = { path = "../../../errors" }
 rpc = { path = "../../../rpc" }
 config = { path = "../../../config" }
+subscribe = { path = "../../../subscribe" }
 
 entities = { path = "../../../rulesets/entities" }
-history_fetcher = { path = "../../../rulesets/history_fetcher" }
-history_recorder = { path = "../../../rulesets/history_recorder" }
+history = { path = "../../../rulesets/history" }
 trade_observer = { path = "../../../rulesets/trade_observer" }
 base_recorder = { path = "../../../rulesets/base_recorder" }
 
@@ -23,10 +23,10 @@ binance_symbols = { path = "../symbols" }
 
 async-trait = "0.1.48"
 chrono = "0.4.19"
-futures = "0.3.14"
-nats = "0.8"
+futures = "0.3.13"
+nats = "0.9.8"
 rand = "0.8.3"
-mongodb = "1.2.1"
+mongodb = { version = "1.2.1", default-features = false, features = ["async-std-runtime"] }
 rmp-serde = "0.15.4"
 serde_qs = "0.8.3"
 url = "2.2.1"

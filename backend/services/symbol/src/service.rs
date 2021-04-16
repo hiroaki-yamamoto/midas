@@ -1,5 +1,5 @@
 use ::mongodb::Database;
-use ::nats::asynk::Connection as Broker;
+use ::nats::Connection as Broker;
 use ::slog::{o, Logger};
 use ::warp::filters::BoxedFilter;
 use ::warp::{Filter, Rejection, Reply};

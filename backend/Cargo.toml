@@ -5,12 +5,11 @@ members = [
   "libs/rulesets/base_recorder",
   "libs/rulesets/executor",
   "libs/rulesets/sign",
-  "libs/rulesets/history_recorder",
-  "libs/rulesets/history_fetcher",
   "libs/rulesets/symbol_fetcher",
   "libs/rulesets/symbol_recorder",
   "libs/rulesets/trade_observer",
   "libs/rulesets/notification",
+  "libs/rulesets/history",
 
   "libs/csrf",
   "libs/errors",
@@ -19,6 +18,7 @@ members = [
   "libs/slog_builder",
   "libs/rpc",
   "libs/types",
+  "libs/subscribe",
 
   "libs/exchanges/binance/executors",
   "libs/exchanges/binance/histories",

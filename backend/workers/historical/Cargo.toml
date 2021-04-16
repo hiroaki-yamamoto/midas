@@ -9,16 +9,22 @@ edition = "2018"
 [dependencies]
 config = { path = "../../libs/config" }
 types = { path = "../../libs/types" }
+rpc = { path = "../../libs/rpc" }
+
+history = { path = "../../libs/rulesets/history" }
+subscribe = { path = "../../libs/subscribe" }
+
 binance_histories = { path = "../../libs/exchanges/binance/histories" }
 binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
 
 slog = "2.7.0"
 tokio = { version = "1.4.0", features = ["rt", "rt-multi-thread", "macros", "signal"] }
-nats = "0.8"
+nats = "0.9.8"
 clap = "3.0.0-beta.2"
-mongodb = "1.2.1"
-futures = "0.3.14"
-libc = "0.2.93"
+mongodb = { version = "1.2.1", default-features = false, features = ["async-std-runtime"] }
+futures = "0.3.13"
+libc = "0.2.91"
+tokio-stream = "0.1.5"
 
 [[bin]]
 name = "historical_fetch_worker"
@@ -27,3 +33,7 @@ path = "src/main_fetcher.rs"
 [[bin]]
 name = "historical_record_worker"
 path = "src/main_recorder.rs"
+
+[[bin]]
+name = "historical_aggregator"
+path = "src/main_aggregator.rs"

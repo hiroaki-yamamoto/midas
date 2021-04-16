@@ -6,9 +6,14 @@ use ::rpc::historical::HistChartProg;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "status")]
 pub enum KlineFetchStatus {
-  Progress {
+  ProgressChanged {
     exchange: Exchanges,
-    progress: HistChartProg,
+    previous: Option<HistChartProg>,
+    current: HistChartProg,
+  },
+  Done {
+    exchange: Exchanges,
+    symbol: String,
   },
   Stop,
 }

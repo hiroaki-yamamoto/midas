@@ -1,7 +1,6 @@
 use ::std::collections::HashSet;
 
-use ::futures::future::join_all;
-use ::nats::asynk::Connection as NatsCon;
+use ::nats::Connection as NatsCon;
 use ::rmp_serde::to_vec as to_msgpack;
 use ::slog::Logger;
 
@@ -48,7 +47,6 @@ impl<'s, 't> SymbolUpdateEventManager<'s, 't> {
   }
 
   pub async fn publish_changes(&self) {
-    let mut await_vec = vec![];
     for add_item in &self.to_add[..] {
       let msg = match to_msgpack(&add_item) {
         Err(e) => {
@@ -61,11 +59,17 @@ impl<'s, 't> SymbolUpdateEventManager<'s, 't> {
         }
         Ok(v) => v,
       };
-      await_vec.push(
-        self
-          .broker
-          .publish(SYMBOL_ADD_EVENT, msg.as_slice().to_owned()),
-      );
+      if let Err(e) = self
+        .broker
+        .publish(SYMBOL_ADD_EVENT, msg.as_slice().to_owned())
+      {
+        ::slog::warn!(
+          self.log,
+          "Failed to publish the newly added symbol";
+          "symbol" => add_item.symbol.to_owned(),
+          "error" => e,
+        );
+      };
     }
     for del_item in &self.to_remove[..] {
       let msg = match to_msgpack(&del_item) {
@@ -79,22 +83,17 @@ impl<'s, 't> SymbolUpdateEventManager<'s, 't> {
         }
         Ok(v) => v,
       };
-      await_vec.push(
-        self
-          .broker
-          .publish(SYMBOL_REMOVE_EVENT, msg.as_slice().to_owned()),
-      );
-    }
-    for err in join_all(await_vec)
-      .await
-      .into_iter()
-      .filter_map(|item| item.err())
-    {
-      ::slog::warn!(
-        self.log,
-        "Failed to publish the symbol update message: {}",
-        err
-      );
+      if let Err(e) = self
+        .broker
+        .publish(SYMBOL_REMOVE_EVENT, msg.as_slice().to_owned())
+      {
+        ::slog::warn!(
+          self.log,
+          "Failed to publish the deleted symbol";
+          "symbol" => del_item.symbol.to_owned(),
+          "error" => e,
+        );
+      }
     }
     return;
   }

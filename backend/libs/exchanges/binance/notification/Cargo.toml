@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 errors = { path = "../../../errors" }
 types = { path = "../../../types" }
+subscribe = { path = "../../../subscribe" }
 
 binance_clients = { path = "../clients" }
 binance_symbols = { path = "../symbols" }
@@ -21,7 +22,7 @@ keychain = { path = "../../../keychain" }
 
 async-trait = "0.1.48"
 features = "0.10.0"
-nats = "0.8"
+nats = "0.9.8"
 rmp-serde = "0.15.4"
 serde_json = "1.0.64"
 slog = "2.7.0"
@@ -29,5 +30,5 @@ tokio = { version = "1.4.0", features = ["time", "macros"] }
 tokio-stream = "0.1.5"
 tokio-tungstenite = { version = "0.14.0", features = ["native-tls"] }
 futures = "0.3.14"
-mongodb = "1.2.1"
+mongodb = { version = "1.2.1", default-features = false, features = ["async-std-runtime"] }
 serde = "1.0.125"

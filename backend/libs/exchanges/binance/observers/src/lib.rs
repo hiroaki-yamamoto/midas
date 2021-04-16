@@ -6,13 +6,12 @@ use ::std::convert::TryFrom;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::futures::future::join;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::doc;
 use ::mongodb::Database;
-use ::nats::asynk::Connection as Broker;
-use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
+use ::nats::Connection as Broker;
+use ::rmp_serde::to_vec as to_msgpack;
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
 use ::tokio::select;
@@ -23,12 +22,12 @@ use self::entities::{BookTicker, SubscribeRequest, SubscribeRequestInner};
 use ::binance_symbols::entities::{ListSymbolStream, Symbol};
 use ::binance_symbols::recorder::SymbolRecorder;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
-use ::types::{GenericResult, ThreadSafeResult};
+use ::subscribe::to_stream as nats_to_stream;
+use ::types::{GenericResult, TLSWebSocket, ThreadSafeResult};
 
 use self::constants::{
   SYMBOL_ADD_EVENT, SYMBOL_REMOVE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
 };
-use ::types::TLSWebSocket;
 
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{InitError, MaximumAttemptExceeded, WebsocketError};
@@ -257,7 +256,7 @@ impl TradeObserver {
       }
       Ok(v) => v,
     };
-    let _ = self.broker.publish(TRADE_OBSERVER_SUB_NAME, &msg[..]).await;
+    let _ = self.broker.publish(TRADE_OBSERVER_SUB_NAME, &msg[..]);
   }
 
   async fn handle_websocket_message(
@@ -305,24 +304,13 @@ impl TradeObserver {
     }
   }
 
-  fn handle_add_symbol(&self, data: &[u8]) -> Option<String> {
-    let symbol: Symbol = match from_msgpack(data) {
-      Err(e) => {
-        ::slog::warn!(
-          self.logger,
-          "Failed to read symbol add event payload: {}",
-          e
-        );
-        return None;
-      }
-      Ok(o) => o,
-    };
+  fn handle_add_symbol(&self, symbol: &Symbol) -> Option<String> {
     if symbol.status != "TRADING"
       || self.get_symbol_index(&symbol.symbol).is_some()
     {
       return None;
     }
-    return Some(symbol.symbol);
+    return Some(symbol.symbol.clone());
   }
 
   async fn handle_event(
@@ -330,15 +318,15 @@ impl TradeObserver {
     socket: &mut TLSWebSocket,
   ) -> ThreadSafeResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
-    let (symbol_add_event, symbol_remove_evnet) = join(
+    let (_, symbol_add_event) = nats_to_stream::<Symbol>(
       self
         .broker
-        .queue_subscribe(SYMBOL_ADD_EVENT, "trade_observer"),
-      self.broker.subscribe(SYMBOL_REMOVE_EVENT),
-    )
-    .await;
+        .queue_subscribe(SYMBOL_ADD_EVENT, "trade_observer")?,
+    );
+    let (_, symbol_remove_evnet) =
+      nats_to_stream::<Symbol>(self.broker.subscribe(SYMBOL_REMOVE_EVENT)?);
     let (mut symbol_add_event, mut symbol_remove_evnet) =
-      (symbol_add_event?, symbol_remove_evnet?);
+      (symbol_add_event.boxed(), symbol_remove_evnet.boxed());
     let mut clear_sym_map_flag = false;
     let mut initial_symbols_stream = self.init().await?;
     loop {
@@ -347,23 +335,12 @@ impl TradeObserver {
         Some(symbol) = initial_symbols_stream.next() => {
           add_buf.insert(symbol.symbol);
         }
-        Some(msg) = symbol_add_event.next() => {
-          if let Some(symb) = self.handle_add_symbol(&msg.data[..]) {
+        Some(symbol) = symbol_add_event.next() => {
+          if let Some(symb) = self.handle_add_symbol(&symbol) {
             add_buf.insert(symb);
           }
         },
-        Some(msg) = symbol_remove_evnet.next() => {
-          let symbol: Symbol = match from_msgpack(&msg.data[..]) {
-            Err(e) => {
-              ::slog::warn!(
-                self.logger,
-                "Failed to read symbol removal event payload: {}",
-                e
-              );
-              continue;
-            },
-            Ok(o) => o
-          };
+        Some(symbol) = symbol_remove_evnet.next() => {
           del_buf.insert(symbol.symbol);
         },
         _ = event_delay => {
@@ -430,15 +407,13 @@ impl TradeObserverTrait for TradeObserver {
   async fn subscribe(
     &self,
   ) -> ::std::io::Result<BoxStream<'_, CommonBookTicker>> {
-    return Ok(
-      self
-        .broker
-        .subscribe(TRADE_OBSERVER_SUB_NAME)
-        .await?
-        .map(|msg| from_msgpack::<BookTicker<f64>>(&msg.data[..]))
-        .filter_map(|res| async { res.ok() })
-        .map(|item| item.into())
-        .boxed(),
+    let (_, st) = nats_to_stream::<BookTicker<f64>>(
+      self.broker.subscribe(TRADE_OBSERVER_SUB_NAME)?,
     );
+    let st = st.map(|item| {
+      let ret: CommonBookTicker = item.into();
+      return ret;
+    });
+    return Ok(st.boxed());
   }
 }
