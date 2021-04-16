@@ -40,19 +40,20 @@ async fn main() {
     select! {
       Some((exchange, part)) = part_stream.next() => {
         let prog_map = kvs.entry(exchange).or_insert(HashMap::new());
-        let prev = prog_map.get(&part.symbol).cloned();
-        let result = match prog_map.get_mut(&part.symbol) {
+        let result = match prog_map.get(&part.symbol) {
           None => {
             let mut prog_clone = part.clone();
             prog_clone.cur_symbol_num = (prog_map.len() + 1) as i64;
-            prog_map.insert(part.symbol.clone(), prog_clone);
-            &part
+            prog_clone
           }
           Some(v) => {
-            v.cur_object_num += part.cur_object_num;
-            v
+            let mut prog_clone = v.clone();
+            prog_clone.cur_object_num += part.cur_object_num;
+            prog_clone
           }
         };
+        ::slog::info!(logger, "{:?}", result);
+        let prev = prog_map.insert(result.symbol.clone(), result.clone());
         let result = KlineFetchStatus::ProgressChanged {
           exchange: Exchanges::Binance,
           previous: prev,
