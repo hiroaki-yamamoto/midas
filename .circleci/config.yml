@@ -214,7 +214,7 @@ workflows:
           filters:
             branches:
               only: master
-          service_name: historical_fetch_aggregator
+          service_name: historical_aggregator
       - deploy-image:
           name: "Historical Kline Record Worker Deployment"
           requires:
