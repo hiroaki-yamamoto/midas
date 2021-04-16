@@ -6,8 +6,8 @@ use ::clap::Clap;
 use ::futures::{FutureExt, SinkExt, StreamExt};
 use ::libc::{SIGINT, SIGTERM};
 use ::nats::{connect as broker_con, Connection as NatsCon};
-use ::rmp_serde::to_vec_named as to_msgpack;
 use ::rpc::entities::Status;
+use ::serde_json::to_string;
 use ::slog::{o, Logger};
 use ::tokio::select;
 use ::tokio::signal::unix as signal;
@@ -61,14 +61,14 @@ fn handle_websocket(
         },
         _ = publish_interval.tick() => {
           if needs_flush {
-            let msg: Vec<u8> = to_msgpack(&book_tickers).unwrap_or_else(|e| {
-              return to_msgpack(&Status::new_int(0, format!("{}", e).as_str()))
+            let msg: String = to_string(&book_tickers).unwrap_or_else(|e| {
+              return to_string(&Status::new_int(0, format!("{}", e).as_str()))
                 .unwrap_or_else(
-                  |e| format!("Failed to encode the bookticker data: {}", e).into_bytes()
+                  |e| format!("Failed to encode the bookticker data: {}", e)
                 );
             });
             book_tickers.clear();
-            let _ = socket.send(Message::binary(msg)).await;
+            let _ = socket.send(Message::text(msg)).await;
             let _ = socket.flush().await;
             needs_flush = false;
           }

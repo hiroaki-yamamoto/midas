@@ -208,6 +208,14 @@ workflows:
               only: master
           service_name: historical_fetch_worker
       - deploy-image:
+          name: "Historical Kline Aggregation Worker Deployment"
+          requires:
+            - build-backend
+          filters:
+            branches:
+              only: master
+          service_name: historical_fetch_aggregator
+      - deploy-image:
           name: "Historical Kline Record Worker Deployment"
           requires:
             - build-backend

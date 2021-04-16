@@ -102,6 +102,21 @@ services:
     depends_on:
       - database
       - broker
+  historical_fetch_aggregator:
+    build:
+      context: ./backend
+      dockerfile: devel.dockerfile
+      args:
+        - SERVICE=historical_aggregator
+    command:
+      - -c
+      - /etc/midas/midas.yml
+    volumes:
+      - ./etc:/etc/midas
+      - ./backend:/opt/code
+    restart: unless-stopped
+    depends_on:
+      - broker
   historical_record_worker:
     build:
       context: ./backend
