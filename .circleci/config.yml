@@ -271,6 +271,7 @@ workflows:
           requires:
             - Historical Kline Service Deployment
             - Historical Kline Fetch Worker Deployment
+            - Historical Kline Aggregation Worker Deployment
             - Historical Kline Record Worker Deployment
             - Symbol Service Deployment
             - Trade Observer Worker Deployment
