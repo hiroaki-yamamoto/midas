@@ -4,8 +4,8 @@ use ::std::io::{Error as IOError, ErrorKind as IOErrKind};
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::nats::subscription::Handler;
-use ::nats::Connection as NatsCon;
-use ::rmp_serde::to_vec as to_msgpack;
+use ::nats::{Connection as NatsCon, Message};
+use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde::de::DeserializeOwned;
 use ::serde::ser::Serialize;
 
@@ -38,5 +38,17 @@ where
       .queue_subscribe(self.get_subject(), queue_name)?;
     let (handler, st) = to_stream::<T>(sub);
     return Ok((handler, st.boxed()));
+  }
+
+  fn request<S>(&self, entity: &T) -> IOResult<(S, Message)>
+  where
+    S: DeserializeOwned + Send + Sync,
+  {
+    let msg =
+      to_msgpack(entity).map_err(|e| IOError::new(IOErrKind::Other, e))?;
+    let res = self.get_broker().request(self.get_subject(), msg)?;
+    let des = from_msgpack::<S>(&res.data)
+      .map_err(|e| IOError::new(IOErrKind::Other, e))?;
+    return Ok((des, res));
   }
 }

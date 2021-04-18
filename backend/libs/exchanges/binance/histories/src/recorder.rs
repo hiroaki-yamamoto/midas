@@ -33,7 +33,7 @@ use history::HistoryRecorder as HistRecTrait;
 pub struct HistoryRecorder {
   col: Collection,
   db: Database,
-  broker: NatsConnection,
+  prog_pubsub: HistProgPartPubSub,
   logger: Logger,
 }
 
@@ -56,7 +56,7 @@ impl HistoryRecorder {
     let ret = Self {
       db,
       col,
-      broker,
+      prog_pubsub: HistProgPartPubSub::new(broker.clone()),
       logger,
     };
     ret
@@ -137,9 +137,7 @@ impl HistoryRecorder {
     };
     let mut value_sub = Box::pin(value_sub);
     let senders = senders.clone();
-    let broker = self.broker.clone();
     let mut counter: usize = 0;
-    let pubsub = HistProgPartPubSub::new(broker);
     loop {
       select! {
         Some(klines) = value_sub.next() => {
@@ -150,7 +148,7 @@ impl HistoryRecorder {
               num_objects: klines.entire_data_len,
               cur_object_num: 1,
             };
-          let _ = pubsub.publish(&prog);
+          let _ = self.prog_pubsub.publish(prog);
           let _ = senders[counter].send(klines.klines);
           counter = (counter + 1) % senders.len();
         },

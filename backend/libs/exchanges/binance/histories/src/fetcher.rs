@@ -1,5 +1,6 @@
 use ::std::collections::HashMap;
 use ::std::fmt::Debug;
+use ::std::io::Result as IOResult;
 use ::std::iter::FromIterator;
 use ::std::time::Duration as StdDur;
 
@@ -11,11 +12,12 @@ use ::nats::Connection;
 use ::rand::random;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
-use ::slog::{error, warn, Logger};
+use ::slog::{warn, Logger};
 use ::tokio::select;
 use ::tokio::sync::{broadcast, mpsc};
 use ::tokio::time::sleep;
 use ::url::Url;
+use subscribe::PubSub;
 
 use ::binance_clients::reqwest;
 use ::binance_symbols::fetcher::SymbolFetcher;
@@ -33,20 +35,21 @@ use ::subscribe::{
 use ::types::{GenericResult, ThreadSafeResult};
 
 use super::constants::{
-  HIST_FETCHER_FETCH_PROG_SUB_NAME, HIST_FETCHER_FETCH_RESP_SUB_NAME,
-  HIST_FETCHER_PARAM_SUB_NAME, HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
+  HIST_FETCHER_FETCH_RESP_SUB_NAME, HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
   REST_ENDPOINT,
 };
 use super::entities::{
   BinancePayload, Kline, Klines, KlinesWithInfo, Param, Query, TradeTime,
 };
+use super::pubsub::{HistFetchParamPubSub, HistProgPartPubSub};
 
 #[derive(Debug, Clone)]
 pub struct HistoryFetcher {
   pub num_reconnect: i8,
   logger: Logger,
   endpoint: Url,
-  broker: Connection,
+  prog_pubsub: HistProgPartPubSub,
+  param_pubsub: HistFetchParamPubSub,
   symbol_fetcher: SymbolFetcher,
 }
 
@@ -61,7 +64,8 @@ impl HistoryFetcher {
       num_reconnect: num_reconnect.unwrap_or(20),
       endpoint: (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()?,
       logger,
-      broker,
+      prog_pubsub: HistProgPartPubSub::new(broker.clone()),
+      param_pubsub: HistFetchParamPubSub::new(broker.clone()),
       symbol_fetcher,
     });
   }
@@ -156,16 +160,13 @@ impl HistoryFetcher {
     )?;
     let mut latest_kline: HashMap<String, TradeTime<MongoDateTime>> =
       from_msgpack(&latest_kline.data[..])?;
-    let msg = to_msgpack(&HistChartProg {
+    let _ = self.prog_pubsub.publish(&HistChartProg {
       symbol: String::from("Currency Trade Date Fetch"),
       num_symbols: symbols_len,
       cur_symbol_num: 0,
       num_objects: symbols_len,
       cur_object_num: 0,
     })?;
-    let _ = self
-      .broker
-      .publish(HIST_FETCHER_FETCH_PROG_SUB_NAME, msg.as_slice());
     let latest_kline_clone = latest_kline.clone();
     let to_fetch_binance = symbols
       .into_iter()
@@ -173,44 +174,32 @@ impl HistoryFetcher {
     let logger = self.logger.clone();
     let (prog_send, mut prog_recv) = broadcast::channel(CHAN_BUF_SIZE);
     for symbol in to_fetch_binance {
-      let broker = &self.broker;
       let prog_send = prog_send.clone();
-      let param = Param {
-        symbol: symbol.clone(),
-        num_symbols: 1,
-        entire_data_len: 1,
-        start_time: DateTime::from_utc(
-          NaiveDateTime::from_timestamp(0, 0),
-          Utc,
-        )
-        .into(),
-        end_time: None,
-      };
-      let req_payload = to_msgpack(&param)?;
+      let resp: IOResult<(KlinesWithInfo, _)> =
+        self.param_pubsub.request(&Param {
+          symbol: symbol.clone(),
+          num_symbols: 1,
+          entire_data_len: 1,
+          start_time: DateTime::from_utc(
+            NaiveDateTime::from_timestamp(0, 0),
+            Utc,
+          )
+          .into(),
+          end_time: None,
+        });
       let logger = logger.clone();
-      let resp = broker.request(
-        HIST_FETCHER_PARAM_SUB_NAME,
-        req_payload.as_slice().to_owned(),
-      );
       match resp {
         Err(e) => {
           warn!(logger, "Failed to publish the messgae: {}", e);
           continue;
         }
-        Ok(resp) => {
-          let resp: Kline = match from_msgpack::<KlinesWithInfo>(&resp.data[..])
-          {
-            Err(e) => {
-              warn!(logger, "Failed to decode the response: {}", e);
+        Ok((resp, _)) => {
+          let resp: Kline = match resp.klines.pop() {
+            None => {
+              warn!(logger, "No value in the response.");
               continue;
             }
-            Ok(mut v) => match v.klines.pop() {
-              None => {
-                warn!(logger, "No value in the response.");
-                continue;
-              }
-              Some(kline) => kline,
-            },
+            Some(kline) => kline,
           };
           let prog = HistChartProg {
             symbol: String::from("Currency Trade Date Fetch"),
@@ -219,25 +208,11 @@ impl HistoryFetcher {
             num_objects: symbols_len,
             cur_object_num: 1,
           };
-          match to_msgpack(&prog) {
-            Err(e) => {
-              error!(logger, "Failed to encode the progress: {}", e);
-              continue;
-            }
-            Ok(msg) => {
-              let _ = prog_send.send(msg);
-            }
-          };
           latest_kline.insert(resp.symbol.clone(), resp.into());
+          let _ = self.prog_pubsub.publish(&prog);
         }
       }
     }
-    let broker = self.broker.clone();
-    ::tokio::spawn(async move {
-      while let Ok(msg) = prog_recv.recv().await {
-        let _ = broker.publish(HIST_FETCHER_FETCH_PROG_SUB_NAME, &msg[..]);
-      }
-    });
     return Ok(HashMap::from_iter(latest_kline.iter().map(
       move |(sym, trade_time)| {
         let trade_time: TradeTime<DateTime<Utc>> = trade_time.into();

@@ -52,7 +52,6 @@ async fn main() {
             prog_clone
           }
         };
-        ::slog::info!(logger, "{:?}", result);
         let prev = prog_map.insert(result.symbol.clone(), result.clone());
         let result = KlineFetchStatus::ProgressChanged {
           exchange: Exchanges::Binance,
