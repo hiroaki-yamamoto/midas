@@ -7,16 +7,21 @@ pub use self::streams::{to_stream, to_stream_msg, to_stream_raw};
 pub use self::traits::PubSub;
 
 #[macro_export]
-macro_rules! impl_pubsub {
-  ($cls_name: ty, $type_name: ty, $sub_name: expr) => {
-    impl $cls_name {
+macro_rules! pubsub {
+  ($accessor: vis, $name: ident, $entity: ty, $sub_name: expr) => {
+    #[derive(Debug, Clone)]
+    $accessor struct $name {
+      con: ::nats::Connection
+    }
+
+    impl $name {
       pub fn new(con: ::nats::Connection) -> Self {
         return Self { con };
       }
       ::types::stateful_setter!(con, ::nats::Connection);
     }
 
-    impl PubSub<$type_name> for $cls_name {
+    impl ::subscribe::PubSub<$entity> for $name {
       fn get_broker(&self) -> &Broker {
         return &self.con;
       }
@@ -24,5 +29,5 @@ macro_rules! impl_pubsub {
         return $sub_name;
       }
     }
-  };
+  }
 }

@@ -14,17 +14,12 @@ use ::slog::{crit, error, warn, Logger};
 use ::tokio::select;
 use ::tokio::sync::mpsc;
 use ::tokio::task::block_in_place;
+use subscribe::PubSub;
 
 use ::rpc::historical::HistChartProg;
-use ::subscribe::{
-  to_stream as nats_to_stream, to_stream_msg as nats_to_stream_msg, PubSub,
-};
 
-use super::constants::{
-  HIST_FETCHER_FETCH_RESP_SUB_NAME, HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
-};
 use super::entities::{Kline, Klines, KlinesWithInfo, TradeTime};
-use super::pubsub::HistProgPartPubSub;
+use super::pubsub::{HistFetchRespPubSub, HistProgPartPubSub};
 
 use base_recorder::Recorder;
 use history::HistoryRecorder as HistRecTrait;
@@ -34,6 +29,7 @@ pub struct HistoryRecorder {
   col: Collection,
   db: Database,
   prog_pubsub: HistProgPartPubSub,
+  fetch_resp_pubsub: HistFetchRespPubSub,
   logger: Logger,
 }
 
@@ -57,6 +53,7 @@ impl HistoryRecorder {
       db,
       col,
       prog_pubsub: HistProgPartPubSub::new(broker.clone()),
+      fetch_resp_pubsub: HistFetchRespPubSub::new(broker.clone()),
       logger,
     };
     ret
@@ -121,20 +118,18 @@ impl HistoryRecorder {
     &self,
     senders: Vec<mpsc::UnboundedSender<Klines>>,
   ) {
-    let (_, value_sub) = match self
-      .broker
-      .queue_subscribe(HIST_FETCHER_FETCH_RESP_SUB_NAME, "recorder")
-    {
-      Err(e) => {
-        crit!(
-          self.logger,
-          "Failed to subscribe the response channel: {}",
-          e; "chan_name" => HIST_FETCHER_FETCH_RESP_SUB_NAME,
-        );
-        return;
-      }
-      Ok(v) => nats_to_stream::<KlinesWithInfo>(v),
-    };
+    let (_, value_sub) =
+      match self.fetch_resp_pubsub.queue_subscribe("recorder") {
+        Err(e) => {
+          crit!(
+            self.logger,
+            "Failed to subscribe the response channel: {}",
+            e; "chan_name" => self.fetch_resp_pubsub.get_subject(),
+          );
+          return;
+        }
+        Ok(v) => v,
+      };
     let mut value_sub = Box::pin(value_sub);
     let senders = senders.clone();
     let mut counter: usize = 0;

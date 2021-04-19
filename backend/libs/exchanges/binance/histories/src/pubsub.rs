@@ -1,24 +1,18 @@
 use ::nats::Connection as Broker;
 
+use ::entities::KlineCtrl;
 use ::rpc::historical::HistChartProg;
-use ::subscribe::{impl_pubsub, PubSub};
+use ::subscribe::pubsub;
 
-use super::entities::Param;
+use super::entities::{KlinesWithInfo, Param};
 
-#[derive(Debug, Clone)]
-pub struct HistProgPartPubSub {
-  con: Broker,
-}
-
-impl_pubsub!(
+pubsub!(
+  pub,
   HistProgPartPubSub,
   HistChartProg,
   "binance.kline.fetch.param"
 );
-
-#[derive(Debug, Clone)]
-pub(crate) struct HistFetchParamPubSub {
-  con: Broker,
-}
-
-impl_pubsub!(HistFetchParamPubSub, Param, "binance.kline.fetch.param");
+pubsub!(pub(crate), HistFetchParamPubSub, Param, "binance.kline.fetch.param");
+pubsub!(pub(crate), HistFetchRespPubSub, KlinesWithInfo, "binance.kline.fetch.resp");
+pubsub!(pub(crate), RecLatestTradeDatePubSub, Vec<String>, "binance.kline.record.latest");
+pubsub!(pub(crate), KlineControlPubSub, KlineCtrl, "binance.kline.ctrl");

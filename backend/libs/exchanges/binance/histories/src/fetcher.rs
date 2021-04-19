@@ -34,14 +34,14 @@ use ::subscribe::{
 };
 use ::types::{GenericResult, ThreadSafeResult};
 
-use super::constants::{
-  HIST_FETCHER_FETCH_RESP_SUB_NAME, HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
-  REST_ENDPOINT,
-};
 use super::entities::{
   BinancePayload, Kline, Klines, KlinesWithInfo, Param, Query, TradeTime,
 };
-use super::pubsub::{HistFetchParamPubSub, HistProgPartPubSub};
+use super::pubsub::{
+  HistFetchParamPubSub, HistFetchRespPubSub, HistProgPartPubSub,
+  KlineControlPubSub, RecLatestTradeDatePubSub,
+};
+use ::binance_clients::constants::REST_ENDPOINT;
 
 #[derive(Debug, Clone)]
 pub struct HistoryFetcher {
@@ -50,6 +50,9 @@ pub struct HistoryFetcher {
   endpoint: Url,
   prog_pubsub: HistProgPartPubSub,
   param_pubsub: HistFetchParamPubSub,
+  resp_pubsub: HistFetchRespPubSub,
+  rec_ltd_pubsub: RecLatestTradeDatePubSub,
+  ctrl_pubsub: KlineControlPubSub,
   symbol_fetcher: SymbolFetcher,
 }
 
@@ -66,6 +69,9 @@ impl HistoryFetcher {
       logger,
       prog_pubsub: HistProgPartPubSub::new(broker.clone()),
       param_pubsub: HistFetchParamPubSub::new(broker.clone()),
+      resp_pubsub: HistFetchRespPubSub::new(broker.clone()),
+      rec_ltd_pubsub: RecLatestTradeDatePubSub::new(broker.clone()),
+      ctrl_pubsub: KlineControlPubSub::new(broker.clone()),
       symbol_fetcher,
     });
   }
@@ -154,12 +160,9 @@ impl HistoryFetcher {
     symbols: Vec<String>,
   ) -> GenericResult<HashMap<String, TradeTime<DateTime<Utc>>>> {
     let symbols_len = symbols.len() as i64;
-    let latest_kline = self.broker.request(
-      HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
-      to_msgpack(&symbols)?,
-    )?;
-    let mut latest_kline: HashMap<String, TradeTime<MongoDateTime>> =
-      from_msgpack(&latest_kline.data[..])?;
+    let (mut latest_kline, _) = self
+      .rec_ltd_pubsub
+      .request::<HashMap<String, TradeTime<MongoDateTime>>>(&symbols)?;
     let _ = self.prog_pubsub.publish(&HistChartProg {
       symbol: String::from("Currency Trade Date Fetch"),
       num_symbols: symbols_len,
@@ -172,9 +175,7 @@ impl HistoryFetcher {
       .into_iter()
       .filter(move |symbol| !latest_kline_clone.contains_key(symbol));
     let logger = self.logger.clone();
-    let (prog_send, mut prog_recv) = broadcast::channel(CHAN_BUF_SIZE);
     for symbol in to_fetch_binance {
-      let prog_send = prog_send.clone();
       let resp: IOResult<(KlinesWithInfo, _)> =
         self.param_pubsub.request(&Param {
           symbol: symbol.clone(),
@@ -193,7 +194,7 @@ impl HistoryFetcher {
           warn!(logger, "Failed to publish the messgae: {}", e);
           continue;
         }
-        Ok((resp, _)) => {
+        Ok((mut resp, _)) => {
           let resp: Kline = match resp.klines.pop() {
             None => {
               warn!(logger, "No value in the response.");
@@ -248,28 +249,18 @@ impl HistoryFetcher {
         if sec_end_date > end_at {
           sec_end_date = end_at;
         }
-        let msg = match to_msgpack(
-          Param {
-            symbol: symbol.clone(),
-            num_symbols: symbols_len as i64,
-            entire_data_len,
-            start_time: sec_start_date.clone().into(),
-            end_time: Some(sec_end_date.into()),
-          }
-          .as_ref(),
-        ) {
-          Err(e) => {
-            warn!(self.logger, "Filed to encode HistFetcherParam: {}", e);
-            continue;
-          }
-          Ok(v) => v,
-        };
         select! {
           _ = stop_sig.recv() => {
             break;
           },
           else => {
-            let _ = self.broker.publish(HIST_FETCHER_PARAM_SUB_NAME, msg);
+            let _ = self.param_pubsub.publish(&Param {
+              symbol: symbol.clone(),
+              num_symbols: symbols_len as i64,
+              entire_data_len,
+              start_time: sec_start_date.clone().into(),
+              end_time: Some(sec_end_date.into()),
+            });
             sec_start_date = sec_end_date.clone();
           }
         }
@@ -310,10 +301,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
 
   async fn spawn(&self) -> ThreadSafeResult<()> {
     let me = self.clone();
-    let (_, param_sub) = nats_to_stream_msg::<Param>(
-      me.broker
-        .queue_subscribe(HIST_FETCHER_PARAM_SUB_NAME, "fetch.thread")?,
-    );
+    let (_, param_sub) = me.param_pubsub.queue_subscribe("fetch.thread")?;
     let (_, ctrl_sub) =
       nats_to_stream::<KlineCtrl>(me.broker.subscribe("binance.kline.ctrl")?);
     let mut param_sub = param_sub.boxed();
@@ -375,34 +363,12 @@ impl HistoryFetcherTrait for HistoryFetcher {
             },
             Ok(v) => v
           };
-          let response_payload = match to_msgpack(KlinesWithInfo{
+          let _ = me.resp_pubsub.publish(&KlinesWithInfo{
             klines: resp,
             symbol: param.symbol.clone(),
             num_symbols: param.num_symbols,
             entire_data_len: param.entire_data_len
-          }.as_ref()) {
-            Err(e) => {
-              warn!(
-                me.logger,
-                "Failed to serialize the payload for response: {}", e
-              );
-              continue;
-            },
-            Ok(v) => v
-          };
-          match msg.reply {
-            Some(_) => {
-              if let Err(e) = msg.respond(&response_payload[..].to_owned()) {
-                warn!(me.logger, "Failed to respond to the request: {}", e;
-                "subject" => msg.subject, "reply" => msg.reply);
-              }
-            },
-            None => {
-              let _ = me.broker.publish(
-                HIST_FETCHER_FETCH_RESP_SUB_NAME,
-                &response_payload[..].to_owned());
-            },
-          };
+          });
         },
         else => {break;}
       }
