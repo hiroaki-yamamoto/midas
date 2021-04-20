@@ -3,7 +3,6 @@ mod streams;
 mod traits;
 
 pub use self::handler::handle;
-pub use self::streams::{to_stream, to_stream_msg, to_stream_raw};
 pub use self::traits::PubSub;
 
 #[macro_export]
@@ -22,7 +21,7 @@ macro_rules! pubsub {
     }
 
     impl ::subscribe::PubSub<$entity> for $name {
-      fn get_broker(&self) -> &Broker {
+      fn get_broker(&self) -> &::nats::Connection {
         return &self.con;
       }
       fn get_subject(&self) -> &str {

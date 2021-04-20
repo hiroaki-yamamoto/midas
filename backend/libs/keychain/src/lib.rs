@@ -1,3 +1,5 @@
+pub mod pubsub;
+
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::oid::ObjectId;
@@ -10,16 +12,17 @@ use ::nats::Connection as NatsCon;
 use ::rmp_serde::to_vec as to_msgpack;
 
 use ::rpc::entities::Exchanges;
-use ::subscribe::to_stream as n2s;
 use ::types::{GenericResult, ThreadSafeResult};
 
 use ::base_recorder::Recorder;
 pub use ::entities::APIKey;
 use ::entities::APIKeyEvent;
 
+use self::pubsub::APIKeyPubSub;
+
 #[derive(Debug, Clone)]
 pub struct KeyChain {
-  broker: NatsCon,
+  pubsub: APIKeyPubSub,
   db: Database,
   col: Collection,
 }
@@ -27,7 +30,11 @@ pub struct KeyChain {
 impl KeyChain {
   pub async fn new(broker: NatsCon, db: Database) -> Self {
     let col = db.collection("apiKeyChains");
-    let ret = Self { broker, db, col };
+    let ret = Self {
+      pubsub: APIKeyPubSub::new(broker),
+      db,
+      col,
+    };
     ret.update_indices(&["exchange"]).await;
     return ret;
   }

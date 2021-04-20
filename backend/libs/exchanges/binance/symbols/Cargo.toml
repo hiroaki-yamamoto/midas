@@ -10,6 +10,7 @@ edition = "2018"
 errors = { path = "../../../errors" }
 rpc = { path = "../../../rpc" }
 types = { path = "../../../types" }
+subscribe = { path = "../../../subscribe" }
 
 binance_clients = { path = "../clients" }
 base_recorder = { path = "../../../rulesets/base_recorder" }

@@ -22,7 +22,6 @@ use self::entities::{BookTicker, SubscribeRequest, SubscribeRequestInner};
 use ::binance_symbols::entities::{ListSymbolStream, Symbol};
 use ::binance_symbols::recorder::SymbolRecorder;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
-use ::subscribe::to_stream as nats_to_stream;
 use ::types::{GenericResult, TLSWebSocket, ThreadSafeResult};
 
 use self::constants::{

@@ -19,7 +19,9 @@ use subscribe::PubSub;
 use ::rpc::historical::HistChartProg;
 
 use super::entities::{Kline, Klines, KlinesWithInfo, TradeTime};
-use super::pubsub::{HistFetchRespPubSub, HistProgPartPubSub};
+use super::pubsub::{
+  HistFetchRespPubSub, HistProgPartPubSub, RecLatestTradeDatePubSub,
+};
 
 use base_recorder::Recorder;
 use history::HistoryRecorder as HistRecTrait;
@@ -30,6 +32,7 @@ pub struct HistoryRecorder {
   db: Database,
   prog_pubsub: HistProgPartPubSub,
   fetch_resp_pubsub: HistFetchRespPubSub,
+  latest_trade_date_pubsub: RecLatestTradeDatePubSub,
   logger: Logger,
 }
 
@@ -54,6 +57,7 @@ impl HistoryRecorder {
       col,
       prog_pubsub: HistProgPartPubSub::new(broker.clone()),
       fetch_resp_pubsub: HistFetchRespPubSub::new(broker.clone()),
+      latest_trade_date_pubsub: RecLatestTradeDatePubSub::new(broker.clone()),
       logger,
     };
     ret
@@ -136,14 +140,13 @@ impl HistoryRecorder {
     loop {
       select! {
         Some(klines) = value_sub.next() => {
-          let prog = HistChartProg {
-              symbol: klines.symbol,
-              num_symbols: klines.num_symbols,
-              cur_symbol_num: 1,
-              num_objects: klines.entire_data_len,
-              cur_object_num: 1,
-            };
-          let _ = self.prog_pubsub.publish(prog);
+          let _ = self.prog_pubsub.publish(&HistChartProg {
+            symbol: klines.symbol,
+            num_symbols: klines.num_symbols,
+            cur_symbol_num: 1,
+            num_objects: klines.entire_data_len,
+            cur_object_num: 1,
+          });
           let _ = senders[counter].send(klines.klines);
           counter = (counter + 1) % senders.len();
         },
@@ -154,9 +157,7 @@ impl HistoryRecorder {
 
   async fn spawn_latest_trade_time_request(&self) {
     let me = self.clone();
-    let (_, sub) = match me
-      .broker
-      .queue_subscribe(HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME, "recorder")
+    let (_, sub) = match me.latest_trade_date_pubsub.queue_subscribe("recorder")
     {
       Err(e) => {
         error!(
@@ -166,7 +167,7 @@ impl HistoryRecorder {
         );
         return;
       }
-      Ok(v) => nats_to_stream_msg::<Vec<String>>(v),
+      Ok(v) => v,
     };
     let mut sub = sub.boxed();
     loop {

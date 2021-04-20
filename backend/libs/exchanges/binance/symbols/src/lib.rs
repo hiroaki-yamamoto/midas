@@ -2,6 +2,7 @@ pub mod constants;
 pub mod entities;
 pub mod fetcher;
 mod manager;
+pub mod pubsub;
 pub mod recorder;
 
 pub use ::symbol_fetcher::SymbolFetcher;

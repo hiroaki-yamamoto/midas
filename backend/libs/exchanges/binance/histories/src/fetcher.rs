@@ -29,9 +29,6 @@ use ::errors::{EmptyError, MaximumAttemptExceeded};
 use ::history::HistoryFetcher as HistoryFetcherTrait;
 use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
-use ::subscribe::{
-  to_stream as nats_to_stream, to_stream_msg as nats_to_stream_msg,
-};
 use ::types::{GenericResult, ThreadSafeResult};
 
 use super::entities::{
@@ -278,9 +275,6 @@ impl HistoryFetcherTrait for HistoryFetcher {
         field: String::from("symbol"),
       }));
     }
-    let (_, stop_sub) =
-      nats_to_stream::<KlineCtrl>(self.broker.subscribe("binance.kline.ctrl")?);
-    let mut stop_sub = stop_sub.boxed();
     let mut query: Option<Document> = None;
     if symbol[0] != "all" {
       query = Some(doc! { "symbol": doc! { "$in": symbol } });
@@ -288,6 +282,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
     let symbols = self.symbol_fetcher.get(query).await?;
     let me = self.clone();
     let (stop_send, mut stop_recv) = mpsc::unbounded_channel();
+    let (_, mut stop_sub) = me.ctrl_pubsub.subscribe()?;
     let _ = tokio::spawn(async move {
       while let Some(_) = stop_sub.next().await {
         let _ = stop_send.send(());
@@ -302,8 +297,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
   async fn spawn(&self) -> ThreadSafeResult<()> {
     let me = self.clone();
     let (_, param_sub) = me.param_pubsub.queue_subscribe("fetch.thread")?;
-    let (_, ctrl_sub) =
-      nats_to_stream::<KlineCtrl>(me.broker.subscribe("binance.kline.ctrl")?);
+    let (_, ctrl_sub) = me.ctrl_pubsub.subscribe()?;
     let mut param_sub = param_sub.boxed();
     let mut ctrl_sub = ctrl_sub.boxed();
     let (stop_sender, _) = broadcast::channel(1024);
