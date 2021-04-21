@@ -7,9 +7,8 @@ use ::mongodb::bson::{doc, from_document, to_document, Document};
 use ::mongodb::error::Result;
 use ::mongodb::options::UpdateModifications;
 use ::mongodb::{Collection, Database};
-use ::nats::subscription::Handler;
 use ::nats::Connection as NatsCon;
-use ::rmp_serde::to_vec as to_msgpack;
+use ::subscribe::PubSub;
 
 use ::rpc::entities::Exchanges;
 use ::types::{GenericResult, ThreadSafeResult};
@@ -46,8 +45,7 @@ impl KeyChain {
     let mut api_key = api_key.clone();
     api_key.inner_mut().id = id.cloned();
     let event = APIKeyEvent::Add(api_key);
-    let msg = to_msgpack(&event)?;
-    let _ = self.broker.publish("apikey", msg)?;
+    let _ = self.pubsub.publish(&event)?;
     return Ok(id.cloned());
   }
 
@@ -110,17 +108,9 @@ impl KeyChain {
     {
       let api_key: APIKey = from_document(doc)?;
       let event = APIKeyEvent::Remove(api_key);
-      let msg = to_msgpack(&event)?;
-      let _ = self.broker.publish("apikey", msg)?;
+      let _ = self.pubsub.publish(&event)?;
     }
     return Ok(());
-  }
-
-  pub async fn subscribe_event(
-    broker: &NatsCon,
-  ) -> ::std::io::Result<(Handler, BoxStream<'_, APIKeyEvent>)> {
-    let (handler, st) = n2s::<APIKeyEvent>(broker.subscribe("apikey")?);
-    return Ok((handler, st.boxed()));
   }
 }
 

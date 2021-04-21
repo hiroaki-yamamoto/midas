@@ -139,7 +139,7 @@ impl HistoryRecorder {
     let mut counter: usize = 0;
     loop {
       select! {
-        Some(klines) = value_sub.next() => {
+        Some((klines, _)) = value_sub.next() => {
           let _ = self.prog_pubsub.publish(&HistChartProg {
             symbol: klines.symbol,
             num_symbols: klines.num_symbols,

@@ -29,7 +29,6 @@ use ::entities::{APIKey, APIKeyEvent, APIKeyInner};
 use ::errors::{MaximumAttemptExceeded, WebsocketError};
 use ::keychain::KeyChain;
 use ::notification::UserStream as UserStreamTrait;
-use ::subscribe::{to_stream as nats_to_stream, to_stream_raw as n2s_raw};
 use ::types::{GenericResult, TLSWebSocket, ThreadSafeResult};
 
 #[derive(Debug, Clone)]
