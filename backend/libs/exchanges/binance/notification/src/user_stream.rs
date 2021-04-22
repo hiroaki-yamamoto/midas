@@ -184,7 +184,7 @@ impl UserStreamTrait for UserStream {
       .publish(USER_STREAM_LISTEN_KEY_SUB_NAME, to_msgpack(&key)?)?;
     return Ok(());
   }
-  async fn clise_listen_key(
+  async fn close_listen_key(
     &self,
     api_key: &APIKeyInner,
     listen_key: &String,
@@ -233,7 +233,7 @@ impl UserStreamTrait for UserStream {
             APIKeyEvent::Remove(APIKey::Binance(api_key)) => {
               if let Some(listen_key) = listen_keys.remove(&api_key.pub_key) {
                 sockets.remove(&api_key.pub_key);
-                let _ = me.clise_listen_key(&api_key, &listen_key);
+                let _ = me.close_listen_key(&api_key, &listen_key);
               }
             }
             _ => {},
