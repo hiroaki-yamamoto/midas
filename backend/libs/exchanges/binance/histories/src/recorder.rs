@@ -18,7 +18,7 @@ use subscribe::PubSub;
 
 use ::rpc::historical::HistChartProg;
 
-use super::entities::{Kline, Klines, KlinesWithInfo, TradeTime};
+use super::entities::{Kline, Klines, TradeTime};
 use super::pubsub::{
   HistFetchRespPubSub, HistProgPartPubSub, RecLatestTradeDatePubSub,
 };

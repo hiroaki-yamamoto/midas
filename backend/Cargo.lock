@@ -357,7 +357,6 @@ dependencies = [
  "binance_symbols",
  "entities",
  "errors",
- "features",
  "futures",
  "keychain",
  "mongodb",
@@ -997,15 +996,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "features"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83072b3c84e55f9d0c0ff36a4575d0fd2e543ae4a56e04e7f5a9222188d574e3"
-dependencies = [
- "bitflags",
-]
-
-[[package]]
 name = "fixedbitset"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1342,7 +1332,6 @@ dependencies = [
 name = "historical_service"
 version = "0.1.0"
 dependencies = [
- "async-stream",
  "binance_histories",
  "binance_symbols",
  "clap",
@@ -3099,7 +3088,6 @@ dependencies = [
  "serde",
  "tokio 1.4.0",
  "tokio-stream",
- "types",
 ]
 
 [[package]]
@@ -3647,7 +3635,6 @@ dependencies = [
  "tokio 1.4.0",
  "tokio-tungstenite 0.14.0",
  "url",
- "warp",
 ]
 
 [[package]]

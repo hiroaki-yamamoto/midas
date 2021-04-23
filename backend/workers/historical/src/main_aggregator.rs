@@ -38,7 +38,7 @@ async fn main() {
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   loop {
     select! {
-      Some((exchange, part)) = part_stream.next() => {
+      Some((exchange, (part, _))) = part_stream.next() => {
         let prog_map = kvs.entry(exchange).or_insert(HashMap::new());
         let result = match prog_map.get(&part.symbol) {
           None => {
@@ -60,7 +60,7 @@ async fn main() {
         };
         let _= status_pubsub.publish(&result);
       },
-      Some(status) = status_st.next() => {
+      Some((status, _)) = status_st.next() => {
         match status {
           KlineFetchStatus::ProgressChanged{
             exchange,

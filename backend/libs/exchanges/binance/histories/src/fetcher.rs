@@ -10,7 +10,6 @@ use ::futures::StreamExt;
 use ::mongodb::bson::{doc, DateTime as MongoDateTime, Document};
 use ::nats::Connection;
 use ::rand::random;
-use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
 use ::tokio::select;
@@ -21,9 +20,7 @@ use subscribe::PubSub;
 
 use ::binance_clients::reqwest;
 use ::binance_symbols::fetcher::SymbolFetcher;
-use ::config::{
-  CHAN_BUF_SIZE, DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH,
-};
+use ::config::{DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH};
 use ::entities::KlineCtrl;
 use ::errors::{EmptyError, MaximumAttemptExceeded};
 use ::history::HistoryFetcher as HistoryFetcherTrait;
@@ -340,7 +337,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
           warn!(me.logger, "Stop Signal has been received. Shutting down the worker...");
           break;
         },
-        Some((param, msg)) = param_sub.next() => {
+        Some((param, _)) = param_sub.next() => {
           if let Ok(_) = stop_recv.try_recv() {
             warn!(me.logger, "Stop Signal has been received. Shutting down the worker...");
             break;

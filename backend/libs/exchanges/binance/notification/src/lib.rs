@@ -1,4 +1,3 @@
-mod constants;
 mod entities;
 mod pubsub;
 mod user_stream;

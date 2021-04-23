@@ -11,7 +11,6 @@ use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::doc;
 use ::mongodb::Database;
 use ::nats::Connection as Broker;
-use ::rmp_serde::to_vec as to_msgpack;
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
 use ::subscribe::PubSub;

@@ -1,5 +1,3 @@
-use ::nats::Connection as Broker;
-
 use ::entities::KlineCtrl;
 use ::rpc::historical::HistChartProg;
 use ::subscribe::pubsub;
