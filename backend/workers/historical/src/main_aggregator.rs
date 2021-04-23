@@ -96,9 +96,7 @@ async fn main() {
                 },
                 Ok(o) => o,
               };
-              if remote_current > prog_candidate {
-                local.insert(remote_current.symbol.clone(), remote_current);
-              } else {
+              if remote_current < prog_candidate {
                 local.insert(
                   prog_candidate.symbol.clone(),
                   prog_candidate.clone()
@@ -108,6 +106,8 @@ async fn main() {
                   previous: Some(prog_candidate.clone()),
                   current: prog_candidate
                 });
+              } else {
+                local.insert(remote_current.symbol.clone(), remote_current);
               }
           },
           KlineFetchStatus::Done{exchange, symbol} => {

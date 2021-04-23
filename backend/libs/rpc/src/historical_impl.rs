@@ -18,7 +18,7 @@ impl Sub for &HistChartProg {
     return Ok(HistChartProg {
       symbol: self.symbol.clone(),
       num_symbols: self.num_symbols - rhs.num_symbols,
-      num_objects: self.num_objects - rhs.num_symbols,
+      num_objects: self.num_objects - rhs.num_objects,
       cur_symbol_num: self.cur_symbol_num - rhs.cur_symbol_num,
       cur_object_num: self.cur_object_num - rhs.cur_object_num,
     });
@@ -44,7 +44,7 @@ impl Add for &HistChartProg {
     return Ok(HistChartProg {
       symbol: self.symbol.clone(),
       num_symbols: self.num_symbols + rhs.num_symbols,
-      num_objects: self.num_objects + rhs.num_symbols,
+      num_objects: self.num_objects + rhs.num_objects,
       cur_symbol_num: self.cur_symbol_num + rhs.cur_symbol_num,
       cur_object_num: self.cur_object_num + rhs.cur_object_num,
     });

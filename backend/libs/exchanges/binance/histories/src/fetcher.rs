@@ -182,6 +182,7 @@ impl HistoryFetcher {
           .into(),
           end_time: None,
         });
+      ::slog::info!(logger, "Request sent");
       let logger = logger.clone();
       match resp {
         Err(e) => {
