@@ -3,6 +3,7 @@ mod pubsub;
 
 use ::std::collections::{HashMap, HashSet};
 use ::std::convert::TryFrom;
+use ::std::io::{Error as IOErr, ErrorKind as IOErrKind, Result as IOResult};
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
@@ -258,7 +259,7 @@ impl TradeObserver {
     &mut self,
     socket: &mut TLSWebSocket,
     msg: &wsocket::Message,
-  ) {
+  ) -> IOResult<()> {
     match msg {
       wsocket::Message::Ping(txt) => {
         let _ = socket.send(wsocket::Message::Pong(txt.to_owned())).await;
@@ -281,14 +282,10 @@ impl TradeObserver {
         } else {
           ::slog::warn!(self.logger, "Closing connection...");
         }
-        ::slog::info!(self.logger, "Reconnecting...");
-        *socket = match self.connect().await {
-          Err(e) => {
-            ::slog::error!(self.logger, "Failed to connect: {}", e);
-            return;
-          }
-          Ok(s) => s,
-        };
+        return Err(IOErr::new(
+          IOErrKind::ConnectionAborted,
+          "Unexpected Closed",
+        ));
       }
       wsocket::Message::Pong(_) => {
         ::slog::info!(
@@ -297,6 +294,7 @@ impl TradeObserver {
         );
       }
     }
+    return Ok(());
   }
 
   fn handle_add_symbol(&self, symbol: &Symbol) -> Option<String> {
@@ -365,7 +363,7 @@ impl TradeObserver {
           }
         },
         Some(Ok(msg)) = socket.next() => {
-          self.handle_websocket_message(socket, &msg).await;
+          let _ =  self.handle_websocket_message(socket, &msg).await?;
         }
         else => {break;}
       }
@@ -386,14 +384,15 @@ impl TradeObserver {
 impl TradeObserverTrait for TradeObserver {
   async fn start(&self) -> GenericResult<()> {
     let mut me = self.clone();
-    let mut socket = me.connect().await?;
-    if let Err(e) = me.handle_event(&mut socket).await {
-      ::slog::error!(
-        me.logger,
-        "Failed to open the handler of the trade event: {}",
-        e,
-      );
-    };
+    let mut reconnect_interval = interval(Duration::from_secs(1));
+    loop {
+      let mut socket = me.connect().await?;
+      if let Ok(_) = me.handle_event(&mut socket).await {
+        break;
+      }
+      ::slog::info!(self.logger, "Reconnecting after 1 sec...");
+      reconnect_interval.tick().await;
+    }
     return Ok(());
   }
   async fn subscribe(
