@@ -67,11 +67,15 @@ async fn main() {
             previous,
             current: remote_current} => {
               let local = kvs.entry(exchange).or_insert(HashMap::new());
-              let local_current = local
-                .get(&remote_current.symbol);
+              let local_current = local.get(&remote_current.symbol);
               let diff = match previous {
                 Some(prev) => { &remote_current - &prev },
-                None => { Ok(remote_current.clone()) },
+                None => {
+                  match local_current {
+                    Some(local) => &remote_current - local,
+                    None => Ok(remote_current.clone()),
+                  }
+                }
               };
               let diff = match diff {
                 Err(e) => {

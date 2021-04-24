@@ -17,9 +17,16 @@ where
 {
   fn get_subject(&self) -> &str;
   fn get_broker(&self) -> &NatsCon;
+
+  fn serialize<S>(entity: &S) -> IOResult<Vec<u8>>
+  where
+    S: Serialize,
+  {
+    return to_msgpack(entity).map_err(|e| IOError::new(IOErrKind::Other, e));
+  }
+
   fn publish(&self, entity: &T) -> IOResult<()> {
-    let msg =
-      to_msgpack(entity).map_err(|e| IOError::new(IOErrKind::Other, e))?;
+    let msg = Self::serialize(entity)?;
     return self.get_broker().publish(self.get_subject(), msg);
   }
 
@@ -44,11 +51,18 @@ where
   where
     S: DeserializeOwned + Send + Sync,
   {
-    let msg =
-      to_msgpack(entity).map_err(|e| IOError::new(IOErrKind::Other, e))?;
+    let msg = Self::serialize(entity)?;
     let res = self.get_broker().request(self.get_subject(), msg)?;
     let des = from_msgpack::<S>(&res.data)
       .map_err(|e| IOError::new(IOErrKind::Other, e))?;
     return Ok((des, res));
+  }
+
+  fn respond<S>(&self, msg: &Message, resp: &S) -> IOResult<()>
+  where
+    S: Serialize,
+  {
+    let resp = Self::serialize(resp)?;
+    return msg.respond(resp);
   }
 }

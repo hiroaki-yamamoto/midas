@@ -13,7 +13,7 @@ use ::rand::random;
 use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
 use ::tokio::select;
-use ::tokio::sync::{broadcast, mpsc};
+use ::tokio::sync::mpsc;
 use ::tokio::time::sleep;
 use ::url::Url;
 use subscribe::PubSub;
@@ -182,7 +182,6 @@ impl HistoryFetcher {
           .into(),
           end_time: None,
         });
-      ::slog::info!(logger, "Request sent");
       let logger = logger.clone();
       match resp {
         Err(e) => {
@@ -301,55 +300,27 @@ impl HistoryFetcherTrait for HistoryFetcher {
   }
 
   async fn spawn(&self) -> ThreadSafeResult<()> {
-    let me = self.clone();
-    let (_, param_sub) = me.param_pubsub.queue_subscribe("fetch.thread")?;
-    let ctrl_pubsub = me.ctrl_pubsub.clone();
+    let (_, param_sub) = self.param_pubsub.queue_subscribe("fetch.thread")?;
+    let (_, mut ctrl_sub) = self.ctrl_pubsub.subscribe()?;
     let mut param_sub = param_sub.boxed();
-    let (stop_sender, _) = broadcast::channel(1024);
-    let log = me.logger.clone();
-    let _ = ::tokio::spawn({
-      let stop_sender = stop_sender.clone();
-      async move {
-        let (_, mut ctrl_sub) = match ctrl_pubsub.subscribe() {
-          Err(e) => {
-            ::slog::warn!(
-              log,
-              "Failed to subscribe the control channel: {:?}",
-              e
-            );
-            return;
-          }
-          Ok(o) => o,
-        };
-        while let Some((ctrl, _)) = ctrl_sub.next().await {
+    loop {
+      select! {
+        Some((ctrl, _)) = ctrl_sub.next() => {
           match ctrl {
             KlineCtrl::Stop => {
-              let _ = stop_sender.send(());
+              warn!(self.logger, "Stop Signal has been received. Shutting down the worker...");
               break;
             }
           }
-        }
-      }
-    });
-    loop {
-      let mut stop_recv = stop_sender.subscribe();
-      select! {
-         _ignore = stop_recv.recv() => {
-          warn!(me.logger, "Stop Signal has been received. Shutting down the worker...");
-          break;
         },
-        Some((param, _)) = param_sub.next() => {
-          if let Ok(_) = stop_recv.try_recv() {
-            warn!(me.logger, "Stop Signal has been received. Shutting down the worker...");
-            break;
-          }
+        Some((param, msg)) = param_sub.next() => {
           let num_obj = match param.end_time {
             None => 1,
             Some(end_time) => (*end_time - *param.start_time).num_minutes()
           };
           if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
             warn!(
-              me.logger,
+              self.logger,
               "Duration between the specified start and end time exceeds
                 the maximum number of the objects to fetch.";
               "symbol" => &param.symbol,
@@ -361,7 +332,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
             continue;
           }
           let start_time = *param.start_time;
-          let resp = me.fetch(
+          let resp = self.fetch(
             param.symbol.clone(),
             start_time,
             param.end_time.map(|d| *d),
@@ -369,17 +340,21 @@ impl HistoryFetcherTrait for HistoryFetcher {
           let resp = resp.await;
           let resp = match resp {
             Err(e) => {
-              warn!(me.logger, "Failed to fetch kline data: {}", e);
+              warn!(self.logger, "Failed to fetch kline data: {}", e);
               continue;
             },
             Ok(v) => v
           };
-          let _ = me.resp_pubsub.publish(&KlinesWithInfo{
+          let payload = &KlinesWithInfo{
             klines: resp,
             symbol: param.symbol.clone(),
             num_symbols: param.num_symbols,
             entire_data_len: param.entire_data_len
-          });
+          };
+          let _ = match msg.reply {
+            Some(_) => self.resp_pubsub.respond(&msg, payload),
+            None => self.resp_pubsub.publish(payload)
+          };
         },
         else => {break;}
       }
