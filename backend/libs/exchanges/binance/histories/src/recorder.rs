@@ -3,6 +3,7 @@ use ::std::collections::hash_map::HashMap;
 use ::async_trait::async_trait;
 use ::futures::future::{join3, join_all};
 use ::futures::{Stream, StreamExt};
+use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{
   doc, from_document, to_bson, DateTime as MongoDateTime, Document,
 };
@@ -141,6 +142,7 @@ impl HistoryRecorder {
       select! {
         Some((klines, _)) = value_sub.next() => {
           let _ = self.prog_pubsub.publish(&HistChartProg {
+            id: ObjectId::new().to_string(),
             symbol: klines.symbol,
             num_symbols: klines.num_symbols,
             cur_symbol_num: 1,

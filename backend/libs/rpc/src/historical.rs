@@ -4,14 +4,16 @@
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct HistChartProg {
     #[prost(string, tag="1")]
+    pub id: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
     pub symbol: ::prost::alloc::string::String,
-    #[prost(int64, tag="2")]
-    pub num_symbols: i64,
     #[prost(int64, tag="3")]
-    pub cur_symbol_num: i64,
+    pub num_symbols: i64,
     #[prost(int64, tag="4")]
-    pub num_objects: i64,
+    pub cur_symbol_num: i64,
     #[prost(int64, tag="5")]
+    pub num_objects: i64,
+    #[prost(int64, tag="6")]
     pub cur_object_num: i64,
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]

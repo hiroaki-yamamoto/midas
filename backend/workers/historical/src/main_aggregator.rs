@@ -49,13 +49,14 @@ async fn main() {
           Some(v) => {
             let mut prog_clone = v.clone();
             prog_clone.cur_object_num += part.cur_object_num;
+            prog_clone.id = part.id;
             prog_clone
           }
         };
-        let prev = prog_map.insert(result.symbol.clone(), result.clone());
+        let _ = prog_map.insert(result.symbol.clone(), result.clone());
         let result = KlineFetchStatus::ProgressChanged {
           exchange: Exchanges::Binance,
-          previous: prev,
+          previous: None,
           current: result.clone(),
         };
         let _= status_pubsub.publish(&result);
@@ -68,6 +69,13 @@ async fn main() {
             current: remote_current} => {
               let local = kvs.entry(exchange).or_insert(HashMap::new());
               let local_current = local.get(&remote_current.symbol);
+
+              if let (Some(prev), Some(loc_cur)) = (previous.clone(), local_current) {
+                if prev.id == loc_cur.id {
+                  continue;
+                }
+              }
+
               let diff = match previous {
                 Some(prev) => { &remote_current - &prev },
                 None => {
@@ -93,21 +101,22 @@ async fn main() {
                   local_current + &diff
                 },
               };
-              let prog_candidate = match prog_candidate {
+              let mut prog_candidate = match prog_candidate {
                 Err(e) => {
                   ::slog::error!(logger, "Failed to apply the diff: {:?}", e);
                   continue;
                 },
                 Ok(o) => o,
               };
+              prog_candidate.id = remote_current.id.clone();
               if remote_current < prog_candidate {
-                local.insert(
+                let old = local.insert(
                   prog_candidate.symbol.clone(),
                   prog_candidate.clone()
                 );
                 let _ = status_pubsub.publish(&KlineFetchStatus::ProgressChanged {
                   exchange: Exchanges::Binance,
-                  previous: Some(prog_candidate.clone()),
+                  previous: old,
                   current: prog_candidate
                 });
               } else {

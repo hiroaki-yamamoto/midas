@@ -4,6 +4,9 @@ import * as entities_pb from './entities_pb';
 
 
 export class HistChartProg extends jspb.Message {
+  getId(): string;
+  setId(value: string): HistChartProg;
+
   getSymbol(): string;
   setSymbol(value: string): HistChartProg;
 
@@ -29,6 +32,7 @@ export class HistChartProg extends jspb.Message {
 
 export namespace HistChartProg {
   export type AsObject = {
+    id: string,
     symbol: string,
     numSymbols: number,
     curSymbolNum: number,

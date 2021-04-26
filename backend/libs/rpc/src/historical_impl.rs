@@ -1,6 +1,7 @@
 use ::std::cmp::{Ord, Ordering, PartialOrd};
 use ::std::ops::{Add, Sub};
 
+use ::bson::oid::ObjectId;
 use ::http::status::StatusCode;
 
 use super::entities::Status;
@@ -16,6 +17,7 @@ impl Sub for &HistChartProg {
       ));
     }
     return Ok(HistChartProg {
+      id: ObjectId::new().to_hex(),
       symbol: self.symbol.clone(),
       num_symbols: self.num_symbols - rhs.num_symbols,
       num_objects: self.num_objects - rhs.num_objects,
@@ -42,6 +44,7 @@ impl Add for &HistChartProg {
       ));
     }
     return Ok(HistChartProg {
+      id: ObjectId::new().to_hex(),
       symbol: self.symbol.clone(),
       num_symbols: self.num_symbols + rhs.num_symbols,
       num_objects: self.num_objects + rhs.num_objects,

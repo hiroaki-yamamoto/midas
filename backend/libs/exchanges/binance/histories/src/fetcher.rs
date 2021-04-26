@@ -7,16 +7,17 @@ use ::std::time::Duration as StdDur;
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::futures::StreamExt;
+use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{doc, DateTime as MongoDateTime, Document};
 use ::nats::Connection;
 use ::rand::random;
 use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
+use ::subscribe::PubSub;
 use ::tokio::select;
 use ::tokio::sync::mpsc;
 use ::tokio::time::sleep;
 use ::url::Url;
-use subscribe::PubSub;
 
 use ::binance_clients::reqwest;
 use ::binance_symbols::fetcher::SymbolFetcher;
@@ -158,6 +159,7 @@ impl HistoryFetcher {
       .rec_ltd_pubsub
       .request::<HashMap<String, TradeTime<MongoDateTime>>>(&symbols)?;
     let _ = self.prog_pubsub.publish(&HistChartProg {
+      id: ObjectId::new().to_string(),
       symbol: String::from("Currency Trade Date Fetch"),
       num_symbols: symbols_len,
       cur_symbol_num: 0,
@@ -197,6 +199,7 @@ impl HistoryFetcher {
             Some(kline) => kline,
           };
           let prog = HistChartProg {
+            id: ObjectId::new().to_string(),
             symbol: String::from("Currency Trade Date Fetch"),
             num_symbols: symbols_len,
             cur_symbol_num: 0,
