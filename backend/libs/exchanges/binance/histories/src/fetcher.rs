@@ -6,17 +6,16 @@ use ::std::time::Duration as StdDur;
 
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use ::futures::StreamExt;
+use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{doc, DateTime as MongoDateTime, Document};
-use ::nats::Connection;
+use ::nats::{Connection, Message};
 use ::rand::random;
 use ::serde_qs::to_string;
 use ::slog::{warn, Logger};
 use ::subscribe::PubSub;
 use ::tokio::select;
-use ::tokio::sync::mpsc;
-use ::tokio::time::sleep;
+use ::tokio::time::{sleep, timeout};
 use ::url::Url;
 
 use ::binance_clients::reqwest;
@@ -222,7 +221,7 @@ impl HistoryFetcher {
   async fn push_fetch_request(
     &self,
     symbols: &Vec<SymbolInfo>,
-    stop_sig: &mut mpsc::UnboundedReceiver<()>,
+    stop_sig: &mut BoxStream<'_, (KlineCtrl, Message)>,
   ) -> GenericResult<()> {
     let end_at = Utc::now();
     let trade_dates = self
@@ -241,26 +240,28 @@ impl HistoryFetcher {
       }
       let mut sec_start_date = start_at;
       while sec_start_date < end_at {
+        if let Ok(Some((ctrl, _))) =
+          timeout(StdDur::from_micros(1), stop_sig.next()).await
+        {
+          match ctrl {
+            KlineCtrl::Stop => {
+              break;
+            }
+          }
+        }
         let mut sec_end_date =
           sec_start_date + Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
         if sec_end_date > end_at {
           sec_end_date = end_at;
         }
-        select! {
-          _ = stop_sig.recv() => {
-            break;
-          },
-          else => {
-            let _ = self.param_pubsub.publish(&Param {
-              symbol: symbol.clone(),
-              num_symbols: symbols_len as i64,
-              entire_data_len,
-              start_time: sec_start_date.clone().into(),
-              end_time: Some(sec_end_date.into()),
-            });
-            sec_start_date = sec_end_date.clone();
-          }
-        }
+        let _ = self.param_pubsub.publish(&Param {
+          symbol: symbol.clone(),
+          num_symbols: symbols_len as i64,
+          entire_data_len,
+          start_time: sec_start_date.clone().into(),
+          end_time: Some(sec_end_date.into()),
+        });
+        sec_start_date = sec_end_date.clone();
       }
     }
     return Ok(());
@@ -281,23 +282,13 @@ impl HistoryFetcherTrait for HistoryFetcher {
     }
     let symbols = self.symbol_fetcher.get(query).await?;
     let me = self.clone();
-    let (stop_send, mut stop_recv) = mpsc::unbounded_channel();
-    let ctrl_pubsub = self.ctrl_pubsub.clone();
-    let logger = self.logger.clone();
     let _ = tokio::spawn(async move {
-      let (_, mut stop_sub) = match ctrl_pubsub.subscribe() {
-        Err(e) => {
-          ::slog::warn!(logger, "Failed to subscribe: {:?}", e);
-          return;
-        }
+      let (ctrl_hdl, mut ctrl_sub) = match me.ctrl_pubsub.subscribe() {
+        Err(_) => return,
         Ok(o) => o,
       };
-      while let Some(_) = stop_sub.next().await {
-        let _ = stop_send.send(());
-      }
-    });
-    let _ = tokio::spawn(async move {
-      let _ = me.push_fetch_request(&symbols, &mut stop_recv).await;
+      let _ = me.push_fetch_request(&symbols, &mut ctrl_sub).await;
+      let _ = ctrl_hdl.unsubscribe();
     });
     return Ok(());
   }
