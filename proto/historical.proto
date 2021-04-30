@@ -6,11 +6,12 @@ package historical;
 option go_package="rpc";
 
 message HistChartProg {
-  string symbol = 1;
-  int64 num_symbols = 2;
-  int64 cur_symbol_num = 3;
-  int64 num_objects = 4;
-  int64 cur_object_num = 5;
+  string id = 1;
+  string symbol = 2;
+  int64 num_symbols = 3;
+  int64 cur_symbol_num = 4;
+  int64 num_objects = 5;
+  int64 cur_object_num = 6;
 }
 
 message HistChartFetchReq {

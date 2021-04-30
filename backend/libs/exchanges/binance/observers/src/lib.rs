@@ -1,8 +1,9 @@
-mod constants;
 pub mod entities;
+mod pubsub;
 
 use ::std::collections::{HashMap, HashSet};
 use ::std::convert::TryFrom;
+use ::std::io::{Error as IOErr, ErrorKind as IOErrKind, Result as IOResult};
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
@@ -11,38 +12,42 @@ use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::doc;
 use ::mongodb::Database;
 use ::nats::Connection as Broker;
-use ::rmp_serde::to_vec as to_msgpack;
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
+use ::subscribe::PubSub;
 use ::tokio::select;
 use ::tokio::time::{interval, sleep};
 use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
-use self::entities::{BookTicker, SubscribeRequest, SubscribeRequestInner};
 use ::binance_symbols::entities::{ListSymbolStream, Symbol};
+use ::binance_symbols::pubsub::{
+  SymbolAddEventPubSub, SymbolRemovalEventPubSub,
+};
 use ::binance_symbols::recorder::SymbolRecorder;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
-use ::subscribe::to_stream as nats_to_stream;
 use ::types::{GenericResult, TLSWebSocket, ThreadSafeResult};
 
-use self::constants::{
-  SYMBOL_ADD_EVENT, SYMBOL_REMOVE_EVENT, TRADE_OBSERVER_SUB_NAME, WS_ENDPOINT,
-};
+use ::binance_clients::constants::WS_ENDPOINT;
+
+use self::entities::{BookTicker, SubscribeRequest, SubscribeRequestInner};
+use self::pubsub::BookTickerPubSub;
 
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{InitError, MaximumAttemptExceeded, WebsocketError};
 use ::symbol_recorder::SymbolRecorder as SymbolRecorderTrait;
 pub use ::trade_observer::TradeObserver as TradeObserverTrait;
 
-const NUM_SESSION: usize = 10;
+const NUM_SESSION: usize = 5;
 const EVENT_DELAY: Duration = Duration::from_secs(1);
 
 #[derive(Clone)]
 pub struct TradeObserver {
-  broker: Broker,
   logger: Logger,
   recorder: Option<SymbolRecorder>,
   symbols: Vec<Vec<String>>,
+  symbol_add_event: SymbolAddEventPubSub,
+  symbol_del_event: SymbolRemovalEventPubSub,
+  bookticker_pubsub: BookTickerPubSub,
 }
 
 impl TradeObserver {
@@ -56,7 +61,9 @@ impl TradeObserver {
       Some(db) => Some(SymbolRecorder::new(db).await),
     };
     let me = Self {
-      broker,
+      symbol_add_event: SymbolAddEventPubSub::new(broker.clone()),
+      symbol_del_event: SymbolRemovalEventPubSub::new(broker.clone()),
+      bookticker_pubsub: BookTickerPubSub::new(broker.clone()),
       logger,
       recorder,
       symbols: vec![],
@@ -245,25 +252,14 @@ impl TradeObserver {
         Ok(v) => v,
       },
     };
-    let msg = match to_msgpack(&book) {
-      Err(e) => {
-        ::slog::warn!(
-          self.logger,
-          "Failed to encode the book update data: {}",
-          e
-        );
-        return;
-      }
-      Ok(v) => v,
-    };
-    let _ = self.broker.publish(TRADE_OBSERVER_SUB_NAME, &msg[..]);
+    let _ = self.bookticker_pubsub.publish(&book);
   }
 
   async fn handle_websocket_message(
     &mut self,
     socket: &mut TLSWebSocket,
     msg: &wsocket::Message,
-  ) {
+  ) -> IOResult<()> {
     match msg {
       wsocket::Message::Ping(txt) => {
         let _ = socket.send(wsocket::Message::Pong(txt.to_owned())).await;
@@ -286,14 +282,10 @@ impl TradeObserver {
         } else {
           ::slog::warn!(self.logger, "Closing connection...");
         }
-        ::slog::info!(self.logger, "Reconnecting...");
-        *socket = match self.connect().await {
-          Err(e) => {
-            ::slog::error!(self.logger, "Failed to connect: {}", e);
-            return;
-          }
-          Ok(s) => s,
-        };
+        return Err(IOErr::new(
+          IOErrKind::ConnectionAborted,
+          "Unexpected Closed",
+        ));
       }
       wsocket::Message::Pong(_) => {
         ::slog::info!(
@@ -302,6 +294,7 @@ impl TradeObserver {
         );
       }
     }
+    return Ok(());
   }
 
   fn handle_add_symbol(&self, symbol: &Symbol) -> Option<String> {
@@ -318,13 +311,10 @@ impl TradeObserver {
     socket: &mut TLSWebSocket,
   ) -> ThreadSafeResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
-    let (_, symbol_add_event) = nats_to_stream::<Symbol>(
-      self
-        .broker
-        .queue_subscribe(SYMBOL_ADD_EVENT, "trade_observer")?,
-    );
-    let (_, symbol_remove_evnet) =
-      nats_to_stream::<Symbol>(self.broker.subscribe(SYMBOL_REMOVE_EVENT)?);
+    let me = self.clone();
+    let (_, symbol_add_event) =
+      me.symbol_add_event.queue_subscribe("trade_observer")?;
+    let (_, symbol_remove_evnet) = me.symbol_del_event.subscribe()?;
     let (mut symbol_add_event, mut symbol_remove_evnet) =
       (symbol_add_event.boxed(), symbol_remove_evnet.boxed());
     let mut clear_sym_map_flag = false;
@@ -335,12 +325,12 @@ impl TradeObserver {
         Some(symbol) = initial_symbols_stream.next() => {
           add_buf.insert(symbol.symbol);
         }
-        Some(symbol) = symbol_add_event.next() => {
+        Some((symbol, _)) = symbol_add_event.next() => {
           if let Some(symb) = self.handle_add_symbol(&symbol) {
             add_buf.insert(symb);
           }
         },
-        Some(symbol) = symbol_remove_evnet.next() => {
+        Some((symbol, _)) = symbol_remove_evnet.next() => {
           del_buf.insert(symbol.symbol);
         },
         _ = event_delay => {
@@ -373,7 +363,7 @@ impl TradeObserver {
           }
         },
         Some(Ok(msg)) = socket.next() => {
-          self.handle_websocket_message(socket, &msg).await;
+          let _ =  self.handle_websocket_message(socket, &msg).await?;
         }
         else => {break;}
       }
@@ -394,23 +384,22 @@ impl TradeObserver {
 impl TradeObserverTrait for TradeObserver {
   async fn start(&self) -> GenericResult<()> {
     let mut me = self.clone();
-    let mut socket = me.connect().await?;
-    if let Err(e) = me.handle_event(&mut socket).await {
-      ::slog::error!(
-        me.logger,
-        "Failed to open the handler of the trade event: {}",
-        e,
-      );
-    };
+    let mut reconnect_interval = interval(Duration::from_secs(1));
+    loop {
+      let mut socket = me.connect().await?;
+      if let Ok(_) = me.handle_event(&mut socket).await {
+        break;
+      }
+      ::slog::info!(self.logger, "Reconnecting after 1 sec...");
+      reconnect_interval.tick().await;
+    }
     return Ok(());
   }
   async fn subscribe(
     &self,
   ) -> ::std::io::Result<BoxStream<'_, CommonBookTicker>> {
-    let (_, st) = nats_to_stream::<BookTicker<f64>>(
-      self.broker.subscribe(TRADE_OBSERVER_SUB_NAME)?,
-    );
-    let st = st.map(|item| {
+    let (_, st) = self.bookticker_pubsub.subscribe()?;
+    let st = st.map(|(item, _)| {
       let ret: CommonBookTicker = item.into();
       return ret;
     });

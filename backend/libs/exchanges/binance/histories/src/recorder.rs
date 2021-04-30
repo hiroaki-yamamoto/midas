@@ -3,6 +3,7 @@ use ::std::collections::hash_map::HashMap;
 use ::async_trait::async_trait;
 use ::futures::future::{join3, join_all};
 use ::futures::{Stream, StreamExt};
+use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{
   doc, from_document, to_bson, DateTime as MongoDateTime, Document,
 };
@@ -14,17 +15,14 @@ use ::slog::{crit, error, warn, Logger};
 use ::tokio::select;
 use ::tokio::sync::mpsc;
 use ::tokio::task::block_in_place;
+use subscribe::PubSub;
 
 use ::rpc::historical::HistChartProg;
-use ::subscribe::{
-  to_stream as nats_to_stream, to_stream_msg as nats_to_stream_msg, PubSub,
-};
 
-use super::constants::{
-  HIST_FETCHER_FETCH_RESP_SUB_NAME, HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME,
+use super::entities::{Kline, Klines, TradeTime};
+use super::pubsub::{
+  HistFetchRespPubSub, HistProgPartPubSub, RecLatestTradeDatePubSub,
 };
-use super::entities::{Kline, Klines, KlinesWithInfo, TradeTime};
-use super::pubsub::HistProgPartPubSub;
 
 use base_recorder::Recorder;
 use history::HistoryRecorder as HistRecTrait;
@@ -33,7 +31,9 @@ use history::HistoryRecorder as HistRecTrait;
 pub struct HistoryRecorder {
   col: Collection,
   db: Database,
-  broker: NatsConnection,
+  prog_pubsub: HistProgPartPubSub,
+  fetch_resp_pubsub: HistFetchRespPubSub,
+  latest_trade_date_pubsub: RecLatestTradeDatePubSub,
   logger: Logger,
 }
 
@@ -56,7 +56,9 @@ impl HistoryRecorder {
     let ret = Self {
       db,
       col,
-      broker,
+      prog_pubsub: HistProgPartPubSub::new(broker.clone()),
+      fetch_resp_pubsub: HistFetchRespPubSub::new(broker.clone()),
+      latest_trade_date_pubsub: RecLatestTradeDatePubSub::new(broker.clone()),
       logger,
     };
     ret
@@ -121,36 +123,32 @@ impl HistoryRecorder {
     &self,
     senders: Vec<mpsc::UnboundedSender<Klines>>,
   ) {
-    let (_, value_sub) = match self
-      .broker
-      .queue_subscribe(HIST_FETCHER_FETCH_RESP_SUB_NAME, "recorder")
-    {
-      Err(e) => {
-        crit!(
-          self.logger,
-          "Failed to subscribe the response channel: {}",
-          e; "chan_name" => HIST_FETCHER_FETCH_RESP_SUB_NAME,
-        );
-        return;
-      }
-      Ok(v) => nats_to_stream::<KlinesWithInfo>(v),
-    };
+    let (_, value_sub) =
+      match self.fetch_resp_pubsub.queue_subscribe("recorder") {
+        Err(e) => {
+          crit!(
+            self.logger,
+            "Failed to subscribe the response channel: {}",
+            e; "chan_name" => self.fetch_resp_pubsub.get_subject(),
+          );
+          return;
+        }
+        Ok(v) => v,
+      };
     let mut value_sub = Box::pin(value_sub);
     let senders = senders.clone();
-    let broker = self.broker.clone();
     let mut counter: usize = 0;
-    let pubsub = HistProgPartPubSub::new(broker);
     loop {
       select! {
-        Some(klines) = value_sub.next() => {
-          let prog = HistChartProg {
-              symbol: klines.symbol,
-              num_symbols: klines.num_symbols,
-              cur_symbol_num: 1,
-              num_objects: klines.entire_data_len,
-              cur_object_num: 1,
-            };
-          let _ = pubsub.publish(&prog);
+        Some((klines, _)) = value_sub.next() => {
+          let _ = self.prog_pubsub.publish(&HistChartProg {
+            id: ObjectId::new().to_string(),
+            symbol: klines.symbol,
+            num_symbols: klines.num_symbols,
+            cur_symbol_num: 1,
+            num_objects: klines.entire_data_len,
+            cur_object_num: 1,
+          });
           let _ = senders[counter].send(klines.klines);
           counter = (counter + 1) % senders.len();
         },
@@ -161,9 +159,7 @@ impl HistoryRecorder {
 
   async fn spawn_latest_trade_time_request(&self) {
     let me = self.clone();
-    let (_, sub) = match me
-      .broker
-      .queue_subscribe(HIST_RECORDER_LATEST_TRADE_DATE_SUB_NAME, "recorder")
+    let (_, sub) = match me.latest_trade_date_pubsub.queue_subscribe("recorder")
     {
       Err(e) => {
         error!(
@@ -173,7 +169,7 @@ impl HistoryRecorder {
         );
         return;
       }
-      Ok(v) => nats_to_stream_msg::<Vec<String>>(v),
+      Ok(v) => v,
     };
     let mut sub = sub.boxed();
     loop {

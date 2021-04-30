@@ -5,7 +5,6 @@ use ::async_trait::async_trait;
 use ::futures::future::join_all;
 use ::futures::{SinkExt, StreamExt};
 use ::nats::Connection as Broker;
-use ::rmp_serde::to_vec as to_msgpack;
 use ::serde_json::{from_slice as from_json_bin, from_str as from_json_str};
 use ::slog::Logger;
 use ::tokio::select;
@@ -16,31 +15,39 @@ use ::tokio_tungstenite::tungstenite::{
   client::IntoClientRequest, Error as WebSocketError, Message,
 };
 
-use super::constants::{
-  REST_ENDPOINT, USER_STREAM_LISTEN_KEY_SUB_NAME,
-  USER_STREAM_NOTIFICATION_SUB_NAME, USER_STREAM_REAUTH_SUB_NAME, WS_ENDPOINT,
-};
-use super::entities::{
-  CastedUserStreamEvents, ListenKey, ListenKeyPair, RawUserStreamEvents,
-};
+use ::binance_clients::constants::{REST_ENDPOINT, WS_ENDPOINT};
 use ::binance_clients::PubClient;
 
 use ::entities::{APIKey, APIKeyEvent, APIKeyInner};
 use ::errors::{MaximumAttemptExceeded, WebsocketError};
-use ::keychain::KeyChain;
+use ::keychain::pubsub::APIKeyPubSub;
 use ::notification::UserStream as UserStreamTrait;
-use ::subscribe::{to_stream as nats_to_stream, to_stream_raw as n2s_raw};
+use ::subscribe::PubSub;
 use ::types::{GenericResult, TLSWebSocket, ThreadSafeResult};
+
+use super::entities::{
+  CastedUserStreamEvents, ListenKey, ListenKeyPair, RawUserStreamEvents,
+};
+use super::pubsub::{ListenKeyPubSub, NotifyPubSub, ReauthPubSub};
 
 #[derive(Debug, Clone)]
 pub struct UserStream {
-  broker: Broker,
+  key_pubsub: APIKeyPubSub,
+  notify_pubsub: NotifyPubSub,
+  reauth_pubsub: ReauthPubSub,
+  listen_key_pubsub: ListenKeyPubSub,
   logger: Logger,
 }
 
 impl UserStream {
   pub fn new(broker: Broker, logger: Logger) -> Self {
-    return Self { broker, logger };
+    return Self {
+      key_pubsub: APIKeyPubSub::new(broker.clone()),
+      notify_pubsub: NotifyPubSub::new(broker.clone()),
+      reauth_pubsub: ReauthPubSub::new(broker.clone()),
+      listen_key_pubsub: ListenKeyPubSub::new(broker.clone()),
+      logger,
+    };
   }
   async fn init_websocket<S>(
     &self,
@@ -67,10 +74,9 @@ impl UserStream {
     &self,
     uds: RawUserStreamEvents,
   ) -> GenericResult<()> {
-    self.broker.publish(USER_STREAM_NOTIFICATION_SUB_NAME, {
+    let _ = self.notify_pubsub.publish({
       let casted: GenericResult<CastedUserStreamEvents> = uds.into();
-      let casted = casted?;
-      to_msgpack(&casted)?
+      &casted?
     })?;
     return Ok(());
   }
@@ -98,7 +104,7 @@ impl UserStream {
         let _ = socket.close(None).await;
       }
       listen_keys.remove(api_key);
-      let _ = self.broker.publish(USER_STREAM_REAUTH_SUB_NAME, api_key);
+      let _ = self.reauth_pubsub.publish(&api_key);
       return Ok(());
     }
     let socket_opt = sockets
@@ -180,12 +186,10 @@ impl UserStreamTrait for UserStream {
       .json()
       .await?;
     let key = ListenKeyPair::new(resp.listen_key, pub_key.clone());
-    let _ = self
-      .broker
-      .publish(USER_STREAM_LISTEN_KEY_SUB_NAME, to_msgpack(&key)?)?;
+    let _ = self.listen_key_pubsub.publish(&key)?;
     return Ok(());
   }
-  async fn clise_listen_key(
+  async fn close_listen_key(
     &self,
     api_key: &APIKeyInner,
     listen_key: &String,
@@ -201,20 +205,10 @@ impl UserStreamTrait for UserStream {
     return Ok(());
   }
   async fn start(&self) -> GenericResult<()> {
-    let (_, keychain_sub) = KeyChain::subscribe_event(&self.broker).await?;
-    let (_, listen_key_sub) = nats_to_stream::<ListenKeyPair>(
-      self
-        .broker
-        .queue_subscribe(USER_STREAM_LISTEN_KEY_SUB_NAME, "user_stream")?,
-    );
-    let (_, reauth_sub) = n2s_raw(
-      self
-        .broker
-        .queue_subscribe(USER_STREAM_REAUTH_SUB_NAME, "user_stream")?,
-    );
-    let reauth_sub = reauth_sub
-      .map(|msg| String::from_utf8(msg.data))
-      .filter_map(|msg| async { msg.ok() });
+    let (_, keychain_sub) = self.key_pubsub.subscribe()?;
+    let (_, listen_key_sub) =
+      self.listen_key_pubsub.queue_subscribe("user_stream")?;
+    let (_, reauth_sub) = self.reauth_pubsub.queue_subscribe("user_stream")?;
     let mut keychain_sub = keychain_sub.boxed();
     let mut listen_key_sub = listen_key_sub.boxed();
     let mut reauth_sub = reauth_sub.boxed();
@@ -226,7 +220,7 @@ impl UserStreamTrait for UserStream {
     let me = self;
     loop {
       select! {
-        Some(event) = keychain_sub.next() => {
+        Some((event, _)) = keychain_sub.next() => {
           match event {
             APIKeyEvent::Add(APIKey::Binance(api_key)) => {
               let _ = me.get_listen_key(&api_key).await;
@@ -234,13 +228,13 @@ impl UserStreamTrait for UserStream {
             APIKeyEvent::Remove(APIKey::Binance(api_key)) => {
               if let Some(listen_key) = listen_keys.remove(&api_key.pub_key) {
                 sockets.remove(&api_key.pub_key);
-                let _ = me.clise_listen_key(&api_key, &listen_key);
+                let _ = me.close_listen_key(&api_key, &listen_key);
               }
             }
             _ => {},
           }
         },
-        Some(listen_key) = listen_key_sub.next() => {
+        Some((listen_key, _)) = listen_key_sub.next() => {
           let socket = match me.init_websocket(
             format!("{}/{}", WS_ENDPOINT, listen_key.listen_key)
           ).await {
@@ -272,7 +266,7 @@ impl UserStreamTrait for UserStream {
             });
           join_all(result_defer).await;
         },
-        Some(pub_key) = reauth_sub.next() => {
+        Some((pub_key, _)) = reauth_sub.next() => {
           match me.handle_disconnect(&pub_key).await {
             Ok(_) => {},
             Err(e) => {
@@ -292,10 +286,7 @@ impl UserStreamTrait for UserStream {
                 WebSocketError::AlreadyClosed => {
                   sockets.remove(&api_key);
                   listen_keys.remove(&api_key);
-                  let _ = me.broker.publish(
-                    USER_STREAM_REAUTH_SUB_NAME,
-                    api_key
-                  );
+                  let _ = me.reauth_pubsub.publish(&api_key);
                 },
                 _ => ::slog::warn!(me.logger, "Failed to receive payload: {}", e),
               }

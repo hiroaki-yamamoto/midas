@@ -1,3 +1,5 @@
+pub mod pubsub;
+
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::oid::ObjectId;
@@ -5,21 +7,21 @@ use ::mongodb::bson::{doc, from_document, to_document, Document};
 use ::mongodb::error::Result;
 use ::mongodb::options::UpdateModifications;
 use ::mongodb::{Collection, Database};
-use ::nats::subscription::Handler;
 use ::nats::Connection as NatsCon;
-use ::rmp_serde::to_vec as to_msgpack;
+use ::subscribe::PubSub;
 
 use ::rpc::entities::Exchanges;
-use ::subscribe::to_stream as n2s;
 use ::types::{GenericResult, ThreadSafeResult};
 
 use ::base_recorder::Recorder;
 pub use ::entities::APIKey;
 use ::entities::APIKeyEvent;
 
+use self::pubsub::APIKeyPubSub;
+
 #[derive(Debug, Clone)]
 pub struct KeyChain {
-  broker: NatsCon,
+  pubsub: APIKeyPubSub,
   db: Database,
   col: Collection,
 }
@@ -27,7 +29,11 @@ pub struct KeyChain {
 impl KeyChain {
   pub async fn new(broker: NatsCon, db: Database) -> Self {
     let col = db.collection("apiKeyChains");
-    let ret = Self { broker, db, col };
+    let ret = Self {
+      pubsub: APIKeyPubSub::new(broker),
+      db,
+      col,
+    };
     ret.update_indices(&["exchange"]).await;
     return ret;
   }
@@ -39,8 +45,7 @@ impl KeyChain {
     let mut api_key = api_key.clone();
     api_key.inner_mut().id = id.cloned();
     let event = APIKeyEvent::Add(api_key);
-    let msg = to_msgpack(&event)?;
-    let _ = self.broker.publish("apikey", msg)?;
+    let _ = self.pubsub.publish(&event)?;
     return Ok(id.cloned());
   }
 
@@ -103,17 +108,9 @@ impl KeyChain {
     {
       let api_key: APIKey = from_document(doc)?;
       let event = APIKeyEvent::Remove(api_key);
-      let msg = to_msgpack(&event)?;
-      let _ = self.broker.publish("apikey", msg)?;
+      let _ = self.pubsub.publish(&event)?;
     }
     return Ok(());
-  }
-
-  pub async fn subscribe_event(
-    broker: &NatsCon,
-  ) -> ::std::io::Result<(Handler, BoxStream<'_, APIKeyEvent>)> {
-    let (handler, st) = n2s::<APIKeyEvent>(broker.subscribe("apikey")?);
-    return Ok((handler, st.boxed()));
   }
 }
 
