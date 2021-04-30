@@ -37,7 +37,7 @@ use ::errors::{InitError, MaximumAttemptExceeded, WebsocketError};
 use ::symbol_recorder::SymbolRecorder as SymbolRecorderTrait;
 pub use ::trade_observer::TradeObserver as TradeObserverTrait;
 
-const NUM_SESSION: usize = 10;
+const NUM_SESSION: usize = 5;
 const EVENT_DELAY: Duration = Duration::from_secs(1);
 
 #[derive(Clone)]
