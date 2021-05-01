@@ -20,8 +20,8 @@ notification = { path = "../../../rulesets/notification" }
 entities = { path = "../../../rulesets/entities" }
 keychain = { path = "../../../keychain" }
 
-async-trait = "0.1.48"
-nats = "0.9.8"
+async-trait = "0.1.50"
+nats = "0.9.16"
 rmp-serde = "0.15.4"
 serde_json = "1.0.64"
 slog = "2.7.0"
