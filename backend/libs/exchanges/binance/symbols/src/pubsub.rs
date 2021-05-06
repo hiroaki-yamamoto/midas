@@ -1,17 +1,5 @@
 use ::subscribe::pubsub;
 
-use super::entities::Symbol;
+use super::entities::SymbolEvent;
 
-pubsub!(
-  pub,
-  SymbolRemovalEventPubSub,
-  Symbol,
-  "binance.symbol.events.remove"
-);
-
-pubsub!(
-  pub,
-  SymbolAddEventPubSub,
-  Symbol,
-  "binance.symbol.events.remove"
-);
+pubsub!(pub, SymbolEventPubSub, SymbolEvent, "binance.symbol.events");

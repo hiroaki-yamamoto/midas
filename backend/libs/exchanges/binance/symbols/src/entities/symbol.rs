@@ -42,6 +42,8 @@ impl From<Symbol> for SymbolInfo {
   }
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "event_type")]
 pub enum SymbolEvent {
   Add(Symbol),
   Remove(Symbol),

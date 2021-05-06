@@ -22,10 +22,8 @@ use ::tokio::time::{interval, sleep};
 use ::tokio_stream::StreamMap;
 use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
-use ::binance_symbols::entities::{ListSymbolStream, Symbol};
-use ::binance_symbols::pubsub::{
-  SymbolAddEventPubSub, SymbolRemovalEventPubSub,
-};
+use ::binance_symbols::entities::{ListSymbolStream, Symbol, SymbolEvent};
+use ::binance_symbols::pubsub::SymbolEventPubSub;
 use ::binance_symbols::recorder::SymbolRecorder;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::types::{GenericResult, TLSWebSocket, ThreadSafeResult};
@@ -40,25 +38,16 @@ use ::errors::{InitError, MaximumAttemptExceeded, WebsocketError};
 use ::symbol_recorder::SymbolRecorder as SymbolRecorderTrait;
 pub use ::trade_observer::TradeObserver as TradeObserverTrait;
 
-<<<<<<< HEAD
 const NUM_SOCKET: usize = 10;
-=======
-const NUM_SESSION: usize = 5;
->>>>>>> master
 const EVENT_DELAY: Duration = Duration::from_secs(1);
 
 #[derive(Clone)]
 pub struct TradeObserver {
   logger: Logger,
   recorder: Option<SymbolRecorder>,
-<<<<<<< HEAD
-  symbols: HashMap<String, (usize, usize)>,
-=======
-  symbols: Vec<Vec<String>>,
-  symbol_add_event: SymbolAddEventPubSub,
-  symbol_del_event: SymbolRemovalEventPubSub,
+  symbol_event: SymbolEventPubSub,
   bookticker_pubsub: BookTickerPubSub,
->>>>>>> master
+  symbols: HashMap<String, (usize, usize)>,
 }
 
 impl TradeObserver {
@@ -72,8 +61,7 @@ impl TradeObserver {
       Some(db) => Some(SymbolRecorder::new(db).await),
     };
     let me = Self {
-      symbol_add_event: SymbolAddEventPubSub::new(broker.clone()),
-      symbol_del_event: SymbolRemovalEventPubSub::new(broker.clone()),
+      symbol_event: SymbolEventPubSub::new(broker.clone()),
       bookticker_pubsub: BookTickerPubSub::new(broker.clone()),
       logger,
       recorder,
@@ -297,11 +285,8 @@ impl TradeObserver {
   ) -> ThreadSafeResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
     let me = self.clone();
-    let (_, symbol_add_event) =
-      me.symbol_add_event.queue_subscribe("trade_observer")?;
-    let (_, symbol_remove_evnet) = me.symbol_del_event.subscribe()?;
-    let (mut symbol_add_event, mut symbol_remove_evnet) =
-      (symbol_add_event.boxed(), symbol_remove_evnet.boxed());
+    let (handler, symbol_event) =
+      me.symbol_event.queue_subscribe("trade_observer")?;
     let mut clear_sym_map_flag = false;
     let mut initial_symbols_stream = self.init().await?;
     loop {
@@ -310,13 +295,17 @@ impl TradeObserver {
         Some(symbol) = initial_symbols_stream.next() => {
           add_buf.insert(symbol.symbol);
         }
-        Some((symbol, _)) = symbol_add_event.next() => {
-          if let Some(symb) = self.handle_add_symbol(&symbol) {
-            add_buf.insert(symb);
+        Some((event, _)) = symbol_event.next() => {
+          match event {
+            SymbolEvent::Add(symbol) => {
+              if let Some(symb) = self.handle_add_symbol(&symbol) {
+                add_buf.insert(symb);
+              }
+            },
+            SymbolEvent::Remove(symbol) => {
+              del_buf.insert(symbol.symbol);
+            }
           }
-        },
-        Some((symbol, _)) = symbol_remove_evnet.next() => {
-          del_buf.insert(symbol.symbol);
         },
         _ = event_delay => {
           if clear_sym_map_flag {
@@ -347,7 +336,7 @@ impl TradeObserver {
             );
           }
         },
-        Some((index, Ok(msg))) = socket.next() => {
+        Some((index, Ok(msg))) = sockets.next() => {
           let _ =  self.handle_websocket_message(socket, &msg).await?;
         }
         else => {break;}
