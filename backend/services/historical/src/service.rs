@@ -87,7 +87,7 @@ impl Service {
             }
             Ok((subsc_handler, mut resp)) => loop {
               select! {
-                Some(item) = resp.next() => {
+                Some((item, _)) = resp.next() => {
                   match item {
                     KlineFetchStatus::ProgressChanged {
                       exchange: _,

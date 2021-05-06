@@ -21,7 +21,7 @@ pub fn to_stream_raw(
   return (handler, stream);
 }
 
-pub fn to_stream_msg<T>(
+pub fn to_stream<T>(
   sub: Subscription,
 ) -> (Handler, impl Stream<Item = (T, Message)> + Send + Sync)
 where
@@ -30,19 +30,6 @@ where
   let (handler, stream) = to_stream_raw(sub);
   let stream = stream
     .map(|msg| from_msgpack::<T>(&msg.data).map(|d| (d, msg)))
-    .filter_map(|res| async { res.ok() });
-  return (handler, stream);
-}
-
-pub fn to_stream<T>(
-  sub: Subscription,
-) -> (Handler, impl Stream<Item = T> + Send + Sync)
-where
-  T: DeserializeOwned + Send + Sync,
-{
-  let (handler, stream) = to_stream_raw(sub);
-  let stream = stream
-    .map(|msg| from_msgpack::<T>(&msg.data))
     .filter_map(|res| async { res.ok() });
   return (handler, stream);
 }

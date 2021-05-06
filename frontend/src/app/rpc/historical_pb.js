@@ -115,11 +115,12 @@ proto.historical.HistChartProg.prototype.toObject = function(opt_includeInstance
  */
 proto.historical.HistChartProg.toObject = function(includeInstance, msg) {
   var f, obj = {
-    symbol: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    numSymbols: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    curSymbolNum: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    numObjects: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    curObjectNum: jspb.Message.getFieldWithDefault(msg, 5, 0)
+    id: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    symbol: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    numSymbols: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    curSymbolNum: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    numObjects: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    curObjectNum: jspb.Message.getFieldWithDefault(msg, 6, 0)
   };
 
   if (includeInstance) {
@@ -158,21 +159,25 @@ proto.historical.HistChartProg.deserializeBinaryFromReader = function(msg, reade
     switch (field) {
     case 1:
       var value = /** @type {string} */ (reader.readString());
-      msg.setSymbol(value);
+      msg.setId(value);
       break;
     case 2:
-      var value = /** @type {number} */ (reader.readInt64());
-      msg.setNumSymbols(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setSymbol(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readInt64());
-      msg.setCurSymbolNum(value);
+      msg.setNumSymbols(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readInt64());
-      msg.setNumObjects(value);
+      msg.setCurSymbolNum(value);
       break;
     case 5:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setNumObjects(value);
+      break;
+    case 6:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setCurObjectNum(value);
       break;
@@ -205,38 +210,45 @@ proto.historical.HistChartProg.prototype.serializeBinary = function() {
  */
 proto.historical.HistChartProg.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getSymbol();
+  f = message.getId();
   if (f.length > 0) {
     writer.writeString(
       1,
       f
     );
   }
-  f = message.getNumSymbols();
-  if (f !== 0) {
-    writer.writeInt64(
+  f = message.getSymbol();
+  if (f.length > 0) {
+    writer.writeString(
       2,
       f
     );
   }
-  f = message.getCurSymbolNum();
+  f = message.getNumSymbols();
   if (f !== 0) {
     writer.writeInt64(
       3,
       f
     );
   }
-  f = message.getNumObjects();
+  f = message.getCurSymbolNum();
   if (f !== 0) {
     writer.writeInt64(
       4,
       f
     );
   }
-  f = message.getCurObjectNum();
+  f = message.getNumObjects();
   if (f !== 0) {
     writer.writeInt64(
       5,
+      f
+    );
+  }
+  f = message.getCurObjectNum();
+  if (f !== 0) {
+    writer.writeInt64(
+      6,
       f
     );
   }
@@ -244,10 +256,10 @@ proto.historical.HistChartProg.serializeBinaryToWriter = function(message, write
 
 
 /**
- * optional string symbol = 1;
+ * optional string id = 1;
  * @return {string}
  */
-proto.historical.HistChartProg.prototype.getSymbol = function() {
+proto.historical.HistChartProg.prototype.getId = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
@@ -256,34 +268,34 @@ proto.historical.HistChartProg.prototype.getSymbol = function() {
  * @param {string} value
  * @return {!proto.historical.HistChartProg} returns this
  */
-proto.historical.HistChartProg.prototype.setSymbol = function(value) {
+proto.historical.HistChartProg.prototype.setId = function(value) {
   return jspb.Message.setProto3StringField(this, 1, value);
 };
 
 
 /**
- * optional int64 num_symbols = 2;
+ * optional string symbol = 2;
+ * @return {string}
+ */
+proto.historical.HistChartProg.prototype.getSymbol = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.historical.HistChartProg} returns this
+ */
+proto.historical.HistChartProg.prototype.setSymbol = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional int64 num_symbols = 3;
  * @return {number}
  */
 proto.historical.HistChartProg.prototype.getNumSymbols = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.historical.HistChartProg} returns this
- */
-proto.historical.HistChartProg.prototype.setNumSymbols = function(value) {
-  return jspb.Message.setProto3IntField(this, 2, value);
-};
-
-
-/**
- * optional int64 cur_symbol_num = 3;
- * @return {number}
- */
-proto.historical.HistChartProg.prototype.getCurSymbolNum = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -292,16 +304,16 @@ proto.historical.HistChartProg.prototype.getCurSymbolNum = function() {
  * @param {number} value
  * @return {!proto.historical.HistChartProg} returns this
  */
-proto.historical.HistChartProg.prototype.setCurSymbolNum = function(value) {
+proto.historical.HistChartProg.prototype.setNumSymbols = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional int64 num_objects = 4;
+ * optional int64 cur_symbol_num = 4;
  * @return {number}
  */
-proto.historical.HistChartProg.prototype.getNumObjects = function() {
+proto.historical.HistChartProg.prototype.getCurSymbolNum = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
@@ -310,16 +322,16 @@ proto.historical.HistChartProg.prototype.getNumObjects = function() {
  * @param {number} value
  * @return {!proto.historical.HistChartProg} returns this
  */
-proto.historical.HistChartProg.prototype.setNumObjects = function(value) {
+proto.historical.HistChartProg.prototype.setCurSymbolNum = function(value) {
   return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional int64 cur_object_num = 5;
+ * optional int64 num_objects = 5;
  * @return {number}
  */
-proto.historical.HistChartProg.prototype.getCurObjectNum = function() {
+proto.historical.HistChartProg.prototype.getNumObjects = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
@@ -328,8 +340,26 @@ proto.historical.HistChartProg.prototype.getCurObjectNum = function() {
  * @param {number} value
  * @return {!proto.historical.HistChartProg} returns this
  */
-proto.historical.HistChartProg.prototype.setCurObjectNum = function(value) {
+proto.historical.HistChartProg.prototype.setNumObjects = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
+};
+
+
+/**
+ * optional int64 cur_object_num = 6;
+ * @return {number}
+ */
+proto.historical.HistChartProg.prototype.getCurObjectNum = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.historical.HistChartProg} returns this
+ */
+proto.historical.HistChartProg.prototype.setCurObjectNum = function(value) {
+  return jspb.Message.setProto3IntField(this, 6, value);
 };
 
 

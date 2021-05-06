@@ -7,7 +7,7 @@ use ::types::{GenericResult, ThreadSafeResult};
 pub trait UserStream {
   async fn get_listen_key(&self, api_key: &APIKeyInner)
     -> ThreadSafeResult<()>;
-  async fn clise_listen_key(
+  async fn close_listen_key(
     &self,
     api_key: &APIKeyInner,
     listen_key: &String,

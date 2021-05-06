@@ -59,8 +59,8 @@ impl SymbolFetcherTrait for SymbolFetcher {
       let info: ExchangeInfo = resp.json().await?;
       let new_symbols = info.symbols.clone();
       let update_event_manager = SymbolUpdateEventManager::new(
-        &self.log,
-        &self.broker,
+        self.log.clone(),
+        self.broker.clone(),
         new_symbols.clone(),
         old_symbols,
       );

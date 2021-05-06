@@ -21,8 +21,7 @@ entities = { path = "../../../rulesets/entities" }
 keychain = { path = "../../../keychain" }
 
 async-trait = "0.1.50"
-features = "0.10.0"
-nats = "0.9.14"
+nats = "0.9.16"
 rmp-serde = "0.15.4"
 serde_json = "1.0.64"
 slog = "2.7.0"

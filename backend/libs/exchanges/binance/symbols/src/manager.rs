@@ -1,23 +1,23 @@
 use ::std::collections::HashSet;
 
 use ::nats::Connection as NatsCon;
-use ::rmp_serde::to_vec as to_msgpack;
 use ::slog::Logger;
 
-use super::constants::{SYMBOL_ADD_EVENT, SYMBOL_REMOVE_EVENT};
-
 use super::entities::Symbol;
+use super::pubsub::{SymbolAddEventPubSub, SymbolRemovalEventPubSub};
+use ::subscribe::PubSub;
 
 #[derive(Debug, Clone)]
-pub struct SymbolUpdateEventManager<'s, 't> {
+pub struct SymbolUpdateEventManager {
   pub to_add: Vec<Symbol>,
   pub to_remove: Vec<Symbol>,
-  pub broker: &'t NatsCon,
-  pub log: &'s Logger,
+  pub add_event: SymbolAddEventPubSub,
+  pub del_event: SymbolRemovalEventPubSub,
+  pub log: Logger,
 }
 
-impl<'s, 't> SymbolUpdateEventManager<'s, 't> {
-  pub fn new<S, T>(log: &'s Logger, broker: &'t NatsCon, new: S, old: T) -> Self
+impl SymbolUpdateEventManager {
+  pub fn new<S, T>(log: Logger, broker: NatsCon, new: S, old: T) -> Self
   where
     S: IntoIterator<Item = Symbol> + Clone,
     T: IntoIterator<Item = Symbol> + Clone,
@@ -42,27 +42,14 @@ impl<'s, 't> SymbolUpdateEventManager<'s, 't> {
       log,
       to_add,
       to_remove,
-      broker,
+      add_event: SymbolAddEventPubSub::new(broker.clone()),
+      del_event: SymbolRemovalEventPubSub::new(broker.clone()),
     };
   }
 
   pub async fn publish_changes(&self) {
     for add_item in &self.to_add[..] {
-      let msg = match to_msgpack(&add_item) {
-        Err(e) => {
-          ::slog::warn!(
-            self.log,
-            "Failed to encode symbol addition event message: {}",
-            e
-          );
-          return;
-        }
-        Ok(v) => v,
-      };
-      if let Err(e) = self
-        .broker
-        .publish(SYMBOL_ADD_EVENT, msg.as_slice().to_owned())
-      {
+      if let Err(e) = self.add_event.publish(&add_item) {
         ::slog::warn!(
           self.log,
           "Failed to publish the newly added symbol";
@@ -72,21 +59,7 @@ impl<'s, 't> SymbolUpdateEventManager<'s, 't> {
       };
     }
     for del_item in &self.to_remove[..] {
-      let msg = match to_msgpack(&del_item) {
-        Err(e) => {
-          ::slog::warn!(
-            self.log,
-            "Failed to encode symbol deletion event message: {}",
-            e
-          );
-          return;
-        }
-        Ok(v) => v,
-      };
-      if let Err(e) = self
-        .broker
-        .publish(SYMBOL_REMOVE_EVENT, msg.as_slice().to_owned())
-      {
+      if let Err(e) = self.del_event.publish(&del_item) {
         ::slog::warn!(
           self.log,
           "Failed to publish the deleted symbol";

@@ -357,7 +357,6 @@ dependencies = [
  "binance_symbols",
  "entities",
  "errors",
- "features",
  "futures",
  "keychain",
  "mongodb",
@@ -998,15 +997,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "features"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83072b3c84e55f9d0c0ff36a4575d0fd2e543ae4a56e04e7f5a9222188d574e3"
-dependencies = [
- "bitflags",
-]
-
-[[package]]
 name = "fixedbitset"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1343,7 +1333,6 @@ dependencies = [
 name = "historical_service"
 version = "0.1.0"
 dependencies = [
- "async-stream",
  "binance_histories",
  "binance_symbols",
  "clap",
@@ -1653,9 +1642,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.93"
+version = "0.2.94"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9385f66bf6105b241aa65a61cb923ef20efc665cb9f9bb50ac2f0c4b7f378d41"
+checksum = "18794a8ad5b29321f790b55d93dfba91e125cb1a9edbd4f8e3150acc771c1a5e"
 
 [[package]]
 name = "linked-hash-map"
@@ -3647,7 +3636,6 @@ dependencies = [
  "tokio 1.5.0",
  "tokio-tungstenite 0.14.0",
  "url",
- "warp",
 ]
 
 [[package]]
