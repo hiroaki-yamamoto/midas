@@ -41,3 +41,8 @@ impl From<Symbol> for SymbolInfo {
     };
   }
 }
+
+pub enum SymbolEvent {
+  Add(Symbol),
+  Remove(Symbol),
+}

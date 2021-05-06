@@ -6,8 +6,10 @@ use ::std::convert::TryFrom;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
+use ::futures::future::join_all;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{BoxStream, StreamExt};
+use ::futures::{Future, FutureExt};
 use ::mongodb::bson::doc;
 use ::mongodb::Database;
 use ::nats::Connection as Broker;
@@ -16,6 +18,7 @@ use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
 use ::tokio::select;
 use ::tokio::time::{interval, sleep};
+use ::tokio_stream::StreamMap;
 use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
 use self::entities::{BookTicker, SubscribeRequest, SubscribeRequestInner};
@@ -34,7 +37,7 @@ use ::errors::{InitError, MaximumAttemptExceeded, WebsocketError};
 use ::symbol_recorder::SymbolRecorder as SymbolRecorderTrait;
 pub use ::trade_observer::TradeObserver as TradeObserverTrait;
 
-const NUM_SESSION: usize = 10;
+const NUM_SOCKET: usize = 10;
 const EVENT_DELAY: Duration = Duration::from_secs(1);
 
 #[derive(Clone)]
@@ -42,7 +45,7 @@ pub struct TradeObserver {
   broker: Broker,
   logger: Logger,
   recorder: Option<SymbolRecorder>,
-  symbols: Vec<Vec<String>>,
+  symbols: HashMap<String, (usize, usize)>,
 }
 
 impl TradeObserver {
@@ -59,46 +62,20 @@ impl TradeObserver {
       broker,
       logger,
       recorder,
-      symbols: vec![],
+      symbols: HashMap::new(),
     };
     return me;
   }
 
-  fn add_symbol(&mut self, symbol: &String) -> usize {
-    if self.symbols.len() < NUM_SESSION {
-      self.symbols.push(vec![symbol.clone()]);
-      return self.symbols.len() - 1;
-    }
-    let (index, most_bored) = self
-      .symbols
-      .iter_mut()
-      .enumerate()
-      .min_by_key(|(_, x)| x.len())
-      .unwrap();
-    most_bored.push(symbol.clone());
-    return index;
-  }
-
-  fn get_symbol_index(&self, symbol: &String) -> Option<(usize, usize)> {
-    for (index, symbols) in self.symbols.iter().enumerate() {
-      match symbols.iter().position(|s| s == symbol) {
-        None => {
-          continue;
-        }
-        Some(pos) => return Some((index, pos)),
-      }
-    }
-    return None;
-  }
-
   async fn init_socket(&self) -> Result<TLSWebSocket, WebsocketError> {
-    let (websocket, resp) =
-      connect_async(WS_ENDPOINT)
-        .await
-        .map_err(|err| WebsocketError {
+    let (websocket, resp) = connect_async(WS_ENDPOINT)
+      .then(|res| async {
+        res.map_err(|err| WebsocketError {
           msg: Some(err.to_string()),
           status: None,
-        })?;
+        })
+      })
+      .await?;
     let status = resp.status();
     if !status.is_informational() {
       return Err(WebsocketError {
@@ -109,7 +86,7 @@ impl TradeObserver {
     return Ok(websocket);
   }
 
-  async fn connect(&mut self) -> GenericResult<TLSWebSocket> {
+  async fn connect(&mut self) -> Result<TLSWebSocket, MaximumAttemptExceeded> {
     let mut interval =
       interval(Duration::from_secs(DEFAULT_RECONNECT_INTERVAL as u64));
     for _ in 0..20 {
@@ -126,7 +103,7 @@ impl TradeObserver {
       };
       return Ok(socket);
     }
-    return Err(Box::new(MaximumAttemptExceeded {}));
+    return Err(MaximumAttemptExceeded {});
   }
 
   async fn subscribe<T>(
@@ -315,7 +292,7 @@ impl TradeObserver {
 
   async fn handle_event(
     &mut self,
-    socket: &mut TLSWebSocket,
+    sockets: &mut StreamMap<usize, &mut TLSWebSocket>,
   ) -> ThreadSafeResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
     let (_, symbol_add_event) = nats_to_stream::<Symbol>(
@@ -372,8 +349,8 @@ impl TradeObserver {
             );
           }
         },
-        Some(Ok(msg)) = socket.next() => {
-          self.handle_websocket_message(socket, &msg).await;
+        Some((index, Ok(msg))) = sockets.next() => {
+          self.handle_websocket_message(sockets, &msg).await;
         }
         else => {break;}
       }
@@ -394,8 +371,16 @@ impl TradeObserver {
 impl TradeObserverTrait for TradeObserver {
   async fn start(&self) -> GenericResult<()> {
     let mut me = self.clone();
-    let mut socket = me.connect().await?;
-    if let Err(e) = me.handle_event(&mut socket).await {
+    let mut sockets = vec![];
+    for _ in 0..NUM_SOCKET {
+      sockets.push(me.connect());
+    }
+    let sockets = join_all(sockets).await;
+    let mut socket_map = StreamMap::new();
+    for (index, socket) in sockets.into_iter().enumerate() {
+      socket_map.insert(index, &mut socket?);
+    }
+    if let Err(e) = me.handle_event(&mut socket_map).await {
       ::slog::error!(
         me.logger,
         "Failed to open the handler of the trade event: {}",
