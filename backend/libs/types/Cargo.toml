@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 errors = { path = "../errors" }
 
-url = "2.2.1"
+url = "2.2.2"
 serde = { version = "1.0.125", features = ["derive"] }
 tokio = { version = "1.5.0", features = ["sync", "net"] }
 chrono = "0.4.19"
