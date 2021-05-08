@@ -11,4 +11,4 @@ err-derive = "0.3.0"
 serde = { version = "1.0.125", features = ["derive"] }
 slog = "2.7.0"
 slog_derive = "0.2.0"
-url = "2.2.1"
+url = "2.2.2"

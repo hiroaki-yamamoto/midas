@@ -1463,10 +1463,15 @@
   resolved "https://registry.yarnpkg.com/@types/google-protobuf/-/google-protobuf-3.15.2.tgz#70753e948cabeb416d71299dc35c3f562a10fb0f"
   integrity sha512-ubeqvw7sl6CdgeiIilsXB2jIFoD/D0F+/LIEp7xEBEXRNtDJcf05FRINybsJtL7GlkWOUVn6gJs2W9OF+xI6lg==
 
-"@types/jasmine@*", "@types/jasmine@~3.6.0":
+"@types/jasmine@*":
   version "3.6.10"
   resolved "https://registry.yarnpkg.com/@types/jasmine/-/jasmine-3.6.10.tgz#c49d5660bda6e935782e5c83deb1d3b6efb3fac6"
   integrity sha512-yfCl7JGtIc5LjScFpeIGBBNhJFkJdAAcsAnAd9ZRHwzh+sR2zkt257BKkTCF5VpJ8wMPnzzZ8QatRdXM8tqpKA==
+
+"@types/jasmine@~3.7.0":
+  version "3.7.1"
+  resolved "https://registry.yarnpkg.com/@types/jasmine/-/jasmine-3.7.1.tgz#35b86511a389673ac1a706c6010b35788a0d998d"
+  integrity sha512-MP1bcwS0MXQSKPBd20wv0rqF+GOfHTchz4mKFkS4ajAmz2oYwhOpSE9FPe611TOOarA061itZwUQUYRI5mPJsA==
 
 "@types/jasminewd2@~2.0.3":
   version "2.0.8"
