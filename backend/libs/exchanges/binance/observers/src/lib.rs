@@ -26,6 +26,7 @@ use ::binance_symbols::entities::{ListSymbolStream, Symbol, SymbolEvent};
 use ::binance_symbols::pubsub::SymbolEventPubSub;
 use ::binance_symbols::recorder::SymbolRecorder;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
+use ::errors::EmptyError;
 use ::types::{GenericResult, TLSWebSocket, ThreadSafeResult};
 
 use ::binance_clients::constants::WS_ENDPOINT;
@@ -47,7 +48,7 @@ pub struct TradeObserver {
   recorder: Option<SymbolRecorder>,
   symbol_event: SymbolEventPubSub,
   bookticker_pubsub: BookTickerPubSub,
-  symbols: HashMap<String, (usize, usize)>,
+  add_symbol_count: usize,
 }
 
 impl TradeObserver {
@@ -63,9 +64,9 @@ impl TradeObserver {
     let me = Self {
       symbol_event: SymbolEventPubSub::new(broker.clone()),
       bookticker_pubsub: BookTickerPubSub::new(broker.clone()),
+      add_symbol_count: 0,
       logger,
       recorder,
-      symbols: HashMap::new(),
     };
     return me;
   }
@@ -111,32 +112,31 @@ impl TradeObserver {
 
   async fn subscribe<T>(
     &mut self,
-    socket: &mut TLSWebSocket,
+    sockets: &mut StreamMap<usize, TLSWebSocket>,
+    symbol_indices: &mut HashMap<String, (usize, usize)>,
     symbols: T,
   ) -> ThreadSafeResult<()>
   where
     T: Iterator<Item = String>,
   {
-    let mut map: HashMap<usize, Vec<String>> = HashMap::new();
+    let mut to_subscribe: HashMap<usize, Vec<String>> = HashMap::new();
     for symbol in symbols {
-      let index = self.add_symbol(&symbol);
-      let symbol = symbol.clone();
-      match map.get_mut(&index) {
-        None => {
-          map.insert(index, vec![symbol]);
-        }
-        Some(a) => {
-          a.push(symbol);
-        }
-      }
+      let index = self.add_symbol_count;
+      let symbols = to_subscribe.entry(index).or_insert(vec![]);
+      symbol_indices.insert(symbol.clone(), (index, 0));
+      symbols.push(symbol);
+      self.add_symbol_count += 1;
+      self.add_symbol_count %= sockets.len();
     }
-    let mut timer = interval(Duration::from_secs(1));
-    for (id, symbols) in map.into_iter() {
+    for (socket_id, socket) in sockets.iter_mut() {
+      let symbols = to_subscribe.get(socket_id).ok_or(EmptyError {
+        field: socket_id.to_string(),
+      })?;
       let params: Vec<String> = symbols
         .into_iter()
         .map(|item| format!("{}@bookTicker", item.to_lowercase()))
         .collect();
-      let id = id as u64;
+      let id = 0;
       let req = SubscribeRequestInner { id, params };
       let req = SubscribeRequest::Subscribe(req);
       ::slog::debug!(self.logger, "Subscribe: {:?}", &req);
@@ -144,14 +144,13 @@ impl TradeObserver {
       let req = String::from_utf8(req)?;
       let _ = socket.send(wsocket::Message::Text(req)).await;
       let _ = socket.flush().await;
-      let _ = timer.tick().await;
     }
     return Ok(());
   }
 
   async fn unsubscribe<T>(
     &mut self,
-    socket: &mut TLSWebSocket,
+    socket: &mut StreamMap<usize, &mut TLSWebSocket>,
     symbols: T,
   ) -> ThreadSafeResult<()>
   where
@@ -230,7 +229,7 @@ impl TradeObserver {
 
   async fn handle_websocket_message(
     &mut self,
-    socket: &mut TLSWebSocket,
+    socket: &mut StreamMap<usize, TLSWebSocket>,
     msg: &wsocket::Message,
   ) -> IOResult<()> {
     match msg {
@@ -270,25 +269,25 @@ impl TradeObserver {
     return Ok(());
   }
 
-  fn handle_add_symbol(&self, symbol: &Symbol) -> Option<String> {
-    if symbol.status != "TRADING"
-      || self.get_symbol_index(&symbol.symbol).is_some()
-    {
-      return None;
-    }
-    return Some(symbol.symbol.clone());
+  fn is_symbol_fit(
+    &self,
+    symbol_indices: &HashMap<String, (usize, usize)>,
+    symbol: &Symbol,
+  ) -> bool {
+    return symbol.status == "TRADING"
+      && symbol_indices.get(&symbol.symbol).is_none();
   }
 
   async fn handle_event(
     &mut self,
-    sockets: &mut StreamMap<usize, &mut TLSWebSocket>,
+    sockets: &mut StreamMap<usize, TLSWebSocket>,
   ) -> ThreadSafeResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
-    let me = self.clone();
-    let (handler, symbol_event) =
-      me.symbol_event.queue_subscribe("trade_observer")?;
+    let (handler, mut symbol_event) =
+      self.symbol_event.queue_subscribe("trade_observer")?;
     let mut clear_sym_map_flag = false;
     let mut initial_symbols_stream = self.init().await?;
+    let mut symbol_indices: HashMap<String, (usize, usize)> = HashMap::new();
     loop {
       let event_delay = sleep(EVENT_DELAY);
       select! {
@@ -298,8 +297,8 @@ impl TradeObserver {
         Some((event, _)) = symbol_event.next() => {
           match event {
             SymbolEvent::Add(symbol) => {
-              if let Some(symb) = self.handle_add_symbol(&symbol) {
-                add_buf.insert(symb);
+              if self.is_symbol_fit(&symbol_indices, &symbol) {
+                add_buf.insert(symbol.symbol);
               }
             },
             SymbolEvent::Remove(symbol) => {
@@ -309,26 +308,32 @@ impl TradeObserver {
         },
         _ = event_delay => {
           if clear_sym_map_flag {
-            let symbols = self.symbols.to_owned().into_iter().flatten();
-            if let Err(e) = self.unsubscribe(socket, symbols).await {
+            let symbols = symbol_indices.keys().cloned();
+            if let Err(e) = self.unsubscribe(
+              sockets, &mut symbol_indices, symbols
+            ).await {
               ::slog::warn!(
                 self.logger,
                 "Got an error while unsubscribing the symbol (init): {}",
                 e
               );
             } else {
-              self.symbols.clear();
+              symbol_indices.clear();
             }
             clear_sym_map_flag = false;
           }
-          if let Err(e) = self.subscribe(socket, add_buf.drain()).await {
+          if let Err(e) = self.subscribe(
+            sockets, &mut symbol_indices, add_buf.drain()
+          ).await {
             ::slog::warn!(
               self.logger,
               "Got an error while subscribing the symbol: {}",
               e
             );
           }
-          if let Err(e) = self.unsubscribe(socket, del_buf.drain()).await {
+          if let Err(e) = self.unsubscribe(
+            sockets, &mut symbol_indices, del_buf.drain()
+          ).await {
             ::slog::warn!(
               self.logger,
               "Got an error while unsubscribing the symbol: {}",
@@ -337,7 +342,7 @@ impl TradeObserver {
           }
         },
         Some((index, Ok(msg))) = sockets.next() => {
-          let _ =  self.handle_websocket_message(socket, &msg).await?;
+          let _ =  self.handle_websocket_message(sockets, &msg).await?;
         }
         else => {break;}
       }
@@ -365,7 +370,7 @@ impl TradeObserverTrait for TradeObserver {
     let sockets = join_all(sockets).await;
     let mut socket_map = StreamMap::new();
     for (index, socket) in sockets.into_iter().enumerate() {
-      socket_map.insert(index, &mut socket?);
+      socket_map.insert(index, socket?);
     }
     if let Err(e) = me.handle_event(&mut socket_map).await {
       ::slog::error!(
