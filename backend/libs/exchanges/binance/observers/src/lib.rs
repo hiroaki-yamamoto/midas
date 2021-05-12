@@ -7,7 +7,7 @@ use ::std::io::{Error as IOErr, ErrorKind as IOErrKind, Result as IOResult};
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::futures::future::join_all;
+use ::futures::future::{join_all, BoxFuture};
 use ::futures::sink::SinkExt;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::futures::{Future, FutureExt};
@@ -150,7 +150,8 @@ impl TradeObserver {
 
   async fn unsubscribe<T>(
     &mut self,
-    socket: &mut StreamMap<usize, &mut TLSWebSocket>,
+    socket: &mut StreamMap<usize, TLSWebSocket>,
+    symbol_indicies: &mut HashMap<String, (usize, usize)>,
     symbols: T,
   ) -> ThreadSafeResult<()>
   where
@@ -158,43 +159,32 @@ impl TradeObserver {
   {
     let mut map: HashMap<usize, Vec<String>> = HashMap::new();
     for symbol in symbols {
-      match self.get_symbol_index(&symbol) {
+      let socket_id = match symbol_indicies.remove(&symbol) {
         None => {
           continue;
         }
-        Some((id, col_index)) => {
-          let symbol = symbol.clone();
-          match map.get_mut(&id) {
-            None => {
-              map.insert(id, vec![symbol]);
-            }
-            Some(v) => {
-              v.push(symbol);
-            }
-          }
-          if let Some(a) = self.symbols.get_mut(id) {
-            a.remove(col_index);
-          }
-        }
+        Some((sid, _)) => sid,
       };
+      map.entry(socket_id).or_insert(vec![]).push(symbol);
     }
-    let mut timer = interval(Duration::from_secs(1));
-    for (id, symbols) in map.into_iter() {
+    for (id, socket) in socket.iter_mut() {
+      let symbols = match map.get(&id) {
+        None => {
+          continue;
+        }
+        Some(symbols) => symbols,
+      };
       let params: Vec<String> = symbols
         .into_iter()
         .map(|item| format!("{}@bookTicker", item.to_lowercase()))
         .collect();
-      let req = SubscribeRequestInner {
-        id: id as u64,
-        params,
-      };
+      let req = SubscribeRequestInner { id: 0, params };
       let req = SubscribeRequest::Unsubscribe(req);
       ::slog::debug!(self.logger, "Unsubscribe: {:?}", &req);
       let req = to_json(&req)?;
       let req = String::from_utf8(req)?;
       let _ = socket.send(wsocket::Message::Text(req)).await;
       let _ = socket.flush().await;
-      let _ = timer.tick().await;
     }
     return Ok(());
   }
@@ -229,7 +219,7 @@ impl TradeObserver {
 
   async fn handle_websocket_message(
     &mut self,
-    socket: &mut StreamMap<usize, TLSWebSocket>,
+    socket: &mut TLSWebSocket,
     msg: &wsocket::Message,
   ) -> IOResult<()> {
     match msg {
@@ -283,8 +273,9 @@ impl TradeObserver {
     sockets: &mut StreamMap<usize, TLSWebSocket>,
   ) -> ThreadSafeResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
+    let nats_symbol = self.symbol_event.clone();
     let (handler, mut symbol_event) =
-      self.symbol_event.queue_subscribe("trade_observer")?;
+      nats_symbol.queue_subscribe("trade_observer")?;
     let mut clear_sym_map_flag = false;
     let mut initial_symbols_stream = self.init().await?;
     let mut symbol_indices: HashMap<String, (usize, usize)> = HashMap::new();
@@ -308,7 +299,8 @@ impl TradeObserver {
         },
         _ = event_delay => {
           if clear_sym_map_flag {
-            let symbols = symbol_indices.keys().cloned();
+            let symbols = symbol_indices.clone();
+            let symbols = symbols.keys().cloned();
             if let Err(e) = self.unsubscribe(
               sockets, &mut symbol_indices, symbols
             ).await {
@@ -342,7 +334,11 @@ impl TradeObserver {
           }
         },
         Some((index, Ok(msg))) = sockets.next() => {
-          let _ =  self.handle_websocket_message(sockets, &msg).await?;
+          let socket = match sockets.iter_mut().find(|(k, _)| *k == index) {
+            None => continue,
+            Some((_, v)) => v,
+          };
+          let _ =  self.handle_websocket_message(socket, &msg).await?;
         }
         else => {break;}
       }
@@ -363,10 +359,8 @@ impl TradeObserver {
 impl TradeObserverTrait for TradeObserver {
   async fn start(&self) -> GenericResult<()> {
     let mut me = self.clone();
-    let mut sockets = vec![];
-    for _ in 0..NUM_SOCKET {
-      sockets.push(me.connect());
-    }
+    let sockets: Vec<BoxFuture<Result<TLSWebSocket, MaximumAttemptExceeded>>> =
+      (0..NUM_SOCKET).map(|_| me.connect().boxed()).collect();
     let sockets = join_all(sockets).await;
     let mut socket_map = StreamMap::new();
     for (index, socket) in sockets.into_iter().enumerate() {
@@ -374,7 +368,7 @@ impl TradeObserverTrait for TradeObserver {
     }
     if let Err(e) = me.handle_event(&mut socket_map).await {
       ::slog::error!(
-        me.logger,
+        self.logger,
         "Failed to open the handler of the trade event: {}",
         e,
       );
