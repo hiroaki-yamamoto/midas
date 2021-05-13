@@ -3,16 +3,15 @@ use ::std::collections::HashSet;
 use ::nats::Connection as NatsCon;
 use ::slog::Logger;
 
-use super::entities::Symbol;
-use super::pubsub::{SymbolAddEventPubSub, SymbolRemovalEventPubSub};
+use super::entities::{Symbol, SymbolEvent};
+use super::pubsub::SymbolEventPubSub;
 use ::subscribe::PubSub;
 
 #[derive(Debug, Clone)]
 pub struct SymbolUpdateEventManager {
   pub to_add: Vec<Symbol>,
   pub to_remove: Vec<Symbol>,
-  pub add_event: SymbolAddEventPubSub,
-  pub del_event: SymbolRemovalEventPubSub,
+  pub event: SymbolEventPubSub,
   pub log: Logger,
 }
 
@@ -42,14 +41,13 @@ impl SymbolUpdateEventManager {
       log,
       to_add,
       to_remove,
-      add_event: SymbolAddEventPubSub::new(broker.clone()),
-      del_event: SymbolRemovalEventPubSub::new(broker.clone()),
+      event: SymbolEventPubSub::new(broker.clone()),
     };
   }
 
   pub async fn publish_changes(&self) {
     for add_item in &self.to_add[..] {
-      if let Err(e) = self.add_event.publish(&add_item) {
+      if let Err(e) = self.event.publish(&SymbolEvent::Add(add_item.clone())) {
         ::slog::warn!(
           self.log,
           "Failed to publish the newly added symbol";
@@ -59,7 +57,8 @@ impl SymbolUpdateEventManager {
       };
     }
     for del_item in &self.to_remove[..] {
-      if let Err(e) = self.del_event.publish(&del_item) {
+      if let Err(e) = self.event.publish(&SymbolEvent::Remove(del_item.clone()))
+      {
         ::slog::warn!(
           self.log,
           "Failed to publish the deleted symbol";

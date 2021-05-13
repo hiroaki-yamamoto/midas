@@ -395,6 +395,7 @@ dependencies = [
  "subscribe",
  "symbol_recorder",
  "tokio 1.5.0",
+ "tokio-stream",
  "tokio-tungstenite 0.14.0",
  "trade_observer",
  "types",

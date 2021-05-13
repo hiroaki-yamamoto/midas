@@ -6,6 +6,6 @@ use ::futures::stream::BoxStream;
 
 pub use self::filters::Filters;
 pub use self::info::ExchangeInfo;
-pub use self::symbol::Symbol;
+pub use self::symbol::{Symbol, SymbolEvent};
 
 pub type ListSymbolStream<'a> = BoxStream<'a, Symbol>;
