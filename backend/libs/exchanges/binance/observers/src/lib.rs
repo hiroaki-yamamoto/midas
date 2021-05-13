@@ -7,10 +7,10 @@ use ::std::io::{Error as IOErr, ErrorKind as IOErrKind, Result as IOResult};
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::futures::future::{join_all, BoxFuture};
+use ::futures::future::join_all;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{BoxStream, StreamExt};
-use ::futures::{Future, FutureExt};
+use ::futures::FutureExt;
 use ::mongodb::bson::doc;
 use ::mongodb::Database;
 use ::nats::Connection as Broker;
@@ -90,7 +90,7 @@ impl TradeObserver {
     return Ok(websocket);
   }
 
-  async fn connect(&mut self) -> Result<TLSWebSocket, MaximumAttemptExceeded> {
+  async fn connect(&self) -> Result<TLSWebSocket, MaximumAttemptExceeded> {
     let mut interval =
       interval(Duration::from_secs(DEFAULT_RECONNECT_INTERVAL as u64));
     for _ in 0..20 {
@@ -274,7 +274,7 @@ impl TradeObserver {
   ) -> ThreadSafeResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
     let nats_symbol = self.symbol_event.clone();
-    let (handler, mut symbol_event) =
+    let (_, mut symbol_event) =
       nats_symbol.queue_subscribe("trade_observer")?;
     let mut clear_sym_map_flag = false;
     let mut initial_symbols_stream = self.init().await?;
@@ -359,8 +359,10 @@ impl TradeObserver {
 impl TradeObserverTrait for TradeObserver {
   async fn start(&self) -> GenericResult<()> {
     let mut me = self.clone();
-    let sockets: Vec<BoxFuture<Result<TLSWebSocket, MaximumAttemptExceeded>>> =
-      (0..NUM_SOCKET).map(|_| me.connect().boxed()).collect();
+    let mut sockets = vec![];
+    for _ in 0..NUM_SOCKET {
+      sockets.push(self.connect().boxed());
+    }
     let sockets = join_all(sockets).await;
     let mut socket_map = StreamMap::new();
     for (index, socket) in sockets.into_iter().enumerate() {
