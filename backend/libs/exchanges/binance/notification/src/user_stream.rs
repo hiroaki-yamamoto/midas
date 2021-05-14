@@ -230,8 +230,7 @@ impl UserStreamTrait for UserStream {
                 sockets.remove(&api_key.pub_key);
                 let _ = me.close_listen_key(&api_key, &listen_key);
               }
-            }
-            _ => {},
+            },
           }
         },
         Some((listen_key, _)) = listen_key_sub.next() => {

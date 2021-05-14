@@ -31,7 +31,6 @@ impl Service {
   ) -> Result<impl SymbolFetcher + Send + Sync, Rejection> {
     return match exchange {
       Exchanges::Binance => Ok(self.binance.clone()),
-      Exchanges::Unknown => Err(::warp::reject::not_found()),
     };
   }
 

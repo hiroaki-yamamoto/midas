@@ -20,7 +20,9 @@ export class KeychainService {
       .get(`${this.endpoint}/`)
       .pipe(
         map((value: APIKeyList.AsObject) => value.keysList),
-        tap((value) => this.keys = value)
+        tap((value: APIKey.AsObject[]) => {
+          this.keys = value;
+        })
       );
   }
 

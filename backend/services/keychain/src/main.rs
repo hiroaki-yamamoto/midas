@@ -1,3 +1,4 @@
+use ::std::convert::TryFrom;
 use ::std::net::SocketAddr;
 
 use ::clap::Clap;
@@ -19,6 +20,17 @@ use ::rpc::entities::{InsertOneResult, Status};
 use ::rpc::keychain::ApiRename;
 use ::rpc::keychain::{ApiKey as RPCAPIKey, ApiKeyList as RPCAPIKeyList};
 use ::rpc::rejection_handler::handle_rejection;
+
+macro_rules! declare_reject_func {
+  () => {
+    |e| {
+      ::warp::reject::custom(Status::new(
+        StatusCode::SERVICE_UNAVAILABLE,
+        format!("{}", e),
+      ))
+    }
+  };
+}
 
 #[tokio::main]
 async fn main() {
@@ -78,22 +90,16 @@ async fn main() {
     .and(::warp::filters::body::json())
     .and_then(
       |keychain: KeyChain, _: Logger, api_key: RPCAPIKey| async move {
-        let api_key: APIKey = api_key.into();
-        let res = keychain.push(api_key).await.map_err(|e| {
-          ::warp::reject::custom(Status::new(
-            StatusCode::SERVICE_UNAVAILABLE,
-            format!("{}", e),
-          ))
-        });
-        match res {
-          Err(e) => {
-            return Err(e);
-          }
-          Ok(res) => {
+        let api_key: APIKey =
+          APIKey::try_from(api_key).map_err(declare_reject_func!())?;
+        return keychain
+          .push(api_key)
+          .await
+          .map_err(declare_reject_func!())
+          .map(|res| {
             let res: InsertOneResult = res.into();
-            return Ok(res);
-          }
-        }
+            return res;
+          });
       },
     )
     .map(|res: InsertOneResult| {

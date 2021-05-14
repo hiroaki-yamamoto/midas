@@ -908,6 +908,7 @@ version = "0.1.0"
 dependencies = [
  "bson",
  "bytes 1.0.1",
+ "errors",
  "futures-core",
  "num-traits",
  "ring",
@@ -2577,6 +2578,7 @@ version = "0.1.0"
 dependencies = [
  "bson",
  "clap",
+ "errors",
  "glob",
  "http",
  "num-derive",

@@ -11,8 +11,11 @@ export class InfoComponent {
   public exchanges: string[];
 
   constructor() {
-    this.exchanges = Object.keys(Exchanges).map((upperName) => {
-      return upperName[0].toUpperCase() + upperName.substr(1).toLowerCase();
-    });
+    this.exchanges = Object
+      .keys(Exchanges)
+      .map(
+        (upperName) => upperName[0].toUpperCase() +
+          upperName.substr(1).toLowerCase()
+      );
   }
 }

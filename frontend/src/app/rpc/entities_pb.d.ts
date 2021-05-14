@@ -73,8 +73,7 @@ export namespace InsertOneResult {
 }
 
 export enum Exchanges { 
-  UNKNOWN = 0,
-  BINANCE = 1,
+  BINANCE = 0,
 }
 export enum BackTestPriceBase { 
   CLOSE = 0,

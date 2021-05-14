@@ -3,21 +3,22 @@ use ::bson::oid::ObjectId;
 use ::http::{status::InvalidStatusCode, StatusCode};
 use ::warp::reject::Reject;
 
+use ::errors::ParseError;
+
 impl Exchanges {
   pub fn as_string(&self) -> String {
     return String::from(match self {
-      Exchanges::Unknown => "Unknown",
       Exchanges::Binance => "binance",
     });
   }
 }
 
 impl ::std::str::FromStr for Exchanges {
-  type Err = String;
+  type Err = ParseError;
   fn from_str(s: &str) -> Result<Self, Self::Err> {
     let ret: Self = match s.to_lowercase().as_str() {
       "binance" => Exchanges::Binance,
-      _ => return Err(format!("Failed to parse the exchange argument: {}", s)),
+      _ => return Err(ParseError::new(None::<&str>, Some(s))),
     };
     return Ok(ret);
   }

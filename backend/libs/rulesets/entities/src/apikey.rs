@@ -1,6 +1,10 @@
+use ::std::convert::TryFrom;
+
 use ::bson::oid::ObjectId;
 use ::num_traits::FromPrimitive;
 use ::serde::{Deserialize, Serialize};
+
+use ::errors::ParseError;
 
 use ::rpc::entities::Exchanges;
 use ::rpc::keychain::ApiKey as RPCAPIKey;
@@ -18,20 +22,17 @@ pub struct APIKeyInner {
 #[serde(tag = "exchange", rename_all = "camelCase")]
 pub enum APIKey {
   Binance(APIKeyInner),
-  Unknown(APIKeyInner),
 }
 
 impl APIKey {
   pub fn inner(&self) -> &APIKeyInner {
     match self {
       APIKey::Binance(inner) => inner,
-      APIKey::Unknown(inner) => inner,
     }
   }
   pub fn inner_mut(&mut self) -> &mut APIKeyInner {
     match self {
       APIKey::Binance(inner) => inner,
-      APIKey::Unknown(inner) => inner,
     }
   }
 }
@@ -40,7 +41,6 @@ impl From<APIKey> for Exchanges {
   fn from(v: APIKey) -> Self {
     match v {
       APIKey::Binance(_) => Self::Binance,
-      APIKey::Unknown(_) => Self::Unknown,
     }
   }
 }
@@ -59,10 +59,17 @@ impl From<APIKey> for Result<RPCAPIKey, String> {
   }
 }
 
-impl From<RPCAPIKey> for APIKey {
-  fn from(value: RPCAPIKey) -> Self {
+impl TryFrom<RPCAPIKey> for APIKey {
+  type Error = ParseError;
+  fn try_from(value: RPCAPIKey) -> Result<Self, Self::Error> {
     let exchange: Exchanges =
-      FromPrimitive::from_i32(value.exchange).unwrap_or(Exchanges::Unknown);
+      FromPrimitive::from_i32(value.exchange).ok_or(ParseError::new::<
+        String,
+        String,
+      >(
+        None,
+        Some(value.exchange.to_string()),
+      ))?;
     let exchange: APIKey = match exchange {
       Exchanges::Binance => APIKey::Binance(APIKeyInner {
         id: ObjectId::with_string(&value.id).ok(),
@@ -70,14 +77,8 @@ impl From<RPCAPIKey> for APIKey {
         pub_key: value.pub_key,
         prv_key: value.prv_key,
       }),
-      Exchanges::Unknown => APIKey::Unknown(APIKeyInner {
-        id: ObjectId::with_string(&value.id).ok(),
-        label: value.label,
-        pub_key: value.pub_key,
-        prv_key: value.prv_key,
-      }),
     };
-    return exchange;
+    return Ok(exchange);
   }
 }
 

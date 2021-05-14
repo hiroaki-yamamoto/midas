@@ -30,7 +30,6 @@ async fn get_exchange(
     Exchanges::Binance => {
       Some(binance::TradeObserver::new(None, broker, logger).await)
     }
-    Exchanges::Unknown => None,
   };
 }
 
@@ -109,9 +108,6 @@ async fn main() {
         let exchange: Exchanges =
           exchange.parse().map_err(|_| ::warp::reject::not_found())?;
         let observer = match exchange {
-          Exchanges::Unknown => {
-            return Err(::warp::reject::not_found());
-          }
           Exchanges::Binance => get_exchange(exchange, broker, logger).await,
         };
         return match observer {
