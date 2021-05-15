@@ -12,6 +12,6 @@ types = { path = "../../types" }
 subscribe = { path = "../../subscribe" }
 
 async-trait = "0.1.50"
-futures-core = "0.3.14"
+futures-core = "0.3.15"
 nats = "0.9.16"
-serde = { version = "1.0.125", features = ["derive"] }
+serde = { version = "1.0.126", features = ["derive"] }
