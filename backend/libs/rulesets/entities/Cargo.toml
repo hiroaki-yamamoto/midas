@@ -11,9 +11,9 @@ rpc = { path = "../../rpc" }
 types = { path = "../../types" }
 errors = { path = "../../errors" }
 
-futures-core = "0.3.14"
+futures-core = "0.3.15"
 num-traits = "0.2.14"
-serde = { version = "1.0.125", features = ["derive"] }
+serde = { version = "1.0.126", features = ["derive"] }
 bson = "1.2.2"
 bytes = "1.0.1"
 ring = "0.16.20"

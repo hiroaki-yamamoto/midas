@@ -13,4 +13,4 @@ types = { path = "../../types" }
 
 async-trait = "0.1.50"
 bson = "1.2.2"
-futures-core = "0.3.14"
+futures-core = "0.3.15"
