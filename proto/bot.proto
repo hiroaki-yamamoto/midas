@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package bot;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+
+message TargetIndicator {
+  oneof target {
+    double absolute = 1;
+    double percentage = 2;
+    google.protobuf.Empty currentPrice = 3;
+    google.protobuf.Duration currentVolume = 4;
+    google.protobuf.Duration volumeLastTick = 5;
+    google.protobuf.Duration highPriceLastTick = 6;
+    google.protobuf.Duration lowPriceLastTick = 7;
+    google.protobuf.Duration midPriceLastTick = 8;
+    google.protobuf.Duration openPriceLastTick = 9;
+    google.protobuf.Duration closePriceLastTick = 10;
+    google.protobuf.Duration SMA = 11;
+    google.protobuf.Duration EMA = 12;
+    google.protobuf.Duration RSI = 13;
+    google.protobuf.Duration MACD = 14;
+    google.protobuf.Duration CCI = 15;
+  }
+}
+
+enum CompareOp {
+  eq = 0;
+  gt = 1;
+  gte = 2;
+  lt = 3;
+  lte = 4;
+}
+
+message ConditionItem {
+  CompareOp cmp = 1;
+  TargetIndicator opA = 2;
+  TargetIndicator opB = 3;
+}
+
+message Condition {
+  oneof condition {
+    Condition and = 1;
+    Condition or = 2;
+    Condition not = 3;
+    ConditionItem single = 4;
+  }
+}
