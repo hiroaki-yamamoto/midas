@@ -3,6 +3,7 @@ syntax = "proto3";
 package bot;
 
 import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 
 message TargetIndicator {
@@ -39,11 +40,28 @@ message ConditionItem {
   TargetIndicator opB = 3;
 }
 
-message Condition {
-  oneof condition {
-    Condition and = 1;
-    Condition or = 2;
-    Condition not = 3;
-    ConditionItem single = 4;
+message Trigger {
+  oneof trigger {
+    Trigger and = 1;
+    Trigger or = 2;
+    Trigger not = 3;
+    Trigger single = 4;
   }
+}
+
+message TriggerType {
+  oneof type {
+    Trigger manual = 1;
+  }
+}
+
+message Bot {
+  string id = 1;
+  string name = 2;
+  google.protobuf.Timestamp createdAt = 3;
+  double tradingAmount = 4;
+  double currentValuation = 5;
+  double realizedProfit = 6;
+  bool auto_reinvestment = 7;
+  TriggerType trigger = 8;
 }

@@ -57,25 +57,63 @@ pub struct ConditionItem {
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Condition {
-    #[prost(oneof="condition::Condition", tags="1, 2, 3, 4")]
-    pub condition: ::core::option::Option<condition::Condition>,
+pub struct Trigger {
+    #[prost(oneof="trigger::Trigger", tags="1, 2, 3, 4")]
+    pub trigger: ::core::option::Option<trigger::Trigger>,
 }
-/// Nested message and enum types in `Condition`.
-pub mod condition {
+/// Nested message and enum types in `Trigger`.
+pub mod trigger {
     #[derive(::serde::Serialize, ::serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum Condition {
+    pub enum Trigger {
         #[prost(message, tag="1")]
-        And(::prost::alloc::boxed::Box<super::Condition>),
+        And(::prost::alloc::boxed::Box<super::Trigger>),
         #[prost(message, tag="2")]
-        Or(::prost::alloc::boxed::Box<super::Condition>),
+        Or(::prost::alloc::boxed::Box<super::Trigger>),
         #[prost(message, tag="3")]
-        Not(::prost::alloc::boxed::Box<super::Condition>),
+        Not(::prost::alloc::boxed::Box<super::Trigger>),
         #[prost(message, tag="4")]
-        Single(super::ConditionItem),
+        Single(::prost::alloc::boxed::Box<super::Trigger>),
     }
+}
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TriggerType {
+    #[prost(oneof="trigger_type::Type", tags="1")]
+    pub r#type: ::core::option::Option<trigger_type::Type>,
+}
+/// Nested message and enum types in `TriggerType`.
+pub mod trigger_type {
+    #[derive(::serde::Serialize, ::serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Type {
+        #[prost(message, tag="1")]
+        Manual(super::Trigger),
+    }
+}
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Bot {
+    #[prost(string, tag="1")]
+    pub id: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub name: ::prost::alloc::string::String,
+    #[prost(message, optional, tag="3")]
+    pub created_at: ::core::option::Option<super::google::protobuf::Timestamp>,
+    #[prost(double, tag="4")]
+    pub trading_amount: f64,
+    #[prost(double, tag="5")]
+    pub current_valuation: f64,
+    #[prost(double, tag="6")]
+    pub realized_profit: f64,
+    #[prost(bool, tag="7")]
+    pub auto_reinvestment: bool,
+    #[prost(message, optional, tag="8")]
+    pub trigger: ::core::option::Option<TriggerType>,
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

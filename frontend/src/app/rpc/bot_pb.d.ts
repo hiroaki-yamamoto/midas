@@ -1,6 +1,7 @@
 import * as jspb from 'google-protobuf'
 
 import * as google_protobuf_duration_pb from 'google-protobuf/google/protobuf/duration_pb';
+import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
 import * as google_protobuf_empty_pb from 'google-protobuf/google/protobuf/empty_pb';
 
 
@@ -155,51 +156,128 @@ export namespace ConditionItem {
   }
 }
 
-export class Condition extends jspb.Message {
-  getAnd(): Condition | undefined;
-  setAnd(value?: Condition): Condition;
+export class Trigger extends jspb.Message {
+  getAnd(): Trigger | undefined;
+  setAnd(value?: Trigger): Trigger;
   hasAnd(): boolean;
-  clearAnd(): Condition;
+  clearAnd(): Trigger;
 
-  getOr(): Condition | undefined;
-  setOr(value?: Condition): Condition;
+  getOr(): Trigger | undefined;
+  setOr(value?: Trigger): Trigger;
   hasOr(): boolean;
-  clearOr(): Condition;
+  clearOr(): Trigger;
 
-  getNot(): Condition | undefined;
-  setNot(value?: Condition): Condition;
+  getNot(): Trigger | undefined;
+  setNot(value?: Trigger): Trigger;
   hasNot(): boolean;
-  clearNot(): Condition;
+  clearNot(): Trigger;
 
-  getSingle(): ConditionItem | undefined;
-  setSingle(value?: ConditionItem): Condition;
+  getSingle(): Trigger | undefined;
+  setSingle(value?: Trigger): Trigger;
   hasSingle(): boolean;
-  clearSingle(): Condition;
+  clearSingle(): Trigger;
 
-  getConditionCase(): Condition.ConditionCase;
+  getTriggerCase(): Trigger.TriggerCase;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Condition.AsObject;
-  static toObject(includeInstance: boolean, msg: Condition): Condition.AsObject;
-  static serializeBinaryToWriter(message: Condition, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Condition;
-  static deserializeBinaryFromReader(message: Condition, reader: jspb.BinaryReader): Condition;
+  toObject(includeInstance?: boolean): Trigger.AsObject;
+  static toObject(includeInstance: boolean, msg: Trigger): Trigger.AsObject;
+  static serializeBinaryToWriter(message: Trigger, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Trigger;
+  static deserializeBinaryFromReader(message: Trigger, reader: jspb.BinaryReader): Trigger;
 }
 
-export namespace Condition {
+export namespace Trigger {
   export type AsObject = {
-    and?: Condition.AsObject,
-    or?: Condition.AsObject,
-    not?: Condition.AsObject,
-    single?: ConditionItem.AsObject,
+    and?: Trigger.AsObject,
+    or?: Trigger.AsObject,
+    not?: Trigger.AsObject,
+    single?: Trigger.AsObject,
   }
 
-  export enum ConditionCase { 
-    CONDITION_NOT_SET = 0,
+  export enum TriggerCase { 
+    TRIGGER_NOT_SET = 0,
     AND = 1,
     OR = 2,
     NOT = 3,
     SINGLE = 4,
+  }
+}
+
+export class TriggerType extends jspb.Message {
+  getManual(): Trigger | undefined;
+  setManual(value?: Trigger): TriggerType;
+  hasManual(): boolean;
+  clearManual(): TriggerType;
+
+  getTypeCase(): TriggerType.TypeCase;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): TriggerType.AsObject;
+  static toObject(includeInstance: boolean, msg: TriggerType): TriggerType.AsObject;
+  static serializeBinaryToWriter(message: TriggerType, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): TriggerType;
+  static deserializeBinaryFromReader(message: TriggerType, reader: jspb.BinaryReader): TriggerType;
+}
+
+export namespace TriggerType {
+  export type AsObject = {
+    manual?: Trigger.AsObject,
+  }
+
+  export enum TypeCase { 
+    TYPE_NOT_SET = 0,
+    MANUAL = 1,
+  }
+}
+
+export class Bot extends jspb.Message {
+  getId(): string;
+  setId(value: string): Bot;
+
+  getName(): string;
+  setName(value: string): Bot;
+
+  getCreatedat(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setCreatedat(value?: google_protobuf_timestamp_pb.Timestamp): Bot;
+  hasCreatedat(): boolean;
+  clearCreatedat(): Bot;
+
+  getTradingamount(): number;
+  setTradingamount(value: number): Bot;
+
+  getCurrentvaluation(): number;
+  setCurrentvaluation(value: number): Bot;
+
+  getRealizedprofit(): number;
+  setRealizedprofit(value: number): Bot;
+
+  getAutoReinvestment(): boolean;
+  setAutoReinvestment(value: boolean): Bot;
+
+  getTrigger(): TriggerType | undefined;
+  setTrigger(value?: TriggerType): Bot;
+  hasTrigger(): boolean;
+  clearTrigger(): Bot;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Bot.AsObject;
+  static toObject(includeInstance: boolean, msg: Bot): Bot.AsObject;
+  static serializeBinaryToWriter(message: Bot, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Bot;
+  static deserializeBinaryFromReader(message: Bot, reader: jspb.BinaryReader): Bot;
+}
+
+export namespace Bot {
+  export type AsObject = {
+    id: string,
+    name: string,
+    createdat?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+    tradingamount: number,
+    currentvaluation: number,
+    realizedprofit: number,
+    autoReinvestment: boolean,
+    trigger?: TriggerType.AsObject,
   }
 }
 
