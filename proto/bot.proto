@@ -45,7 +45,7 @@ message Trigger {
     Trigger and = 1;
     Trigger or = 2;
     Trigger not = 3;
-    Trigger single = 4;
+    ConditionItem single = 4;
   }
 }
 
