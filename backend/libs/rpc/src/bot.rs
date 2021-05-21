@@ -74,7 +74,7 @@ pub mod trigger {
         #[prost(message, tag="3")]
         Not(::prost::alloc::boxed::Box<super::Trigger>),
         #[prost(message, tag="4")]
-        Single(::prost::alloc::boxed::Box<super::Trigger>),
+        Single(super::ConditionItem),
     }
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
