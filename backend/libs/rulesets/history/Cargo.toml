@@ -13,5 +13,5 @@ subscribe = { path = "../../subscribe" }
 
 async-trait = "0.1.50"
 futures-core = "0.3.15"
-nats = "0.9.16"
+nats = "0.9.17"
 serde = { version = "1.0.126", features = ["derive"] }
