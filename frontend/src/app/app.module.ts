@@ -42,6 +42,7 @@ import { KeychainComponent } from './keychain/keychain.component';
 import { EditDialogComponent } from './keychain/edit-dialog/edit-dialog.component';
 import { ExchangePipePipe } from './rpc/exchange-pipe.pipe';
 import { DeleteWarnComponent } from './keychain/delete-warn/delete-warn.component';
+import { BotEditorComponent } from './bot-editor/bot-editor.component';
 
 @NgModule({
   declarations: [
@@ -55,6 +56,7 @@ import { DeleteWarnComponent } from './keychain/delete-warn/delete-warn.componen
     EditDialogComponent,
     ExchangePipePipe,
     DeleteWarnComponent,
+    BotEditorComponent,
   ],
   imports: [
     BrowserModule,
