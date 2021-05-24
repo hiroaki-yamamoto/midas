@@ -16,7 +16,7 @@ import {
   Legend,
 } from '@amcharts/amcharts4/charts';
 
-import { BotInfo, Strategy } from '../rpc/bot_manager_pb';
+import {Bot, TriggerType, Trigger, Manual} from '../rpc/bot_pb';
 
 @Component({
   selector: 'app-dashboard',
@@ -25,7 +25,7 @@ import { BotInfo, Strategy } from '../rpc/bot_manager_pb';
 })
 export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  public botsInfo: BotInfo[];
+  public botsInfo: Bot[];
   private g: XYChart;
 
   constructor(private zone: NgZone) { }
@@ -88,19 +88,16 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.botsInfo = [];
     for (let i = 0; i < 5; i++) {
-      const info = new BotInfo();
+      const info = new Bot();
       info.setId(`test-bot-${i}`);
       info.setName(`Test Bot ${i}`);
       info.setBasecurrency('USDT');
-      info.setStrategy(Strategy.TRAILING);
-      info.setDesc(`Test Description ${i}`);
-      info.setConfig(JSON.stringify({
-        entryBufferPercent: 3.0 + Math.random(),
-        entryTrailingPercent: 0.2,
-        exitBufferPercent: 2.0 + Math.random(),
-        exitTrailingPercent: 0.2,
-        stopLoss: 10.0,
-      }));
+
+      const trigger_condition = new Trigger();
+      trigger_condition.setSingle()
+      const trigger = new TriggerType();
+      trigger.setManual(new Manual());
+      info.setTrigger(trigger);
       this.botsInfo = this.botsInfo.concat(info);
     }
   }

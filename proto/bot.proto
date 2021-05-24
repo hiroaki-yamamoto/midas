@@ -49,19 +49,45 @@ message Trigger {
   }
 }
 
+message Trailing {
+  Trigger watchPoint = 1;
+  Trigger triggerPoint = 2;
+}
+
+message Manual {
+  Trailing entryPoint = 1;
+  Trailing exitPoint = 2;
+  Trigger lossCutPoint = 3;
+}
+
 message TriggerType {
   oneof type {
-    Trigger manual = 1;
+    Manual manual = 1;
   }
 }
 
 message Bot {
   string id = 1;
   string name = 2;
-  google.protobuf.Timestamp createdAt = 3;
-  double tradingAmount = 4;
-  double currentValuation = 5;
-  double realizedProfit = 6;
-  bool auto_reinvestment = 7;
-  TriggerType trigger = 8;
+  string baseCurrency = 3;
+  google.protobuf.Timestamp createdAt = 4;
+  double tradingAmount = 5;
+  double currentValuation = 6;
+  double realizedProfit = 7;
+  bool auto_reinvestment = 8;
+  TriggerType trigger = 9;
+}
+
+enum PositionStatus {
+  closed = 0;
+  opened = 1;
+}
+
+message Position {
+  string id = 1;
+  string botId = 2;
+  string symbol = 3;
+  PositionStatus status = 4;
+  double tradingAmount = 5;
+  double valuation = 6;
 }

@@ -172,8 +172,8 @@ export class Trigger extends jspb.Message {
   hasNot(): boolean;
   clearNot(): Trigger;
 
-  getSingle(): Trigger | undefined;
-  setSingle(value?: Trigger): Trigger;
+  getSingle(): ConditionItem | undefined;
+  setSingle(value?: ConditionItem): Trigger;
   hasSingle(): boolean;
   clearSingle(): Trigger;
 
@@ -192,7 +192,7 @@ export namespace Trigger {
     and?: Trigger.AsObject,
     or?: Trigger.AsObject,
     not?: Trigger.AsObject,
-    single?: Trigger.AsObject,
+    single?: ConditionItem.AsObject,
   }
 
   export enum TriggerCase { 
@@ -204,9 +204,67 @@ export namespace Trigger {
   }
 }
 
+export class Trailing extends jspb.Message {
+  getWatchpoint(): Trigger | undefined;
+  setWatchpoint(value?: Trigger): Trailing;
+  hasWatchpoint(): boolean;
+  clearWatchpoint(): Trailing;
+
+  getTriggerpoint(): Trigger | undefined;
+  setTriggerpoint(value?: Trigger): Trailing;
+  hasTriggerpoint(): boolean;
+  clearTriggerpoint(): Trailing;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Trailing.AsObject;
+  static toObject(includeInstance: boolean, msg: Trailing): Trailing.AsObject;
+  static serializeBinaryToWriter(message: Trailing, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Trailing;
+  static deserializeBinaryFromReader(message: Trailing, reader: jspb.BinaryReader): Trailing;
+}
+
+export namespace Trailing {
+  export type AsObject = {
+    watchpoint?: Trigger.AsObject,
+    triggerpoint?: Trigger.AsObject,
+  }
+}
+
+export class Manual extends jspb.Message {
+  getEntrypoint(): Trailing | undefined;
+  setEntrypoint(value?: Trailing): Manual;
+  hasEntrypoint(): boolean;
+  clearEntrypoint(): Manual;
+
+  getExitpoint(): Trailing | undefined;
+  setExitpoint(value?: Trailing): Manual;
+  hasExitpoint(): boolean;
+  clearExitpoint(): Manual;
+
+  getLosscutpoint(): Trigger | undefined;
+  setLosscutpoint(value?: Trigger): Manual;
+  hasLosscutpoint(): boolean;
+  clearLosscutpoint(): Manual;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Manual.AsObject;
+  static toObject(includeInstance: boolean, msg: Manual): Manual.AsObject;
+  static serializeBinaryToWriter(message: Manual, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Manual;
+  static deserializeBinaryFromReader(message: Manual, reader: jspb.BinaryReader): Manual;
+}
+
+export namespace Manual {
+  export type AsObject = {
+    entrypoint?: Trailing.AsObject,
+    exitpoint?: Trailing.AsObject,
+    losscutpoint?: Trigger.AsObject,
+  }
+}
+
 export class TriggerType extends jspb.Message {
-  getManual(): Trigger | undefined;
-  setManual(value?: Trigger): TriggerType;
+  getManual(): Manual | undefined;
+  setManual(value?: Manual): TriggerType;
   hasManual(): boolean;
   clearManual(): TriggerType;
 
@@ -222,7 +280,7 @@ export class TriggerType extends jspb.Message {
 
 export namespace TriggerType {
   export type AsObject = {
-    manual?: Trigger.AsObject,
+    manual?: Manual.AsObject,
   }
 
   export enum TypeCase { 
@@ -237,6 +295,9 @@ export class Bot extends jspb.Message {
 
   getName(): string;
   setName(value: string): Bot;
+
+  getBasecurrency(): string;
+  setBasecurrency(value: string): Bot;
 
   getCreatedat(): google_protobuf_timestamp_pb.Timestamp | undefined;
   setCreatedat(value?: google_protobuf_timestamp_pb.Timestamp): Bot;
@@ -272,6 +333,7 @@ export namespace Bot {
   export type AsObject = {
     id: string,
     name: string,
+    basecurrency: string,
     createdat?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     tradingamount: number,
     currentvaluation: number,
@@ -281,10 +343,52 @@ export namespace Bot {
   }
 }
 
+export class Position extends jspb.Message {
+  getId(): string;
+  setId(value: string): Position;
+
+  getBotid(): string;
+  setBotid(value: string): Position;
+
+  getSymbol(): string;
+  setSymbol(value: string): Position;
+
+  getStatus(): PositionStatus;
+  setStatus(value: PositionStatus): Position;
+
+  getTradingamount(): number;
+  setTradingamount(value: number): Position;
+
+  getValuation(): number;
+  setValuation(value: number): Position;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Position.AsObject;
+  static toObject(includeInstance: boolean, msg: Position): Position.AsObject;
+  static serializeBinaryToWriter(message: Position, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Position;
+  static deserializeBinaryFromReader(message: Position, reader: jspb.BinaryReader): Position;
+}
+
+export namespace Position {
+  export type AsObject = {
+    id: string,
+    botid: string,
+    symbol: string,
+    status: PositionStatus,
+    tradingamount: number,
+    valuation: number,
+  }
+}
+
 export enum CompareOp { 
   EQ = 0,
   GT = 1,
   GTE = 2,
   LT = 3,
   LTE = 4,
+}
+export enum PositionStatus { 
+  CLOSED = 0,
+  OPENED = 1,
 }

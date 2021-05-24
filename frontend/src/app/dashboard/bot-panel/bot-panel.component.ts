@@ -20,7 +20,7 @@ import {
   Legend,
 } from '@amcharts/amcharts4/charts';
 
-import { BotInfo, CurrentPosition } from '../../rpc/bot_manager_pb';
+import { Bot, Position } from '../../rpc/bot_pb';
 import { IGraphStats } from './interfaces';
 
 @Component({
@@ -30,23 +30,23 @@ import { IGraphStats } from './interfaces';
 })
 export class BotPanelComponent implements OnInit {
 
-  @Input() bot: BotInfo;
+  @Input() bot: Bot;
   @ViewChild('profitGraph') profitGraph: ElementRef;
   @ViewChild('curPosPaginator', {static: true}) curPosPaginator: MatPaginator;
   @ViewChild('arcPosPaginator', { static: true }) arcPosPaginator: MatPaginator;
 
   private g: XYChart;
 
-  public currentPositions: MatTableDataSource<CurrentPosition>;
-  public archivedPositions: MatTableDataSource<CurrentPosition>;
+  public currentPositions: MatTableDataSource<Position>;
+  public archivedPositions: MatTableDataSource<Position>;
   public objItems = Object.entries;
   public dispCol: string[] = [
     'symbol', 'tradingAmount', 'profitAmount', 'profitPercent',
   ];
 
   constructor(private zone: NgZone) {
-    this.currentPositions = new MatTableDataSource<CurrentPosition>([]);
-    this.archivedPositions = new MatTableDataSource<CurrentPosition>([]);
+    this.currentPositions = new MatTableDataSource<Position>([]);
+    this.archivedPositions = new MatTableDataSource<Position>([]);
   }
 
   ngOnInit() {
@@ -57,7 +57,7 @@ export class BotPanelComponent implements OnInit {
   open() {
     for (let i = 0; i < 20; i++) {
       const id = `test-cur-position-${i}`;
-      const pos = new CurrentPosition();
+      const pos = new Position();
       pos.setId(id);
       pos.setBotid(this.bot.getId());
       pos.setSymbol('TESTUSDT');
@@ -69,7 +69,7 @@ export class BotPanelComponent implements OnInit {
 
     for (let i = 0; i < 20; i++) {
       const id = `test-cur-position-${i}`;
-      const pos = new CurrentPosition();
+      const pos = new Position();
       pos.setId(id);
       pos.setBotid(this.bot.getId());
       pos.setSymbol('TESTUSDT');
