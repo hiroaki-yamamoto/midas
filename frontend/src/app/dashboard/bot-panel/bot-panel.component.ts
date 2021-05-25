@@ -41,7 +41,7 @@ export class BotPanelComponent implements OnInit {
   public archivedPositions: MatTableDataSource<Position>;
   public objItems = Object.entries;
   public dispCol: string[] = [
-    'symbol', 'tradingAmount', 'profitAmount', 'profitPercent',
+    'symbol', 'tradingAmount', 'valuation', 'profitAmount', 'profitPercent',
   ];
 
   constructor(private zone: NgZone) {
@@ -62,8 +62,12 @@ export class BotPanelComponent implements OnInit {
       pos.setBotid(this.bot.getId());
       pos.setSymbol('TESTUSDT');
       pos.setTradingamount(Math.random());
-      pos.setProfitamount(Math.random());
-      pos.setProfitpercent(pos.getProfitamount() / pos.getTradingamount() * 100);
+      pos.setValuation(
+        pos.getTradingamount() + (
+          ((Math.round(Math.random() * 10) & 0x01) ? 1 : - 1) *
+          Math.random()
+        )
+      );
       this.currentPositions.data = this.currentPositions.data.concat(pos);
     }
 
@@ -74,8 +78,12 @@ export class BotPanelComponent implements OnInit {
       pos.setBotid(this.bot.getId());
       pos.setSymbol('TESTUSDT');
       pos.setTradingamount(Math.random());
-      pos.setProfitamount(Math.random());
-      pos.setProfitpercent(pos.getProfitamount() / pos.getTradingamount() * 100);
+      pos.setValuation(
+        pos.getTradingamount() + (
+          ((Math.round(Math.random() * 10) & 0x01) ? 1 : - 1) *
+          Math.random()
+        )
+      );
       this.archivedPositions.data = this.archivedPositions.data.concat(pos);
     }
 

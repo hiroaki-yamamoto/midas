@@ -80,6 +80,26 @@ pub mod trigger {
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Trailing {
+    #[prost(message, optional, tag="1")]
+    pub watch_point: ::core::option::Option<Trigger>,
+    #[prost(message, optional, tag="2")]
+    pub trigger_point: ::core::option::Option<Trigger>,
+}
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Manual {
+    #[prost(message, optional, tag="1")]
+    pub entry_point: ::core::option::Option<Trailing>,
+    #[prost(message, optional, tag="2")]
+    pub exit_point: ::core::option::Option<Trailing>,
+    #[prost(message, optional, tag="3")]
+    pub loss_cut_point: ::core::option::Option<Trigger>,
+}
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TriggerType {
     #[prost(oneof="trigger_type::Type", tags="1")]
     pub r#type: ::core::option::Option<trigger_type::Type>,
@@ -91,7 +111,7 @@ pub mod trigger_type {
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Type {
         #[prost(message, tag="1")]
-        Manual(super::Trigger),
+        Manual(super::Manual),
     }
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
@@ -102,18 +122,37 @@ pub struct Bot {
     pub id: ::prost::alloc::string::String,
     #[prost(string, tag="2")]
     pub name: ::prost::alloc::string::String,
-    #[prost(message, optional, tag="3")]
+    #[prost(string, tag="3")]
+    pub base_currency: ::prost::alloc::string::String,
+    #[prost(message, optional, tag="4")]
     pub created_at: ::core::option::Option<super::google::protobuf::Timestamp>,
-    #[prost(double, tag="4")]
-    pub trading_amount: f64,
     #[prost(double, tag="5")]
-    pub current_valuation: f64,
+    pub trading_amount: f64,
     #[prost(double, tag="6")]
+    pub current_valuation: f64,
+    #[prost(double, tag="7")]
     pub realized_profit: f64,
-    #[prost(bool, tag="7")]
+    #[prost(bool, tag="8")]
     pub auto_reinvestment: bool,
-    #[prost(message, optional, tag="8")]
+    #[prost(message, optional, tag="9")]
     pub trigger: ::core::option::Option<TriggerType>,
+}
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Position {
+    #[prost(string, tag="1")]
+    pub id: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub bot_id: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
+    pub symbol: ::prost::alloc::string::String,
+    #[prost(enumeration="PositionStatus", tag="4")]
+    pub status: i32,
+    #[prost(double, tag="5")]
+    pub trading_amount: f64,
+    #[prost(double, tag="6")]
+    pub valuation: f64,
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -125,4 +164,12 @@ pub enum CompareOp {
     Gte = 2,
     Lt = 3,
     Lte = 4,
+}
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum PositionStatus {
+    Closed = 0,
+    Opened = 1,
 }
