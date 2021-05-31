@@ -70,14 +70,21 @@ pub mod trigger {
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Trigger {
         #[prost(message, tag="1")]
-        And(::prost::alloc::boxed::Box<super::Trigger>),
+        And(super::Triggers),
         #[prost(message, tag="2")]
-        Or(::prost::alloc::boxed::Box<super::Trigger>),
+        Or(super::Triggers),
         #[prost(message, tag="3")]
         Not(::prost::alloc::boxed::Box<super::Trigger>),
         #[prost(message, tag="4")]
         Single(super::ConditionItem),
     }
+}
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Triggers {
+    #[prost(message, repeated, tag="1")]
+    pub triggers: ::prost::alloc::vec::Vec<Trigger>,
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

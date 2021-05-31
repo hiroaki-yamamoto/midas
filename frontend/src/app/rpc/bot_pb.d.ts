@@ -164,13 +164,13 @@ export namespace ConditionItem {
 }
 
 export class Trigger extends jspb.Message {
-  getAnd(): Trigger | undefined;
-  setAnd(value?: Trigger): Trigger;
+  getAnd(): Triggers | undefined;
+  setAnd(value?: Triggers): Trigger;
   hasAnd(): boolean;
   clearAnd(): Trigger;
 
-  getOr(): Trigger | undefined;
-  setOr(value?: Trigger): Trigger;
+  getOr(): Triggers | undefined;
+  setOr(value?: Triggers): Trigger;
   hasOr(): boolean;
   clearOr(): Trigger;
 
@@ -196,8 +196,8 @@ export class Trigger extends jspb.Message {
 
 export namespace Trigger {
   export type AsObject = {
-    and?: Trigger.AsObject,
-    or?: Trigger.AsObject,
+    and?: Triggers.AsObject,
+    or?: Triggers.AsObject,
     not?: Trigger.AsObject,
     single?: ConditionItem.AsObject,
   }
@@ -208,6 +208,26 @@ export namespace Trigger {
     OR = 2,
     NOT = 3,
     SINGLE = 4,
+  }
+}
+
+export class Triggers extends jspb.Message {
+  getTriggersList(): Array<Trigger>;
+  setTriggersList(value: Array<Trigger>): Triggers;
+  clearTriggersList(): Triggers;
+  addTriggers(value?: Trigger, index?: number): Trigger;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Triggers.AsObject;
+  static toObject(includeInstance: boolean, msg: Triggers): Triggers.AsObject;
+  static serializeBinaryToWriter(message: Triggers, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Triggers;
+  static deserializeBinaryFromReader(message: Triggers, reader: jspb.BinaryReader): Triggers;
+}
+
+export namespace Triggers {
+  export type AsObject = {
+    triggersList: Array<Trigger.AsObject>,
   }
 }
 
