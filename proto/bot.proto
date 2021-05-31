@@ -11,18 +11,19 @@ message TargetIndicator {
     double absolute = 1;
     double percentage = 2;
     google.protobuf.Empty currentPrice = 3;
-    google.protobuf.Duration currentVolume = 4;
-    google.protobuf.Duration volumeLastTick = 5;
-    google.protobuf.Duration highPriceLastTick = 6;
-    google.protobuf.Duration lowPriceLastTick = 7;
-    google.protobuf.Duration midPriceLastTick = 8;
-    google.protobuf.Duration openPriceLastTick = 9;
-    google.protobuf.Duration closePriceLastTick = 10;
-    google.protobuf.Duration SMA = 11;
-    google.protobuf.Duration EMA = 12;
-    google.protobuf.Duration RSI = 13;
-    google.protobuf.Duration MACD = 14;
-    google.protobuf.Duration CCI = 15;
+    google.protobuf.Empty watchPrice = 4;
+    google.protobuf.Duration currentVolume = 5;
+    google.protobuf.Duration volumeLastTick = 6;
+    google.protobuf.Duration highPriceLastTick = 7;
+    google.protobuf.Duration lowPriceLastTick = 8;
+    google.protobuf.Duration midPriceLastTick = 9;
+    google.protobuf.Duration openPriceLastTick = 10;
+    google.protobuf.Duration closePriceLastTick = 11;
+    google.protobuf.Duration SMA = 12;
+    google.protobuf.Duration EMA = 13;
+    google.protobuf.Duration RSI = 14;
+    google.protobuf.Duration MACD = 15;
+    google.protobuf.Duration CCI = 16;
   }
 }
 
@@ -51,7 +52,8 @@ message Trigger {
 
 message Trailing {
   Trigger watchPoint = 1;
-  Trigger triggerPoint = 2;
+  Trigger unwatchPoint = 2;
+  Trigger triggerPoint = 3;
 }
 
 message Manual {
