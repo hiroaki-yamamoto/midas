@@ -43,11 +43,15 @@ message ConditionItem {
 
 message Trigger {
   oneof trigger {
-    Trigger and = 1;
-    Trigger or = 2;
+    Triggers and = 1;
+    Triggers or = 2;
     Trigger not = 3;
     ConditionItem single = 4;
   }
+}
+
+message Triggers {
+  repeated Trigger triggers = 1;
 }
 
 message Trailing {
