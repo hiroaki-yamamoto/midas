@@ -211,7 +211,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.bot.TargetIndicator.oneofGroups_ = [[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]];
+proto.bot.TargetIndicator.oneofGroups_ = [[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]];
 
 /**
  * @enum {number}
@@ -221,18 +221,19 @@ proto.bot.TargetIndicator.TargetCase = {
   ABSOLUTE: 1,
   PERCENTAGE: 2,
   CURRENTPRICE: 3,
-  CURRENTVOLUME: 4,
-  VOLUMELASTTICK: 5,
-  HIGHPRICELASTTICK: 6,
-  LOWPRICELASTTICK: 7,
-  MIDPRICELASTTICK: 8,
-  OPENPRICELASTTICK: 9,
-  CLOSEPRICELASTTICK: 10,
-  SMA: 11,
-  EMA: 12,
-  RSI: 13,
-  MACD: 14,
-  CCI: 15
+  WATCHPRICE: 4,
+  CURRENTVOLUME: 5,
+  VOLUMELASTTICK: 6,
+  HIGHPRICELASTTICK: 7,
+  LOWPRICELASTTICK: 8,
+  MIDPRICELASTTICK: 9,
+  OPENPRICELASTTICK: 10,
+  CLOSEPRICELASTTICK: 11,
+  SMA: 12,
+  EMA: 13,
+  RSI: 14,
+  MACD: 15,
+  CCI: 16
 };
 
 /**
@@ -276,6 +277,7 @@ proto.bot.TargetIndicator.toObject = function(includeInstance, msg) {
     absolute: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0),
     percentage: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
     currentprice: (f = msg.getCurrentprice()) && google_protobuf_empty_pb.Empty.toObject(includeInstance, f),
+    watchprice: (f = msg.getWatchprice()) && google_protobuf_empty_pb.Empty.toObject(includeInstance, f),
     currentvolume: (f = msg.getCurrentvolume()) && google_protobuf_duration_pb.Duration.toObject(includeInstance, f),
     volumelasttick: (f = msg.getVolumelasttick()) && google_protobuf_duration_pb.Duration.toObject(includeInstance, f),
     highpricelasttick: (f = msg.getHighpricelasttick()) && google_protobuf_duration_pb.Duration.toObject(includeInstance, f),
@@ -338,61 +340,66 @@ proto.bot.TargetIndicator.deserializeBinaryFromReader = function(msg, reader) {
       msg.setCurrentprice(value);
       break;
     case 4:
-      var value = new google_protobuf_duration_pb.Duration;
-      reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
-      msg.setCurrentvolume(value);
+      var value = new google_protobuf_empty_pb.Empty;
+      reader.readMessage(value,google_protobuf_empty_pb.Empty.deserializeBinaryFromReader);
+      msg.setWatchprice(value);
       break;
     case 5:
       var value = new google_protobuf_duration_pb.Duration;
       reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
-      msg.setVolumelasttick(value);
+      msg.setCurrentvolume(value);
       break;
     case 6:
       var value = new google_protobuf_duration_pb.Duration;
       reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
-      msg.setHighpricelasttick(value);
+      msg.setVolumelasttick(value);
       break;
     case 7:
       var value = new google_protobuf_duration_pb.Duration;
       reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
-      msg.setLowpricelasttick(value);
+      msg.setHighpricelasttick(value);
       break;
     case 8:
       var value = new google_protobuf_duration_pb.Duration;
       reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
-      msg.setMidpricelasttick(value);
+      msg.setLowpricelasttick(value);
       break;
     case 9:
       var value = new google_protobuf_duration_pb.Duration;
       reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
-      msg.setOpenpricelasttick(value);
+      msg.setMidpricelasttick(value);
       break;
     case 10:
       var value = new google_protobuf_duration_pb.Duration;
       reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
-      msg.setClosepricelasttick(value);
+      msg.setOpenpricelasttick(value);
       break;
     case 11:
       var value = new google_protobuf_duration_pb.Duration;
       reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
-      msg.setSma(value);
+      msg.setClosepricelasttick(value);
       break;
     case 12:
       var value = new google_protobuf_duration_pb.Duration;
       reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
-      msg.setEma(value);
+      msg.setSma(value);
       break;
     case 13:
       var value = new google_protobuf_duration_pb.Duration;
       reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
-      msg.setRsi(value);
+      msg.setEma(value);
       break;
     case 14:
       var value = new google_protobuf_duration_pb.Duration;
       reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
-      msg.setMacd(value);
+      msg.setRsi(value);
       break;
     case 15:
+      var value = new google_protobuf_duration_pb.Duration;
+      reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
+      msg.setMacd(value);
+      break;
+    case 16:
       var value = new google_protobuf_duration_pb.Duration;
       reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
       msg.setCci(value);
@@ -448,15 +455,15 @@ proto.bot.TargetIndicator.serializeBinaryToWriter = function(message, writer) {
       google_protobuf_empty_pb.Empty.serializeBinaryToWriter
     );
   }
-  f = message.getCurrentvolume();
+  f = message.getWatchprice();
   if (f != null) {
     writer.writeMessage(
       4,
       f,
-      google_protobuf_duration_pb.Duration.serializeBinaryToWriter
+      google_protobuf_empty_pb.Empty.serializeBinaryToWriter
     );
   }
-  f = message.getVolumelasttick();
+  f = message.getCurrentvolume();
   if (f != null) {
     writer.writeMessage(
       5,
@@ -464,7 +471,7 @@ proto.bot.TargetIndicator.serializeBinaryToWriter = function(message, writer) {
       google_protobuf_duration_pb.Duration.serializeBinaryToWriter
     );
   }
-  f = message.getHighpricelasttick();
+  f = message.getVolumelasttick();
   if (f != null) {
     writer.writeMessage(
       6,
@@ -472,7 +479,7 @@ proto.bot.TargetIndicator.serializeBinaryToWriter = function(message, writer) {
       google_protobuf_duration_pb.Duration.serializeBinaryToWriter
     );
   }
-  f = message.getLowpricelasttick();
+  f = message.getHighpricelasttick();
   if (f != null) {
     writer.writeMessage(
       7,
@@ -480,7 +487,7 @@ proto.bot.TargetIndicator.serializeBinaryToWriter = function(message, writer) {
       google_protobuf_duration_pb.Duration.serializeBinaryToWriter
     );
   }
-  f = message.getMidpricelasttick();
+  f = message.getLowpricelasttick();
   if (f != null) {
     writer.writeMessage(
       8,
@@ -488,7 +495,7 @@ proto.bot.TargetIndicator.serializeBinaryToWriter = function(message, writer) {
       google_protobuf_duration_pb.Duration.serializeBinaryToWriter
     );
   }
-  f = message.getOpenpricelasttick();
+  f = message.getMidpricelasttick();
   if (f != null) {
     writer.writeMessage(
       9,
@@ -496,7 +503,7 @@ proto.bot.TargetIndicator.serializeBinaryToWriter = function(message, writer) {
       google_protobuf_duration_pb.Duration.serializeBinaryToWriter
     );
   }
-  f = message.getClosepricelasttick();
+  f = message.getOpenpricelasttick();
   if (f != null) {
     writer.writeMessage(
       10,
@@ -504,7 +511,7 @@ proto.bot.TargetIndicator.serializeBinaryToWriter = function(message, writer) {
       google_protobuf_duration_pb.Duration.serializeBinaryToWriter
     );
   }
-  f = message.getSma();
+  f = message.getClosepricelasttick();
   if (f != null) {
     writer.writeMessage(
       11,
@@ -512,7 +519,7 @@ proto.bot.TargetIndicator.serializeBinaryToWriter = function(message, writer) {
       google_protobuf_duration_pb.Duration.serializeBinaryToWriter
     );
   }
-  f = message.getEma();
+  f = message.getSma();
   if (f != null) {
     writer.writeMessage(
       12,
@@ -520,7 +527,7 @@ proto.bot.TargetIndicator.serializeBinaryToWriter = function(message, writer) {
       google_protobuf_duration_pb.Duration.serializeBinaryToWriter
     );
   }
-  f = message.getRsi();
+  f = message.getEma();
   if (f != null) {
     writer.writeMessage(
       13,
@@ -528,7 +535,7 @@ proto.bot.TargetIndicator.serializeBinaryToWriter = function(message, writer) {
       google_protobuf_duration_pb.Duration.serializeBinaryToWriter
     );
   }
-  f = message.getMacd();
+  f = message.getRsi();
   if (f != null) {
     writer.writeMessage(
       14,
@@ -536,10 +543,18 @@ proto.bot.TargetIndicator.serializeBinaryToWriter = function(message, writer) {
       google_protobuf_duration_pb.Duration.serializeBinaryToWriter
     );
   }
-  f = message.getCci();
+  f = message.getMacd();
   if (f != null) {
     writer.writeMessage(
       15,
+      f,
+      google_protobuf_duration_pb.Duration.serializeBinaryToWriter
+    );
+  }
+  f = message.getCci();
+  if (f != null) {
+    writer.writeMessage(
+      16,
       f,
       google_protobuf_duration_pb.Duration.serializeBinaryToWriter
     );
@@ -657,12 +672,49 @@ proto.bot.TargetIndicator.prototype.hasCurrentprice = function() {
 
 
 /**
- * optional google.protobuf.Duration currentVolume = 4;
+ * optional google.protobuf.Empty watchPrice = 4;
+ * @return {?proto.google.protobuf.Empty}
+ */
+proto.bot.TargetIndicator.prototype.getWatchprice = function() {
+  return /** @type{?proto.google.protobuf.Empty} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_empty_pb.Empty, 4));
+};
+
+
+/**
+ * @param {?proto.google.protobuf.Empty|undefined} value
+ * @return {!proto.bot.TargetIndicator} returns this
+*/
+proto.bot.TargetIndicator.prototype.setWatchprice = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 4, proto.bot.TargetIndicator.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.bot.TargetIndicator} returns this
+ */
+proto.bot.TargetIndicator.prototype.clearWatchprice = function() {
+  return this.setWatchprice(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.bot.TargetIndicator.prototype.hasWatchprice = function() {
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
+/**
+ * optional google.protobuf.Duration currentVolume = 5;
  * @return {?proto.google.protobuf.Duration}
  */
 proto.bot.TargetIndicator.prototype.getCurrentvolume = function() {
   return /** @type{?proto.google.protobuf.Duration} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 4));
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 5));
 };
 
 
@@ -671,7 +723,7 @@ proto.bot.TargetIndicator.prototype.getCurrentvolume = function() {
  * @return {!proto.bot.TargetIndicator} returns this
 */
 proto.bot.TargetIndicator.prototype.setCurrentvolume = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 4, proto.bot.TargetIndicator.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 5, proto.bot.TargetIndicator.oneofGroups_[0], value);
 };
 
 
@@ -689,17 +741,17 @@ proto.bot.TargetIndicator.prototype.clearCurrentvolume = function() {
  * @return {boolean}
  */
 proto.bot.TargetIndicator.prototype.hasCurrentvolume = function() {
-  return jspb.Message.getField(this, 4) != null;
+  return jspb.Message.getField(this, 5) != null;
 };
 
 
 /**
- * optional google.protobuf.Duration volumeLastTick = 5;
+ * optional google.protobuf.Duration volumeLastTick = 6;
  * @return {?proto.google.protobuf.Duration}
  */
 proto.bot.TargetIndicator.prototype.getVolumelasttick = function() {
   return /** @type{?proto.google.protobuf.Duration} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 5));
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 6));
 };
 
 
@@ -708,7 +760,7 @@ proto.bot.TargetIndicator.prototype.getVolumelasttick = function() {
  * @return {!proto.bot.TargetIndicator} returns this
 */
 proto.bot.TargetIndicator.prototype.setVolumelasttick = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 5, proto.bot.TargetIndicator.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 6, proto.bot.TargetIndicator.oneofGroups_[0], value);
 };
 
 
@@ -726,17 +778,17 @@ proto.bot.TargetIndicator.prototype.clearVolumelasttick = function() {
  * @return {boolean}
  */
 proto.bot.TargetIndicator.prototype.hasVolumelasttick = function() {
-  return jspb.Message.getField(this, 5) != null;
+  return jspb.Message.getField(this, 6) != null;
 };
 
 
 /**
- * optional google.protobuf.Duration highPriceLastTick = 6;
+ * optional google.protobuf.Duration highPriceLastTick = 7;
  * @return {?proto.google.protobuf.Duration}
  */
 proto.bot.TargetIndicator.prototype.getHighpricelasttick = function() {
   return /** @type{?proto.google.protobuf.Duration} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 6));
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 7));
 };
 
 
@@ -745,7 +797,7 @@ proto.bot.TargetIndicator.prototype.getHighpricelasttick = function() {
  * @return {!proto.bot.TargetIndicator} returns this
 */
 proto.bot.TargetIndicator.prototype.setHighpricelasttick = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 6, proto.bot.TargetIndicator.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 7, proto.bot.TargetIndicator.oneofGroups_[0], value);
 };
 
 
@@ -763,17 +815,17 @@ proto.bot.TargetIndicator.prototype.clearHighpricelasttick = function() {
  * @return {boolean}
  */
 proto.bot.TargetIndicator.prototype.hasHighpricelasttick = function() {
-  return jspb.Message.getField(this, 6) != null;
+  return jspb.Message.getField(this, 7) != null;
 };
 
 
 /**
- * optional google.protobuf.Duration lowPriceLastTick = 7;
+ * optional google.protobuf.Duration lowPriceLastTick = 8;
  * @return {?proto.google.protobuf.Duration}
  */
 proto.bot.TargetIndicator.prototype.getLowpricelasttick = function() {
   return /** @type{?proto.google.protobuf.Duration} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 7));
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 8));
 };
 
 
@@ -782,7 +834,7 @@ proto.bot.TargetIndicator.prototype.getLowpricelasttick = function() {
  * @return {!proto.bot.TargetIndicator} returns this
 */
 proto.bot.TargetIndicator.prototype.setLowpricelasttick = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 7, proto.bot.TargetIndicator.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 8, proto.bot.TargetIndicator.oneofGroups_[0], value);
 };
 
 
@@ -800,17 +852,17 @@ proto.bot.TargetIndicator.prototype.clearLowpricelasttick = function() {
  * @return {boolean}
  */
 proto.bot.TargetIndicator.prototype.hasLowpricelasttick = function() {
-  return jspb.Message.getField(this, 7) != null;
+  return jspb.Message.getField(this, 8) != null;
 };
 
 
 /**
- * optional google.protobuf.Duration midPriceLastTick = 8;
+ * optional google.protobuf.Duration midPriceLastTick = 9;
  * @return {?proto.google.protobuf.Duration}
  */
 proto.bot.TargetIndicator.prototype.getMidpricelasttick = function() {
   return /** @type{?proto.google.protobuf.Duration} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 8));
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 9));
 };
 
 
@@ -819,7 +871,7 @@ proto.bot.TargetIndicator.prototype.getMidpricelasttick = function() {
  * @return {!proto.bot.TargetIndicator} returns this
 */
 proto.bot.TargetIndicator.prototype.setMidpricelasttick = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 8, proto.bot.TargetIndicator.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 9, proto.bot.TargetIndicator.oneofGroups_[0], value);
 };
 
 
@@ -837,17 +889,17 @@ proto.bot.TargetIndicator.prototype.clearMidpricelasttick = function() {
  * @return {boolean}
  */
 proto.bot.TargetIndicator.prototype.hasMidpricelasttick = function() {
-  return jspb.Message.getField(this, 8) != null;
+  return jspb.Message.getField(this, 9) != null;
 };
 
 
 /**
- * optional google.protobuf.Duration openPriceLastTick = 9;
+ * optional google.protobuf.Duration openPriceLastTick = 10;
  * @return {?proto.google.protobuf.Duration}
  */
 proto.bot.TargetIndicator.prototype.getOpenpricelasttick = function() {
   return /** @type{?proto.google.protobuf.Duration} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 9));
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 10));
 };
 
 
@@ -856,7 +908,7 @@ proto.bot.TargetIndicator.prototype.getOpenpricelasttick = function() {
  * @return {!proto.bot.TargetIndicator} returns this
 */
 proto.bot.TargetIndicator.prototype.setOpenpricelasttick = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 9, proto.bot.TargetIndicator.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 10, proto.bot.TargetIndicator.oneofGroups_[0], value);
 };
 
 
@@ -874,17 +926,17 @@ proto.bot.TargetIndicator.prototype.clearOpenpricelasttick = function() {
  * @return {boolean}
  */
 proto.bot.TargetIndicator.prototype.hasOpenpricelasttick = function() {
-  return jspb.Message.getField(this, 9) != null;
+  return jspb.Message.getField(this, 10) != null;
 };
 
 
 /**
- * optional google.protobuf.Duration closePriceLastTick = 10;
+ * optional google.protobuf.Duration closePriceLastTick = 11;
  * @return {?proto.google.protobuf.Duration}
  */
 proto.bot.TargetIndicator.prototype.getClosepricelasttick = function() {
   return /** @type{?proto.google.protobuf.Duration} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 10));
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 11));
 };
 
 
@@ -893,7 +945,7 @@ proto.bot.TargetIndicator.prototype.getClosepricelasttick = function() {
  * @return {!proto.bot.TargetIndicator} returns this
 */
 proto.bot.TargetIndicator.prototype.setClosepricelasttick = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 10, proto.bot.TargetIndicator.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 11, proto.bot.TargetIndicator.oneofGroups_[0], value);
 };
 
 
@@ -911,17 +963,17 @@ proto.bot.TargetIndicator.prototype.clearClosepricelasttick = function() {
  * @return {boolean}
  */
 proto.bot.TargetIndicator.prototype.hasClosepricelasttick = function() {
-  return jspb.Message.getField(this, 10) != null;
+  return jspb.Message.getField(this, 11) != null;
 };
 
 
 /**
- * optional google.protobuf.Duration SMA = 11;
+ * optional google.protobuf.Duration SMA = 12;
  * @return {?proto.google.protobuf.Duration}
  */
 proto.bot.TargetIndicator.prototype.getSma = function() {
   return /** @type{?proto.google.protobuf.Duration} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 11));
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 12));
 };
 
 
@@ -930,7 +982,7 @@ proto.bot.TargetIndicator.prototype.getSma = function() {
  * @return {!proto.bot.TargetIndicator} returns this
 */
 proto.bot.TargetIndicator.prototype.setSma = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 11, proto.bot.TargetIndicator.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 12, proto.bot.TargetIndicator.oneofGroups_[0], value);
 };
 
 
@@ -948,17 +1000,17 @@ proto.bot.TargetIndicator.prototype.clearSma = function() {
  * @return {boolean}
  */
 proto.bot.TargetIndicator.prototype.hasSma = function() {
-  return jspb.Message.getField(this, 11) != null;
+  return jspb.Message.getField(this, 12) != null;
 };
 
 
 /**
- * optional google.protobuf.Duration EMA = 12;
+ * optional google.protobuf.Duration EMA = 13;
  * @return {?proto.google.protobuf.Duration}
  */
 proto.bot.TargetIndicator.prototype.getEma = function() {
   return /** @type{?proto.google.protobuf.Duration} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 12));
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 13));
 };
 
 
@@ -967,7 +1019,7 @@ proto.bot.TargetIndicator.prototype.getEma = function() {
  * @return {!proto.bot.TargetIndicator} returns this
 */
 proto.bot.TargetIndicator.prototype.setEma = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 12, proto.bot.TargetIndicator.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 13, proto.bot.TargetIndicator.oneofGroups_[0], value);
 };
 
 
@@ -985,17 +1037,17 @@ proto.bot.TargetIndicator.prototype.clearEma = function() {
  * @return {boolean}
  */
 proto.bot.TargetIndicator.prototype.hasEma = function() {
-  return jspb.Message.getField(this, 12) != null;
+  return jspb.Message.getField(this, 13) != null;
 };
 
 
 /**
- * optional google.protobuf.Duration RSI = 13;
+ * optional google.protobuf.Duration RSI = 14;
  * @return {?proto.google.protobuf.Duration}
  */
 proto.bot.TargetIndicator.prototype.getRsi = function() {
   return /** @type{?proto.google.protobuf.Duration} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 13));
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 14));
 };
 
 
@@ -1004,7 +1056,7 @@ proto.bot.TargetIndicator.prototype.getRsi = function() {
  * @return {!proto.bot.TargetIndicator} returns this
 */
 proto.bot.TargetIndicator.prototype.setRsi = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 13, proto.bot.TargetIndicator.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 14, proto.bot.TargetIndicator.oneofGroups_[0], value);
 };
 
 
@@ -1022,17 +1074,17 @@ proto.bot.TargetIndicator.prototype.clearRsi = function() {
  * @return {boolean}
  */
 proto.bot.TargetIndicator.prototype.hasRsi = function() {
-  return jspb.Message.getField(this, 13) != null;
+  return jspb.Message.getField(this, 14) != null;
 };
 
 
 /**
- * optional google.protobuf.Duration MACD = 14;
+ * optional google.protobuf.Duration MACD = 15;
  * @return {?proto.google.protobuf.Duration}
  */
 proto.bot.TargetIndicator.prototype.getMacd = function() {
   return /** @type{?proto.google.protobuf.Duration} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 14));
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 15));
 };
 
 
@@ -1041,7 +1093,7 @@ proto.bot.TargetIndicator.prototype.getMacd = function() {
  * @return {!proto.bot.TargetIndicator} returns this
 */
 proto.bot.TargetIndicator.prototype.setMacd = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 14, proto.bot.TargetIndicator.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 15, proto.bot.TargetIndicator.oneofGroups_[0], value);
 };
 
 
@@ -1059,17 +1111,17 @@ proto.bot.TargetIndicator.prototype.clearMacd = function() {
  * @return {boolean}
  */
 proto.bot.TargetIndicator.prototype.hasMacd = function() {
-  return jspb.Message.getField(this, 14) != null;
+  return jspb.Message.getField(this, 15) != null;
 };
 
 
 /**
- * optional google.protobuf.Duration CCI = 15;
+ * optional google.protobuf.Duration CCI = 16;
  * @return {?proto.google.protobuf.Duration}
  */
 proto.bot.TargetIndicator.prototype.getCci = function() {
   return /** @type{?proto.google.protobuf.Duration} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 15));
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 16));
 };
 
 
@@ -1078,7 +1130,7 @@ proto.bot.TargetIndicator.prototype.getCci = function() {
  * @return {!proto.bot.TargetIndicator} returns this
 */
 proto.bot.TargetIndicator.prototype.setCci = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 15, proto.bot.TargetIndicator.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 16, proto.bot.TargetIndicator.oneofGroups_[0], value);
 };
 
 
@@ -1096,7 +1148,7 @@ proto.bot.TargetIndicator.prototype.clearCci = function() {
  * @return {boolean}
  */
 proto.bot.TargetIndicator.prototype.hasCci = function() {
-  return jspb.Message.getField(this, 15) != null;
+  return jspb.Message.getField(this, 16) != null;
 };
 
 
@@ -1697,6 +1749,7 @@ proto.bot.Trailing.prototype.toObject = function(opt_includeInstance) {
 proto.bot.Trailing.toObject = function(includeInstance, msg) {
   var f, obj = {
     watchpoint: (f = msg.getWatchpoint()) && proto.bot.Trigger.toObject(includeInstance, f),
+    unwatchpoint: (f = msg.getUnwatchpoint()) && proto.bot.Trigger.toObject(includeInstance, f),
     triggerpoint: (f = msg.getTriggerpoint()) && proto.bot.Trigger.toObject(includeInstance, f)
   };
 
@@ -1742,6 +1795,11 @@ proto.bot.Trailing.deserializeBinaryFromReader = function(msg, reader) {
     case 2:
       var value = new proto.bot.Trigger;
       reader.readMessage(value,proto.bot.Trigger.deserializeBinaryFromReader);
+      msg.setUnwatchpoint(value);
+      break;
+    case 3:
+      var value = new proto.bot.Trigger;
+      reader.readMessage(value,proto.bot.Trigger.deserializeBinaryFromReader);
       msg.setTriggerpoint(value);
       break;
     default:
@@ -1781,10 +1839,18 @@ proto.bot.Trailing.serializeBinaryToWriter = function(message, writer) {
       proto.bot.Trigger.serializeBinaryToWriter
     );
   }
-  f = message.getTriggerpoint();
+  f = message.getUnwatchpoint();
   if (f != null) {
     writer.writeMessage(
       2,
+      f,
+      proto.bot.Trigger.serializeBinaryToWriter
+    );
+  }
+  f = message.getTriggerpoint();
+  if (f != null) {
+    writer.writeMessage(
+      3,
       f,
       proto.bot.Trigger.serializeBinaryToWriter
     );
@@ -1830,10 +1896,10 @@ proto.bot.Trailing.prototype.hasWatchpoint = function() {
 
 
 /**
- * optional Trigger triggerPoint = 2;
+ * optional Trigger unwatchPoint = 2;
  * @return {?proto.bot.Trigger}
  */
-proto.bot.Trailing.prototype.getTriggerpoint = function() {
+proto.bot.Trailing.prototype.getUnwatchpoint = function() {
   return /** @type{?proto.bot.Trigger} */ (
     jspb.Message.getWrapperField(this, proto.bot.Trigger, 2));
 };
@@ -1843,8 +1909,45 @@ proto.bot.Trailing.prototype.getTriggerpoint = function() {
  * @param {?proto.bot.Trigger|undefined} value
  * @return {!proto.bot.Trailing} returns this
 */
-proto.bot.Trailing.prototype.setTriggerpoint = function(value) {
+proto.bot.Trailing.prototype.setUnwatchpoint = function(value) {
   return jspb.Message.setWrapperField(this, 2, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.bot.Trailing} returns this
+ */
+proto.bot.Trailing.prototype.clearUnwatchpoint = function() {
+  return this.setUnwatchpoint(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.bot.Trailing.prototype.hasUnwatchpoint = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional Trigger triggerPoint = 3;
+ * @return {?proto.bot.Trigger}
+ */
+proto.bot.Trailing.prototype.getTriggerpoint = function() {
+  return /** @type{?proto.bot.Trigger} */ (
+    jspb.Message.getWrapperField(this, proto.bot.Trigger, 3));
+};
+
+
+/**
+ * @param {?proto.bot.Trigger|undefined} value
+ * @return {!proto.bot.Trailing} returns this
+*/
+proto.bot.Trailing.prototype.setTriggerpoint = function(value) {
+  return jspb.Message.setWrapperField(this, 3, value);
 };
 
 
@@ -1862,7 +1965,7 @@ proto.bot.Trailing.prototype.clearTriggerpoint = function() {
  * @return {boolean}
  */
 proto.bot.Trailing.prototype.hasTriggerpoint = function() {
-  return jspb.Message.getField(this, 2) != null;
+  return jspb.Message.getField(this, 3) != null;
 };
 
 

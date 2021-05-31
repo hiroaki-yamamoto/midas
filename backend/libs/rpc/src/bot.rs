@@ -2,7 +2,7 @@
 #[serde(rename_all = "camelCase")]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TargetIndicator {
-    #[prost(oneof="target_indicator::Target", tags="1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15")]
+    #[prost(oneof="target_indicator::Target", tags="1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16")]
     pub target: ::core::option::Option<target_indicator::Target>,
 }
 /// Nested message and enum types in `TargetIndicator`.
@@ -18,28 +18,30 @@ pub mod target_indicator {
         #[prost(message, tag="3")]
         CurrentPrice(super::super::google::protobuf::Empty),
         #[prost(message, tag="4")]
-        CurrentVolume(super::super::google::protobuf::Duration),
+        WatchPrice(super::super::google::protobuf::Empty),
         #[prost(message, tag="5")]
-        VolumeLastTick(super::super::google::protobuf::Duration),
+        CurrentVolume(super::super::google::protobuf::Duration),
         #[prost(message, tag="6")]
-        HighPriceLastTick(super::super::google::protobuf::Duration),
+        VolumeLastTick(super::super::google::protobuf::Duration),
         #[prost(message, tag="7")]
-        LowPriceLastTick(super::super::google::protobuf::Duration),
+        HighPriceLastTick(super::super::google::protobuf::Duration),
         #[prost(message, tag="8")]
-        MidPriceLastTick(super::super::google::protobuf::Duration),
+        LowPriceLastTick(super::super::google::protobuf::Duration),
         #[prost(message, tag="9")]
-        OpenPriceLastTick(super::super::google::protobuf::Duration),
+        MidPriceLastTick(super::super::google::protobuf::Duration),
         #[prost(message, tag="10")]
-        ClosePriceLastTick(super::super::google::protobuf::Duration),
+        OpenPriceLastTick(super::super::google::protobuf::Duration),
         #[prost(message, tag="11")]
-        Sma(super::super::google::protobuf::Duration),
+        ClosePriceLastTick(super::super::google::protobuf::Duration),
         #[prost(message, tag="12")]
-        Ema(super::super::google::protobuf::Duration),
+        Sma(super::super::google::protobuf::Duration),
         #[prost(message, tag="13")]
-        Rsi(super::super::google::protobuf::Duration),
+        Ema(super::super::google::protobuf::Duration),
         #[prost(message, tag="14")]
-        Macd(super::super::google::protobuf::Duration),
+        Rsi(super::super::google::protobuf::Duration),
         #[prost(message, tag="15")]
+        Macd(super::super::google::protobuf::Duration),
+        #[prost(message, tag="16")]
         Cci(super::super::google::protobuf::Duration),
     }
 }
@@ -84,6 +86,8 @@ pub struct Trailing {
     #[prost(message, optional, tag="1")]
     pub watch_point: ::core::option::Option<Trigger>,
     #[prost(message, optional, tag="2")]
+    pub unwatch_point: ::core::option::Option<Trigger>,
+    #[prost(message, optional, tag="3")]
     pub trigger_point: ::core::option::Option<Trigger>,
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]

@@ -17,6 +17,11 @@ export class TargetIndicator extends jspb.Message {
   hasCurrentprice(): boolean;
   clearCurrentprice(): TargetIndicator;
 
+  getWatchprice(): google_protobuf_empty_pb.Empty | undefined;
+  setWatchprice(value?: google_protobuf_empty_pb.Empty): TargetIndicator;
+  hasWatchprice(): boolean;
+  clearWatchprice(): TargetIndicator;
+
   getCurrentvolume(): google_protobuf_duration_pb.Duration | undefined;
   setCurrentvolume(value?: google_protobuf_duration_pb.Duration): TargetIndicator;
   hasCurrentvolume(): boolean;
@@ -92,6 +97,7 @@ export namespace TargetIndicator {
     absolute: number,
     percentage: number,
     currentprice?: google_protobuf_empty_pb.Empty.AsObject,
+    watchprice?: google_protobuf_empty_pb.Empty.AsObject,
     currentvolume?: google_protobuf_duration_pb.Duration.AsObject,
     volumelasttick?: google_protobuf_duration_pb.Duration.AsObject,
     highpricelasttick?: google_protobuf_duration_pb.Duration.AsObject,
@@ -111,18 +117,19 @@ export namespace TargetIndicator {
     ABSOLUTE = 1,
     PERCENTAGE = 2,
     CURRENTPRICE = 3,
-    CURRENTVOLUME = 4,
-    VOLUMELASTTICK = 5,
-    HIGHPRICELASTTICK = 6,
-    LOWPRICELASTTICK = 7,
-    MIDPRICELASTTICK = 8,
-    OPENPRICELASTTICK = 9,
-    CLOSEPRICELASTTICK = 10,
-    SMA = 11,
-    EMA = 12,
-    RSI = 13,
-    MACD = 14,
-    CCI = 15,
+    WATCHPRICE = 4,
+    CURRENTVOLUME = 5,
+    VOLUMELASTTICK = 6,
+    HIGHPRICELASTTICK = 7,
+    LOWPRICELASTTICK = 8,
+    MIDPRICELASTTICK = 9,
+    OPENPRICELASTTICK = 10,
+    CLOSEPRICELASTTICK = 11,
+    SMA = 12,
+    EMA = 13,
+    RSI = 14,
+    MACD = 15,
+    CCI = 16,
   }
 }
 
@@ -210,6 +217,11 @@ export class Trailing extends jspb.Message {
   hasWatchpoint(): boolean;
   clearWatchpoint(): Trailing;
 
+  getUnwatchpoint(): Trigger | undefined;
+  setUnwatchpoint(value?: Trigger): Trailing;
+  hasUnwatchpoint(): boolean;
+  clearUnwatchpoint(): Trailing;
+
   getTriggerpoint(): Trigger | undefined;
   setTriggerpoint(value?: Trigger): Trailing;
   hasTriggerpoint(): boolean;
@@ -226,6 +238,7 @@ export class Trailing extends jspb.Message {
 export namespace Trailing {
   export type AsObject = {
     watchpoint?: Trigger.AsObject,
+    unwatchpoint?: Trigger.AsObject,
     triggerpoint?: Trigger.AsObject,
   }
 }
