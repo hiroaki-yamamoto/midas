@@ -26,11 +26,14 @@ import { MatListModule } from '@angular/material/list';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSelectModule } from '@angular/material/select';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 import * as am4core from '@amcharts/amcharts4/core';
 import am4themes_animated from '@amcharts/amcharts4/themes/animated';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
+import { BotPanelComponent } from './bot-panel/bot-panel.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
 import { SyncComponent } from './sync/sync.component';
 import { IconSnackBarComponent } from './icon-snackbar/icon-snackbar.component';
 import { SyncProgressComponent } from './sync-progress/sync-progress.component';
@@ -56,7 +59,9 @@ import { BotEditorComponent } from './bot-editor/bot-editor.component';
     EditDialogComponent,
     ExchangePipePipe,
     DeleteWarnComponent,
+    BotPanelComponent,
     BotEditorComponent,
+    DashboardComponent,
   ],
   imports: [
     BrowserModule,
@@ -68,6 +73,7 @@ import { BotEditorComponent } from './bot-editor/bot-editor.component';
     ReactiveFormsModule,
     FlexLayoutModule,
     MatDialogModule,
+    MatExpansionModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
