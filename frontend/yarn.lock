@@ -3386,12 +3386,19 @@ custom-event@~1.0.0:
   resolved "https://registry.yarnpkg.com/custom-event/-/custom-event-1.0.1.tgz#5d02a46850adf1b4a317946a3928fccb5bfd0425"
   integrity sha1-XQKkaFCt8bSjF5RqOSj8y1v9BCU=
 
-"d3-array@1 - 2", d3-array@>=2.5:
+"d3-array@1 - 2":
   version "2.12.1"
   resolved "https://registry.yarnpkg.com/d3-array/-/d3-array-2.12.1.tgz#e20b41aafcdffdf5d50928004ececf815a465e81"
   integrity sha512-B0ErZK/66mHtEsR1TkPEEkwdy+WDesimkM5gpZr5Dsg54BiTA5RXtYW5qTLIAcekaS9xfZrzBLF/OAkB3Qn1YQ==
   dependencies:
     internmap "^1.0.0"
+
+d3-array@>=2.5:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/d3-array/-/d3-array-3.0.0.tgz#32edad6c4b1a8c85800ffc856a5d6a4761a83a6d"
+  integrity sha512-2t/oQ99GzOkttogku85VrBbY2soA/SfVea9fkCGhJ4830sAo8Eslx1SgWT9bzLv9Pxypm+Vjl/BfCnUWTcoDXw==
+  dependencies:
+    internmap "1 - 2"
 
 d3-color@1:
   version "1.4.1"
@@ -5166,6 +5173,11 @@ internal-ip@^4.3.0:
   dependencies:
     default-gateway "^4.2.0"
     ipaddr.js "^1.9.0"
+
+"internmap@1 - 2":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/internmap/-/internmap-2.0.0.tgz#cc38ce0c33eaf4501c07c990673c07caa782179a"
+  integrity sha512-XpWRFi4iwmWoSbMQQPUL7c3Qze/wfEnJxtpMC32awNzo7QC06vNZ6xXz/bLZyHxmMGoiX93eSxXEyTFQB83ukQ==
 
 internmap@^1.0.0:
   version "1.0.1"
