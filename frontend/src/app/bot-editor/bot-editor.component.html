@@ -1,1 +1,14 @@
-<p>bot-editor works!</p>
+<section>
+  <header>
+    <h1 i18n>Add/Edit Bot</h1>
+  </header>
+  <form [formGroup]="form" fxLayout="column">
+    <mat-form-field>
+      <mat-label i18n>Bot Name</mat-label>
+      <input matInput formControlName="name">
+    </mat-form-field>
+    <mat-checkbox class="example-margin" formControlName="reinvest" i18n>
+      Re-invest Mode
+    </mat-checkbox>
+  </form>
+</section>
