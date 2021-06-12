@@ -22,9 +22,9 @@ binance_symbols = { path = "../symbols" }
 
 async-trait = "0.1.50"
 futures = "0.3.15"
-mongodb = { version = "1.2.1", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "1.2.2", default-features = false, features = ["async-std-runtime"] }
 nats = "0.9.18"
-rmp-serde = "0.15.4"
+rmp-serde = "0.15.5"
 serde_json = "1.0.64"
 slog = "2.7.0"
 tokio = { version = "1.6.1", features = ["macros", "time"] }
