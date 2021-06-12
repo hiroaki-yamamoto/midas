@@ -1762,9 +1762,9 @@ dependencies = [
 
 [[package]]
 name = "mio"
-version = "0.7.11"
+version = "0.7.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf80d3e903b34e0bd7282b218398aec54e082c840d9baf8339e0080a0c542956"
+checksum = "84f7475b9d5f08bf64b8d9ef6ca9776a138a8f49681a26c0cfb19639376502f9"
 dependencies = [
  "libc",
  "log",
@@ -3357,7 +3357,7 @@ dependencies = [
  "bytes 1.0.1",
  "libc",
  "memchr",
- "mio 0.7.11",
+ "mio 0.7.12",
  "num_cpus",
  "once_cell",
  "pin-project-lite 0.2.6",
