@@ -1,9 +1,7 @@
 import {
   Component, OnInit,
-  ElementRef, ViewChild
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { editor } from 'monaco-editor';
 
 @Component({
   selector: 'app-bot-editor',
@@ -12,15 +10,16 @@ import { editor } from 'monaco-editor';
 })
 export class BotEditorComponent implements OnInit {
 
-  @ViewChild('monacoEditor') monacoEditor: ElementRef;
-
   public form: FormGroup;
+  public editorOption = {
+    theme: 'vs-dark',
+    language: 'javascript'
+  };
 
   constructor() {}
 
   ngOnInit(): void {
     this.form = new FormGroup({});
-    console.log(this.monacoEditor);
   }
 
 }

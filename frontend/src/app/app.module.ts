@@ -33,6 +33,8 @@ import * as am4core from '@amcharts/amcharts4/core';
 import am4themes_animated from '@amcharts/amcharts4/themes/animated';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
+import { MonacoEditorModule } from 'ngx-monaco-editor'
+
 import { BotPanelComponent } from './bot-panel/bot-panel.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { SyncComponent } from './sync/sync.component';
@@ -70,6 +72,8 @@ import { BotEditorComponent } from './bot-editor/bot-editor.component';
     BrowserAnimationsModule,
     HttpClientXsrfModule,
     HttpClientModule,
+
+    MonacoEditorModule.forRoot(),
 
     ReactiveFormsModule,
     FlexLayoutModule,
