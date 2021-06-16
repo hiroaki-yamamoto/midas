@@ -1,0 +1,15 @@
+function entryWatchPoint(current) {
+  // Write entry watchpoint condition here.
+}
+
+function entryPoint(current, watch) {
+  // Write entryoiint condition here.
+}
+
+function exitWatchPoint(current) {
+  // Write extit watch point here.
+}
+
+function exitPoint(current, watch) {
+  // Write exit point here.
+}
