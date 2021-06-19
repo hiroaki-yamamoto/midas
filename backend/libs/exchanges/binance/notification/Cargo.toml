@@ -25,7 +25,7 @@ nats = "0.9.18"
 rmp-serde = "0.15.5"
 serde_json = "1.0.64"
 slog = "2.7.0"
-tokio = { version = "1.6.1", features = ["time", "macros"] }
+tokio = { version = "1.7.1", features = ["time", "macros"] }
 tokio-stream = "0.1.6"
 tokio-tungstenite = { version = "0.14.0", features = ["native-tls"] }
 futures = "0.3.15"
