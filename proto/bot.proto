@@ -2,75 +2,7 @@ syntax = "proto3";
 
 package bot;
 
-import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/empty.proto";
-
-message TargetIndicator {
-  oneof target {
-    double absolute = 1;
-    double percentage = 2;
-    google.protobuf.Empty currentPrice = 3;
-    google.protobuf.Empty watchPrice = 4;
-    google.protobuf.Duration currentVolume = 5;
-    google.protobuf.Duration volumeLastTick = 6;
-    google.protobuf.Duration highPriceLastTick = 7;
-    google.protobuf.Duration lowPriceLastTick = 8;
-    google.protobuf.Duration midPriceLastTick = 9;
-    google.protobuf.Duration openPriceLastTick = 10;
-    google.protobuf.Duration closePriceLastTick = 11;
-    google.protobuf.Duration SMA = 12;
-    google.protobuf.Duration EMA = 13;
-    google.protobuf.Duration RSI = 14;
-    google.protobuf.Duration MACD = 15;
-    google.protobuf.Duration CCI = 16;
-  }
-}
-
-enum CompareOp {
-  eq = 0;
-  gt = 1;
-  gte = 2;
-  lt = 3;
-  lte = 4;
-}
-
-message ConditionItem {
-  CompareOp cmp = 1;
-  TargetIndicator opA = 2;
-  TargetIndicator opB = 3;
-}
-
-message Trigger {
-  oneof trigger {
-    Triggers and = 1;
-    Triggers or = 2;
-    Trigger not = 3;
-    ConditionItem single = 4;
-  }
-}
-
-message Triggers {
-  repeated Trigger triggers = 1;
-}
-
-message Trailing {
-  Trigger watchPoint = 1;
-  Trigger unwatchPoint = 2;
-  Trigger triggerPoint = 3;
-}
-
-message Manual {
-  Trailing entryPoint = 1;
-  Trailing exitPoint = 2;
-  Trigger lossCutPoint = 3;
-}
-
-message TriggerType {
-  oneof type {
-    Manual manual = 1;
-  }
-}
 
 message Bot {
   string id = 1;
@@ -80,20 +12,6 @@ message Bot {
   double tradingAmount = 5;
   double currentValuation = 6;
   double realizedProfit = 7;
-  bool auto_reinvestment = 8;
-  TriggerType trigger = 9;
-}
-
-enum PositionStatus {
-  closed = 0;
-  opened = 1;
-}
-
-message Position {
-  string id = 1;
-  string botId = 2;
-  string symbol = 3;
-  PositionStatus status = 4;
-  double tradingAmount = 5;
-  double valuation = 6;
+  bool reinvest = 8;
+  string condition = 9;
 }
