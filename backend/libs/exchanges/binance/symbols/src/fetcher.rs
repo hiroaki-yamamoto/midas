@@ -7,7 +7,7 @@ use ::nats::Connection as Broker;
 use ::slog::Logger;
 
 use ::binance_clients::constants::REST_ENDPOINT;
-use ::rpc::entities::SymbolInfo;
+use ::rpc::symbols::SymbolInfo;
 use ::types::ThreadSafeResult;
 
 use super::entities::{ExchangeInfo, Symbol};

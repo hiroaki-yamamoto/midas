@@ -1,6 +1,6 @@
 use ::serde::{Deserialize, Serialize};
 
-use ::rpc::entities::SymbolInfo;
+use ::rpc::symbols::SymbolInfo;
 
 use super::filters::Filters;
 

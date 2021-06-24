@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package symbols;
+
+message SymbolInfo {
+  string symbol = 1;
+  string status = 2;
+  string base = 3;
+  string quote = 4;
+}
+
+message BaseCurrencyList {
+  repeated string baseCurrencies = 1;
+}

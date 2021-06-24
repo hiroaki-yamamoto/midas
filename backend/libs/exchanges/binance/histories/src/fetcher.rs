@@ -24,8 +24,8 @@ use ::config::{DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH};
 use ::entities::KlineCtrl;
 use ::errors::{EmptyError, MaximumAttemptExceeded};
 use ::history::HistoryFetcher as HistoryFetcherTrait;
-use ::rpc::entities::SymbolInfo;
 use ::rpc::historical::HistChartProg;
+use ::rpc::symbols::SymbolInfo;
 use ::types::{GenericResult, ThreadSafeResult};
 
 use super::entities::{

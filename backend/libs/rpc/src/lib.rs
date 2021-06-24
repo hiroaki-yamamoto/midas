@@ -6,6 +6,7 @@ pub mod historical;
 mod historical_impl;
 pub mod keychain;
 pub mod rejection_handler;
+pub mod symbols;
 
 pub mod google {
   pub mod protobuf {

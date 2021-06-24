@@ -15,13 +15,6 @@ enum BackTestPriceBase {
   HighLowMid = 5;
 }
 
-message SymbolInfo {
-  string symbol = 1;
-  string status = 2;
-  string base = 3;
-  string quote = 4;
-}
-
 message Status {
   uint32 code = 1;
   string message = 2;
