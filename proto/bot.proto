@@ -4,6 +4,10 @@ package bot;
 
 import "google/protobuf/timestamp.proto";
 
+enum TriggerType {
+  MANUAL = 0;
+}
+
 message Bot {
   string id = 1;
   string name = 2;
@@ -13,4 +17,19 @@ message Bot {
   double realizedProfit = 7;
   bool reinvest = 8;
   string condition = 9;
+  TriggerType triggerType = 10;
+}
+
+enum PositionStatus {
+  closed = 0;
+  opened = 1;
+}
+
+message Position {
+  string id = 1;
+  string botId = 2;
+  string symbol = 3;
+  PositionStatus status = 4;
+  double tradingAmount = 5;
+  double valuation = 6;
 }

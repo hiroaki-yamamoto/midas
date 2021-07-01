@@ -30,6 +30,9 @@ export class Bot extends jspb.Message {
   getCondition(): string;
   setCondition(value: string): Bot;
 
+  getTriggertype(): TriggerType;
+  setTriggertype(value: TriggerType): Bot;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Bot.AsObject;
   static toObject(includeInstance: boolean, msg: Bot): Bot.AsObject;
@@ -48,6 +51,52 @@ export namespace Bot {
     realizedprofit: number,
     reinvest: boolean,
     condition: string,
+    triggertype: TriggerType,
   }
 }
 
+export class Position extends jspb.Message {
+  getId(): string;
+  setId(value: string): Position;
+
+  getBotid(): string;
+  setBotid(value: string): Position;
+
+  getSymbol(): string;
+  setSymbol(value: string): Position;
+
+  getStatus(): PositionStatus;
+  setStatus(value: PositionStatus): Position;
+
+  getTradingamount(): number;
+  setTradingamount(value: number): Position;
+
+  getValuation(): number;
+  setValuation(value: number): Position;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Position.AsObject;
+  static toObject(includeInstance: boolean, msg: Position): Position.AsObject;
+  static serializeBinaryToWriter(message: Position, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Position;
+  static deserializeBinaryFromReader(message: Position, reader: jspb.BinaryReader): Position;
+}
+
+export namespace Position {
+  export type AsObject = {
+    id: string,
+    botid: string,
+    symbol: string,
+    status: PositionStatus,
+    tradingamount: number,
+    valuation: number,
+  }
+}
+
+export enum TriggerType { 
+  MANUAL = 0,
+}
+export enum PositionStatus { 
+  CLOSED = 0,
+  OPENED = 1,
+}

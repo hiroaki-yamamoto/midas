@@ -16,7 +16,7 @@ import {
   Legend,
 } from '@amcharts/amcharts4/charts';
 
-import {Bot, TriggerType, Trigger, Manual} from '../rpc/bot_pb';
+import {Bot, TriggerType} from '../rpc/bot_pb';
 
 @Component({
   selector: 'app-dashboard',
@@ -91,13 +91,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       const info = new Bot();
       info.setId(`test-bot-${i}`);
       info.setName(`Test Bot ${i}`);
-      info.setBasecurrency('USDT');
-
-      const trigger_condition = new Trigger();
-      trigger_condition.setSingle()
-      const trigger = new TriggerType();
-      trigger.setManual(new Manual());
-      info.setTrigger(trigger);
+      info.setTriggertype(TriggerType.MANUAL);
       this.botsInfo = this.botsInfo.concat(info);
     }
   }
