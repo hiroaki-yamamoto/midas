@@ -15,7 +15,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   public form: FormGroup;
   public editorOption: editor.IStandaloneEditorConstructionOptions = {
     theme: 'vs-dark',
-    language: 'javascript',
+    language: 'typescript',
   };
 
   private extraLib: IDisposable;
@@ -54,7 +54,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       reinvest: new FormControl(),
       condition,
     });
-    this.http.get('/assets/bot-condition.js.txt', { responseType: 'text' })
+    this.http.get('/assets/bot-condition.ts', { responseType: 'text' })
       .subscribe((code: string) => {
         condition.setValue(code);
       });

@@ -4,12 +4,13 @@
  *
  * Note that this function doesn't place the position actually. After this function
  * returns true, and the entryPoint gets true, the position will be actually placed.
- * @param {PriceVolume} current Current Price
- * @returns {boolean} Return true when the market has reaches watchpoint, and
- *                    return false otherwise.
+ * @param {PriceVolume} current - Current Price
+ * @returns {boolean} - Return true when the market has reached watchpoint, and
+ *  return false otherwise.
  */
-function entryWatchPoint(current) {
+function entryWatchPoint(current: PriceVolume): boolean {
   // Write entry watchpoint condition here.
+  return false;
 }
 
 /**
@@ -17,11 +18,14 @@ function entryWatchPoint(current) {
  * will be placed.
  *
  * Note that this function is invoked AFTER entryWatchPoint.
- * @param {PriceVolume} current Current Price
- * @param {PriceVolume} watch The price when the bot started watching
+ * @param {PriceVolume} current - Current Price
+ * @param {PriceVolume} watch - The price when the bot started watching
+ * @returns {boolean} - Return true when the market has reached entrypoint, and
+ *  return false otherwise.
  */
-function entryPoint(current, watch) {
+function entryPoint(current: PriceVolume, watch: PriceVolume): boolean {
   // Write entryoiint condition here.
+  return false;
 }
 
 /**
@@ -31,12 +35,13 @@ function entryPoint(current, watch) {
  *
  * Note that this function doesn't exit the position actually. After this function
  * returns true, and the exitPoint gets true, the position will be actually exited.
- * @param {PriceVolume} current Current Price
- * @returns {boolean} Return true when the market has reaches watchpoint, and
- *                    return false otherwise.
+ * @param {PriceVolume} current - Current Price
+ * @returns {boolean} - Return true when the market has reached watchpoint, and
+ *  return false otherwise.
  */
-function exitWatchPoint(current) {
+function exitWatchPoint(current: PriceVolume): boolean {
   // Write extit watch point here.
+  return false;
 }
 
 /**
@@ -44,9 +49,12 @@ function exitWatchPoint(current) {
  * will be exited.
  *
  * Note that this function is invoked AFTER exitWatchPoint.
- * @param {PriceVolume} current Current Price
- * @param {PriceVolume} watch The price when the bot started watching
+ * @param {PriceVolume} current - Current Price
+ * @param {PriceVolume} watch - The price when the bot started watching
+ * @returns {boolean} - Return true when the market has reached exit point, and
+ *  return false otherwise
  */
-function exitPoint(current, watch) {
+function exitPoint(current: PriceVolume, watch: PriceVolume): boolean {
   // Write exit point here.
+  return false;
 }
