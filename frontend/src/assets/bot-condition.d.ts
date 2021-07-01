@@ -1,9 +1,19 @@
+declare class SymbolInfo {
+  exchange: string;
+  symbol: string;
+  status: string;
+  base: string;
+  quote: string;
+}
+
 declare class PriceVolume {
+  symbolInfo: SymbolInfo;
   price: number;
   volume: number;
 }
 
 declare class Tick {
+  symbolInfo: SymbolInfo;
   volume: number;
   open: number;
   close: number;

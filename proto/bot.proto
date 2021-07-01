@@ -7,7 +7,6 @@ import "google/protobuf/timestamp.proto";
 message Bot {
   string id = 1;
   string name = 2;
-  string baseCurrency = 3;
   google.protobuf.Timestamp createdAt = 4;
   double tradingAmount = 5;
   double currentValuation = 6;

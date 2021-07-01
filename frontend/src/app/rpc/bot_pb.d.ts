@@ -10,9 +10,6 @@ export class Bot extends jspb.Message {
   getName(): string;
   setName(value: string): Bot;
 
-  getBasecurrency(): string;
-  setBasecurrency(value: string): Bot;
-
   getCreatedat(): google_protobuf_timestamp_pb.Timestamp | undefined;
   setCreatedat(value?: google_protobuf_timestamp_pb.Timestamp): Bot;
   hasCreatedat(): boolean;
@@ -45,7 +42,6 @@ export namespace Bot {
   export type AsObject = {
     id: string,
     name: string,
-    basecurrency: string,
     createdat?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     tradingamount: number,
     currentvaluation: number,

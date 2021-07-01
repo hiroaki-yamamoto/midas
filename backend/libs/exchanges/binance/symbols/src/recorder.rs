@@ -52,19 +52,6 @@ impl SymbolRecorderTrait for SymbolRecorder {
       .boxed();
     return Ok(cur as Self::ListStream);
   }
-  async fn quote_assets<T>(&self) -> ThreadSafeResult<T>
-  where
-    T: futures::Stream<Item = String> + Send + Sync + 'async_trait,
-  {
-    // [
-    //   {
-    //     $group: {
-    //       _id: ObjectId(),
-    //       baseCurrencies: {"$addToSet": "$quoteAsset"}
-    //     }
-    //   }
-    // ]
-  }
   async fn update_symbols<T>(
     &self,
     value: Vec<T>,
