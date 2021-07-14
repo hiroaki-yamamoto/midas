@@ -10,7 +10,7 @@ edition = "2018"
 errors = {path = "../errors"}
 
 prost = "0.7.0"
-serde = "1.0.126"
+serde = { version = "1.0.126", features=["derive"] }
 num-traits = "0.2.14"
 num-derive = "0.3.3"
 clap = "3.0.0-beta.2"

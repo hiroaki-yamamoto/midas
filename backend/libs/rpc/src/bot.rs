@@ -18,6 +18,8 @@ pub struct Bot {
     pub reinvest: bool,
     #[prost(string, tag="9")]
     pub condition: ::prost::alloc::string::String,
+    #[prost(enumeration="TriggerType", tag="10")]
+    pub trigger_type: i32,
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -35,8 +37,6 @@ pub struct Position {
     pub trading_amount: f64,
     #[prost(double, tag="6")]
     pub valuation: f64,
-    #[prost(enumeration="TriggerType", tag="7")]
-    pub trigger_type: i32,
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
