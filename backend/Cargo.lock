@@ -480,9 +480,11 @@ dependencies = [
 name = "bot"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "mongodb",
  "rpc",
  "serde",
+ "types",
 ]
 
 [[package]]
