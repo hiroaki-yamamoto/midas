@@ -3260,9 +3260,9 @@ css-color-names@^1.0.1:
   integrity sha512-/loXYOch1qU1biStIFsHH8SxTmOseh1IJqFvy8IujXOm1h+QjUdDhkzOrR5HG8K8mlxREj0yfi8ewCHx0eMxzA==
 
 css-declaration-sorter@^6.0.3:
-  version "6.0.3"
-  resolved "https://registry.yarnpkg.com/css-declaration-sorter/-/css-declaration-sorter-6.0.3.tgz#9dfd8ea0df4cc7846827876fafb52314890c21a9"
-  integrity sha512-52P95mvW1SMzuRZegvpluT6yEv0FqQusydKQPZsNN5Q7hh8EwQvN8E2nwuJ16BBvNN6LcoIZXu/Bk58DAhrrxw==
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/css-declaration-sorter/-/css-declaration-sorter-6.1.0.tgz#6564bf91b7d1b9d43cf0361a01b364e77570d31e"
+  integrity sha512-0FQxk8lmiOgaruBqWel5wedFWd23i10TJaTCBp+8W67Svrc50eQYV+ffuvreFTnCfShS+7ZJuzVaHz/DI9E6bw==
   dependencies:
     timsort "^0.3.0"
 
