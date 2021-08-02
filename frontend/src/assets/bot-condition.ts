@@ -1,4 +1,9 @@
 /**
+ * Set true to enable auto re-investment.
+ */
+const autoReinvestment = false;
+
+/**
  * Entry watch point to get interested in put position.
  * After the result of this function get true, the bot starts watching the market.
  *
