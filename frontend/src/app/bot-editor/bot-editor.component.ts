@@ -16,6 +16,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   public editorOption: editor.IStandaloneEditorConstructionOptions = {
     theme: 'vs-dark',
     language: 'typescript',
+    tabSize: 2,
   };
 
   private extraLib: IDisposable;
@@ -42,7 +43,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
         const uri = 'ts:bot-condition.d.ts';
         this.extraLib = ts.javascriptDefaults.addExtraLib(code, uri);
         this.langModel = monaco.editor.createModel(
-          code, 'typescript', Uri.parse(uri)
+          code, 'typescript', Uri.parse(uri),
         );
       });
   }
