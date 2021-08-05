@@ -52,8 +52,9 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     const condition = new FormControl();
     this.form = new FormGroup({
       name: new FormControl(),
-      reinvest: new FormControl(),
       condition,
+      baseCurrency: new FormControl(),
+      tradingAmount: new FormControl(),
     });
     this.http.get('/assets/bot-condition.ts', { responseType: 'text' })
       .subscribe((code: string) => {

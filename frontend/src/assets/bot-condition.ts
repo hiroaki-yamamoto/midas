@@ -1,7 +1,10 @@
 /**
- * Set true to enable auto re-investment.
+ * The rate of reinvestment. The bot will add the profit multiplied this rate
+ * to the trading amount. i.e. (ra) = (profit) x (rr), where ra = re-invest amount,
+ * and rr = re-investment rate.
+ * If you don't want re-invest, set this value to 0.
  */
-const autoReinvestment = false;
+const reInvestRate = 1.0;
 
 /**
  * Entry watch point to get interested in put position.

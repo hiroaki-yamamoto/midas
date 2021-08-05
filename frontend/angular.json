@@ -21,7 +21,8 @@
               "core-js",
               "raf",
               "xlsx",
-              "@babel/runtime"
+              "@babel/runtime",
+              "monaco-editor"
             ],
             "customWebpackConfig": {
               "path": "./webpack.conf.js",
