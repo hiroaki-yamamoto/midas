@@ -19,4 +19,5 @@ pub trait SymbolRecorder {
   ) -> ThreadSafeResult<InsertManyResult>
   where
     T: Serialize + Send;
+  async fn list_base_currencies(&self) -> ThreadSafeResult<Vec<String>>;
 }

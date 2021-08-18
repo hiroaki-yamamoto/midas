@@ -1,9 +1,12 @@
+use std::str::FromStr;
+
 use ::async_trait::async_trait;
 use ::futures::stream::StreamExt;
 use ::mongodb::bson;
 use ::mongodb::results::InsertManyResult;
 use ::mongodb::{Collection, Database};
 use ::serde::Serialize;
+use futures::FutureExt;
 
 use ::types::ThreadSafeResult;
 
@@ -69,5 +72,16 @@ impl SymbolRecorderTrait for SymbolRecorder {
       .collect();
     let _ = self.col.delete_many(bson::doc! {}, None).await?;
     return Ok(self.col.insert_many(serialized.into_iter(), None).await?);
+  }
+  async fn list_base_currencies(&self) -> ThreadSafeResult<Vec<String>> {
+    return Ok(
+      self
+        .col
+        .distinct("quoteAsset", None, None)
+        .await?
+        .into_iter()
+        .filter_map(|base_bson| base_bson.as_str().map(|base| base.to_string()))
+        .collect(),
+    );
   }
 }
