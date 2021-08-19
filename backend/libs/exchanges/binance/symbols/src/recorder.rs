@@ -1,12 +1,9 @@
-use std::str::FromStr;
-
 use ::async_trait::async_trait;
 use ::futures::stream::StreamExt;
 use ::mongodb::bson;
 use ::mongodb::results::InsertManyResult;
 use ::mongodb::{Collection, Database};
 use ::serde::Serialize;
-use futures::FutureExt;
 
 use ::types::ThreadSafeResult;
 
