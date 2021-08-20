@@ -73,7 +73,7 @@ impl SymbolFetcherTrait for SymbolFetcher {
       return Ok(());
     } else {
       return Err(Box::new(StatusFailure {
-        url: url.clone(),
+        url: Some(url.clone()),
         code: resp_status.as_u16(),
         text: resp.text().await?,
       }));

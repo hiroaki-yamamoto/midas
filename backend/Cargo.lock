@@ -977,6 +977,7 @@ dependencies = [
  "slog",
  "slog_derive",
  "url",
+ "warp",
 ]
 
 [[package]]
@@ -3151,12 +3152,15 @@ dependencies = [
  "clap",
  "config",
  "csrf",
+ "errors",
  "futures",
  "libc",
  "mongodb",
  "nats",
  "num-traits",
  "rpc",
+ "serde",
+ "serde_json",
  "slog",
  "tokio 1.9.0",
  "types",

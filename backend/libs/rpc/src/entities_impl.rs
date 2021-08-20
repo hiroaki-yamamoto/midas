@@ -1,6 +1,9 @@
+use ::std::convert::TryFrom;
+
 use super::entities::{Exchanges, InsertOneResult, Status};
 use ::bson::oid::ObjectId;
 use ::http::{status::InvalidStatusCode, StatusCode};
+use ::num_traits::FromPrimitive;
 use ::warp::reject::Reject;
 
 use ::errors::ParseError;
@@ -27,6 +30,14 @@ impl ::std::str::FromStr for Exchanges {
 impl From<Exchanges> for String {
   fn from(exchange: Exchanges) -> Self {
     return exchange.as_string();
+  }
+}
+
+impl TryFrom<u16> for Exchanges {
+  type Error = ParseError;
+  fn try_from(value: u16) -> Result<Self, Self::Error> {
+    return FromPrimitive::from_u16(value)
+      .ok_or(ParseError::new(None::<&str>, Some(value.to_string())));
   }
 }
 
