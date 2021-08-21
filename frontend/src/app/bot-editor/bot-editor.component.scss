@@ -2,14 +2,14 @@
   height: 80vh;
 }
 
-div.amounts > div {
+div.amounts > mat-form-field {
   margin: {
     left: 1rem;
     right: 1rem;
   };
 }
 
-div.amounts > div:first-child {
+div.amounts > mat-form-field:first-child {
   margin: {
     left: 0;
     right: 1rem;

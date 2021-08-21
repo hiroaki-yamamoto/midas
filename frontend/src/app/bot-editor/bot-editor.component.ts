@@ -5,6 +5,9 @@ import { HttpClient } from '@angular/common/http';
 import { FormGroup, FormControl } from '@angular/forms';
 import { editor, Uri, IDisposable } from 'monaco-editor';
 
+import { SymbolService, IBaseCurrencies } from '../resources/symbol.service';
+import { Exchanges } from '../rpc/entities_pb';
+
 @Component({
   selector: 'app-bot-editor',
   templateUrl: './bot-editor.component.html',
@@ -18,11 +21,17 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     language: 'typescript',
     tabSize: 2,
   };
+  public baseCurrencies: IBaseCurrencies;
+  public exchanges = Object.values(Exchanges);
 
   private extraLib: IDisposable;
   private langModel: IDisposable
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private symbol: SymbolService) {
+    symbol.list_base_currencies(Exchanges.BINANCE).subscribe((baseCurrencies: IBaseCurrencies) => {
+      this.baseCurrencies = baseCurrencies;
+    });
+  }
 
   monacoLoaded(): void {
     const ts = monaco.languages.typescript;
