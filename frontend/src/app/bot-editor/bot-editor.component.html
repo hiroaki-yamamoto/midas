@@ -10,7 +10,10 @@
     <div class="amounts">
       <mat-form-field fxFlex>
         <mat-label i18n>Exchange</mat-label>
-        <mat-select>
+        <mat-select
+          (selectionChange)="exchangeChanged()"
+          formControlName="exchange"
+          required>
           <mat-option *ngFor="let exchange of exchanges" [value]="exchange">
             {{ exchange | exchangePipe | titlecase }}
           </mat-option>
@@ -18,7 +21,15 @@
       </mat-form-field>
       <mat-form-field fxFlex>
         <mat-label i18n>Base Currency</mat-label>
-        <input matInput formControlName="baseCurrency" required>
+        <mat-select
+          formControlName="baseCurrency"
+          required>
+          <mat-option
+            *ngFor="let currency of baseCurrencies.currencies"
+            [value]="currency">
+            {{ currency }}
+          </mat-option>
+        </mat-select>
       </mat-form-field>
       <mat-form-field fxFlex>
         <mat-label i18n>Trading Amount</mat-label>

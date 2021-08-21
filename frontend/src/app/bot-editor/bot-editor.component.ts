@@ -21,16 +21,14 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     language: 'typescript',
     tabSize: 2,
   };
-  public baseCurrencies: IBaseCurrencies;
+  public baseCurrencies: IBaseCurrencies = { currencies: [] };
+  public baseCurrencyEnabled = false;
   public exchanges = Object.values(Exchanges);
 
   private extraLib: IDisposable;
   private langModel: IDisposable
 
   constructor(private http: HttpClient, private symbol: SymbolService) {
-    symbol.list_base_currencies(Exchanges.BINANCE).subscribe((baseCurrencies: IBaseCurrencies) => {
-      this.baseCurrencies = baseCurrencies;
-    });
   }
 
   monacoLoaded(): void {
@@ -62,6 +60,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     this.form = new FormGroup({
       name: new FormControl(),
       condition,
+      exchange: new FormControl(),
       baseCurrency: new FormControl(),
       tradingAmount: new FormControl(),
     });
@@ -74,6 +73,16 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.extraLib) { this.extraLib.dispose(); }
     if (this.langModel) { this.langModel.dispose(); }
+  }
+
+  exchangeChanged(): void {
+    this.baseCurrencyEnabled = false;
+    this.symbol
+      .list_base_currencies(this.form.get('exchange').value)
+      .subscribe((baseCurrencies: IBaseCurrencies) => {
+        this.baseCurrencies = baseCurrencies;
+      });
+    this.baseCurrencyEnabled = true;
   }
 
 }
