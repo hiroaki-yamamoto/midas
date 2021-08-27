@@ -32,7 +32,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   }
 
   monacoLoaded(): void {
-    const ts = monaco.languages.typescript;
+    const ts = window.monaco.languages.typescript;
     // validation settings
     ts.javascriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: true,
@@ -49,7 +49,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       .subscribe((code: string) => {
         const uri = 'ts:bot-condition.d.ts';
         this.extraLib = ts.javascriptDefaults.addExtraLib(code, uri);
-        this.langModel = monaco.editor.createModel(
+        this.langModel = window.monaco.editor.createModel(
           code, 'typescript', Uri.parse(uri),
         );
       });
