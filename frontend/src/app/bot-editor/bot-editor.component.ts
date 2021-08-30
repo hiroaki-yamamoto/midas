@@ -8,6 +8,8 @@ import { editor, Uri, IDisposable } from 'monaco-editor';
 import { SymbolService, IBaseCurrencies } from '../resources/symbol.service';
 import { Exchanges } from '../rpc/entities_pb';
 
+import { faSave } from '@fortawesome/free-solid-svg-icons'
+
 @Component({
   selector: 'app-bot-editor',
   templateUrl: './bot-editor.component.html',
@@ -24,6 +26,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   public baseCurrencies: IBaseCurrencies = { currencies: [] };
   public baseCurrencyEnabled = false;
   public exchanges = Object.values(Exchanges);
+  public saveIcon = faSave;
 
   private extraLib: IDisposable;
   private langModel: IDisposable

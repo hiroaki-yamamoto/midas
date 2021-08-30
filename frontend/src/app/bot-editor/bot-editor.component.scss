@@ -1,5 +1,9 @@
-.editor {
+.editor-container {
   height: 80vh;
+}
+.editor {
+  height: 100%;
+  width: 95%;
 }
 
 div.amounts > mat-form-field {
@@ -21,4 +25,12 @@ div.amounts > div:last-child {
     left: 1rem;
     right: 0;
   };
+}
+
+// fa-icon {
+//   line-height: 0;
+// }
+.button-container {
+  line-height: 1.5rem;
+  margin: 0.5rem;
 }
