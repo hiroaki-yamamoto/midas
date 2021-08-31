@@ -6,7 +6,7 @@
   </button>
 </div>
 <div mat-dialog-content>
-  <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="1rem">
+  <div fxLayout="row" fxLayoutAlign="none center" fxLayoutGap="1rem" class="column-container">
     <section>
       <header><h3 i18n>Synchronize Symbol Data</h3></header>
       <p i18n>
@@ -15,6 +15,7 @@
         button.
       </p>
     </section>
+    <div fxFlex></div>
     <div>
       <button mat-raised-button
         color="primary" i18n (click)="fetchSymbol()"
@@ -26,8 +27,7 @@
       </button>
     </div>
   </div>
-  <div class="spacer"></div>
-  <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="1rem">
+  <div fxLayout="row" fxLayoutAlign="none center" fxLayoutGap="1rem" class="column-container">
     <section>
       <header>
         <h3 i18n>Synchronize Histoical Kline Data</h3>
@@ -67,6 +67,7 @@
         </section>
       </div>
     </section>
+    <div fxFlex></div>
     <div>
       <button mat-raised-button color="primary" i18n
         (click)="fetchHistoricalData()"
