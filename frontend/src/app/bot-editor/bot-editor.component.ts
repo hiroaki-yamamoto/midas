@@ -32,6 +32,8 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   private langModel: IDisposable
 
   constructor(private http: HttpClient, private symbol: SymbolService) {
+    console.log('test');
+
   }
 
   monacoLoaded(): void {
@@ -47,7 +49,6 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       target: ts.ScriptTarget.ES2015,
       allowNonTsExtensions: true
     });
-
     this.http.get('/assets/bot-condition.d.ts', { responseType: 'text' })
       .subscribe((code: string) => {
         const uri = 'ts:bot-condition.d.ts';
