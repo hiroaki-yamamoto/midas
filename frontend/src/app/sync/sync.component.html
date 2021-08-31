@@ -19,8 +19,10 @@
       <button mat-raised-button
         color="primary" i18n (click)="fetchSymbol()"
         [disabled]="!symbolButtonEnabled">
-        <fa-icon [icon]="syncIcon" size="2x"></fa-icon><br>
-        Sync Symbol Data
+        <div class="button-container" fxLayout="column" fxLayoutAlign="center center">
+          <fa-icon [icon]="syncIcon" size="2x"></fa-icon>
+          Sync Symbol Data
+        </div>
       </button>
     </div>
   </div>
@@ -69,8 +71,10 @@
       <button mat-raised-button color="primary" i18n
         (click)="fetchHistoricalData()"
         [disabled]="historicalClient.syncProgress.size &gt; 0">
-        <fa-icon [icon]="histIcon" size="2x"></fa-icon><br>
-        Sync Hist Kline Data
+        <div class="button-container" fxLayout="column" fxLayoutAlign="center center">
+          <fa-icon [icon]="histIcon" size="2x"></fa-icon>
+          Sync Hist Kline Data
+        </div>
       </button>
     </div>
   </div>
