@@ -32,8 +32,6 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   private langModel: IDisposable
 
   constructor(private http: HttpClient, private symbol: SymbolService) {
-    console.log('test');
-
   }
 
   monacoLoaded(): void {
