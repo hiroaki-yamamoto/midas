@@ -3,7 +3,6 @@ import {
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormGroup, FormControl } from '@angular/forms';
-import { editor, Uri, IDisposable } from 'monaco-editor';
 
 import { SymbolService, IBaseCurrencies } from '../resources/symbol.service';
 import { Exchanges } from '../rpc/entities_pb';
@@ -18,7 +17,7 @@ import { faSave } from '@fortawesome/free-solid-svg-icons'
 export class BotEditorComponent implements OnInit, OnDestroy {
 
   public form: FormGroup;
-  public editorOption: editor.IStandaloneEditorConstructionOptions = {
+  public editorOption: monaco.editor.IStandaloneEditorConstructionOptions = {
     theme: 'vs-dark',
     language: 'typescript',
     tabSize: 2,
@@ -28,14 +27,14 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   public exchanges = Object.values(Exchanges);
   public saveIcon = faSave;
 
-  private extraLib: IDisposable;
-  private langModel: IDisposable
+  private extraLib: monaco.IDisposable;
+  private langModel: monaco.IDisposable
 
   constructor(private http: HttpClient, private symbol: SymbolService) {
   }
 
   monacoLoaded(): void {
-    const ts = window.monaco.languages.typescript;
+    const ts = monaco.languages.typescript;
     // validation settings
     ts.javascriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: true,
@@ -51,8 +50,8 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       .subscribe((code: string) => {
         const uri = 'ts:bot-condition.d.ts';
         this.extraLib = ts.javascriptDefaults.addExtraLib(code, uri);
-        this.langModel = window.monaco.editor.createModel(
-          code, 'typescript', Uri.parse(uri),
+        this.langModel = monaco.editor.createModel(
+          code, 'typescript', monaco.Uri.parse(uri),
         );
       });
   }
