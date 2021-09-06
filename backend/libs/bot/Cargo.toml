@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 rpc = { path = "../rpc" }
 types = { path = "../types" }
+errors = { path = "../errors" }
 
 serde = {version = "1.0.126", features = ["derive"]}
 mongodb = { version = "1.2.1", default-features = false, features = ["async-std-runtime"] }

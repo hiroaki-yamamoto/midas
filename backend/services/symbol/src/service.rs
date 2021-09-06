@@ -68,8 +68,8 @@ impl Service {
     let me = self.clone();
     return ::warp::path("base")
       .and(::warp::get())
-      .and(::warp::path::param::<u16>())
-      .and_then(|param: u16| async move {
+      .and(::warp::path::param::<i32>())
+      .and_then(|param: i32| async move {
         return Exchanges::try_from(param)
           .map(|exchange| (exchange,))
           .map_err(|_| ::warp::reject::not_found());
@@ -92,9 +92,9 @@ impl Service {
     let me = self.clone();
     return ::warp::path("refresh")
       .and(::warp::post())
-      .and(::warp::path::param::<u16>())
-      .and_then(|param: u16| async move {
-        let exchange: Exchanges = match FromPrimitive::from_u16(param) {
+      .and(::warp::path::param::<i32>())
+      .and_then(|param: i32| async move {
+        let exchange: Exchanges = match FromPrimitive::from_i32(param) {
           Some(v) => v,
           None => {
             return Err(::warp::reject::not_found());

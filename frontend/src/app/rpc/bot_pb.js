@@ -17,6 +17,8 @@ var global = Function('return this')();
 
 var google_protobuf_timestamp_pb = require('google-protobuf/google/protobuf/timestamp_pb.js');
 goog.object.extend(proto, google_protobuf_timestamp_pb);
+var entities_pb = require('./entities_pb.js');
+goog.object.extend(proto, entities_pb);
 goog.exportSymbol('proto.bot.Bot', null, global);
 goog.exportSymbol('proto.bot.Position', null, global);
 goog.exportSymbol('proto.bot.PositionStatus', null, global);
@@ -97,13 +99,11 @@ proto.bot.Bot.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, ""),
     name: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    exchange: jspb.Message.getFieldWithDefault(msg, 3, 0),
     createdat: (f = msg.getCreatedat()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
-    tradingamount: jspb.Message.getFloatingPointFieldWithDefault(msg, 5, 0.0),
-    currentvaluation: jspb.Message.getFloatingPointFieldWithDefault(msg, 6, 0.0),
-    realizedprofit: jspb.Message.getFloatingPointFieldWithDefault(msg, 7, 0.0),
-    reinvest: jspb.Message.getBooleanFieldWithDefault(msg, 8, false),
-    condition: jspb.Message.getFieldWithDefault(msg, 9, ""),
-    triggertype: jspb.Message.getFieldWithDefault(msg, 10, 0)
+    tradeAmount: jspb.Message.getFloatingPointFieldWithDefault(msg, 5, 0.0),
+    reinvest: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
+    condition: jspb.Message.getFieldWithDefault(msg, 7, "")
   };
 
   if (includeInstance) {
@@ -148,6 +148,10 @@ proto.bot.Bot.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {string} */ (reader.readString());
       msg.setName(value);
       break;
+    case 3:
+      var value = /** @type {!proto.entities.Exchanges} */ (reader.readEnum());
+      msg.setExchange(value);
+      break;
     case 4:
       var value = new google_protobuf_timestamp_pb.Timestamp;
       reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
@@ -155,27 +159,15 @@ proto.bot.Bot.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 5:
       var value = /** @type {number} */ (reader.readDouble());
-      msg.setTradingamount(value);
+      msg.setTradeAmount(value);
       break;
     case 6:
-      var value = /** @type {number} */ (reader.readDouble());
-      msg.setCurrentvaluation(value);
-      break;
-    case 7:
-      var value = /** @type {number} */ (reader.readDouble());
-      msg.setRealizedprofit(value);
-      break;
-    case 8:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setReinvest(value);
       break;
-    case 9:
+    case 7:
       var value = /** @type {string} */ (reader.readString());
       msg.setCondition(value);
-      break;
-    case 10:
-      var value = /** @type {!proto.bot.TriggerType} */ (reader.readEnum());
-      msg.setTriggertype(value);
       break;
     default:
       reader.skipField();
@@ -220,6 +212,13 @@ proto.bot.Bot.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getExchange();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      3,
+      f
+    );
+  }
   f = message.getCreatedat();
   if (f != null) {
     writer.writeMessage(
@@ -228,45 +227,24 @@ proto.bot.Bot.serializeBinaryToWriter = function(message, writer) {
       google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
   }
-  f = message.getTradingamount();
+  f = message.getTradeAmount();
   if (f !== 0.0) {
     writer.writeDouble(
       5,
       f
     );
   }
-  f = message.getCurrentvaluation();
-  if (f !== 0.0) {
-    writer.writeDouble(
-      6,
-      f
-    );
-  }
-  f = message.getRealizedprofit();
-  if (f !== 0.0) {
-    writer.writeDouble(
-      7,
-      f
-    );
-  }
   f = message.getReinvest();
   if (f) {
     writer.writeBool(
-      8,
+      6,
       f
     );
   }
   f = message.getCondition();
   if (f.length > 0) {
     writer.writeString(
-      9,
-      f
-    );
-  }
-  f = message.getTriggertype();
-  if (f !== 0.0) {
-    writer.writeEnum(
-      10,
+      7,
       f
     );
   }
@@ -310,6 +288,24 @@ proto.bot.Bot.prototype.setName = function(value) {
 
 
 /**
+ * optional entities.Exchanges exchange = 3;
+ * @return {!proto.entities.Exchanges}
+ */
+proto.bot.Bot.prototype.getExchange = function() {
+  return /** @type {!proto.entities.Exchanges} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {!proto.entities.Exchanges} value
+ * @return {!proto.bot.Bot} returns this
+ */
+proto.bot.Bot.prototype.setExchange = function(value) {
+  return jspb.Message.setProto3EnumField(this, 3, value);
+};
+
+
+/**
  * optional google.protobuf.Timestamp createdAt = 4;
  * @return {?proto.google.protobuf.Timestamp}
  */
@@ -347,10 +343,10 @@ proto.bot.Bot.prototype.hasCreatedat = function() {
 
 
 /**
- * optional double tradingAmount = 5;
+ * optional double trade_amount = 5;
  * @return {number}
  */
-proto.bot.Bot.prototype.getTradingamount = function() {
+proto.bot.Bot.prototype.getTradeAmount = function() {
   return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 5, 0.0));
 };
 
@@ -359,53 +355,17 @@ proto.bot.Bot.prototype.getTradingamount = function() {
  * @param {number} value
  * @return {!proto.bot.Bot} returns this
  */
-proto.bot.Bot.prototype.setTradingamount = function(value) {
+proto.bot.Bot.prototype.setTradeAmount = function(value) {
   return jspb.Message.setProto3FloatField(this, 5, value);
 };
 
 
 /**
- * optional double currentValuation = 6;
- * @return {number}
- */
-proto.bot.Bot.prototype.getCurrentvaluation = function() {
-  return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 6, 0.0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.bot.Bot} returns this
- */
-proto.bot.Bot.prototype.setCurrentvaluation = function(value) {
-  return jspb.Message.setProto3FloatField(this, 6, value);
-};
-
-
-/**
- * optional double realizedProfit = 7;
- * @return {number}
- */
-proto.bot.Bot.prototype.getRealizedprofit = function() {
-  return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 7, 0.0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.bot.Bot} returns this
- */
-proto.bot.Bot.prototype.setRealizedprofit = function(value) {
-  return jspb.Message.setProto3FloatField(this, 7, value);
-};
-
-
-/**
- * optional bool reinvest = 8;
+ * optional bool reinvest = 6;
  * @return {boolean}
  */
 proto.bot.Bot.prototype.getReinvest = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 8, false));
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 6, false));
 };
 
 
@@ -414,16 +374,16 @@ proto.bot.Bot.prototype.getReinvest = function() {
  * @return {!proto.bot.Bot} returns this
  */
 proto.bot.Bot.prototype.setReinvest = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 8, value);
+  return jspb.Message.setProto3BooleanField(this, 6, value);
 };
 
 
 /**
- * optional string condition = 9;
+ * optional string condition = 7;
  * @return {string}
  */
 proto.bot.Bot.prototype.getCondition = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
 };
 
 
@@ -432,25 +392,7 @@ proto.bot.Bot.prototype.getCondition = function() {
  * @return {!proto.bot.Bot} returns this
  */
 proto.bot.Bot.prototype.setCondition = function(value) {
-  return jspb.Message.setProto3StringField(this, 9, value);
-};
-
-
-/**
- * optional TriggerType triggerType = 10;
- * @return {!proto.bot.TriggerType}
- */
-proto.bot.Bot.prototype.getTriggertype = function() {
-  return /** @type {!proto.bot.TriggerType} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
-};
-
-
-/**
- * @param {!proto.bot.TriggerType} value
- * @return {!proto.bot.Bot} returns this
- */
-proto.bot.Bot.prototype.setTriggertype = function(value) {
-  return jspb.Message.setProto3EnumField(this, 10, value);
+  return jspb.Message.setProto3StringField(this, 7, value);
 };
 
 

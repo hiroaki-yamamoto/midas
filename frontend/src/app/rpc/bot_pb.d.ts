@@ -1,6 +1,7 @@
 import * as jspb from 'google-protobuf'
 
 import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
+import * as entities_pb from './entities_pb';
 
 
 export class Bot extends jspb.Message {
@@ -10,28 +11,22 @@ export class Bot extends jspb.Message {
   getName(): string;
   setName(value: string): Bot;
 
+  getExchange(): entities_pb.Exchanges;
+  setExchange(value: entities_pb.Exchanges): Bot;
+
   getCreatedat(): google_protobuf_timestamp_pb.Timestamp | undefined;
   setCreatedat(value?: google_protobuf_timestamp_pb.Timestamp): Bot;
   hasCreatedat(): boolean;
   clearCreatedat(): Bot;
 
-  getTradingamount(): number;
-  setTradingamount(value: number): Bot;
-
-  getCurrentvaluation(): number;
-  setCurrentvaluation(value: number): Bot;
-
-  getRealizedprofit(): number;
-  setRealizedprofit(value: number): Bot;
+  getTradeAmount(): number;
+  setTradeAmount(value: number): Bot;
 
   getReinvest(): boolean;
   setReinvest(value: boolean): Bot;
 
   getCondition(): string;
   setCondition(value: string): Bot;
-
-  getTriggertype(): TriggerType;
-  setTriggertype(value: TriggerType): Bot;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Bot.AsObject;
@@ -45,13 +40,11 @@ export namespace Bot {
   export type AsObject = {
     id: string,
     name: string,
+    exchange: entities_pb.Exchanges,
     createdat?: google_protobuf_timestamp_pb.Timestamp.AsObject,
-    tradingamount: number,
-    currentvaluation: number,
-    realizedprofit: number,
+    tradeAmount: number,
     reinvest: boolean,
     condition: string,
-    triggertype: TriggerType,
   }
 }
 

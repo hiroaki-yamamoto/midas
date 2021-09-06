@@ -481,6 +481,7 @@ name = "bot"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "errors",
  "mongodb",
  "rpc",
  "serde",

@@ -3,6 +3,7 @@ syntax = "proto3";
 package bot;
 
 import "google/protobuf/timestamp.proto";
+import "entities.proto";
 
 enum TriggerType {
   MANUAL = 0;
@@ -11,13 +12,11 @@ enum TriggerType {
 message Bot {
   string id = 1;
   string name = 2;
+  entities.Exchanges exchange = 3;
   google.protobuf.Timestamp createdAt = 4;
-  double tradingAmount = 5;
-  double currentValuation = 6;
-  double realizedProfit = 7;
-  bool reinvest = 8;
-  string condition = 9;
-  TriggerType triggerType = 10;
+  double trade_amount = 5;
+  bool reinvest = 6;
+  string condition = 7;
 }
 
 enum PositionStatus {

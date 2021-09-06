@@ -33,10 +33,10 @@ impl From<Exchanges> for String {
   }
 }
 
-impl TryFrom<u16> for Exchanges {
+impl TryFrom<i32> for Exchanges {
   type Error = ParseError;
-  fn try_from(value: u16) -> Result<Self, Self::Error> {
-    return FromPrimitive::from_u16(value)
+  fn try_from(value: i32) -> Result<Self, Self::Error> {
+    return FromPrimitive::from_i32(value)
       .ok_or(ParseError::new(None::<&str>, Some(value.to_string())));
   }
 }

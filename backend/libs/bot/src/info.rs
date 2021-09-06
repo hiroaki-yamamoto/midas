@@ -1,8 +1,11 @@
-use ::rpc::bot::Bot;
+use ::rpc::bot::Bot as RPCBot;
 
-use ::mongodb::bson::{from_document, Document};
+use ::mongodb::bson::{doc, from_document, Document};
 use ::mongodb::error::Result as DBResult;
+use ::mongodb::options::UpdateModifications;
 use ::mongodb::{Collection, Database};
+
+use super::entities::Bot;
 
 pub struct BotInfoRecorder {
   col: Collection,
@@ -26,5 +29,9 @@ impl BotInfoRecorder {
       .map(|doc| from_document(doc).ok())
       .flatten();
     return Ok(doc);
+  }
+
+  pub async fn write(&self, model: Bot) -> Result<Bot> {
+    // self.col.update_one(doc! {"_id": model.id})
   }
 }
