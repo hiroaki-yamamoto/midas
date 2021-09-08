@@ -91,7 +91,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       const info = new Bot();
       info.setId(`test-bot-${i}`);
       info.setName(`Test Bot ${i}`);
-      info.setTriggertype(TriggerType.MANUAL);
       this.botsInfo = this.botsInfo.concat(info);
     }
   }
