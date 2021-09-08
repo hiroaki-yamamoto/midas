@@ -2,7 +2,6 @@ version: "3.8"
 services:
   database:
     image: mongo
-    # restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: midas
     volumes:
@@ -10,14 +9,13 @@ services:
       - "./etc/mongo/scripts:/docker-entrypoint-initdb.d"
   broker:
     image: nats-streaming:scratch
-    # restart: unless-stopped
   proxy:
     image: nginx:alpine
-    # restart: unless-stopped
     volumes:
       - ./etc/tls:/etc/tls:ro
       - ./etc/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
+      - express
       - symbol_service
       - historical_service
       - trade_observer_service
@@ -25,27 +23,8 @@ services:
       - frontend
     ports:
       - 50000:50000
-  # proxy:
-  #   image: envoyproxy/envoy-alpine:v1.16-latest
-    restart: unless-stopped
-  #   command:
-  #     - -c
-  #     - /etc/midas/envoy.yaml
-  #   volumes:
-  #     - ./etc:/etc/midas
-  #   environment:
-  #     ENVOY_UID: 0
-  #   depends_on:
-  #     - symbol_service
-  #     - historical_service
-  #     - trade_observer_service
-  #     - frontend
-  #   ports:
-  #     - 50000:50001
-  #     - 50001:50002
   express:
     image: mongo-express
-    # restart: unless-stopped
     environment:
       ME_CONFIG_MONGODB_SERVER: database
       ME_CONFIG_SITE_BASEURL: /admin/
@@ -63,7 +42,6 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
-    # restart: unless-stopped
     depends_on:
       - database
       - broker
@@ -81,7 +59,6 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
-    # restart: unless-stopped
     depends_on:
       - database
       - broker
@@ -98,7 +75,6 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
-    # restart: unless-stopped
     depends_on:
       - database
       - broker
@@ -114,7 +90,6 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
-    # restart: unless-stopped
     depends_on:
       - broker
   historical_record_worker:
@@ -129,7 +104,6 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
-    # restart: unless-stopped
     depends_on:
       - database
       - broker
@@ -147,7 +121,6 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
-    # restart: unless-stopped
     depends_on:
       - database
       - broker
@@ -163,7 +136,6 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
-    # restart: unless-stopped
     depends_on:
       - database
       - broker
@@ -179,7 +151,6 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
-    # restart: unless-stopped
     depends_on:
       - broker
   token_service:
@@ -194,7 +165,6 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
-    # restart: unless-stopped
   keychain_service:
     build:
       context: ./backend
@@ -207,13 +177,11 @@ services:
     volumes:
       - ./etc:/etc/midas
       - ./backend:/opt/code
-    # restart: unless-stopped
     depends_on:
       - database
   frontend:
     build:
       context: frontend
-    # restart: unless-stopped
     volumes:
       - ./frontend:/opt/code
       - /opt/code/node_modules
