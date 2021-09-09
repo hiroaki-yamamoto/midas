@@ -1,9 +1,9 @@
-use ::rpc::bot::Bot as RPCBot;
-
-use ::mongodb::bson::{doc, from_document, Document};
+use ::mongodb::bson::{doc, from_document, to_document, Document};
 use ::mongodb::error::Result as DBResult;
-use ::mongodb::options::UpdateModifications;
+use ::mongodb::options::UpdateOptions;
 use ::mongodb::{Collection, Database};
+
+use ::types::ThreadSafeResult;
 
 use super::entities::Bot;
 
@@ -31,7 +31,29 @@ impl BotInfoRecorder {
     return Ok(doc);
   }
 
-  pub async fn write(&self, model: Bot) -> Result<Bot> {
-    // self.col.update_one(doc! {"_id": model.id})
+  pub async fn write(&self, model: &Bot) -> ThreadSafeResult<Bot> {
+    let model_doc = to_document(&model)?;
+    let id = match &model.id {
+      Some(id) => self
+        .col
+        .update_one(
+          doc! {"_id": id},
+          model_doc,
+          UpdateOptions::builder().upsert(true).build(),
+        )
+        .await?
+        .upserted_id
+        .map(|id_son| id_son.as_object_id().cloned())
+        .flatten(),
+      None => {
+        let result = self.col.insert_one(model_doc, None).await?.inserted_id;
+        result.as_object_id().cloned()
+      }
+    };
+    let mut model = model.clone();
+    if id != None {
+      model.id = id;
+    }
+    return Ok(model);
   }
 }
