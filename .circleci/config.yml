@@ -269,13 +269,6 @@ workflows:
           name: "Deploy Success Notification"
           filters:
             branches:
-              ignore: master
-          requires:
-            - build-backend
-      - notify:
-          name: "Deploy Success Notification"
-          filters:
-            branches:
               only: master
           requires:
             - Historical Kline Service Deployment
