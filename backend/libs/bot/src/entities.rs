@@ -1,12 +1,13 @@
-use std::convert::TryFrom;
-use std::str::FromStr;
+use ::std::convert::TryFrom;
+use ::std::str::FromStr;
 
-use ::chrono::Utc;
-use ::errors::ParseError;
 use ::mongodb::bson;
+use ::serde::{Deserialize, Serialize};
+
+use ::errors::ParseError;
 use ::rpc::bot::Bot as RPCBot;
 use ::rpc::entities::Exchanges;
-use ::serde::{Deserialize, Serialize};
+use ::types::DateTime;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bot {
@@ -55,5 +56,22 @@ impl TryFrom<RPCBot> for Bot {
       cond_ts: value.condition,
       cond_js: None,
     });
+  }
+}
+
+impl From<Bot> for RPCBot {
+  fn from(value: Bot) -> Self {
+    return Self {
+      id: value.id.map(|id| id.to_hex()).unwrap_or("".to_string()),
+      name: value.name,
+      exchange: value.exchange as i32,
+      created_at: value.created_at.map(|time| {
+        let time: DateTime = time.into();
+        time.into()
+      }),
+      trade_amount: value.trade_amount,
+      reinvest: value.reinvest,
+      condition: value.cond_ts,
+    };
   }
 }
