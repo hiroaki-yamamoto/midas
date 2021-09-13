@@ -1,0 +1,13 @@
+{
+  "name": "transpiler",
+  "version": "1.0.0",
+  "description": "Transpiler Server from Typescript to Javascript",
+  "main": "index.js",
+  "repository": "https://github.com/hiroaki-yamamoto/midas",
+  "author": "Hiroaki Yamamoto",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "typescript": "^4.4.3"
+  }
+}
