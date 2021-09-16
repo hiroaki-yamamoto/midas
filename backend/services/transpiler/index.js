@@ -35,3 +35,11 @@ const server = http.createServer(listener);
 const port = 50505;
 console.log('Listening port ', port);
 server.listen(port);
+
+const graceful_shutdown = () => {
+  console.log('Closing the server. bye bye!');
+  server.close();
+};
+
+process.on('SIGTERM', graceful_shutdown);
+process.on('SIGINT', graceful_shutdown);

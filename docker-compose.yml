@@ -20,6 +20,7 @@ services:
       - historical_service
       - trade_observer_service
       - keychain_service
+      - transpiler_service
       - frontend
     ports:
       - 50000:50000
@@ -179,6 +180,12 @@ services:
       - ./backend:/opt/code
     depends_on:
       - database
+  transpiler_service:
+    build:
+      context: ./backend/services/transpiler
+    volumes:
+      - ./backend/services/transpiler:/opt/code
+      - /opt/code/node_modules
   frontend:
     build:
       context: frontend
