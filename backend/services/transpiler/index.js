@@ -1,5 +1,10 @@
-const http = require('http');
+const http2 = require('http2');
+const fs = require('fs/promises');
+const url = require('url');
+
 const ts = require('typescript');
+const yaml = require('js-yaml');
+const argparse = require('argparse');
 
 const listener = (req, res) => {
   if (req.method.toLowerCase() !== 'post') {
@@ -31,15 +36,31 @@ const listener = (req, res) => {
   });
 };
 
-const server = http.createServer(listener);
-const port = 50505;
-console.log('Listening port ', port);
-server.listen(port);
+(async () => {
+  const parser = new argparse.ArgumentParser({
+    description: 'Typescript Transpile Service',
+    add_help: true,
+  });
+  parser.add_argument('-c', '--config', { help: 'Config file path' });
 
-const graceful_shutdown = () => {
-  console.log('Closing the server. bye bye!');
-  server.close();
-};
+  const cmdArgs = parser.parse_args();
+  const cfg = yaml.load(await fs.readFile(cmdArgs.config));
+  const host = new url.URL(`http://${cfg.host}`);
+  const certs = {
+    key: await fs.readFile(cfg.tls.privateKey),
+    cert: await fs.readFile(cfg.tls.cert),
+    allowHTTP1: true,
+  }
 
-process.on('SIGTERM', graceful_shutdown);
-process.on('SIGINT', graceful_shutdown);
+  const server = http2.createSecureServer(certs, listener);
+  console.log('Listening port', host.port);
+  server.listen(parseInt(host.port, 10));
+
+  const graceful_shutdown = () => {
+    console.log('Closing the server. bye bye!');
+    server.close();
+  };
+
+  process.on('SIGTERM', graceful_shutdown);
+  process.on('SIGINT', graceful_shutdown);
+})();

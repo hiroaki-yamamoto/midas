@@ -2,4 +2,4 @@
 # -*- coding: utf-8 -*-
 
 yarn install
-exec node index.js
+exec node index.js ${@}

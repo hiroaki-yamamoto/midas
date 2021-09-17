@@ -183,7 +183,11 @@ services:
   transpiler_service:
     build:
       context: ./backend/services/transpiler
+    command:
+      - -c
+      - /etc/midas/midas.yml
     volumes:
+      - ./etc:/etc/midas
       - ./backend/services/transpiler:/opt/code
       - /opt/code/node_modules
   frontend:
