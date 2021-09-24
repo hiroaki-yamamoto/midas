@@ -1,10 +1,22 @@
 const http2 = require('http2');
+const cookie = require('cookie');
 const fs = require('fs/promises');
 const url = require('url');
 
 const ts = require('typescript');
 const yaml = require('js-yaml');
 const argparse = require('argparse');
+
+const protect_csrf = (cookieName, headerName, handler) => (req, res) => {
+  console.log(req.headers);
+  const cookieValue = cookie.parse(req.headers.cookie || '')[cookieName];
+  const header = req.headers[headerName];
+  if (cookieValue && header && cookieValue === header) {
+    return handler(req, res);
+  }
+  res.writeHead(403);
+  res.end('Permission Denied: Token Verification Failed');
+};
 
 const listener = (req, res) => {
   if (req.method.toLowerCase() !== 'post') {
@@ -52,7 +64,9 @@ const listener = (req, res) => {
     allowHTTP1: true,
   }
 
-  const server = http2.createSecureServer(certs, listener);
+  const server = http2.createSecureServer(
+    certs, protect_csrf('XSRF-TOKEN', 'X-XSRF-TOKEN', listener),
+  );
   console.log('Listening port', host.port);
   server.listen(parseInt(host.port, 10));
 
