@@ -17,8 +17,8 @@ pub struct Bot {
   pub created_at: Option<bson::DateTime>,
   pub trade_amount: f64,
   pub reinvest: bool,
-  cond_ts: String,
-  cond_js: Option<String>,
+  pub cond_ts: String,
+  pub cond_js: Option<String>,
 }
 
 impl Bot {
