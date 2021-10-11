@@ -11,6 +11,9 @@ export class Bot extends jspb.Message {
   getName(): string;
   setName(value: string): Bot;
 
+  getBasecurrency(): string;
+  setBasecurrency(value: string): Bot;
+
   getExchange(): entities_pb.Exchanges;
   setExchange(value: entities_pb.Exchanges): Bot;
 
@@ -40,6 +43,7 @@ export namespace Bot {
   export type AsObject = {
     id: string,
     name: string,
+    basecurrency: string,
     exchange: entities_pb.Exchanges,
     createdat?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     tradeAmount: number,

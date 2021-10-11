@@ -493,6 +493,12 @@ dependencies = [
 [[package]]
 name = "bot_service"
 version = "0.1.0"
+dependencies = [
+ "bot",
+ "mongodb",
+ "rpc",
+ "warp",
+]
 
 [[package]]
 name = "brotli"

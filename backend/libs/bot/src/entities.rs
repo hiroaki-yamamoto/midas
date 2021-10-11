@@ -13,6 +13,7 @@ use ::types::DateTime;
 pub struct Bot {
   pub id: Option<bson::oid::ObjectId>,
   pub name: String,
+  pub base_currency: String,
   pub exchange: Exchanges,
   pub created_at: Option<bson::DateTime>,
   pub trade_amount: f64,
@@ -25,6 +26,7 @@ impl Bot {
   pub fn new(
     id: Option<bson::oid::ObjectId>,
     name: String,
+    base_currency: String,
     exchange: Exchanges,
     trade_amount: f64,
     reinvest: bool,
@@ -33,6 +35,7 @@ impl Bot {
     return Self {
       id,
       name,
+      base_currency,
       exchange,
       trade_amount,
       reinvest,
@@ -49,6 +52,7 @@ impl TryFrom<RPCBot> for Bot {
     return Ok(Self {
       id: bson::oid::ObjectId::from_str(value.id.as_str()).ok(),
       name: value.name,
+      base_currency: value.base_currency,
       exchange: Exchanges::try_from(value.exchange)?,
       trade_amount: value.trade_amount,
       created_at: None,
@@ -64,6 +68,7 @@ impl From<Bot> for RPCBot {
     return Self {
       id: value.id.map(|id| id.to_hex()).unwrap_or("".to_string()),
       name: value.name,
+      base_currency: value.base_currency,
       exchange: value.exchange as i32,
       created_at: value.created_at.map(|time| {
         let time: DateTime = time.into();

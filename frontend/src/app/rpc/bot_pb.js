@@ -99,11 +99,12 @@ proto.bot.Bot.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, ""),
     name: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    exchange: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    basecurrency: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    exchange: jspb.Message.getFieldWithDefault(msg, 4, 0),
     createdat: (f = msg.getCreatedat()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
-    tradeAmount: jspb.Message.getFloatingPointFieldWithDefault(msg, 5, 0.0),
-    reinvest: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
-    condition: jspb.Message.getFieldWithDefault(msg, 7, "")
+    tradeAmount: jspb.Message.getFloatingPointFieldWithDefault(msg, 6, 0.0),
+    reinvest: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
+    condition: jspb.Message.getFieldWithDefault(msg, 8, "")
   };
 
   if (includeInstance) {
@@ -149,23 +150,27 @@ proto.bot.Bot.deserializeBinaryFromReader = function(msg, reader) {
       msg.setName(value);
       break;
     case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setBasecurrency(value);
+      break;
+    case 4:
       var value = /** @type {!proto.entities.Exchanges} */ (reader.readEnum());
       msg.setExchange(value);
       break;
-    case 4:
+    case 5:
       var value = new google_protobuf_timestamp_pb.Timestamp;
       reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
       msg.setCreatedat(value);
       break;
-    case 5:
+    case 6:
       var value = /** @type {number} */ (reader.readDouble());
       msg.setTradeAmount(value);
       break;
-    case 6:
+    case 7:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setReinvest(value);
       break;
-    case 7:
+    case 8:
       var value = /** @type {string} */ (reader.readString());
       msg.setCondition(value);
       break;
@@ -212,17 +217,24 @@ proto.bot.Bot.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getBasecurrency();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
   f = message.getExchange();
   if (f !== 0.0) {
     writer.writeEnum(
-      3,
+      4,
       f
     );
   }
   f = message.getCreatedat();
   if (f != null) {
     writer.writeMessage(
-      4,
+      5,
       f,
       google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
@@ -230,21 +242,21 @@ proto.bot.Bot.serializeBinaryToWriter = function(message, writer) {
   f = message.getTradeAmount();
   if (f !== 0.0) {
     writer.writeDouble(
-      5,
+      6,
       f
     );
   }
   f = message.getReinvest();
   if (f) {
     writer.writeBool(
-      6,
+      7,
       f
     );
   }
   f = message.getCondition();
   if (f.length > 0) {
     writer.writeString(
-      7,
+      8,
       f
     );
   }
@@ -288,11 +300,29 @@ proto.bot.Bot.prototype.setName = function(value) {
 
 
 /**
- * optional entities.Exchanges exchange = 3;
+ * optional string baseCurrency = 3;
+ * @return {string}
+ */
+proto.bot.Bot.prototype.getBasecurrency = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.bot.Bot} returns this
+ */
+proto.bot.Bot.prototype.setBasecurrency = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional entities.Exchanges exchange = 4;
  * @return {!proto.entities.Exchanges}
  */
 proto.bot.Bot.prototype.getExchange = function() {
-  return /** @type {!proto.entities.Exchanges} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+  return /** @type {!proto.entities.Exchanges} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
@@ -301,17 +331,17 @@ proto.bot.Bot.prototype.getExchange = function() {
  * @return {!proto.bot.Bot} returns this
  */
 proto.bot.Bot.prototype.setExchange = function(value) {
-  return jspb.Message.setProto3EnumField(this, 3, value);
+  return jspb.Message.setProto3EnumField(this, 4, value);
 };
 
 
 /**
- * optional google.protobuf.Timestamp createdAt = 4;
+ * optional google.protobuf.Timestamp createdAt = 5;
  * @return {?proto.google.protobuf.Timestamp}
  */
 proto.bot.Bot.prototype.getCreatedat = function() {
   return /** @type{?proto.google.protobuf.Timestamp} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 4));
+    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 5));
 };
 
 
@@ -320,7 +350,7 @@ proto.bot.Bot.prototype.getCreatedat = function() {
  * @return {!proto.bot.Bot} returns this
 */
 proto.bot.Bot.prototype.setCreatedat = function(value) {
-  return jspb.Message.setWrapperField(this, 4, value);
+  return jspb.Message.setWrapperField(this, 5, value);
 };
 
 
@@ -338,16 +368,16 @@ proto.bot.Bot.prototype.clearCreatedat = function() {
  * @return {boolean}
  */
 proto.bot.Bot.prototype.hasCreatedat = function() {
-  return jspb.Message.getField(this, 4) != null;
+  return jspb.Message.getField(this, 5) != null;
 };
 
 
 /**
- * optional double trade_amount = 5;
+ * optional double trade_amount = 6;
  * @return {number}
  */
 proto.bot.Bot.prototype.getTradeAmount = function() {
-  return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 5, 0.0));
+  return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 6, 0.0));
 };
 
 
@@ -356,16 +386,16 @@ proto.bot.Bot.prototype.getTradeAmount = function() {
  * @return {!proto.bot.Bot} returns this
  */
 proto.bot.Bot.prototype.setTradeAmount = function(value) {
-  return jspb.Message.setProto3FloatField(this, 5, value);
+  return jspb.Message.setProto3FloatField(this, 6, value);
 };
 
 
 /**
- * optional bool reinvest = 6;
+ * optional bool reinvest = 7;
  * @return {boolean}
  */
 proto.bot.Bot.prototype.getReinvest = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 6, false));
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 7, false));
 };
 
 
@@ -374,16 +404,16 @@ proto.bot.Bot.prototype.getReinvest = function() {
  * @return {!proto.bot.Bot} returns this
  */
 proto.bot.Bot.prototype.setReinvest = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 6, value);
+  return jspb.Message.setProto3BooleanField(this, 7, value);
 };
 
 
 /**
- * optional string condition = 7;
+ * optional string condition = 8;
  * @return {string}
  */
 proto.bot.Bot.prototype.getCondition = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
 };
 
 
@@ -392,7 +422,7 @@ proto.bot.Bot.prototype.getCondition = function() {
  * @return {!proto.bot.Bot} returns this
  */
 proto.bot.Bot.prototype.setCondition = function(value) {
-  return jspb.Message.setProto3StringField(this, 7, value);
+  return jspb.Message.setProto3StringField(this, 8, value);
 };
 
 
