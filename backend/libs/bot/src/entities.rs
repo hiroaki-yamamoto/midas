@@ -49,11 +49,16 @@ impl Bot {
 impl TryFrom<RPCBot> for Bot {
   type Error = ParseError;
   fn try_from(value: RPCBot) -> Result<Self, Self::Error> {
+    let exchange = Exchanges::try_from(value.exchange).map_err(|err| {
+      let mut err = err.clone();
+      err.field = Some(String::from("exchange"));
+      return err;
+    });
     return Ok(Self {
       id: bson::oid::ObjectId::from_str(value.id.as_str()).ok(),
       name: value.name,
       base_currency: value.base_currency,
-      exchange: Exchanges::try_from(value.exchange)?,
+      exchange: exchange?,
       trade_amount: value.trade_amount,
       created_at: None,
       reinvest: value.reinvest,

@@ -5,8 +5,8 @@ use ::err_derive::Error;
 #[derive(Debug, Default, Clone, Error)]
 #[error(display = "Failed to parse: (field: {:?}, input: {:?})", field, input)]
 pub struct ParseError {
-  field: Option<String>,
-  input: Option<String>,
+  pub field: Option<String>,
+  pub input: Option<String>,
 }
 
 impl ParseError {

@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 bot = { path = "../../libs/bot" }
 rpc = { path = "../../libs/rpc" }
+errors = { path = "../../libs/errors" }
 
 warp = { version = "0.3.1", features = ["tls"] }
 mongodb = { version = "1.2.1", default-features = false, features = ["async-std-runtime"] }

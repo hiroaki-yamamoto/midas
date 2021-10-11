@@ -1,4 +1,3 @@
-use ::errors::StatusFailure;
 use ::std::convert::Infallible;
 use ::warp::http::StatusCode;
 use ::warp::{reject, reply};
@@ -41,12 +40,6 @@ pub async fn handle_rejection(
     status = Status::new(
       StatusCode::UNSUPPORTED_MEDIA_TYPE,
       "The specified media type is not supported.",
-    );
-  } else if let Some(detail) = err.find::<StatusFailure>() {
-    status = Status::new(
-      StatusCode::from_u16(detail.code)
-        .unwrap_or(StatusCode::SERVICE_UNAVAILABLE),
-      format!("({:?}", detail),
     );
   } else {
     status = Status::new(

@@ -7,6 +7,7 @@ use ::types::ThreadSafeResult;
 
 use super::entities::Bot;
 
+#[derive(Debug, Clone)]
 pub struct BotInfoRecorder {
   col: Collection,
 }
