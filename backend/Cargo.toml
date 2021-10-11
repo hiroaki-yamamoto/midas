@@ -33,6 +33,7 @@ members = [
   "services/observer",
   "services/token",
   "services/keychain",
+  "services/bot",
 
   "workers/historical",
   "workers/observer",
