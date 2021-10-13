@@ -1,5 +1,6 @@
 use ::err_derive::Error;
 use ::url::Url;
+use ::warp::reject::Reject;
 
 #[derive(Debug, Clone, Error)]
 #[error(
@@ -19,3 +20,5 @@ impl StatusFailure {
     return Self { url, code, text };
   }
 }
+
+impl Reject for StatusFailure {}

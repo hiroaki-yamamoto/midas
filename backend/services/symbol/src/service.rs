@@ -11,9 +11,8 @@ use ::binance_symbols::{
   fetcher as binance_fetcher, recorder as binance_recorder, SymbolFetcher,
   SymbolRecorder,
 };
-use ::errors::StatusFailure;
 use ::num_traits::FromPrimitive;
-use ::rpc::entities::Exchanges;
+use ::rpc::entities::{Exchanges, Status};
 
 use super::entities::BaseCurrencies;
 
@@ -115,7 +114,10 @@ async fn handle_base_currencies(
   recorder: impl SymbolRecorder + Send + Sync,
 ) -> Result<Vec<String>, Rejection> {
   return recorder.list_base_currencies().await.map_err(|err| {
-    reject::custom(StatusFailure::new(None, 500, format!("{}", err)))
+    reject::custom(Status::new(
+      ::warp::http::StatusCode::SERVICE_UNAVAILABLE,
+      format!("{}", err),
+    ))
   });
 }
 
