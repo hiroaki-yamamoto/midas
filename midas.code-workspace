@@ -16,6 +16,7 @@
 	"settings": {
 		"protoc": {
 			"options": ["-I", "."]
-		}
+		},
+		"rust-analyzer.cargo.target": "x86_64-unknown-linux-musl"
 	}
 }
