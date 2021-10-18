@@ -9,7 +9,9 @@ edition = "2018"
 [dependencies]
 bot = { path = "../../libs/bot" }
 rpc = { path = "../../libs/rpc" }
+config = { path = "../../libs/config" }
 errors = { path = "../../libs/errors" }
 
 warp = { version = "0.3.1", features = ["tls"] }
 mongodb = { version = "1.2.1", default-features = false, features = ["async-std-runtime"] }
+reqwest = { version = "0.11.4", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }

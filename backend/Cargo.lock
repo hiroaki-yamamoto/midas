@@ -495,8 +495,10 @@ name = "bot_service"
 version = "0.1.0"
 dependencies = [
  "bot",
+ "config",
  "errors",
  "mongodb",
+ "reqwest",
  "rpc",
  "warp",
 ]
