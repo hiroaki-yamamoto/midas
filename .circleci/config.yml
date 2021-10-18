@@ -37,7 +37,7 @@ jobs:
           key: cargo-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - run:
           name: "Install musl tools"
-          command: "apt-get update && apt-get install -y musl-tools jq curl lld"
+          command: "apt-get update && apt-get install -y musl-tools jq curl lld clang"
       - run: rustup component add rustfmt
       - run:
           name: "Install musl package"
