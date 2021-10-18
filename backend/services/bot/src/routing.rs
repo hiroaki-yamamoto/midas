@@ -23,7 +23,11 @@ pub fn construct(db: &Database) -> BoxedFilter<(impl Reply,)> {
         let status = Status::new(code.clone(), e.to_string());
         return Err(::warp::reject::custom(status));
       }
-      writer.write(&bot.unwrap()).await;
+      if let Err(e) = writer.write(&bot.unwrap()).await {
+        let code = StatusCode::INTERNAL_SERVER_ERROR;
+        let status = Status::new(code.clone(), e.to_string());
+        return Err(::warp::reject::custom(status));
+      }
       return Ok(());
     })
     .map(|_| {
