@@ -265,6 +265,14 @@ workflows:
             branches:
               only: master
           service_name: notify_worker
+      - deploy-image:
+          name: "Bot Service Deployment"
+          requires:
+            - build-backend
+          filters:
+            branches:
+              only: master
+          service_name: bot_service
       - notify:
           name: "Deploy Success Notification"
           filters:
@@ -280,3 +288,4 @@ workflows:
             - Trade Observer Service Deployment
             - Keychain Service Deployment
             - Notification Worker Deployment
+            - Bot Service Deployment
