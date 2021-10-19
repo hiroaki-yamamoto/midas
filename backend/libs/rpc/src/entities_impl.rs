@@ -7,7 +7,6 @@ use ::num_traits::FromPrimitive;
 use ::warp::reject::Reject;
 
 use ::errors::ParseError;
-use ::errors::StatusFailure;
 
 impl Exchanges {
   pub fn as_string(&self) -> String {

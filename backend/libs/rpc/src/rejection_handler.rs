@@ -1,4 +1,3 @@
-use ::errors::StatusFailure;
 use ::std::convert::Infallible;
 use ::warp::http::StatusCode;
 use ::warp::{reject, reply};

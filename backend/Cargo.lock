@@ -495,11 +495,17 @@ name = "bot_service"
 version = "0.1.0"
 dependencies = [
  "bot",
+ "clap",
  "config",
+ "csrf",
  "errors",
+ "futures",
+ "libc",
  "mongodb",
  "reqwest",
  "rpc",
+ "slog",
+ "tokio 1.9.0",
  "warp",
 ]
 
