@@ -29,5 +29,5 @@ tokio = { version = "1.8.1", features = ["time", "macros"] }
 tokio-stream = "0.1.7"
 tokio-tungstenite = { version = "0.15.0", features = ["native-tls"] }
 futures = "0.3.15"
-mongodb = { version = "1.2.2", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.0.1", default-features = false, features = ["async-std-runtime"] }
 serde = { version = "1.0.126", features=["derive"] }
