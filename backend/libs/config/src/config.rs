@@ -2,7 +2,7 @@ use ::std::error::Error;
 use ::std::fs::{read_to_string, File};
 use ::std::io::Read;
 
-use ::reqwest::{Certificate, Client, Identity};
+use ::reqwest::{Certificate, Client};
 use ::serde::Deserialize;
 use ::slog::Logger;
 use ::slog_builder::{build_debug, build_json};
