@@ -283,19 +283,18 @@ impl HistoryFetcherTrait for HistoryFetcher {
     let symbols = self.symbol_fetcher.get(query).await?;
     let me = self.clone();
     let _ = tokio::spawn(async move {
-      let (ctrl_hdl, mut ctrl_sub) = match me.ctrl_pubsub.subscribe() {
+      let mut ctrl_sub = match me.ctrl_pubsub.subscribe() {
         Err(_) => return,
         Ok(o) => o,
       };
       let _ = me.push_fetch_request(&symbols, &mut ctrl_sub).await;
-      let _ = ctrl_hdl.unsubscribe();
     });
     return Ok(());
   }
 
   async fn spawn(&self) -> ThreadSafeResult<()> {
-    let (_, param_sub) = self.param_pubsub.queue_subscribe("fetch.thread")?;
-    let (_, mut ctrl_sub) = self.ctrl_pubsub.subscribe()?;
+    let param_sub = self.param_pubsub.queue_subscribe("fetch.thread")?;
+    let mut ctrl_sub = self.ctrl_pubsub.subscribe()?;
     let mut param_sub = param_sub.boxed();
     loop {
       select! {

@@ -123,18 +123,17 @@ impl HistoryRecorder {
     &self,
     senders: Vec<mpsc::UnboundedSender<Klines>>,
   ) {
-    let (_, value_sub) =
-      match self.fetch_resp_pubsub.queue_subscribe("recorder") {
-        Err(e) => {
-          crit!(
-            self.logger,
-            "Failed to subscribe the response channel: {}",
-            e; "chan_name" => self.fetch_resp_pubsub.get_subject(),
-          );
-          return;
-        }
-        Ok(v) => v,
-      };
+    let value_sub = match self.fetch_resp_pubsub.queue_subscribe("recorder") {
+      Err(e) => {
+        crit!(
+          self.logger,
+          "Failed to subscribe the response channel: {}",
+          e; "chan_name" => self.fetch_resp_pubsub.get_subject(),
+        );
+        return;
+      }
+      Ok(v) => v,
+    };
     let mut value_sub = Box::pin(value_sub);
     let senders = senders.clone();
     let mut counter: usize = 0;
@@ -159,8 +158,7 @@ impl HistoryRecorder {
 
   async fn spawn_latest_trade_time_request(&self) {
     let me = self.clone();
-    let (_, sub) = match me.latest_trade_date_pubsub.queue_subscribe("recorder")
-    {
+    let sub = match me.latest_trade_date_pubsub.queue_subscribe("recorder") {
       Err(e) => {
         error!(
           me.logger,

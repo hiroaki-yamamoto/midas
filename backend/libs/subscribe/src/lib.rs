@@ -1,8 +1,6 @@
-mod handler;
 mod streams;
 mod traits;
 
-pub use self::handler::handle;
 pub use self::traits::PubSub;
 
 #[macro_export]

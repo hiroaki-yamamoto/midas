@@ -2,7 +2,7 @@ use ::std::collections::HashMap;
 use ::std::net::SocketAddr;
 use ::std::time::Duration;
 
-use ::clap::Clap;
+use ::clap::Parser;
 use ::futures::{FutureExt, SinkExt, StreamExt};
 use ::libc::{SIGINT, SIGTERM};
 use ::nats::{connect as broker_con, Connection as NatsCon};

@@ -1,6 +1,6 @@
 use ::std::collections::HashMap;
 
-use ::clap::Clap;
+use ::clap::Parser;
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
 use ::nats::connect;
@@ -29,11 +29,11 @@ async fn main() {
 
   // Binance
   let part = binance_pubsub::HistProgPartPubSub::new(broker.clone());
-  let (binance_handler, mut st) = part.queue_subscribe("aggregate").unwrap();
+  let mut st = part.queue_subscribe("aggregate").unwrap();
   part_stream.insert(Exchanges::Binance, &mut st);
 
   let status_pubsub = FetchStatusPubSub::new(broker);
-  let (status_handler, mut status_st) = status_pubsub.subscribe().unwrap();
+  let mut status_st = status_pubsub.subscribe().unwrap();
   let mut stop =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   loop {
@@ -130,8 +130,6 @@ async fn main() {
         }
       },
       _ = stop.recv() => {
-        let _ = binance_handler.unsubscribe().unwrap();
-        let _ = status_handler.unsubscribe().unwrap();
         part_stream.clear();
         break;
       },

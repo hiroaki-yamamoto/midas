@@ -85,7 +85,7 @@ impl Service {
               let _ = sock.send(Message::close_with(1011 as u16, msg)).await;
               let _ = sock.flush().await;
             }
-            Ok((subsc_handler, mut resp)) => loop {
+            Ok(mut resp) => loop {
               select! {
                 Some((item, _)) = resp.next() => {
                   match item {
@@ -101,7 +101,6 @@ impl Service {
                       let _ = sock.send(payload).await;
                     },
                     KlineFetchStatus::Stop => {
-                      let _ = subsc_handler.unsubscribe();
                       break;
                     },
                     _ => {}
@@ -111,7 +110,6 @@ impl Service {
                 Some(msg) = sock.next() => {
                   let msg = msg.unwrap_or(::warp::ws::Message::close());
                   if msg.is_close() {
-                    let _ = subsc_handler.unsubscribe();
                     break;
                   }
                 },

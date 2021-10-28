@@ -1,4 +1,4 @@
-use ::clap::Clap;
+use ::clap::Parser;
 use ::futures::future::{join_all, select};
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::options::ClientOptions as MongoDBCliOpt;

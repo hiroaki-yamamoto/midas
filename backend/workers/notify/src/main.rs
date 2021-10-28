@@ -1,4 +1,4 @@
-use ::clap::Clap;
+use ::clap::Parser;
 use ::futures::future::{select, Either};
 use ::libc::{SIGINT, SIGTERM};
 use ::nats::connect as new_broker;
