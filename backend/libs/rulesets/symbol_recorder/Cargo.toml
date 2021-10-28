@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 types = { path = "../../types" }
 
-async-trait = "0.1.50"
-futures-core = "0.3.15"
-mongodb = { version = "1.2.2", default-features = false, features = ["async-std-runtime"] }
-serde = { version = "1.0.126", features=["derive"] }
+async-trait = "0.1.51"
+futures-core = "0.3.17"
+mongodb = { version = "1.2.3", default-features = false, features = ["async-std-runtime"] }
+serde = { version = "1.0.130", features=["derive"] }

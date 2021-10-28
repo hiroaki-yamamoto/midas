@@ -11,12 +11,12 @@ errors = {path = "../errors"}
 types = { path = "../types" }
 
 prost = "0.7.0"
-serde = { version = "1.0.126", features=["derive"] }
+serde = { version = "1.0.130", features=["derive"] }
 num-traits = "0.2.14"
 num-derive = "0.3.3"
-clap = "3.0.0-beta.2"
-http = "0.2.4"
-bson = "1.2.2"
+clap = "3.0.0-beta.5"
+http = "0.2.5"
+bson = "1.2.4"
 warp = "0.3.1"
 chrono = "0.4.19"
 

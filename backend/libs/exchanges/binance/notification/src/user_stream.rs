@@ -205,10 +205,10 @@ impl UserStreamTrait for UserStream {
     return Ok(());
   }
   async fn start(&self) -> GenericResult<()> {
-    let (_, keychain_sub) = self.key_pubsub.subscribe()?;
-    let (_, listen_key_sub) =
+    let keychain_sub = self.key_pubsub.subscribe()?;
+    let listen_key_sub =
       self.listen_key_pubsub.queue_subscribe("user_stream")?;
-    let (_, reauth_sub) = self.reauth_pubsub.queue_subscribe("user_stream")?;
+    let reauth_sub = self.reauth_pubsub.queue_subscribe("user_stream")?;
     let mut keychain_sub = keychain_sub.boxed();
     let mut listen_key_sub = listen_key_sub.boxed();
     let mut reauth_sub = reauth_sub.boxed();

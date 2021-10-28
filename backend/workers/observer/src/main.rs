@@ -1,4 +1,4 @@
-use ::clap::Clap;
+use ::clap::Parser;
 use ::futures::future::{select, Either};
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::options::ClientOptions as MongoDBCliOpt;
@@ -11,7 +11,7 @@ use ::binance_observers::{self as binance, TradeObserverTrait};
 use ::config::{Config, DEFAULT_CONFIG_PATH};
 use ::rpc::entities::Exchanges;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 #[clap(author = "Hiroaki Yamamoto")]
 struct CmdArgs {
   #[clap(short, long)]

@@ -1,6 +1,6 @@
 use ::std::net::SocketAddr;
 
-use ::clap::Clap;
+use ::clap::Parser;
 use ::futures::FutureExt;
 use ::libc::{SIGINT, SIGTERM};
 use ::slog::info;

@@ -1,7 +1,7 @@
 use ::std::convert::TryFrom;
 use ::std::net::SocketAddr;
 
-use ::clap::Clap;
+use ::clap::Parser;
 use ::futures::FutureExt;
 use ::futures::StreamExt;
 use ::http::StatusCode;

@@ -3,7 +3,7 @@ mod service;
 
 use ::std::net::SocketAddr;
 
-use ::clap::Clap;
+use ::clap::Parser;
 use ::futures::FutureExt;
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::{options::ClientOptions as DBCliOpt, Client as DBCli};

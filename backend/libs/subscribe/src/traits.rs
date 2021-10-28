@@ -3,7 +3,6 @@ use ::std::io::{Error as IOError, ErrorKind as IOErrKind};
 
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
-use ::nats::subscription::Handler;
 use ::nats::{Connection as NatsCon, Message};
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde::de::DeserializeOwned;
@@ -30,21 +29,21 @@ where
     return self.get_broker().publish(self.get_subject(), msg);
   }
 
-  fn subscribe(&self) -> IOResult<(Handler, BoxStream<(T, Message)>)> {
+  fn subscribe(&self) -> IOResult<BoxStream<(T, Message)>> {
     let sub = self.get_broker().subscribe(self.get_subject())?;
-    let (handler, st) = to_stream::<T>(sub);
-    return Ok((handler, st.boxed()));
+    let st = to_stream::<T>(sub);
+    return Ok(st.boxed());
   }
 
   fn queue_subscribe(
     &self,
     queue_name: &str,
-  ) -> IOResult<(Handler, BoxStream<(T, Message)>)> {
+  ) -> IOResult<BoxStream<(T, Message)>> {
     let sub = self
       .get_broker()
       .queue_subscribe(self.get_subject(), queue_name)?;
-    let (handler, st) = to_stream::<T>(sub);
-    return Ok((handler, st.boxed()));
+    let st = to_stream::<T>(sub);
+    return Ok(st.boxed());
   }
 
   fn request<S>(&self, entity: &T) -> IOResult<(S, Message)>

@@ -17,7 +17,7 @@ pub struct InsertOneResult {
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[derive(::num_derive::FromPrimitive, ::clap::Clap)]
+#[derive(::num_derive::FromPrimitive, ::clap::Parser)]
 #[serde(tag = "exchange")]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
@@ -26,7 +26,7 @@ pub enum Exchanges {
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[derive(::num_derive::FromPrimitive, ::clap::Clap)]
+#[derive(::num_derive::FromPrimitive, ::clap::Parser)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum BackTestPriceBase {
