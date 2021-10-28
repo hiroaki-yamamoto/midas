@@ -21,6 +21,7 @@ services:
       - trade_observer_service
       - keychain_service
       - transpiler_service
+      - bot_service
       - frontend
     ports:
       - 50000:50000
@@ -190,6 +191,21 @@ services:
       - ./etc:/etc/midas
       - ./backend/services/transpiler:/opt/code
       - /opt/code/node_modules
+  bot_service:
+    build:
+      context: ./backend
+      dockerfile: devel.dockerfile
+      args:
+        - SERVICE=bot_service
+    command:
+      - -c
+      - /etc/midas/midas.yml
+    volumes:
+      - ./etc:/etc/midas
+      - ./backend:/opt/code
+    depends_on:
+      - database
+      - transpiler_service
   frontend:
     build:
       context: frontend

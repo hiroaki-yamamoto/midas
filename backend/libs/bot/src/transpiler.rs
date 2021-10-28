@@ -14,7 +14,7 @@ pub struct Transpiler {
 }
 
 impl Transpiler {
-  const LOCATION: &'static str = "/transpiler";
+  const LOCATION: &'static str = "https://transpiler_service:50000";
   pub fn new(cli: Client) -> Self {
     return Self { cli };
   }
