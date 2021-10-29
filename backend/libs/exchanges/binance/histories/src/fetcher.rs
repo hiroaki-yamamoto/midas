@@ -1,12 +1,8 @@
-use ::std::collections::HashMap;
 use ::std::fmt::Debug;
-use ::std::io::Result as IOResult;
-use ::std::iter::FromIterator;
 use ::std::time::{Duration as StdDur, SystemTime, UNIX_EPOCH};
 
 use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
-use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{doc, DateTime as MongoDateTime, Document};
 use ::nats::{Connection, Message};
 use ::rand::random;
@@ -24,7 +20,6 @@ use ::entities::KlineCtrl;
 use ::errors::{EmptyError, MaximumAttemptExceeded};
 use ::history::HistoryFetcher as HistoryFetcherTrait;
 use ::rpc::entities::SymbolInfo;
-use ::rpc::historical::HistChartProg;
 use ::types::{GenericResult, ThreadSafeResult};
 
 use super::entities::{
@@ -156,67 +151,30 @@ impl HistoryFetcher {
 
   async fn get_first_trade_date(
     &self,
-    symbols: Vec<String>,
-  ) -> GenericResult<HashMap<String, TradeTime<SystemTime>>> {
-    let symbols_len = symbols.len() as i64;
-    let (mut latest_kline, _) = self
+    symbol: String,
+  ) -> GenericResult<TradeTime<SystemTime>> {
+    let (db_recent_trade_date, _) = self
       .rec_ltd_pubsub
-      .request::<HashMap<String, TradeTime<MongoDateTime>>>(&symbols)?;
-    let _ = self.prog_pubsub.publish(&HistChartProg {
-      id: ObjectId::new().to_string(),
-      symbol: String::from("Currency Trade Date Fetch"),
-      num_symbols: symbols_len,
-      cur_symbol_num: 0,
-      num_objects: symbols_len,
-      cur_object_num: 0,
+      .request::<TradeTime<MongoDateTime>>(&symbol)?;
+    let (resp, _): (KlinesWithInfo, _) = self.param_pubsub.request(&Param {
+      symbol: symbol.clone(),
+      num_symbols: 1,
+      entire_data_len: 1,
+      start_time: SystemTime::UNIX_EPOCH.into(),
+      end_time: None,
     })?;
-    let latest_kline_clone = latest_kline.clone();
-    let to_fetch_binance = symbols
-      .into_iter()
-      .filter(move |symbol| !latest_kline_clone.contains_key(symbol));
-    let logger = self.logger.clone();
-    for symbol in to_fetch_binance {
-      let resp: IOResult<(KlinesWithInfo, _)> =
-        self.param_pubsub.request(&Param {
-          symbol: symbol.clone(),
-          num_symbols: 1,
-          entire_data_len: 1,
-          start_time: SystemTime::UNIX_EPOCH.into(),
-          end_time: None,
-        });
-      let logger = logger.clone();
-      match resp {
-        Err(e) => {
-          warn!(logger, "Failed to publish the messgae: {}", e);
-          continue;
-        }
-        Ok((mut resp, _)) => {
-          let resp: Kline = match resp.klines.pop() {
-            None => {
-              warn!(logger, "No value in the response.");
-              continue;
-            }
-            Some(kline) => kline,
-          };
-          let prog = HistChartProg {
-            id: ObjectId::new().to_string(),
-            symbol: String::from("Currency Trade Date Fetch"),
-            num_symbols: symbols_len,
-            cur_symbol_num: 0,
-            num_objects: symbols_len,
-            cur_object_num: 1,
-          };
-          latest_kline.insert(resp.symbol.clone(), resp.into());
-          let _ = self.prog_pubsub.publish(&prog);
-        }
-      }
+    let resp: Kline = resp
+      .klines
+      .first()
+      .ok_or(EmptyError {
+        field: "klines".to_string(),
+      })?
+      .clone();
+    if db_recent_trade_date.open_time > resp.open_time {
+      return Ok(db_recent_trade_date.into());
+    } else {
+      return Ok(resp.into());
     }
-    return Ok(HashMap::from_iter(latest_kline.iter().map(
-      move |(sym, trade_time)| {
-        let trade_time: TradeTime<SystemTime> = trade_time.into();
-        return (sym.clone(), trade_time);
-      },
-    )));
   }
 
   async fn push_fetch_request(
@@ -225,14 +183,16 @@ impl HistoryFetcher {
     stop_sig: &mut BoxStream<'_, (KlineCtrl, Message)>,
   ) -> GenericResult<()> {
     let end_at = SystemTime::now();
-    let trade_dates = self
-      .get_first_trade_date(
-        symbols.into_iter().map(|sym| sym.symbol.clone()).collect(),
-      )
-      .await?;
     let symbols_len = symbols.len();
-    for (symbol, dates) in trade_dates.into_iter() {
-      let start_at = dates.open_time;
+    for symbol in symbols {
+      let recent_trade_date =
+        match self.get_first_trade_date(symbol.symbol.clone()).await {
+          Err(_) => {
+            continue;
+          }
+          Ok(d) => d,
+        };
+      let start_at = recent_trade_date.open_time;
       let mut entire_data_len = end_at.duration_since(start_at)?.as_secs() / 60;
       let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as u64;
       entire_data_len /= 1000;
@@ -256,7 +216,7 @@ impl HistoryFetcher {
           sec_end_date = end_at;
         }
         let _ = self.param_pubsub.publish(&Param {
-          symbol: symbol.clone(),
+          symbol: symbol.symbol.clone(),
           num_symbols: symbols_len as i64,
           entire_data_len,
           start_time: sec_start_date.clone().into(),

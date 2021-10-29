@@ -1,6 +1,5 @@
-use ::std::collections::hash_map::HashMap;
-
 use ::async_trait::async_trait;
+use ::errors::EmptyError;
 use ::futures::future::{join3, join_all};
 use ::futures::{Stream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
@@ -12,9 +11,10 @@ use ::mongodb::{Collection, Database};
 use ::nats::Connection as NatsConnection;
 use ::rmp_serde::to_vec as to_msgpack;
 use ::slog::{crit, error, warn, Logger};
+use ::subscribe::PubSub;
 use ::tokio::select;
 use ::tokio::sync::mpsc;
-use subscribe::PubSub;
+use ::types::ThreadSafeResult;
 
 use ::rpc::historical::HistChartProg;
 
@@ -80,13 +80,13 @@ impl HistoryRecorder {
 
   async fn get_latest_trade_time(
     &self,
-    symbols: Vec<String>,
-  ) -> MongoResult<HashMap<String, TradeTime<MongoDateTime>>> {
-    let mut cur = self
+    symbols: String,
+  ) -> ThreadSafeResult<TradeTime<MongoDateTime>> {
+    let doc = self
       .col
       .aggregate(
         vec![
-          doc! { "$match": doc! { "symbol": doc! { "$in": symbols } } },
+          doc! { "$match": doc! { "symbol": symbols } },
           doc! {
             "$group": doc! {
               "_id": "$symbol",
@@ -101,14 +101,18 @@ impl HistoryRecorder {
         ],
         None,
       )
-      .await?;
-    let mut ret = HashMap::new();
-    while let Some(doc) = cur.next().await {
-      let doc = doc?;
-      let latest: TradeTime<MongoDateTime> = from_document(doc)?;
-      ret.insert(latest.symbol.clone(), latest);
-    }
-    return Ok(ret);
+      .await?
+      .filter_map(|doc| async { doc.ok() })
+      .filter_map(|doc| async {
+        from_document::<TradeTime<MongoDateTime>>(doc).ok()
+      })
+      .boxed()
+      .next()
+      .await
+      .ok_or(EmptyError {
+        field: "Trade Date".to_string(),
+      })?;
+    return Ok(doc);
   }
 
   async fn spawn_fetch_response(
@@ -166,8 +170,8 @@ impl HistoryRecorder {
       let logger = self.logger.clone();
       let me = self.clone();
       select! {
-        Some((symbols, msg)) = sub.next() => {
-          let trade_dates = match me.get_latest_trade_time(symbols).await {
+        Some((symbol, msg)) = sub.next() => {
+          let trade_dates = match me.get_latest_trade_time(symbol).await {
             Err(e) => {
               error!(logger, "Failed to get the latest trade time: {}", e);
               continue;
