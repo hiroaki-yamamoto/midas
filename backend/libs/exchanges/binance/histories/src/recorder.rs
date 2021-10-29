@@ -5,7 +5,7 @@ use ::futures::future::{join3, join_all};
 use ::futures::{Stream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{
-  doc, from_document, to_bson, DateTime as MongoDateTime, Document,
+  doc, from_document, DateTime as MongoDateTime, Document,
 };
 use ::mongodb::error::Result as MongoResult;
 use ::mongodb::{Collection, Database};
@@ -14,7 +14,6 @@ use ::rmp_serde::to_vec as to_msgpack;
 use ::slog::{crit, error, warn, Logger};
 use ::tokio::select;
 use ::tokio::sync::mpsc;
-use ::tokio::task::block_in_place;
 use subscribe::PubSub;
 
 use ::rpc::historical::HistChartProg;
@@ -29,7 +28,7 @@ use history::HistoryRecorder as HistRecTrait;
 
 #[derive(Debug, Clone)]
 pub struct HistoryRecorder {
-  col: Collection,
+  col: Collection<Kline>,
   db: Database,
   prog_pubsub: HistProgPartPubSub,
   fetch_resp_pubsub: HistFetchRespPubSub,
@@ -71,14 +70,7 @@ impl HistoryRecorder {
     let col = self.col.clone();
     loop {
       select! {
-        Some(raw_klines) = kline_recv.recv() => {
-          let klines = block_in_place(move || {
-            return raw_klines
-              .into_iter()
-              .filter_map(|item| to_bson(&item).ok())
-              .filter_map(|item| item.as_document().cloned())
-              .map(|item| item.clone());
-          });
+        Some(klines) = kline_recv.recv() => {
           let _ = col.insert_many(klines, None).await;
         },
         else => {break;}
@@ -145,7 +137,7 @@ impl HistoryRecorder {
             symbol: klines.symbol,
             num_symbols: klines.num_symbols,
             cur_symbol_num: 1,
-            num_objects: klines.entire_data_len,
+            num_objects: klines.entire_data_len as i64,
             cur_object_num: 1,
           });
           let _ = senders[counter].send(klines.klines);
@@ -213,8 +205,6 @@ impl HistoryRecorder {
         .col
         .find(query, None)
         .await?
-        .filter_map(|item| async { item.ok() })
-        .map(|item| from_document::<Kline>(item))
         .filter_map(|item| async { item.ok() }),
     );
   }

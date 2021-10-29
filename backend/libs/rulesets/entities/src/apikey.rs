@@ -72,7 +72,7 @@ impl TryFrom<RPCAPIKey> for APIKey {
       ))?;
     let exchange: APIKey = match exchange {
       Exchanges::Binance => APIKey::Binance(APIKeyInner {
-        id: ObjectId::with_string(&value.id).ok(),
+        id: ObjectId::parse_str(&value.id).ok(),
         label: value.label,
         pub_key: value.pub_key,
         prv_key: value.prv_key,

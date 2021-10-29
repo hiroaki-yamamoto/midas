@@ -50,7 +50,7 @@ async fn main() {
     .untuple_one();
 
   let id_filter = ::warp::path::param().and_then(|id: String| async move {
-    match ObjectId::with_string(&id) {
+    match ObjectId::parse_str(&id) {
       Err(_) => return Err(::warp::reject()),
       Ok(id) => return Ok(id),
     };

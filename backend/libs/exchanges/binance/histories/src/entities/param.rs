@@ -5,7 +5,7 @@ use ::serde::{Deserialize, Serialize};
 pub struct Param {
   pub symbol: String,
   pub num_symbols: i64,
-  pub entire_data_len: i64,
+  pub entire_data_len: u64,
   pub start_time: MongoDateTime,
   pub end_time: Option<MongoDateTime>,
 }

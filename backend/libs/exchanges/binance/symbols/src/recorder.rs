@@ -3,7 +3,6 @@ use ::futures::stream::StreamExt;
 use ::mongodb::bson;
 use ::mongodb::results::InsertManyResult;
 use ::mongodb::{Collection, Database};
-use ::serde::Serialize;
 
 use ::types::ThreadSafeResult;
 
@@ -13,7 +12,7 @@ use ::symbol_recorder::SymbolRecorder as SymbolRecorderTrait;
 
 #[derive(Debug, Clone)]
 pub struct SymbolRecorder {
-  col: Collection,
+  col: Collection<Symbol>,
   db: Database,
 }
 
@@ -40,35 +39,21 @@ impl RecorderTrait for SymbolRecorder {
 #[async_trait]
 impl SymbolRecorderTrait for SymbolRecorder {
   type ListStream = ListSymbolStream<'static>;
+  type Type = Symbol;
   async fn list(
     &self,
     query: impl Into<Option<bson::Document>> + Send + 'async_trait,
   ) -> ThreadSafeResult<Self::ListStream> {
     let cur = self.col.find(query, None).await?;
-    let cur = cur
-      .filter_map(|doc| async { doc.ok() })
-      .map(|doc| bson::from_bson::<Symbol>(bson::Bson::Document(doc)))
-      .filter_map(|doc| async { doc.ok() })
-      .boxed();
+    let cur = cur.filter_map(|doc| async { doc.ok() }).boxed();
     return Ok(cur as Self::ListStream);
   }
-  async fn update_symbols<T>(
+  async fn update_symbols(
     &self,
-    value: Vec<T>,
-  ) -> ThreadSafeResult<InsertManyResult>
-  where
-    T: Serialize + Send,
-  {
-    let empty = bson::Array::new();
-    let serialized: Vec<bson::Document> = bson::to_bson(&value)?
-      .as_array()
-      .unwrap_or(&empty)
-      .into_iter()
-      .filter_map(|item| item.as_document())
-      .map(|item| item.clone())
-      .collect();
+    value: Vec<Self::Type>,
+  ) -> ThreadSafeResult<InsertManyResult> {
     let _ = self.col.delete_many(bson::doc! {}, None).await?;
-    return Ok(self.col.insert_many(serialized.into_iter(), None).await?);
+    return Ok(self.col.insert_many(value.into_iter(), None).await?);
   }
   async fn list_base_currencies(&self) -> ThreadSafeResult<Vec<String>> {
     return Ok(
