@@ -7,7 +7,7 @@ use ::serde::{Deserialize, Serialize};
 use ::errors::ParseError;
 use ::rpc::bot::Bot as RPCBot;
 use ::rpc::entities::Exchanges;
-use ::types::DateTime;
+use ::rpc::google::protobuf::Timestamp;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bot {
@@ -75,10 +75,10 @@ impl From<Bot> for RPCBot {
       name: value.name,
       base_currency: value.base_currency,
       exchange: value.exchange as i32,
-      created_at: value.created_at.map(|time| {
-        let time: DateTime = time.into();
-        time.into()
-      }),
+      created_at: value
+        .created_at
+        .map(|time| Timestamp::try_from(time.to_system_time()).ok())
+        .flatten(),
       trade_amount: value.trade_amount,
       reinvest: value.reinvest,
       condition: value.cond_ts,

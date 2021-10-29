@@ -8,7 +8,6 @@ edition = "2018"
 
 [dependencies]
 errors = {path = "../errors"}
-types = { path = "../types" }
 
 prost = "0.7.0"
 serde = { version = "1.0.130", features=["derive"] }
@@ -18,7 +17,6 @@ clap = "3.0.0-beta.5"
 http = "0.2.5"
 bson = "2.0.1"
 warp = "0.3.1"
-chrono = "0.4.19"
 
 [build-dependencies]
 prost-build = "0.7.0"
