@@ -1,6 +1,6 @@
 use ::async_trait::async_trait;
-use ::chrono::{DateTime, Utc};
 use ::futures_core::stream::BoxStream;
+use ::std::time::SystemTime;
 
 use ::entities::BookTicker;
 use ::types::GenericResult;
@@ -13,6 +13,6 @@ pub trait TradeObserver {
 
 pub trait TradeDateTime {
   fn symbol(&self) -> String;
-  fn open_time(&self) -> DateTime<Utc>;
-  fn close_time(&self) -> DateTime<Utc>;
+  fn open_time(&self) -> SystemTime;
+  fn close_time(&self) -> SystemTime;
 }

@@ -22,7 +22,6 @@ binance_clients = { path = "../clients" }
 binance_symbols = { path = "../symbols" }
 
 async-trait = "0.1.51"
-chrono = "0.4.19"
 futures = "0.3.17"
 nats = "0.15.2"
 rand = "0.8.4"

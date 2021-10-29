@@ -1,7 +1,7 @@
-use ::chrono::{NaiveDateTime, Utc};
+use ::mongodb::bson::DateTime;
 use ::serde_json::Value;
 
-use super::{DateTime, StdResult};
+use super::StdResult;
 use ::errors::ParseError;
 
 pub fn cast_datetime(
@@ -15,11 +15,7 @@ pub fn cast_datetime(
 }
 
 pub fn cast_datetime_from_i64(value: i64) -> DateTime {
-  let (epoch, mils) = (value / 1000, value % 1000);
-  return DateTime::from_utc(
-    NaiveDateTime::from_timestamp(epoch, (mils * 1000).abs() as u32),
-    Utc,
-  );
+  return DateTime::from_millis(value);
 }
 
 pub fn cast_f64(fld_name: &str, value: &Value) -> StdResult<f64, ParseError> {

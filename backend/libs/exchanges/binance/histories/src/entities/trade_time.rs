@@ -1,5 +1,5 @@
 use ::mongodb::bson::DateTime as MongoDateTime;
-use ::types::DateTime as ChronoDateTime;
+use ::std::time::SystemTime;
 use serde::{Deserialize, Serialize};
 
 use super::Kline;
@@ -14,7 +14,7 @@ pub struct TradeTime<T> {
   pub close_time: T,
 }
 
-impl TradeTime<ChronoDateTime> {
+impl TradeTime<SystemTime> {
   fn from<S>(from: S) -> Self
   where
     S: TradeDateTime,
@@ -40,11 +40,11 @@ impl TradeTime<MongoDateTime> {
   }
 }
 
-impl TradeDateTime for TradeTime<ChronoDateTime> {
-  fn open_time(&self) -> ChronoDateTime {
+impl TradeDateTime for TradeTime<SystemTime> {
+  fn open_time(&self) -> SystemTime {
     return self.open_time;
   }
-  fn close_time(&self) -> ChronoDateTime {
+  fn close_time(&self) -> SystemTime {
     return self.close_time;
   }
   fn symbol(&self) -> String {
@@ -53,24 +53,24 @@ impl TradeDateTime for TradeTime<ChronoDateTime> {
 }
 
 impl TradeDateTime for TradeTime<MongoDateTime> {
-  fn open_time(&self) -> ChronoDateTime {
-    return *self.open_time;
+  fn open_time(&self) -> SystemTime {
+    return self.open_time.into();
   }
-  fn close_time(&self) -> ChronoDateTime {
-    return *self.close_time;
+  fn close_time(&self) -> SystemTime {
+    return self.close_time.into();
   }
   fn symbol(&self) -> String {
     return self.symbol.clone();
   }
 }
 
-impl From<Kline> for TradeTime<ChronoDateTime> {
+impl From<Kline> for TradeTime<SystemTime> {
   fn from(kline: Kline) -> Self {
     return Self::from(kline);
   }
 }
 
-impl From<&Kline> for TradeTime<ChronoDateTime> {
+impl From<&Kline> for TradeTime<SystemTime> {
   fn from(kline: &Kline) -> Self {
     return Self::from(kline.clone());
   }
@@ -88,26 +88,26 @@ impl From<&Kline> for TradeTime<MongoDateTime> {
   }
 }
 
-impl From<TradeTime<MongoDateTime>> for TradeTime<ChronoDateTime> {
+impl From<TradeTime<MongoDateTime>> for TradeTime<SystemTime> {
   fn from(mongo: TradeTime<MongoDateTime>) -> Self {
     return Self::from(mongo);
   }
 }
 
-impl From<&TradeTime<MongoDateTime>> for TradeTime<ChronoDateTime> {
+impl From<&TradeTime<MongoDateTime>> for TradeTime<SystemTime> {
   fn from(mongo: &TradeTime<MongoDateTime>) -> Self {
     return Self::from(mongo.clone());
   }
 }
 
-impl From<TradeTime<ChronoDateTime>> for TradeTime<MongoDateTime> {
-  fn from(chrono_based: TradeTime<ChronoDateTime>) -> Self {
+impl From<TradeTime<SystemTime>> for TradeTime<MongoDateTime> {
+  fn from(chrono_based: TradeTime<SystemTime>) -> Self {
     return Self::from(chrono_based);
   }
 }
 
-impl From<&TradeTime<ChronoDateTime>> for TradeTime<MongoDateTime> {
-  fn from(chrono_based: &TradeTime<ChronoDateTime>) -> Self {
+impl From<&TradeTime<SystemTime>> for TradeTime<MongoDateTime> {
+  fn from(chrono_based: &TradeTime<SystemTime>) -> Self {
     return Self::from(chrono_based.clone());
   }
 }

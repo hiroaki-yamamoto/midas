@@ -1,6 +1,6 @@
-use ::chrono::Utc;
 use ::mongodb::bson::DateTime;
 use ::serde::{Deserialize, Serialize};
+use ::std::time::SystemTime;
 use ::types::stateful_setter;
 
 use super::order_type::OrderType;
@@ -70,7 +70,7 @@ impl OrderRequest<DateTime> {
       iceberg_qty: None,
       order_response_type: None,
       recv_window: None,
-      timestamp: Utc::now().into(),
+      timestamp: SystemTime::now().into(),
     };
   }
 }

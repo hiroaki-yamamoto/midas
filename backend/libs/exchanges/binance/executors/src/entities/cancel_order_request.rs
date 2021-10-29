@@ -1,6 +1,7 @@
+use ::std::time::SystemTime;
+
 use serde::Serialize;
 
-use ::chrono::Utc;
 use ::mongodb::bson::DateTime;
 use ::types::stateful_setter;
 
@@ -19,7 +20,7 @@ impl CancelOrderRequest<DateTime> {
   pub fn new(symbol: String) -> Self {
     return Self {
       symbol,
-      timestamp: Utc::now().into(),
+      timestamp: SystemTime::now().into(),
       order_id: None,
       orig_client_order_id: None,
       new_client_order_id: None,
