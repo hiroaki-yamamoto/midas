@@ -19,7 +19,7 @@ symbol_recorder = { path = "../../../rulesets/symbol_recorder" }
 
 async-trait = "0.1.51"
 futures = "0.3.17"
-mongodb = { version = "1.2.3", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.0.1", default-features = false, features = ["async-std-runtime"] }
 reqwest = { version = "0.11.6", features = ["gzip", "brotli", "json"] }
 nats = "0.15.2"
 serde = { version = "1.0.130", features=["derive"] }

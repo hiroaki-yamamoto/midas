@@ -3,7 +3,7 @@ pub mod pubsub;
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::oid::ObjectId;
-use ::mongodb::bson::{doc, from_document, to_document, Document};
+use ::mongodb::bson::{doc, Document};
 use ::mongodb::error::Result;
 use ::mongodb::options::UpdateModifications;
 use ::mongodb::{Collection, Database};
@@ -23,7 +23,7 @@ use self::pubsub::APIKeyPubSub;
 pub struct KeyChain {
   pubsub: APIKeyPubSub,
   db: Database,
-  col: Collection,
+  col: Collection<APIKey>,
 }
 
 impl KeyChain {
@@ -39,14 +39,13 @@ impl KeyChain {
   }
 
   pub async fn push(&self, api_key: APIKey) -> GenericResult<Option<ObjectId>> {
-    let value = to_document(&api_key)?;
-    let result = self.col.insert_one(value.to_owned(), None).await?;
+    let result = self.col.insert_one(&api_key, None).await?;
     let id = result.inserted_id.as_object_id();
     let mut api_key = api_key.clone();
-    api_key.inner_mut().id = id.cloned();
+    api_key.inner_mut().id = id.clone();
     let event = APIKeyEvent::Add(api_key);
     let _ = self.pubsub.publish(&event)?;
-    return Ok(id.cloned());
+    return Ok(id.clone());
   }
 
   pub async fn rename_label(
@@ -76,8 +75,6 @@ impl KeyChain {
       .find(filter, None)
       .await?
       .filter_map(|res| async { res.ok() })
-      .map(|doc| from_document::<APIKey>(doc))
-      .filter_map(|ent| async { ent.ok() })
       .boxed();
     return Ok(stream);
   }
@@ -96,9 +93,7 @@ impl KeyChain {
         },
         None,
       )
-      .await?
-      .map(|k| from_document::<APIKey>(k).ok())
-      .flatten();
+      .await?;
     return Ok(key);
   }
 
@@ -106,7 +101,7 @@ impl KeyChain {
     if let Some(doc) =
       self.col.find_one_and_delete(doc! {"_id": id}, None).await?
     {
-      let api_key: APIKey = from_document(doc)?;
+      let api_key: APIKey = doc;
       let event = APIKeyEvent::Remove(api_key);
       let _ = self.pubsub.publish(&event)?;
     }

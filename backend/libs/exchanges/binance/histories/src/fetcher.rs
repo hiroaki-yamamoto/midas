@@ -2,10 +2,9 @@ use ::std::collections::HashMap;
 use ::std::fmt::Debug;
 use ::std::io::Result as IOResult;
 use ::std::iter::FromIterator;
-use ::std::time::Duration as StdDur;
+use ::std::time::{Duration as StdDur, SystemTime, UNIX_EPOCH};
 
 use ::async_trait::async_trait;
-use ::chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{doc, DateTime as MongoDateTime, Document};
@@ -73,20 +72,26 @@ impl HistoryFetcher {
   pub async fn fetch(
     &self,
     pair: String,
-    start_at: DateTime<Utc>,
-    end_at: Option<DateTime<Utc>>,
+    start_at: SystemTime,
+    end_at: Option<SystemTime>,
   ) -> ThreadSafeResult<Klines> {
     let limit = match end_at {
-      Some(end_at) => Some((end_at - start_at).num_minutes()),
+      Some(end_at) => Some(end_at.duration_since(start_at)?.as_secs() / 60),
       None => None,
     };
     let mut url = self.endpoint.clone();
     let param = Query {
       symbol: pair.clone(),
       interval: "1m".into(),
-      start_time: format!("{}", start_at.timestamp() * 1000),
+      start_time: format!(
+        "{}",
+        start_at.duration_since(UNIX_EPOCH)?.as_millis()
+      ),
       end_time: match end_at {
-        Some(end_at) => Some(format!("{}", end_at.timestamp() * 1000)),
+        Some(end_at) => Some(format!(
+          "{}",
+          end_at.duration_since(UNIX_EPOCH)?.as_millis()
+        )),
         None => None,
       },
       limit: format!("{}", limit.unwrap_or(1)),
@@ -152,7 +157,7 @@ impl HistoryFetcher {
   async fn get_first_trade_date(
     &self,
     symbols: Vec<String>,
-  ) -> GenericResult<HashMap<String, TradeTime<DateTime<Utc>>>> {
+  ) -> GenericResult<HashMap<String, TradeTime<SystemTime>>> {
     let symbols_len = symbols.len() as i64;
     let (mut latest_kline, _) = self
       .rec_ltd_pubsub
@@ -176,11 +181,7 @@ impl HistoryFetcher {
           symbol: symbol.clone(),
           num_symbols: 1,
           entire_data_len: 1,
-          start_time: DateTime::from_utc(
-            NaiveDateTime::from_timestamp(0, 0),
-            Utc,
-          )
-          .into(),
+          start_time: SystemTime::UNIX_EPOCH.into(),
           end_time: None,
         });
       let logger = logger.clone();
@@ -212,7 +213,7 @@ impl HistoryFetcher {
     }
     return Ok(HashMap::from_iter(latest_kline.iter().map(
       move |(sym, trade_time)| {
-        let trade_time: TradeTime<DateTime<Utc>> = trade_time.into();
+        let trade_time: TradeTime<SystemTime> = trade_time.into();
         return (sym.clone(), trade_time);
       },
     )));
@@ -223,7 +224,7 @@ impl HistoryFetcher {
     symbols: &Vec<SymbolInfo>,
     stop_sig: &mut BoxStream<'_, (KlineCtrl, Message)>,
   ) -> GenericResult<()> {
-    let end_at = Utc::now();
+    let end_at = SystemTime::now();
     let trade_dates = self
       .get_first_trade_date(
         symbols.into_iter().map(|sym| sym.symbol.clone()).collect(),
@@ -232,8 +233,8 @@ impl HistoryFetcher {
     let symbols_len = symbols.len();
     for (symbol, dates) in trade_dates.into_iter() {
       let start_at = dates.open_time;
-      let mut entire_data_len = (end_at - start_at).num_minutes();
-      let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as i64;
+      let mut entire_data_len = end_at.duration_since(start_at)?.as_secs() / 60;
+      let entire_data_len_rem = entire_data_len % NUM_OBJECTS_TO_FETCH as u64;
       entire_data_len /= 1000;
       if entire_data_len_rem > 0 {
         entire_data_len += 1;
@@ -249,8 +250,8 @@ impl HistoryFetcher {
             }
           }
         }
-        let mut sec_end_date =
-          sec_start_date + Duration::minutes(NUM_OBJECTS_TO_FETCH as i64);
+        let mut sec_end_date = sec_start_date
+          + StdDur::from_secs((NUM_OBJECTS_TO_FETCH as u64) * 60);
         if sec_end_date > end_at {
           sec_end_date = end_at;
         }
@@ -307,11 +308,15 @@ impl HistoryFetcherTrait for HistoryFetcher {
           }
         },
         Some((param, msg)) = param_sub.next() => {
+          let start_time: SystemTime = param.start_time.into();
           let num_obj = match param.end_time {
             None => 1,
-            Some(end_time) => (*end_time - *param.start_time).num_minutes()
+            Some(end_time) => {
+              end_time.to_system_time()
+                .duration_since(start_time)?.as_secs() / 60
+            }
           };
-          if num_obj > NUM_OBJECTS_TO_FETCH as i64 {
+          if num_obj > NUM_OBJECTS_TO_FETCH as u64 {
             warn!(
               self.logger,
               "Duration between the specified start and end time exceeds
@@ -324,11 +329,10 @@ impl HistoryFetcherTrait for HistoryFetcher {
             );
             continue;
           }
-          let start_time = *param.start_time;
           let resp = self.fetch(
             param.symbol.clone(),
             start_time,
-            param.end_time.map(|d| *d),
+            param.end_time.map(|d| d.into()),
           );
           let resp = resp.await;
           let resp = match resp {

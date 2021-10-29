@@ -6,9 +6,7 @@ use ::async_trait::async_trait;
 use ::futures::future::{join, join_all, BoxFuture};
 use ::futures::stream::BoxStream;
 use ::futures::{FutureExt, StreamExt};
-use ::mongodb::bson::{
-  doc, from_document, oid::ObjectId, to_document, DateTime,
-};
+use ::mongodb::bson::{doc, oid::ObjectId, to_document, DateTime};
 use ::mongodb::options::{UpdateModifications, UpdateOptions};
 use ::mongodb::{Collection, Database};
 use ::nats::Connection as NatsCon;
@@ -40,7 +38,7 @@ pub struct Executor {
   broker: NatsCon,
   db: Database,
   log: Logger,
-  positions: Collection,
+  positions: Collection<OrderResponse<f64, DateTime>>,
 }
 
 impl Executor {
@@ -213,9 +211,6 @@ impl ExecutorTrait for Executor {
       .find(doc! {"positionGroupId": gid}, None)
       .await?
       .filter_map(|pos| async { pos.ok() })
-      .filter_map(|pos| async {
-        from_document::<OrderResponse<f64, DateTime>>(pos).ok()
-      })
       .boxed();
     let cli = match self.get_client(api_key.pub_key.clone()) {
       Err(e) => return Err(e),
