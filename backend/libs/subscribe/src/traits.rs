@@ -1,5 +1,6 @@
 use ::std::io::Result as IOResult;
 use ::std::io::{Error as IOError, ErrorKind as IOErrKind};
+use ::std::time::Duration;
 
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
@@ -51,7 +52,11 @@ where
     S: DeserializeOwned + Send + Sync,
   {
     let msg = Self::serialize(entity)?;
-    let res = self.get_broker().request(self.get_subject(), msg)?;
+    let res = self.get_broker().request_timeout(
+      self.get_subject(),
+      msg,
+      Duration::from_secs(5),
+    )?;
     let des = from_msgpack::<S>(&res.data)
       .map_err(|e| IOError::new(IOErrKind::Other, e))?;
     return Ok((des, res));

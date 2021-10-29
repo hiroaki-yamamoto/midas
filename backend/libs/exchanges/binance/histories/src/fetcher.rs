@@ -153,9 +153,10 @@ impl HistoryFetcher {
     &self,
     symbol: String,
   ) -> GenericResult<TradeTime<SystemTime>> {
-    let (db_recent_trade_date, _) = self
+    let db_trade_date_opt = self
       .rec_ltd_pubsub
-      .request::<TradeTime<MongoDateTime>>(&symbol)?;
+      .request::<TradeTime<MongoDateTime>>(&symbol)
+      .ok();
     let (resp, _): (KlinesWithInfo, _) = self.param_pubsub.request(&Param {
       symbol: symbol.clone(),
       num_symbols: 1,
@@ -170,11 +171,12 @@ impl HistoryFetcher {
         field: "klines".to_string(),
       })?
       .clone();
-    if db_recent_trade_date.open_time > resp.open_time {
-      return Ok(db_recent_trade_date.into());
-    } else {
-      return Ok(resp.into());
+    if let Some((db_recent_trade_date, _)) = db_trade_date_opt {
+      if db_recent_trade_date.open_time > resp.open_time {
+        return Ok(db_recent_trade_date.into());
+      }
     }
+    return Ok(resp.into());
   }
 
   async fn push_fetch_request(
