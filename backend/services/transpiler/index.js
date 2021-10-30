@@ -10,7 +10,7 @@ const argparse = require('argparse');
 const protect_csrf = (cookieName, headerName, handler) => (req, res) => {
   console.log(req.headers);
   const cookieValue = cookie.parse(req.headers.cookie || '')[cookieName];
-  const header = req.headers[headerName];
+  const header = req.headers[headerName.toLowerCase()];
   if (cookieValue && header && cookieValue === header) {
     return handler(req, res);
   }
