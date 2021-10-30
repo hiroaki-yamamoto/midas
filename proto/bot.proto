@@ -11,13 +11,12 @@ enum TriggerType {
 
 message Bot {
   string id = 1;
-  string name = 2;
-  string baseCurrency = 3;
+  google.protobuf.Timestamp createdAt = 2;
+  string name = 3;
   entities.Exchanges exchange = 4;
-  google.protobuf.Timestamp createdAt = 5;
-  double trade_amount = 6;
-  bool reinvest = 7;
-  string condition = 8;
+  string baseCurrency = 5;
+  double tradingAmount = 6;
+  string condition = 7;
 }
 
 enum PositionStatus {

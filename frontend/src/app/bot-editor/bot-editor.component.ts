@@ -60,10 +60,10 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     const condition = new FormControl();
     this.form = new FormGroup({
       name: new FormControl(),
-      condition,
       exchange: new FormControl(),
       baseCurrency: new FormControl(),
       tradingAmount: new FormControl(),
+      condition,
     });
     this.http.get('/assets/bot-condition.ts', { responseType: 'text' })
       .subscribe((code: string) => {

@@ -16,8 +16,7 @@ pub struct Bot {
   pub base_currency: String,
   pub exchange: Exchanges,
   pub created_at: Option<bson::DateTime>,
-  pub trade_amount: f64,
-  pub reinvest: bool,
+  pub trading_amount: f64,
   pub cond_ts: String,
   pub cond_js: Option<String>,
 }
@@ -28,8 +27,7 @@ impl Bot {
     name: String,
     base_currency: String,
     exchange: Exchanges,
-    trade_amount: f64,
-    reinvest: bool,
+    trading_amount: f64,
     cond: String,
   ) -> Self {
     return Self {
@@ -37,8 +35,7 @@ impl Bot {
       name,
       base_currency,
       exchange,
-      trade_amount,
-      reinvest,
+      trading_amount,
       created_at: None,
       cond_ts: cond,
       cond_js: None,
@@ -59,9 +56,8 @@ impl TryFrom<RPCBot> for Bot {
       name: value.name,
       base_currency: value.base_currency,
       exchange: exchange?,
-      trade_amount: value.trade_amount,
+      trading_amount: value.trading_amount,
       created_at: None,
-      reinvest: value.reinvest,
       cond_ts: value.condition,
       cond_js: None,
     });
@@ -79,8 +75,7 @@ impl From<Bot> for RPCBot {
         .created_at
         .map(|time| Timestamp::try_from(time.to_system_time()).ok())
         .flatten(),
-      trade_amount: value.trade_amount,
-      reinvest: value.reinvest,
+      trading_amount: value.trading_amount,
       condition: value.cond_ts,
     };
   }
