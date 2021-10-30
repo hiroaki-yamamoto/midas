@@ -8,25 +8,22 @@ export class Bot extends jspb.Message {
   getId(): string;
   setId(value: string): Bot;
 
+  getCreatedAt(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setCreatedAt(value?: google_protobuf_timestamp_pb.Timestamp): Bot;
+  hasCreatedAt(): boolean;
+  clearCreatedAt(): Bot;
+
   getName(): string;
   setName(value: string): Bot;
-
-  getBasecurrency(): string;
-  setBasecurrency(value: string): Bot;
 
   getExchange(): entities_pb.Exchanges;
   setExchange(value: entities_pb.Exchanges): Bot;
 
-  getCreatedat(): google_protobuf_timestamp_pb.Timestamp | undefined;
-  setCreatedat(value?: google_protobuf_timestamp_pb.Timestamp): Bot;
-  hasCreatedat(): boolean;
-  clearCreatedat(): Bot;
+  getBaseCurrency(): string;
+  setBaseCurrency(value: string): Bot;
 
-  getTradeAmount(): number;
-  setTradeAmount(value: number): Bot;
-
-  getReinvest(): boolean;
-  setReinvest(value: boolean): Bot;
+  getTradingAmount(): number;
+  setTradingAmount(value: number): Bot;
 
   getCondition(): string;
   setCondition(value: string): Bot;
@@ -42,12 +39,11 @@ export class Bot extends jspb.Message {
 export namespace Bot {
   export type AsObject = {
     id: string,
+    createdAt?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     name: string,
-    basecurrency: string,
     exchange: entities_pb.Exchanges,
-    createdat?: google_protobuf_timestamp_pb.Timestamp.AsObject,
-    tradeAmount: number,
-    reinvest: boolean,
+    baseCurrency: string,
+    tradingAmount: number,
     condition: string,
   }
 }
@@ -65,8 +61,8 @@ export class Position extends jspb.Message {
   getStatus(): PositionStatus;
   setStatus(value: PositionStatus): Position;
 
-  getTradingamount(): number;
-  setTradingamount(value: number): Position;
+  getTradingAmount(): number;
+  setTradingAmount(value: number): Position;
 
   getValuation(): number;
   setValuation(value: number): Position;
@@ -85,7 +81,7 @@ export namespace Position {
     botid: string,
     symbol: string,
     status: PositionStatus,
-    tradingamount: number,
+    tradingAmount: number,
     valuation: number,
   }
 }

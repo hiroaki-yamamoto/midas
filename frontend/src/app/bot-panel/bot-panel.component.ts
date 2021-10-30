@@ -61,9 +61,9 @@ export class BotPanelComponent implements OnInit {
       pos.setId(id);
       pos.setBotid(this.bot.getId());
       pos.setSymbol('TESTUSDT');
-      pos.setTradingamount(Math.random());
+      pos.setTradingAmount(Math.random());
       pos.setValuation(
-        pos.getTradingamount() + (
+        pos.getTradingAmount() + (
           ((Math.round(Math.random() * 10) & 0x01) ? 1 : - 1) *
           Math.random()
         )
@@ -77,9 +77,9 @@ export class BotPanelComponent implements OnInit {
       pos.setId(id);
       pos.setBotid(this.bot.getId());
       pos.setSymbol('TESTUSDT');
-      pos.setTradingamount(Math.random());
+      pos.setTradingAmount(Math.random());
       pos.setValuation(
-        pos.getTradingamount() + (
+        pos.getTradingAmount() + (
           ((Math.round(Math.random() * 10) & 0x01) ? 1 : - 1) *
           Math.random()
         )

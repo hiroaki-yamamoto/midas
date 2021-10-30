@@ -98,13 +98,12 @@ proto.bot.Bot.prototype.toObject = function(opt_includeInstance) {
 proto.bot.Bot.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    name: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    basecurrency: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    createdAt: (f = msg.getCreatedAt()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
+    name: jspb.Message.getFieldWithDefault(msg, 3, ""),
     exchange: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    createdat: (f = msg.getCreatedat()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
-    tradeAmount: jspb.Message.getFloatingPointFieldWithDefault(msg, 6, 0.0),
-    reinvest: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
-    condition: jspb.Message.getFieldWithDefault(msg, 8, "")
+    baseCurrency: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    tradingAmount: jspb.Message.getFloatingPointFieldWithDefault(msg, 6, 0.0),
+    condition: jspb.Message.getFieldWithDefault(msg, 7, "")
   };
 
   if (includeInstance) {
@@ -146,31 +145,27 @@ proto.bot.Bot.deserializeBinaryFromReader = function(msg, reader) {
       msg.setId(value);
       break;
     case 2:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setName(value);
+      var value = new google_protobuf_timestamp_pb.Timestamp;
+      reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
+      msg.setCreatedAt(value);
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
-      msg.setBasecurrency(value);
+      msg.setName(value);
       break;
     case 4:
       var value = /** @type {!proto.entities.Exchanges} */ (reader.readEnum());
       msg.setExchange(value);
       break;
     case 5:
-      var value = new google_protobuf_timestamp_pb.Timestamp;
-      reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
-      msg.setCreatedat(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setBaseCurrency(value);
       break;
     case 6:
       var value = /** @type {number} */ (reader.readDouble());
-      msg.setTradeAmount(value);
+      msg.setTradingAmount(value);
       break;
     case 7:
-      var value = /** @type {boolean} */ (reader.readBool());
-      msg.setReinvest(value);
-      break;
-    case 8:
       var value = /** @type {string} */ (reader.readString());
       msg.setCondition(value);
       break;
@@ -210,14 +205,15 @@ proto.bot.Bot.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getName();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getCreatedAt();
+  if (f != null) {
+    writer.writeMessage(
       2,
-      f
+      f,
+      google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
   }
-  f = message.getBasecurrency();
+  f = message.getName();
   if (f.length > 0) {
     writer.writeString(
       3,
@@ -231,32 +227,24 @@ proto.bot.Bot.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCreatedat();
-  if (f != null) {
-    writer.writeMessage(
+  f = message.getBaseCurrency();
+  if (f.length > 0) {
+    writer.writeString(
       5,
-      f,
-      google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
+      f
     );
   }
-  f = message.getTradeAmount();
+  f = message.getTradingAmount();
   if (f !== 0.0) {
     writer.writeDouble(
       6,
       f
     );
   }
-  f = message.getReinvest();
-  if (f) {
-    writer.writeBool(
-      7,
-      f
-    );
-  }
   f = message.getCondition();
   if (f.length > 0) {
     writer.writeString(
-      8,
+      7,
       f
     );
   }
@@ -282,28 +270,47 @@ proto.bot.Bot.prototype.setId = function(value) {
 
 
 /**
- * optional string name = 2;
+ * optional google.protobuf.Timestamp created_at = 2;
+ * @return {?proto.google.protobuf.Timestamp}
+ */
+proto.bot.Bot.prototype.getCreatedAt = function() {
+  return /** @type{?proto.google.protobuf.Timestamp} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 2));
+};
+
+
+/**
+ * @param {?proto.google.protobuf.Timestamp|undefined} value
+ * @return {!proto.bot.Bot} returns this
+*/
+proto.bot.Bot.prototype.setCreatedAt = function(value) {
+  return jspb.Message.setWrapperField(this, 2, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.bot.Bot} returns this
+ */
+proto.bot.Bot.prototype.clearCreatedAt = function() {
+  return this.setCreatedAt(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.bot.Bot.prototype.hasCreatedAt = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional string name = 3;
  * @return {string}
  */
 proto.bot.Bot.prototype.getName = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.bot.Bot} returns this
- */
-proto.bot.Bot.prototype.setName = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
-};
-
-
-/**
- * optional string baseCurrency = 3;
- * @return {string}
- */
-proto.bot.Bot.prototype.getBasecurrency = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
@@ -312,7 +319,7 @@ proto.bot.Bot.prototype.getBasecurrency = function() {
  * @param {string} value
  * @return {!proto.bot.Bot} returns this
  */
-proto.bot.Bot.prototype.setBasecurrency = function(value) {
+proto.bot.Bot.prototype.setName = function(value) {
   return jspb.Message.setProto3StringField(this, 3, value);
 };
 
@@ -336,47 +343,28 @@ proto.bot.Bot.prototype.setExchange = function(value) {
 
 
 /**
- * optional google.protobuf.Timestamp createdAt = 5;
- * @return {?proto.google.protobuf.Timestamp}
+ * optional string base_currency = 5;
+ * @return {string}
  */
-proto.bot.Bot.prototype.getCreatedat = function() {
-  return /** @type{?proto.google.protobuf.Timestamp} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 5));
+proto.bot.Bot.prototype.getBaseCurrency = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
 
 /**
- * @param {?proto.google.protobuf.Timestamp|undefined} value
- * @return {!proto.bot.Bot} returns this
-*/
-proto.bot.Bot.prototype.setCreatedat = function(value) {
-  return jspb.Message.setWrapperField(this, 5, value);
-};
-
-
-/**
- * Clears the message field making it undefined.
+ * @param {string} value
  * @return {!proto.bot.Bot} returns this
  */
-proto.bot.Bot.prototype.clearCreatedat = function() {
-  return this.setCreatedat(undefined);
+proto.bot.Bot.prototype.setBaseCurrency = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
 };
 
 
 /**
- * Returns whether this field is set.
- * @return {boolean}
- */
-proto.bot.Bot.prototype.hasCreatedat = function() {
-  return jspb.Message.getField(this, 5) != null;
-};
-
-
-/**
- * optional double trade_amount = 6;
+ * optional double trading_amount = 6;
  * @return {number}
  */
-proto.bot.Bot.prototype.getTradeAmount = function() {
+proto.bot.Bot.prototype.getTradingAmount = function() {
   return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 6, 0.0));
 };
 
@@ -385,35 +373,17 @@ proto.bot.Bot.prototype.getTradeAmount = function() {
  * @param {number} value
  * @return {!proto.bot.Bot} returns this
  */
-proto.bot.Bot.prototype.setTradeAmount = function(value) {
+proto.bot.Bot.prototype.setTradingAmount = function(value) {
   return jspb.Message.setProto3FloatField(this, 6, value);
 };
 
 
 /**
- * optional bool reinvest = 7;
- * @return {boolean}
- */
-proto.bot.Bot.prototype.getReinvest = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 7, false));
-};
-
-
-/**
- * @param {boolean} value
- * @return {!proto.bot.Bot} returns this
- */
-proto.bot.Bot.prototype.setReinvest = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 7, value);
-};
-
-
-/**
- * optional string condition = 8;
+ * optional string condition = 7;
  * @return {string}
  */
 proto.bot.Bot.prototype.getCondition = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
 };
 
 
@@ -422,7 +392,7 @@ proto.bot.Bot.prototype.getCondition = function() {
  * @return {!proto.bot.Bot} returns this
  */
 proto.bot.Bot.prototype.setCondition = function(value) {
-  return jspb.Message.setProto3StringField(this, 8, value);
+  return jspb.Message.setProto3StringField(this, 7, value);
 };
 
 
@@ -462,7 +432,7 @@ proto.bot.Position.toObject = function(includeInstance, msg) {
     botid: jspb.Message.getFieldWithDefault(msg, 2, ""),
     symbol: jspb.Message.getFieldWithDefault(msg, 3, ""),
     status: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    tradingamount: jspb.Message.getFloatingPointFieldWithDefault(msg, 5, 0.0),
+    tradingAmount: jspb.Message.getFloatingPointFieldWithDefault(msg, 5, 0.0),
     valuation: jspb.Message.getFloatingPointFieldWithDefault(msg, 6, 0.0)
   };
 
@@ -518,7 +488,7 @@ proto.bot.Position.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 5:
       var value = /** @type {number} */ (reader.readDouble());
-      msg.setTradingamount(value);
+      msg.setTradingAmount(value);
       break;
     case 6:
       var value = /** @type {number} */ (reader.readDouble());
@@ -581,7 +551,7 @@ proto.bot.Position.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getTradingamount();
+  f = message.getTradingAmount();
   if (f !== 0.0) {
     writer.writeDouble(
       5,
@@ -671,10 +641,10 @@ proto.bot.Position.prototype.setStatus = function(value) {
 
 
 /**
- * optional double tradingAmount = 5;
+ * optional double trading_amount = 5;
  * @return {number}
  */
-proto.bot.Position.prototype.getTradingamount = function() {
+proto.bot.Position.prototype.getTradingAmount = function() {
   return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 5, 0.0));
 };
 
@@ -683,7 +653,7 @@ proto.bot.Position.prototype.getTradingamount = function() {
  * @param {number} value
  * @return {!proto.bot.Position} returns this
  */
-proto.bot.Position.prototype.setTradingamount = function(value) {
+proto.bot.Position.prototype.setTradingAmount = function(value) {
   return jspb.Message.setProto3FloatField(this, 5, value);
 };
 
