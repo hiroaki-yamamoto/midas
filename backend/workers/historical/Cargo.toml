@@ -18,13 +18,13 @@ binance_histories = { path = "../../libs/exchanges/binance/histories" }
 binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
 
 slog = "2.7.0"
-tokio = { version = "1.12.0", features = ["rt", "rt-multi-thread", "macros", "signal"] }
+tokio = { version = "1.13.0", features = ["rt", "rt-multi-thread", "macros", "signal"] }
 nats = "0.15.2"
 clap = "3.0.0-beta.5"
 mongodb = { version = "2.0.1", default-features = false, features = ["async-std-runtime"] }
 futures = "0.3.17"
-libc = "0.2.105"
-tokio-stream = "0.1.7"
+libc = "0.2.106"
+tokio-stream = "0.1.8"
 
 [[bin]]
 name = "historical_fetch_worker"
