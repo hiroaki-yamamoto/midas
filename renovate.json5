@@ -27,8 +27,8 @@
       "allowedVersions": "<4.3.0"
     },
     {
-      "packageNames": ["prost", "prost-build"],
-      "allowedVersions": "<0.8.0"
+      "packangeNames": ["time"],
+      "allowedVersions": "<0.3"
     }
   ]
 }
