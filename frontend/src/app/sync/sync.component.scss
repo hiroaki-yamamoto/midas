@@ -3,7 +3,7 @@
 }
 
 [mat-raised-button] {
-  padding-top: 1.2rem;
+  padding: 0.5rem;
 }
 
 app-sync-progress {
@@ -12,4 +12,8 @@ app-sync-progress {
 
 h3, h4 {
   margin: 0;
+}
+
+.column-container {
+  margin: 1rem 0;
 }

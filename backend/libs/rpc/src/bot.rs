@@ -1,57 +1,51 @@
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct BotInfo {
+pub struct Bot {
     #[prost(string, tag="1")]
     pub id: ::prost::alloc::string::String,
-    #[prost(enumeration="Strategy", tag="2")]
-    pub strategy: i32,
+    #[prost(message, optional, tag="2")]
+    pub created_at: ::core::option::Option<super::google::protobuf::Timestamp>,
     #[prost(string, tag="3")]
     pub name: ::prost::alloc::string::String,
-    #[prost(string, tag="4")]
-    pub base_currency: ::prost::alloc::string::String,
+    #[prost(enumeration="super::entities::Exchanges", tag="4")]
+    pub exchange: i32,
     #[prost(string, tag="5")]
-    pub desc: ::prost::alloc::string::String,
-    #[prost(string, tag="6")]
-    pub config: ::prost::alloc::string::String,
+    pub base_currency: ::prost::alloc::string::String,
+    #[prost(double, tag="6")]
+    pub trading_amount: f64,
+    #[prost(string, tag="7")]
+    pub condition: ::prost::alloc::string::String,
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CurrentPosition {
+pub struct Position {
     #[prost(string, tag="1")]
     pub id: ::prost::alloc::string::String,
     #[prost(string, tag="2")]
     pub bot_id: ::prost::alloc::string::String,
     #[prost(string, tag="3")]
     pub symbol: ::prost::alloc::string::String,
-    #[prost(double, tag="4")]
-    pub trading_amount: f64,
+    #[prost(enumeration="PositionStatus", tag="4")]
+    pub status: i32,
     #[prost(double, tag="5")]
-    pub profit_amount: f64,
+    pub trading_amount: f64,
     #[prost(double, tag="6")]
-    pub profit_percent: f64,
-}
-#[derive(::serde::Serialize, ::serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct BotInfoList {
-    #[prost(message, repeated, tag="1")]
-    pub bots: ::prost::alloc::vec::Vec<BotInfo>,
-}
-#[derive(::serde::Serialize, ::serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct BotInfoListRequest {
-    #[prost(int64, tag="1")]
-    pub offset: i64,
-    #[prost(int64, tag="2")]
-    pub limit: i64,
+    pub valuation: f64,
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
-pub enum Strategy {
-    Trailing = 0,
+pub enum TriggerType {
+    Manual = 0,
+}
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum PositionStatus {
+    Closed = 0,
+    Opened = 1,
 }

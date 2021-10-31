@@ -7,7 +7,7 @@ use ::nats::Connection as Broker;
 use ::slog::Logger;
 
 use ::binance_clients::constants::REST_ENDPOINT;
-use ::rpc::entities::SymbolInfo;
+use ::rpc::symbols::SymbolInfo;
 use ::types::ThreadSafeResult;
 
 use super::entities::{ExchangeInfo, Symbol};
@@ -73,7 +73,7 @@ impl SymbolFetcherTrait for SymbolFetcher {
       return Ok(());
     } else {
       return Err(Box::new(StatusFailure {
-        url: url.clone(),
+        url: Some(url.clone()),
         code: resp_status.as_u16(),
         text: resp.text().await?,
       }));

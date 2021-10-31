@@ -55,4 +55,15 @@ impl SymbolRecorderTrait for SymbolRecorder {
     let _ = self.col.delete_many(bson::doc! {}, None).await?;
     return Ok(self.col.insert_many(value.into_iter(), None).await?);
   }
+  async fn list_base_currencies(&self) -> ThreadSafeResult<Vec<String>> {
+    return Ok(
+      self
+        .col
+        .distinct("quoteAsset", None, None)
+        .await?
+        .into_iter()
+        .filter_map(|base_bson| base_bson.as_str().map(|base| base.to_string()))
+        .collect(),
+    );
+  }
 }

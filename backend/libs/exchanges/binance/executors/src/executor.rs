@@ -246,7 +246,7 @@ impl ExecutorTrait for Executor {
           let status = resp.status();
           if !status.is_success() {
             return Err(Box::new(StatusFailure {
-              url: resp.url().clone(),
+              url: Some(resp.url().clone()),
               code: status.as_u16(),
               text: resp
                 .text()
@@ -289,7 +289,7 @@ impl ExecutorTrait for Executor {
             let status = resp.status();
             if !status.is_success() {
               return Err(Box::new(StatusFailure {
-                url: resp.url().clone(),
+                url: Some(resp.url().clone()),
                 code: status.as_u16(),
                 text: resp
                   .text()

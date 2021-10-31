@@ -2,7 +2,7 @@ use ::std::error::Error;
 use ::std::fs::{read_to_string, File};
 use ::std::io::Read;
 
-use ::reqwest::{Certificate, Client, Identity};
+use ::reqwest::{Certificate, Client};
 use ::serde::Deserialize;
 use ::slog::Logger;
 use ::slog_builder::{build_debug, build_json};
@@ -16,15 +16,7 @@ pub struct TLS {
   pub prv_key: String,
   pub cert: String,
   pub ca: String,
-}
-
-impl TLS {
-  pub fn build_tls(&self) -> GenericResult<(Identity, Certificate)> {
-    return Ok((
-      Identity::from_pem(read_to_string(&self.prv_key)?.as_bytes())?,
-      Certificate::from_pem(read_to_string(&self.cert)?.as_bytes())?,
-    ));
-  }
+  pub root: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -72,12 +64,7 @@ impl Config {
   }
 
   pub fn build_rest_client(&self) -> GenericResult<Client> {
-    let (prv_key, root_cert) = self.tls.build_tls()?;
-    return Ok(
-      Client::builder()
-        .add_root_certificate(root_cert)
-        .identity(prv_key)
-        .build()?,
-    );
+    let ca = Certificate::from_pem(read_to_string(&self.tls.ca)?.as_bytes())?;
+    return Ok(Client::builder().add_root_certificate(ca).build()?);
   }
 }

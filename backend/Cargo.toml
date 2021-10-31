@@ -19,6 +19,7 @@ members = [
   "libs/rpc",
   "libs/types",
   "libs/subscribe",
+  "libs/bot",
 
   "libs/exchanges/binance/executors",
   "libs/exchanges/binance/histories",
@@ -32,6 +33,7 @@ members = [
   "services/observer",
   "services/token",
   "services/keychain",
+  "services/bot",
 
   "workers/historical",
   "workers/observer",
