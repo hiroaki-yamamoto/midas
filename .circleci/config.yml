@@ -152,7 +152,7 @@ jobs:
               -f prod.dockerfile \
               --build-arg SERVICE=<<parameters.service_name>> \
               -t ghcr.io/hiroaki-yamamoto/<<parameters.service_name>> \
-              --label org.opencontainers.image.source = https://github.com/hiroaki-yamamoto/midas .
+              --label org.opencontainers.image.source=https://github.com/hiroaki-yamamoto/midas .
           working_directory: backend
       - run:
           name: Push Docker Image
