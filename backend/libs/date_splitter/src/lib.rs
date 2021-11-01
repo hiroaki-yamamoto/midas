@@ -35,6 +35,12 @@ impl DateSplitter {
     }
     return Ok((ret + 1) as usize);
   }
+  pub fn predict_next(&self) -> SystemTime {
+    if self.cur + self.interval <= self.end {
+      return self.cur + self.interval;
+    }
+    return self.end;
+  }
 }
 
 impl Stream for DateSplitter {
@@ -46,11 +52,13 @@ impl Stream for DateSplitter {
   ) -> Poll<Option<Self::Item>> {
     let ret = self.cur.clone();
     let interval = self.interval;
+
     if self.cur + interval <= self.end {
       self.cur += interval;
     } else {
       self.cur = self.end;
     }
+
     if ret >= self.end {
       return Poll::Ready(None);
     } else {
