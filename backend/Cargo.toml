@@ -19,6 +19,7 @@ members = [
   "libs/rpc",
   "libs/types",
   "libs/subscribe",
+  "libs/date_splitter",
 
   "libs/exchanges/binance/executors",
   "libs/exchanges/binance/histories",
