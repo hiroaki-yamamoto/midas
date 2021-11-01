@@ -27,7 +27,7 @@
       "allowedVersions": "<4.3.0"
     },
     {
-      "packangeNames": ["time"],
+      "packageNames": ["time"],
       "allowedVersions": "<0.3"
     }
   ]
