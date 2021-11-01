@@ -157,7 +157,7 @@ jobs:
       - run:
           name: Push Docker Image
           command: |
-            docker push ghcr.io/hiroaki-yamamoto/midas/<<parameters.service_name>>
+            docker push ghcr.io/hiroaki-yamamoto/<<parameters.service_name>>
       - slack/notify:
           event: fail
           ignore_errors: false
