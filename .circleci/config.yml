@@ -140,9 +140,9 @@ jobs:
             apk update
             apk add --no-cache bash curl jq
       - run:
-          name: Log into docker.pkg.github.com
+          name: Log into ghcr.io
           command: |
-            docker login https://docker.pkg.github.com \
+            docker login ghcr.io \
               -u ${GITHUB_USERNAME} \
               -p ${GITHUB_TOKEN}
       - run:
@@ -151,17 +151,17 @@ jobs:
             docker build \
               -f prod.dockerfile \
               --build-arg SERVICE=<<parameters.service_name>> \
-              -t docker.pkg.github.com/hiroaki-yamamoto/midas/<<parameters.service_name>> .
+              -t ghcr.io/hiroaki-yamamoto/midas/<<parameters.service_name>> .
           working_directory: backend
       - run:
           name: Push Docker Image
           command: |
-            docker push docker.pkg.github.com/hiroaki-yamamoto/midas/<<parameters.service_name>>
+            docker push ghcr.io/hiroaki-yamamoto/midas/<<parameters.service_name>>
       - slack/notify:
           event: fail
           ignore_errors: false
           template: basic_fail_1
-      - run: docker logout https://docker.pkg.github.com
+      - run: docker logout ghcr.io
   notify:
     docker:
       - image: ubuntu
