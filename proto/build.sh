@@ -12,7 +12,7 @@ frontend() {
     --grpc-web_out=import_style=commonjs+dts,mode=grpcwebtext:$FRONT_OUT \
     --js_out=import_style=commonjs:$FRONT_OUT \
     -I . $PROTOS
-  echo "Done"
+  echo "Done (Frontend)"
 }
 
 clean() {

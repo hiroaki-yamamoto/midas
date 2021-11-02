@@ -37,7 +37,7 @@ jobs:
           key: cargo-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - run:
           name: "Install musl tools"
-          command: "apt-get update && apt-get install -y musl-tools jq curl lld"
+          command: "apt-get update && apt-get install -y musl-tools jq curl lld clang"
       - run: rustup component add rustfmt
       - run:
           name: "Install musl package"
@@ -140,9 +140,9 @@ jobs:
             apk update
             apk add --no-cache bash curl jq
       - run:
-          name: Log into docker.pkg.github.com
+          name: Log into ghcr.io
           command: |
-            docker login https://docker.pkg.github.com \
+            docker login ghcr.io \
               -u ${GITHUB_USERNAME} \
               -p ${GITHUB_TOKEN}
       - run:
@@ -151,17 +151,18 @@ jobs:
             docker build \
               -f prod.dockerfile \
               --build-arg SERVICE=<<parameters.service_name>> \
-              -t docker.pkg.github.com/hiroaki-yamamoto/midas/<<parameters.service_name>> .
+              -t ghcr.io/hiroaki-yamamoto/<<parameters.service_name>> \
+              --label org.opencontainers.image.source=https://github.com/hiroaki-yamamoto/midas .
           working_directory: backend
       - run:
           name: Push Docker Image
           command: |
-            docker push docker.pkg.github.com/hiroaki-yamamoto/midas/<<parameters.service_name>>
+            docker push ghcr.io/hiroaki-yamamoto/<<parameters.service_name>>
       - slack/notify:
           event: fail
           ignore_errors: false
           template: basic_fail_1
-      - run: docker logout https://docker.pkg.github.com
+      - run: docker logout ghcr.io
   notify:
     docker:
       - image: ubuntu
@@ -265,6 +266,14 @@ workflows:
             branches:
               only: master
           service_name: notify_worker
+      - deploy-image:
+          name: "Bot Service Deployment"
+          requires:
+            - build-backend
+          filters:
+            branches:
+              only: master
+          service_name: bot_service
       - notify:
           name: "Deploy Success Notification"
           filters:
@@ -280,3 +289,4 @@ workflows:
             - Trade Observer Service Deployment
             - Keychain Service Deployment
             - Notification Worker Deployment
+            - Bot Service Deployment

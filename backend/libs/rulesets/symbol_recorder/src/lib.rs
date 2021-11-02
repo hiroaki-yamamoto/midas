@@ -18,4 +18,5 @@ pub trait SymbolRecorder {
     &self,
     value: Vec<Self::Type>,
   ) -> ThreadSafeResult<InsertManyResult>;
+  async fn list_base_currencies(&self) -> ThreadSafeResult<Vec<String>>;
 }

@@ -3,7 +3,6 @@ syntax = "proto3";
 import "entities.proto";
 
 package historical;
-option go_package="rpc";
 
 message HistChartProg {
   string id = 1;

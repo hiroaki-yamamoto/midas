@@ -1,0 +1,28 @@
+.editor-container {
+  height: 80vh;
+}
+.editor {
+  height: 100%;
+  width: 95%;
+}
+
+div.amounts > mat-form-field {
+  margin: {
+    left: 1rem;
+    right: 1rem;
+  };
+}
+
+div.amounts > mat-form-field:first-child {
+  margin: {
+    left: 0;
+    right: 1rem;
+  };
+}
+
+div.amounts > div:last-child {
+  margin: {
+    left: 1rem;
+    right: 0;
+  };
+}

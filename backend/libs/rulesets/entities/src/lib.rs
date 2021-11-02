@@ -14,6 +14,6 @@ pub use self::order::{Order, OrderInner};
 pub use self::order_option::OrderOption;
 
 use ::futures_core::stream::BoxStream;
-use ::rpc::entities::SymbolInfo;
+use ::rpc::symbols::SymbolInfo;
 
 pub type ListSymbolStream<'a> = BoxStream<'a, SymbolInfo>;

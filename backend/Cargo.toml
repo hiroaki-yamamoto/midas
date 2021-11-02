@@ -20,6 +20,7 @@ members = [
   "libs/types",
   "libs/subscribe",
   "libs/date_splitter",
+  "libs/bot",
 
   "libs/exchanges/binance/executors",
   "libs/exchanges/binance/histories",
@@ -33,6 +34,7 @@ members = [
   "services/observer",
   "services/token",
   "services/keychain",
+  "services/bot",
 
   "workers/historical",
   "workers/observer",

@@ -6,8 +6,12 @@
 </section>
 
 <section class="dashboard">
-  <header>
+  <header fxLayout="row" fxLayoutAlign="none center">
     <h1 i18n>Bots</h1>
+    <div fxFlex></div>
+    <a mat-fab color="primary" routerLink="/edit-bot" i18n>
+      <mat-icon>add</mat-icon>
+    </a>
   </header>
   <mat-accordion>
     <app-bot-panel *ngFor="let bot of botsInfo" [bot]="bot"></app-bot-panel>

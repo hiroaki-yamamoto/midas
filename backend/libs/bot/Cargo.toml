@@ -1,0 +1,17 @@
+[package]
+name = "bot"
+version = "0.1.0"
+authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rpc = { path = "../rpc" }
+types = { path = "../types" }
+errors = { path = "../errors" }
+
+serde = { version = "1.0.126", features = ["derive"] }
+mongodb = { version = "2.0.1", default-features = false, features = ["async-std-runtime"] }
+reqwest = { version = "0.11.4", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
+rand = "0.8.4"

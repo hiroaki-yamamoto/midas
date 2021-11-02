@@ -6,3 +6,4 @@ tls:
   privateKey: /etc/midas/tls/svc/devel.key
   cert: /etc/midas/tls/svc/devel.crt
   ca: /etc/midas/tls/svc/root-ca.pem
+  root: /etc/midas/tls/svc/root.key

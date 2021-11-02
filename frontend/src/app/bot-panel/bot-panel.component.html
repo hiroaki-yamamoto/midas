@@ -1,7 +1,6 @@
 <mat-expansion-panel (opened)="open()" (closed)="close()">
   <mat-expansion-panel-header>
-    <mat-panel-title>{{ bot.getName() }} (Base Currency: {{ bot.getBasecurrency() }}) </mat-panel-title>
-    <mat-panel-description>{{ bot.getDesc() }}</mat-panel-description>
+    <mat-panel-title>{{ bot.getName() }}</mat-panel-title>
   </mat-expansion-panel-header>
   <section>
     <header><h2>Profit Graph</h2></header>
@@ -24,15 +23,22 @@
               <th mat-header-cell *matHeaderCellDef>Trading Amount</th>
               <td mat-cell *matCellDef="let item">{{ item.getTradingamount() }}</td>
             </ng-container>
+            <ng-container matColumnDef="valuation">
+              <th mat-header-cell *matHeaderCellDef>Valuation</th>
+              <td mat-cell *matCellDef="let item">{{ item.getValuation() }}</td>
+            </ng-container>
 
             <ng-container matColumnDef="profitAmount">
               <th mat-header-cell *matHeaderCellDef>Profit Amount</th>
-              <td mat-cell *matCellDef="let item">{{ item.getProfitamount() }}</td>
+              <td mat-cell *matCellDef="let item">
+                {{ item.getValuation() - item.getTradingamount() }}
+              </td>
             </ng-container>
-
             <ng-container matColumnDef="profitPercent">
               <th mat-header-cell *matHeaderCellDef>Profit %</th>
-              <td mat-cell *matCellDef="let item">{{ item.getProfitpercent() }} %</td>
+              <td mat-cell *matCellDef="let item">
+                {{ (item.getValuation() - item.getTradingamount()) / item.getTradingamount() * 100 }} %
+              </td>
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="dispCol"></tr>
@@ -53,15 +59,23 @@
               <th mat-header-cell *matHeaderCellDef>Trading Amount</th>
               <td mat-cell *matCellDef="let item">{{ item.getTradingamount() }}</td>
             </ng-container>
+            <ng-container matColumnDef="valuation">
+              <th mat-header-cell *matHeaderCellDef>Valuation</th>
+              <td mat-cell *matCellDef="let item">{{ item.getValuation() }}</td>
+            </ng-container>
 
             <ng-container matColumnDef="profitAmount">
               <th mat-header-cell *matHeaderCellDef>Profit Amount</th>
-              <td mat-cell *matCellDef="let item">{{ item.getProfitamount() }}</td>
+              <td mat-cell *matCellDef="let item">
+                {{ item.getValuation() - item.getTradingamount() }}
+              </td>
             </ng-container>
 
             <ng-container matColumnDef="profitPercent">
               <th mat-header-cell *matHeaderCellDef>Profit %</th>
-              <td mat-cell *matCellDef="let item">{{ item.getProfitpercent() }} %</td>
+              <td mat-cell *matCellDef="let item">
+                {{ (item.getValuation() - item.getTradingamount()) / item.getTradingamount() * 100 }} %
+              </td>
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="dispCol"></tr>

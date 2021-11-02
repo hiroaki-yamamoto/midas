@@ -8,6 +8,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,11 +27,16 @@ import { MatListModule } from '@angular/material/list';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSelectModule } from '@angular/material/select';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 import * as am4core from '@amcharts/amcharts4/core';
 import am4themes_animated from '@amcharts/amcharts4/themes/animated';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
+import { MonacoEditorModule } from 'ngx-monaco-editor'
+
+import { BotPanelComponent } from './bot-panel/bot-panel.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
 import { SyncComponent } from './sync/sync.component';
 import { IconSnackBarComponent } from './icon-snackbar/icon-snackbar.component';
 import { SyncProgressComponent } from './sync-progress/sync-progress.component';
@@ -42,6 +48,7 @@ import { KeychainComponent } from './keychain/keychain.component';
 import { EditDialogComponent } from './keychain/edit-dialog/edit-dialog.component';
 import { ExchangePipePipe } from './rpc/exchange-pipe.pipe';
 import { DeleteWarnComponent } from './keychain/delete-warn/delete-warn.component';
+import { BotEditorComponent } from './bot-editor/bot-editor.component';
 
 @NgModule({
   declarations: [
@@ -55,6 +62,9 @@ import { DeleteWarnComponent } from './keychain/delete-warn/delete-warn.componen
     EditDialogComponent,
     ExchangePipePipe,
     DeleteWarnComponent,
+    BotPanelComponent,
+    BotEditorComponent,
+    DashboardComponent,
   ],
   imports: [
     BrowserModule,
@@ -63,9 +73,13 @@ import { DeleteWarnComponent } from './keychain/delete-warn/delete-warn.componen
     HttpClientXsrfModule,
     HttpClientModule,
 
+    MonacoEditorModule.forRoot(),
+
     ReactiveFormsModule,
     FlexLayoutModule,
+    MatCheckboxModule,
     MatDialogModule,
+    MatExpansionModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
