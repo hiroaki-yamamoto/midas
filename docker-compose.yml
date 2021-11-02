@@ -9,6 +9,8 @@ services:
       - "./etc/mongo/scripts:/docker-entrypoint-initdb.d"
   broker:
     image: nats-streaming:scratch
+  redis:
+    image: redis:alpine
   proxy:
     image: nginx:alpine
     volumes:
