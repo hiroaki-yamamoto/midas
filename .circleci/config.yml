@@ -211,14 +211,6 @@ workflows:
               only: master
           service_name: historical_fetch_worker
       - deploy-image:
-          name: "Historical Kline Aggregation Worker Deployment"
-          requires:
-            - build-backend
-          filters:
-            branches:
-              only: master
-          service_name: historical_aggregator
-      - deploy-image:
           name: "Historical Kline Record Worker Deployment"
           requires:
             - build-backend
@@ -282,7 +274,6 @@ workflows:
           requires:
             - Historical Kline Service Deployment
             - Historical Kline Fetch Worker Deployment
-            - Historical Kline Aggregation Worker Deployment
             - Historical Kline Record Worker Deployment
             - Symbol Service Deployment
             - Trade Observer Worker Deployment
