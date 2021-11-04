@@ -1276,27 +1276,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
-name = "historical-workers"
-version = "0.1.0"
-dependencies = [
- "binance_histories",
- "binance_symbols",
- "clap",
- "config",
- "futures",
- "history",
- "libc",
- "mongodb",
- "nats",
- "rpc",
- "slog",
- "subscribe",
- "tokio",
- "tokio-stream",
- "types",
-]
-
-[[package]]
 name = "historical_service"
 version = "0.1.0"
 dependencies = [
@@ -1322,6 +1301,27 @@ dependencies = [
  "tokio",
  "types",
  "warp",
+]
+
+[[package]]
+name = "historical_worker"
+version = "0.1.0"
+dependencies = [
+ "binance_histories",
+ "binance_symbols",
+ "clap",
+ "config",
+ "futures",
+ "history",
+ "libc",
+ "mongodb",
+ "nats",
+ "rpc",
+ "slog",
+ "subscribe",
+ "tokio",
+ "tokio-stream",
+ "types",
 ]
 
 [[package]]

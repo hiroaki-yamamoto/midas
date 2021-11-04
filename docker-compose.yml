@@ -49,8 +49,7 @@ services:
     depends_on:
       - database
       - broker
-      - historical_fetch_worker
-      - historical_record_worker
+      - historical_worker
   symbol_service:
     build:
       context: ./backend
@@ -67,27 +66,12 @@ services:
       - database
       - broker
       - binance_trade_observer_worker
-  historical_fetch_worker:
+  historical_worker:
     build:
       context: ./backend
       dockerfile: devel.dockerfile
       args:
-        - SERVICE=historical_fetch_worker
-    command:
-      - -c
-      - /etc/midas/midas.yml
-    volumes:
-      - ./etc:/etc/midas
-      - ./backend:/opt/code
-    depends_on:
-      - database
-      - broker
-  historical_record_worker:
-    build:
-      context: ./backend
-      dockerfile: devel.dockerfile
-      args:
-        - SERVICE=historical_record_worker
+        - SERVICE=historical_worker
     command:
       - -c
       - /etc/midas/midas.yml
