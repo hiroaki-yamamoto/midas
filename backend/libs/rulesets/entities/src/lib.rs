@@ -4,6 +4,7 @@ mod execution;
 mod kline;
 mod order;
 mod order_option;
+mod trade_time;
 
 pub use self::apikey::APIKeyEvent;
 pub use self::apikey::{APIKey, APIKeyInner};
@@ -12,6 +13,7 @@ pub use self::execution::{ExecutionResult, ExecutionType};
 pub use self::kline::KlineCtrl;
 pub use self::order::{Order, OrderInner};
 pub use self::order_option::OrderOption;
+pub use self::trade_time::{TradeTime, TradeTimeTrait};
 
 use ::futures_core::stream::BoxStream;
 use ::rpc::symbols::SymbolInfo;

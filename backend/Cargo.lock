@@ -920,6 +920,7 @@ dependencies = [
  "bytes",
  "errors",
  "futures-core",
+ "mongodb",
  "num-traits",
  "ring",
  "rpc",

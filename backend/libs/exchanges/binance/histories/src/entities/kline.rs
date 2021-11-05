@@ -4,7 +4,7 @@ use ::mongodb::bson::DateTime as MongoDateTime;
 use ::serde::{Deserialize, Serialize};
 use ::serde_json::Value;
 
-use ::trade_observer::TradeDateTime;
+use ::entities::{TradeTime, TradeTimeTrait};
 use ::types::casting::{cast_datetime, cast_f64, cast_i64};
 use ::types::ThreadSafeResult;
 
@@ -51,7 +51,7 @@ impl AsRef<Kline> for Kline {
   }
 }
 
-impl TradeDateTime for Kline {
+impl TradeTimeTrait for &Kline {
   fn open_time(&self) -> SystemTime {
     return self.open_time.into();
   }
@@ -60,6 +60,42 @@ impl TradeDateTime for Kline {
   }
   fn symbol(&self) -> String {
     return self.symbol.clone();
+  }
+}
+
+impl TradeTimeTrait for Kline {
+  fn open_time(&self) -> SystemTime {
+    return self.open_time.into();
+  }
+  fn close_time(&self) -> SystemTime {
+    return self.close_time.into();
+  }
+  fn symbol(&self) -> String {
+    return self.symbol.clone();
+  }
+}
+
+impl From<Kline> for TradeTime<SystemTime> {
+  fn from(kline: Kline) -> Self {
+    return Self::from(kline);
+  }
+}
+
+impl From<&Kline> for TradeTime<SystemTime> {
+  fn from(kline: &Kline) -> Self {
+    return Self::from(kline);
+  }
+}
+
+impl From<Kline> for TradeTime<MongoDateTime> {
+  fn from(kline: Kline) -> Self {
+    return Self::from(kline);
+  }
+}
+
+impl From<&Kline> for TradeTime<MongoDateTime> {
+  fn from(kline: &Kline) -> Self {
+    return Self::from(kline);
   }
 }
 
