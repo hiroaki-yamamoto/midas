@@ -22,4 +22,4 @@ serde = { version = "1.0.130", features=["derive"] }
 libc = "0.2.106"
 num-traits = "0.2.14"
 http = "0.2.5"
-nats = "0.15.2"
+nats = "0.16.0"
