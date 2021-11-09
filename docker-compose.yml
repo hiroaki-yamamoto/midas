@@ -181,6 +181,8 @@ services:
   frontend:
     build:
       context: frontend
+    environment:
+      NODE_OPTIONS: --openssl-legacy-provider
     volumes:
       - ./frontend:/opt/code
       - /opt/code/node_modules
