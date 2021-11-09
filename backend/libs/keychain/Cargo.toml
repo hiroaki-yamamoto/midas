@@ -16,4 +16,4 @@ base_recorder = { path = "../rulesets/base_recorder" }
 futures = "0.3.17"
 mongodb = { version = "2.0.1", default-features = false, features = ["async-std-runtime"] }
 rmp-serde = "0.15.5"
-nats = "0.15.2"
+nats = "0.16.0"
