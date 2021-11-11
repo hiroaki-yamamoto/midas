@@ -55,15 +55,19 @@ jobs:
             rm -rf ${SCCACHE_ARCHIVE} ${TARGET}
             chmod u+x $RUSTC_WRAPPER
       - run:
-          name: "Extract openssl-musl package"
-          command: "tar xJvf openssl-musl.txz && mv openssl-musl ~/"
+          name: "Extract musl dependencies"
+          command: |
+            mkdir ../deps
+            tar xJvf openssl.txz -C ../deps
+            tar xJvf gmp.txz -C ../deps
           working_directory: ./.circleci
       - run:
           name: Build the package
           command: |
+            DEPS=`realpath ../deps`
             export \
-              OPENSSL_DIR=${HOME}/openssl-musl/musl \
-              OPENSSL_LIB_DIR=${HOME}/openssl-musl/musl/lib64
+              OPENSSL_DIR=$DEPS/openssl \
+              OPENSSL_LIB_DIR=$DEPS/openssl/lib64
             cargo build --target x86_64-unknown-linux-musl --release
           working_directory: ./backend
           environment:
