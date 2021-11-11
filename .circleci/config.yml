@@ -64,9 +64,9 @@ jobs:
       - run:
           name: Build the package
           command: |
-            DEPS=`realpath ../deps`
-            OPENSSL_DIR: $DEPS/openssl
-            OPENSSL_LIB_DIR: $DEPS/openssl/lib64
+            export DEPS=`realpath ../deps` \
+              OPENSSL_DIR: $DEPS/openssl \
+              OPENSSL_LIB_DIR: $DEPS/openssl/lib64
             cargo build --target x86_64-unknown-linux-musl --release
           working_directory: ./backend
           environment:
