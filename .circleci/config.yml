@@ -60,6 +60,8 @@ jobs:
             mkdir ../deps
             tar xJvf openssl.txz -C ../deps
             tar xJvf gmp.txz -C ../deps
+            tar xJvf mpfr.txz -C ../deps
+            tar xJvf mpc.txz -C ../deps
           working_directory: ./.circleci
       - run:
           name: Build the package
