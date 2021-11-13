@@ -17,4 +17,4 @@ nats = "0.16.0"
 slog = "2.7.0"
 futures = "0.3.17"
 libc = "0.2.107"
-mongodb = { version = "2.0.1", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.0.2", default-features = false, features = ["async-std-runtime"] }
