@@ -6,11 +6,11 @@ set -e
 export CC="musl-gcc -fPIE -pie -O2"
 
 BASEDIR=`dirname $0`
-DOWNLOAD_URL='https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz'
+DOWNLOAD_URL='https://www.mpfr.org/mpfr-current/mpfr-4.1.0.tar.xz'
 FILENAME=`basename $DOWNLOAD_URL`
 EXTRACTED_NAME=`basename ${FILENAME} .tar.xz`
 WORK_DIR=`realpath $BASEDIR`
-PREFIX="$WORK_DIR/../deps/gmp"
+PREFIX="$WORK_DIR/../deps/mpfr"
 
 curl $DOWNLOAD_URL -o $WORK_DIR/$FILENAME
 tar xJvf $WORK_DIR/$FILENAME -C $WORK_DIR
@@ -20,7 +20,8 @@ cd $WORK_DIR/$EXTRACTED_NAME
 ./configure \
   --prefix=$PREFIX \
   --enable-shared=no \
-  --enable-static=yes
+  --enable-static=yes \
+  --with-gmp=`dirname $PREFIX`/gmp
 make -j`nproc`
 make -j`nproc` check
 make -j`nproc` install

@@ -6,21 +6,23 @@ set -e
 export CC="musl-gcc -fPIE -pie -O2"
 
 BASEDIR=`dirname $0`
-DOWNLOAD_URL='https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz'
+DOWNLOAD_URL='http://www.multiprecision.org/downloads/mpc-1.2.0.tar.gz'
 FILENAME=`basename $DOWNLOAD_URL`
-EXTRACTED_NAME=`basename ${FILENAME} .tar.xz`
+EXTRACTED_NAME=`basename ${FILENAME} .tar.gz`
 WORK_DIR=`realpath $BASEDIR`
-PREFIX="$WORK_DIR/../deps/gmp"
+PREFIX="$WORK_DIR/../deps/mpc"
 
 curl $DOWNLOAD_URL -o $WORK_DIR/$FILENAME
-tar xJvf $WORK_DIR/$FILENAME -C $WORK_DIR
+tar xzvf $WORK_DIR/$FILENAME -C $WORK_DIR
 rm -rf $PREFIX
 cd $WORK_DIR/$EXTRACTED_NAME
 
 ./configure \
   --prefix=$PREFIX \
   --enable-shared=no \
-  --enable-static=yes
+  --enable-static=yes \
+  --with-gmp=`dirname $PREFIX`/gmp \
+  --with-mpfr=`dirname $PREFIX`/mpfr
 make -j`nproc`
 make -j`nproc` check
 make -j`nproc` install
