@@ -1399,9 +1399,9 @@
   integrity sha512-59SgoZ3EXbkfSX7b63tsou/SDGzwUEK6MuB5sKqgVK1/XE0fxmpsOb9DQI8LXW3KfGnAjImCGhhEb7uPPAUVNA==
 
 "@fortawesome/angular-fontawesome@^0.10.0":
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/@fortawesome/angular-fontawesome/-/angular-fontawesome-0.10.0.tgz#b589e1321f3543032bd8e2b96ad6ed532cf578e1"
-  integrity sha512-d7gz/zK76KXcGYpexaXH5wkIIenS62sxbUxwstR04HQZpF33S+8KyCnZjo+eCs6akGi9khjU4mVBrVGDySHvVg==
+  version "0.10.1"
+  resolved "https://registry.yarnpkg.com/@fortawesome/angular-fontawesome/-/angular-fontawesome-0.10.1.tgz#d26edd125bc03d1109d266e646f6a4bbf097632a"
+  integrity sha512-4nVRm+NcLcdaNrNFhThb/7/tb5CDm0vQwJFyljR3XMCQyEr94hMX5SiUYbvYm9YJVImMYfdpR0lO0B8sh12Vbw==
   dependencies:
     tslib "^2.3.1"
 
