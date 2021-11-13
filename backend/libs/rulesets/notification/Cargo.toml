@@ -8,6 +8,6 @@ edition = "2018"
 
 [dependencies]
 types = { path = "../../types" }
-entities = { path = "../entities" }
+entities = { path = "../../entities" }
 
 async-trait = "0.1.51"

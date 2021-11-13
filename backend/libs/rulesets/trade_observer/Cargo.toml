@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 types = { path = "../../types" }
-entities = { path = "../entities" }
+entities = { path = "../../entities" }
 
 futures-core = "0.3.17"
 async-trait = "0.1.51"

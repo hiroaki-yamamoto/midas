@@ -13,7 +13,7 @@ rpc = { path = "../../../rpc" }
 config = { path = "../../../config" }
 subscribe = { path = "../../../subscribe" }
 
-entities = { path = "../../../rulesets/entities" }
+entities = { path = "../../../entities" }
 history = { path = "../../../rulesets/history" }
 trade_observer = { path = "../../../rulesets/trade_observer" }
 base_recorder = { path = "../../../rulesets/base_recorder" }

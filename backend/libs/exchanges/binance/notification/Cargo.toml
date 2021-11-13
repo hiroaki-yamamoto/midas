@@ -17,7 +17,7 @@ binance_histories = { path = "../histories" }
 binance_executors = { path = "../executors" }
 
 notification = { path = "../../../rulesets/notification" }
-entities = { path = "../../../rulesets/entities" }
+entities = { path = "../../../entities" }
 keychain = { path = "../../../keychain" }
 
 async-trait = "0.1.51"
