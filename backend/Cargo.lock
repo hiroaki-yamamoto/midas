@@ -1330,8 +1330,10 @@ name = "history"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "entities",
  "futures-core",
  "nats",
+ "reqwest",
  "rpc",
  "serde",
  "subscribe",
