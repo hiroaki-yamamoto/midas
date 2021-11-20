@@ -7,7 +7,7 @@ pub struct HistoryFetchRequest {
   pub exchange: Exchanges,
   pub symbol: String,
   pub start: DateTime,
-  pub end: DateTime,
+  pub end: Option<DateTime>,
 }
 
 impl HistoryFetchRequest {
@@ -15,7 +15,7 @@ impl HistoryFetchRequest {
     exchange: Exchanges,
     symbol: T,
     start: DateTime,
-    end: DateTime,
+    end: Option<DateTime>,
   ) -> Self
   where
     T: AsRef<str>,

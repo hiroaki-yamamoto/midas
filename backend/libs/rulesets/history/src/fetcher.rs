@@ -1,13 +1,16 @@
 use ::async_trait::async_trait;
 use ::entities::HistoryFetchRequest;
 
-use ::reqwest::Error;
+use ::types::ThreadSafeResult;
 
 use super::traits::KlineTrait;
 
 #[async_trait]
 pub trait HistoryFetcher {
-  async fn fetch<T>(&self, req: &HistoryFetchRequest) -> Result<Vec<T>, Error>
+  async fn fetch<T>(
+    &self,
+    req: &HistoryFetchRequest,
+  ) -> ThreadSafeResult<Vec<T>>
   where
     T: KlineTrait + Clone;
 }

@@ -6,19 +6,18 @@ use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::{doc, DateTime as MongoDateTime, Document};
 use ::nats::{Connection, Message};
 use ::rand::random;
-use ::serde_qs::to_string;
+use ::serde_qs::to_string as to_qs;
 use ::slog::{warn, Logger};
 use ::subscribe::PubSub;
 use ::tokio::select;
 use ::tokio::time::{sleep, timeout};
 use ::url::Url;
 
-use ::binance_clients::reqwest;
 use ::binance_symbols::fetcher::SymbolFetcher;
 use ::config::{DEFAULT_RECONNECT_INTERVAL, NUM_OBJECTS_TO_FETCH};
-use ::entities::KlineCtrl;
-use ::errors::{EmptyError, MaximumAttemptExceeded};
-use ::history::HistoryFetcher as HistoryFetcherTrait;
+use ::entities::{HistoryFetchRequest, KlineCtrl};
+use ::errors::{EmptyError, ExecutionFailed, MaximumAttemptExceeded};
+use ::history::{HistoryFetcher as HistoryFetcherTrait, KlineTrait};
 use ::rpc::symbols::SymbolInfo;
 use ::types::{GenericResult, ThreadSafeResult};
 
@@ -91,11 +90,11 @@ impl HistoryFetcher {
       },
       limit: format!("{}", limit.unwrap_or(1)),
     };
-    let param = to_string(&param)?;
+    let param = to_qs(&param)?;
     url.set_query(Some(&param));
     let mut c: i8 = 0;
     while c < 20 {
-      let resp = reqwest::get(url.clone()).await?;
+      let resp = ::reqwest::get(url.clone()).await?;
       let rest_status = resp.status();
       if rest_status.is_success() {
         let values = resp.json::<BinancePayload>().await?;
@@ -114,8 +113,8 @@ impl HistoryFetcher {
           })
           .collect();
         return Ok(ret);
-      } else if rest_status == reqwest::StatusCode::IM_A_TEAPOT
-        || rest_status == reqwest::StatusCode::TOO_MANY_REQUESTS
+      } else if rest_status == ::reqwest::StatusCode::IM_A_TEAPOT
+        || rest_status == ::reqwest::StatusCode::TOO_MANY_REQUESTS
       {
         let mut retry_secs: i64 = resp
           .headers()
@@ -229,99 +228,60 @@ impl HistoryFetcher {
     }
     return Ok(());
   }
+  async fn fetch_inner(
+    &self,
+    req: &HistoryFetchRequest,
+  ) -> ThreadSafeResult<::reqwest::Response> {
+    let std_start = req.start.to_system_time();
+    let query = match req.end.map(|d| d.to_system_time()) {
+      Some(std_end) => {
+        let duration = std_end.duration_since(std_start)?;
+        // 60000 = 60 secs (i.e. 1 minutes) x 1000 objects.
+        if duration > StdDur::from_secs(60000) {
+          return Err(Box::new(ExecutionFailed::new(
+            "The duration must be less than or qeual to 1000 munites.",
+          )));
+        }
+        Query {
+          symbol: req.symbol,
+          start_time: std_start
+            .duration_since(UNIX_EPOCH)?
+            .as_millis()
+            .to_string(),
+          end_time: Some(
+            std_end.duration_since(UNIX_EPOCH)?.as_millis().to_string(),
+          ),
+          interval: "1m".into(),
+          limit: (duration.as_secs() / 60).to_string(),
+        }
+      }
+      None => Query {
+        symbol: req.symbol,
+        start_time: std_start
+          .duration_since(UNIX_EPOCH)?
+          .as_millis()
+          .to_string(),
+        end_time: None,
+        interval: "1m".into(),
+        limit: "1".into(),
+      },
+    };
+    let mut url = self.endpoint.clone();
+    let query = to_qs(&query)?;
+    url.set_query(Some(&query));
+    return Ok(::reqwest::get(url.clone()).await?);
+  }
 }
 
 #[async_trait]
 impl HistoryFetcherTrait for HistoryFetcher {
-  async fn refresh(&self, symbol: Vec<String>) -> ThreadSafeResult<()> {
-    if symbol.len() < 1 {
-      return Err(Box::new(EmptyError {
-        field: String::from("symbol"),
-      }));
-    }
-    let mut query: Option<Document> = None;
-    if symbol[0] != "all" {
-      query = Some(doc! { "symbol": doc! { "$in": symbol } });
-    }
-    let symbols = self.symbol_fetcher.get(query).await?;
-    let me = self.clone();
-    let _ = tokio::spawn(async move {
-      let mut ctrl_sub = match me.ctrl_pubsub.subscribe() {
-        Err(_) => return,
-        Ok(o) => o,
-      };
-      let _ = me.push_fetch_request(&symbols, &mut ctrl_sub).await;
-    });
+  async fn fetch<T>(
+    &self,
+    req: &HistoryFetchRequest,
+  ) -> ThreadSafeResult<Vec<T>>
+  where
+    T: KlineTrait + Clone,
+  {
     return Ok(());
-  }
-
-  async fn spawn(&self) -> ThreadSafeResult<()> {
-    let param_sub = self.param_pubsub.queue_subscribe("fetch.thread")?;
-    let mut ctrl_sub = self.ctrl_pubsub.subscribe()?;
-    let mut param_sub = param_sub.boxed();
-    loop {
-      select! {
-        Some((ctrl, _)) = ctrl_sub.next() => {
-          match ctrl {
-            KlineCtrl::Stop => {
-              warn!(self.logger, "Stop Signal has been received. Shutting down the worker...");
-              break;
-            }
-          }
-        },
-        Some((param, msg)) = param_sub.next() => {
-          let start_time: SystemTime = param.start_time.into();
-          let num_obj = match param.end_time {
-            None => 1,
-            Some(end_time) => {
-              end_time.to_system_time()
-                .duration_since(start_time)?.as_secs() / 60
-            }
-          };
-          if num_obj > NUM_OBJECTS_TO_FETCH as u64 {
-            warn!(
-              self.logger,
-              "Duration between the specified start and end time exceeds
-                the maximum number of the objects to fetch.";
-              "symbol" => &param.symbol,
-              "start_time" => param.start_time.to_string(),
-              "end_time" => format!("{:?}", param.end_time),
-              "num_objects" => num_obj,
-              "maximum_number_objects" => NUM_OBJECTS_TO_FETCH,
-            );
-            continue;
-          }
-          let resp = self.fetch(
-            param.symbol.clone(),
-            start_time,
-            param.end_time.map(|d| d.into()),
-          );
-          let resp = resp.await;
-          let resp = match resp {
-            Err(e) => {
-              warn!(self.logger, "Failed to fetch kline data: {}", e);
-              continue;
-            },
-            Ok(v) => v
-          };
-          let payload = &KlinesWithInfo{
-            klines: resp,
-            symbol: param.symbol.clone(),
-            num_symbols: param.num_symbols,
-            entire_data_len: param.entire_data_len
-          };
-          let _ = match msg.reply {
-            Some(_) => self.resp_pubsub.respond(&msg, payload),
-            None => self.resp_pubsub.publish(payload)
-          };
-        },
-        else => {break;}
-      }
-    }
-    return Ok(());
-  }
-
-  async fn stop(&self) -> ThreadSafeResult<()> {
-    return Ok(self.ctrl_pubsub.publish(&KlineCtrl::Stop)?);
   }
 }
