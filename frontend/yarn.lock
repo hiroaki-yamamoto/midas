@@ -5664,9 +5664,9 @@ lie@~3.3.0:
     immediate "~3.0.5"
 
 lines-and-columns@^1.1.6:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.0.tgz#730382e9a1cbb3fdeb5494b3915bfae145c0d3d2"
-  integrity sha512-tfO1siOurT114rus/3opoeRtTAWjfgQFY+p8Q2wswWVhXpjk99Rb/IKX76akoJDh7pxlQuf4XfZ4p/PSwBMuuQ==
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.3.tgz#3360dbb0dfffd23a6ad0300135efacb50f50eb73"
+  integrity sha512-bQEvPBbeyPQGdQ/1H/tnLUz0479EH/9pHxCe3TGRQFxpg/PIbBeTUwpm7xyewdFfHjKLGidU/lSH1QkF+i8HUg==
 
 loader-runner@^4.2.0:
   version "4.2.0"
