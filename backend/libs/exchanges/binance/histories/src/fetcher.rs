@@ -228,48 +228,19 @@ impl HistoryFetcher {
     }
     return Ok(());
   }
-  async fn fetch_inner(
+
+  fn validate_request(
     &self,
     req: &HistoryFetchRequest,
-  ) -> ThreadSafeResult<::reqwest::Response> {
-    let std_start = req.start.to_system_time();
-    let query = match req.end.map(|d| d.to_system_time()) {
-      Some(std_end) => {
-        let duration = std_end.duration_since(std_start)?;
-        // 60000 = 60 secs (i.e. 1 minutes) x 1000 objects.
-        if duration > StdDur::from_secs(60000) {
-          return Err(Box::new(ExecutionFailed::new(
-            "The duration must be less than or qeual to 1000 munites.",
-          )));
-        }
-        Query {
-          symbol: req.symbol,
-          start_time: std_start
-            .duration_since(UNIX_EPOCH)?
-            .as_millis()
-            .to_string(),
-          end_time: Some(
-            std_end.duration_since(UNIX_EPOCH)?.as_millis().to_string(),
-          ),
-          interval: "1m".into(),
-          limit: (duration.as_secs() / 60).to_string(),
-        }
+  ) -> ThreadSafeResult<()> {
+    if let Some(duration) = req.duration() {
+      if duration > StdDur::from_secs(60000) {
+        return Err(Box::new(ExecutionFailed::new(
+          "The duration must be less than or qeual to 1000 munites.",
+        )));
       }
-      None => Query {
-        symbol: req.symbol,
-        start_time: std_start
-          .duration_since(UNIX_EPOCH)?
-          .as_millis()
-          .to_string(),
-        end_time: None,
-        interval: "1m".into(),
-        limit: "1".into(),
-      },
-    };
-    let mut url = self.endpoint.clone();
-    let query = to_qs(&query)?;
-    url.set_query(Some(&query));
-    return Ok(::reqwest::get(url.clone()).await?);
+    }
+    return Ok(());
   }
 }
 
@@ -282,6 +253,14 @@ impl HistoryFetcherTrait for HistoryFetcher {
   where
     T: KlineTrait + Clone,
   {
+    if let Err(e) = self.validate_request(req) {
+      return Err(e);
+    }
+    let mut url = self.endpoint.clone();
+    let query: Query = req.into();
+    let query = to_qs(&query)?;
+    url.set_query(Some(&query));
+    let resp = ::reqwest::get(url.clone()).await?;
     return Ok(());
   }
 }
