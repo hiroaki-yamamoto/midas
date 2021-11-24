@@ -3,14 +3,11 @@ use ::entities::HistoryFetchRequest;
 
 use ::types::ThreadSafeResult;
 
-use super::traits::KlineTrait;
-
 #[async_trait]
 pub trait HistoryFetcher {
-  async fn fetch<T>(
+  type Klines;
+  async fn fetch(
     &self,
     req: &HistoryFetchRequest,
-  ) -> ThreadSafeResult<Vec<T>>
-  where
-    T: KlineTrait + Clone;
+  ) -> ThreadSafeResult<Self::Klines>;
 }

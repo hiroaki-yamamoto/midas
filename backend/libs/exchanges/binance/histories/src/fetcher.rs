@@ -1,30 +1,21 @@
 use ::std::fmt::Debug;
-use ::std::time::{Duration as StdDur, SystemTime};
+use ::std::time::Duration as StdDur;
 
 use ::async_trait::async_trait;
-use ::mongodb::bson::DateTime as MongoDateTime;
 use ::nats::Connection;
 use ::rand::random;
 use ::serde_qs::to_string as to_qs;
 use ::slog::{warn, Logger};
-use ::subscribe::PubSub;
 use ::tokio::time::sleep;
 use ::url::Url;
 
-use ::binance_symbols::fetcher::SymbolFetcher;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::entities::HistoryFetchRequest;
-use ::errors::{EmptyError, ExecutionFailed, MaximumAttemptExceeded};
-use ::history::{HistoryFetcher as HistoryFetcherTrait, KlineTrait};
+use ::errors::{ExecutionFailed, MaximumAttemptExceeded};
+use ::history::HistoryFetcher as HistoryFetcherTrait;
 use ::types::{GenericResult, ThreadSafeResult};
 
-use super::entities::{
-  BinancePayload, Kline, KlinesWithInfo, Param, Query, TradeTime,
-};
-use super::pubsub::{
-  HistFetchParamPubSub, HistFetchRespPubSub, HistProgPartPubSub,
-  KlineControlPubSub, RecLatestTradeDatePubSub,
-};
+use super::entities::{BinancePayload, Kline, Query};
 use ::binance_clients::constants::REST_ENDPOINT;
 
 #[derive(Debug, Clone)]
@@ -32,12 +23,6 @@ pub struct HistoryFetcher {
   pub num_reconnect: i8,
   logger: Logger,
   endpoint: Url,
-  prog_pubsub: HistProgPartPubSub,
-  param_pubsub: HistFetchParamPubSub,
-  resp_pubsub: HistFetchRespPubSub,
-  rec_ltd_pubsub: RecLatestTradeDatePubSub,
-  ctrl_pubsub: KlineControlPubSub,
-  symbol_fetcher: SymbolFetcher,
 }
 
 impl HistoryFetcher {
@@ -45,50 +30,26 @@ impl HistoryFetcher {
     num_reconnect: Option<i8>,
     logger: Logger,
     broker: Connection,
-    symbol_fetcher: SymbolFetcher,
   ) -> GenericResult<Self> {
     return Ok(Self {
       num_reconnect: num_reconnect.unwrap_or(20),
       endpoint: (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()?,
       logger,
-      prog_pubsub: HistProgPartPubSub::new(broker.clone()),
-      param_pubsub: HistFetchParamPubSub::new(broker.clone()),
-      resp_pubsub: HistFetchRespPubSub::new(broker.clone()),
-      rec_ltd_pubsub: RecLatestTradeDatePubSub::new(broker.clone()),
-      ctrl_pubsub: KlineControlPubSub::new(broker.clone()),
-      symbol_fetcher,
     });
   }
 
-  async fn get_first_trade_date(
-    &self,
-    symbol: String,
-  ) -> GenericResult<TradeTime<SystemTime>> {
-    let db_trade_date_opt = self
-      .rec_ltd_pubsub
-      .request::<TradeTime<MongoDateTime>>(&symbol)
-      .ok();
-    let (resp, _): (KlinesWithInfo, _) = self.param_pubsub.request(&Param {
-      symbol: symbol.clone(),
-      num_symbols: 1,
-      entire_data_len: 1,
-      start_time: SystemTime::UNIX_EPOCH.into(),
-      end_time: None,
-    })?;
-    let resp: Kline = resp
-      .klines
-      .first()
-      .ok_or(EmptyError {
-        field: "klines".to_string(),
-      })?
-      .clone();
-    if let Some((db_recent_trade_date, _)) = db_trade_date_opt {
-      if db_recent_trade_date.open_time > resp.open_time {
-        return Ok(db_recent_trade_date.into());
-      }
-    }
-    return Ok(resp.into());
-  }
+  // async fn get_first_trade_date(
+  //   &self,
+  //   symbol: String,
+  // ) -> GenericResult<TradeTime<SystemTime>> {
+  //   let req = &Param {
+  //     symbol: symbol.clone(),
+  //     num_symbols: 1,
+  //     entire_data_len: 1,
+  //     start_time: SystemTime::UNIX_EPOCH.into(),
+  //     end_time: None,
+  //   };
+  // }
 
   fn validate_request(
     &self,
@@ -107,13 +68,11 @@ impl HistoryFetcher {
 
 #[async_trait]
 impl HistoryFetcherTrait for HistoryFetcher {
-  async fn fetch<T>(
+  type Klines = Vec<Kline>;
+  async fn fetch(
     &self,
     req: &HistoryFetchRequest,
-  ) -> ThreadSafeResult<Vec<T>>
-  where
-    T: KlineTrait + Clone,
-  {
+  ) -> ThreadSafeResult<Self::Klines> {
     if let Err(e) = self.validate_request(req) {
       return Err(e);
     }
@@ -130,14 +89,14 @@ impl HistoryFetcherTrait for HistoryFetcher {
       let status = resp.status();
       if status.is_success() {
         let payload = resp.json::<BinancePayload>().await?;
-        let klines: Vec<T> = payload
+        let klines: Vec<Kline> = payload
           .iter()
-          .filter_map(|item| match Kline::new(pair.clone(), item) {
+          .filter_map(|item| match Kline::new(req.symbol.clone(), item) {
             Err(err) => {
               warn!(
                 self.logger,
                 "Failed to fetch Kline data: {}",
-                err; "symbol" => &pair
+                err; "symbol" => &req.symbol
               );
               return None;
             }

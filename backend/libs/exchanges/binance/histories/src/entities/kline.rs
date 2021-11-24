@@ -5,7 +5,6 @@ use ::serde::{Deserialize, Serialize};
 use ::serde_json::Value;
 
 use ::entities::{TradeTime, TradeTimeTrait};
-use ::history::KlineTrait;
 use ::types::casting::{cast_datetime, cast_f64, cast_i64};
 use ::types::ThreadSafeResult;
 
@@ -25,8 +24,6 @@ pub struct Kline {
   pub taker_buy_quote_volume: f64,
 }
 
-impl KlineTrait for Kline {}
-
 impl Kline {
   pub fn new(symbol: String, payload: &Vec<Value>) -> ThreadSafeResult<Self> {
     return Ok(Kline {
@@ -45,8 +42,6 @@ impl Kline {
     });
   }
 }
-
-pub type Klines = Vec<Kline>;
 
 impl AsRef<Kline> for Kline {
   fn as_ref(&self) -> &Self {
@@ -99,19 +94,5 @@ impl From<Kline> for TradeTime<MongoDateTime> {
 impl From<&Kline> for TradeTime<MongoDateTime> {
   fn from(kline: &Kline) -> Self {
     return Self::from(kline);
-  }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct KlinesWithInfo {
-  pub symbol: String,
-  pub num_symbols: i64,
-  pub entire_data_len: u64,
-  pub klines: Klines,
-}
-
-impl AsRef<KlinesWithInfo> for KlinesWithInfo {
-  fn as_ref(&self) -> &Self {
-    return self;
   }
 }
