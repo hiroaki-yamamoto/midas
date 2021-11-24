@@ -24,7 +24,6 @@ impl From<&HistoryFetchRequest> for Query {
   fn from(value: &HistoryFetchRequest) -> Self {
     let std_start = value.start.map(|d| d.to_system_time());
     let std_end = value.end.map(|d| d.to_system_time());
-    let duration = value.duration();
 
     return Self {
       symbol: value.symbol.clone(),

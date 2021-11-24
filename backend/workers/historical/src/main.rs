@@ -1,17 +1,19 @@
 use ::clap::Parser;
-use ::futures::future::{join_all, select};
+use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::options::ClientOptions as MongoDBCliOpt;
 use ::mongodb::Client as DBCli;
 use ::nats::connect;
-use ::slog::{info, o};
+use ::slog::{info, warn};
 use ::tokio::signal::unix as signal;
+use subscribe::PubSub;
 
 use ::config::{CmdArgs, Config};
+use ::rpc::entities::Exchanges;
 
 use ::binance_histories::fetcher::HistoryFetcher as BinanceHistoryFetcher;
-use ::binance_histories::HistoryFetcher;
-use ::binance_symbols::fetcher::SymbolFetcher as BinanceSymbolFetcher;
+use ::binance_histories::pubsub::HistChartPubSub;
+use ::history::HistoryFetcher;
 
 #[tokio::main]
 async fn main() {
@@ -24,24 +26,30 @@ async fn main() {
     DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await.unwrap())
       .unwrap()
       .database("midas");
-  let fetchers: Vec<Box<dyn HistoryFetcher>> = vec![Box::new(
-    BinanceHistoryFetcher::new(
-      None,
-      logger.clone(),
-      broker.clone(),
-      BinanceSymbolFetcher::new(
-        logger.new(o!("scope" => "SymbolFetcher")),
-        broker,
-        db,
-      )
-      .await,
-    )
-    .await
-    .unwrap(),
-  )];
-  let fetchers = fetchers.iter().map(|fetcher| fetcher.spawn());
+
+  let pubsub = HistChartPubSub::new(broker);
+  let mut sub = pubsub.subscribe().unwrap();
+
+  let binance_fetcher =
+    BinanceHistoryFetcher::new(None, logger.clone()).unwrap();
+
+  while let Some((req, _)) = sub.next().await {
+    match &req.exchange {
+      Exchanges::Binance => {
+        let kline = binance_fetcher.fetch(&req).await;
+      }
+      _ => {
+        warn!(
+          logger,
+          "Unknown Exchange Type: {}",
+          req.exchange.as_string()
+        );
+        continue;
+      }
+    }
+  }
+
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let sig = Box::pin(sig.recv());
-  select(join_all(fetchers), sig).await;
 }

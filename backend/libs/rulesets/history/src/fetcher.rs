@@ -5,7 +5,7 @@ use ::types::ThreadSafeResult;
 
 #[async_trait]
 pub trait HistoryFetcher {
-  type Klines;
+  type Klines: Clone;
   async fn fetch(
     &self,
     req: &HistoryFetchRequest,

@@ -2,7 +2,6 @@ use ::std::fmt::Debug;
 use ::std::time::Duration as StdDur;
 
 use ::async_trait::async_trait;
-use ::nats::Connection;
 use ::rand::random;
 use ::serde_qs::to_string as to_qs;
 use ::slog::{warn, Logger};
@@ -26,11 +25,7 @@ pub struct HistoryFetcher {
 }
 
 impl HistoryFetcher {
-  pub async fn new(
-    num_reconnect: Option<i8>,
-    logger: Logger,
-    broker: Connection,
-  ) -> GenericResult<Self> {
+  pub fn new(num_reconnect: Option<i8>, logger: Logger) -> GenericResult<Self> {
     return Ok(Self {
       num_reconnect: num_reconnect.unwrap_or(20),
       endpoint: (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()?,
@@ -84,7 +79,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
     let query: Query = req.into();
     let query = to_qs(&query)?;
     url.set_query(Some(&query));
-    for i in 0..20 {
+    for _ in 0..self.num_reconnect {
       let resp = ::reqwest::get(url.clone()).await?;
       let status = resp.status();
       if status.is_success() {
