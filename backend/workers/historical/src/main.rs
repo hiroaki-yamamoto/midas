@@ -5,8 +5,9 @@ use ::mongodb::options::ClientOptions as MongoDBCliOpt;
 use ::mongodb::Client as DBCli;
 use ::nats::connect;
 use ::slog::{info, warn};
+use ::subscribe::PubSub;
+use ::tokio::select;
 use ::tokio::signal::unix as signal;
-use subscribe::PubSub;
 
 use ::config::{CmdArgs, Config};
 use ::rpc::entities::Exchanges;
@@ -29,27 +30,30 @@ async fn main() {
 
   let pubsub = HistChartPubSub::new(broker);
   let mut sub = pubsub.subscribe().unwrap();
-
-  let binance_fetcher =
-    BinanceHistoryFetcher::new(None, logger.clone()).unwrap();
-
-  while let Some((req, _)) = sub.next().await {
-    match &req.exchange {
-      Exchanges::Binance => {
-        let kline = binance_fetcher.fetch(&req).await;
-      }
-      _ => {
-        warn!(
-          logger,
-          "Unknown Exchange Type: {}",
-          req.exchange.as_string()
-        );
-        continue;
-      }
-    }
-  }
-
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
-  let sig = Box::pin(sig.recv());
+  let binance_fetcher =
+    BinanceHistoryFetcher::new(None, logger.clone()).unwrap();
+  loop {
+    select! {
+      Some((req, _)) = sub.next() => {
+        match req.exchange {
+          Exchanges::Binance => {
+            let kline = binance_fetcher.fetch(&req).await;
+          }
+          _ => {
+            warn!(
+              logger,
+              "Unknown Exchange Type: {}",
+              req.exchange.as_string()
+            );
+            continue;
+          }
+        }
+      },
+      _ = sig.recv() => {
+        break;
+      },
+    }
+  }
 }
