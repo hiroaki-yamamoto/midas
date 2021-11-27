@@ -13,7 +13,7 @@ subscribe = { path = "../subscribe" }
 entities = { path = "../rulesets/entities" }
 base_recorder = { path = "../rulesets/base_recorder" }
 
-futures = "0.3.17"
+futures = "0.3.18"
 mongodb = { version = "2.0.2", default-features = false, features = ["async-std-runtime"] }
 rmp-serde = "0.15.5"
 nats = "0.16.0"

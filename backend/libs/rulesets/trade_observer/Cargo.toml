@@ -10,5 +10,5 @@ edition = "2018"
 types = { path = "../../types" }
 entities = { path = "../entities" }
 
-futures-core = "0.3.17"
+futures-core = "0.3.18"
 async-trait = "0.1.51"
