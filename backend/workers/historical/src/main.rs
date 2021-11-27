@@ -32,8 +32,10 @@ async fn main() {
   let mut sub = pubsub.subscribe().unwrap();
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
+
   let binance_fetcher =
     BinanceHistoryFetcher::new(None, logger.clone()).unwrap();
+
   loop {
     select! {
       Some((req, _)) = sub.next() => {
