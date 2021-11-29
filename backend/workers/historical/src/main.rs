@@ -5,6 +5,7 @@ use ::mongodb::options::ClientOptions as MongoDBCliOpt;
 use ::mongodb::Client as DBCli;
 use ::nats::connect;
 use ::slog::{info, warn};
+use ::std::collections::HashMap;
 use ::subscribe::PubSub;
 use ::tokio::select;
 use ::tokio::signal::unix as signal;
@@ -33,23 +34,24 @@ async fn main() {
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
 
+  let mut reg: HashMap<Exchanges, &dyn HistoryFetcher> = HashMap::new();
   let binance_fetcher =
     BinanceHistoryFetcher::new(None, logger.clone()).unwrap();
+  reg.insert(Exchanges::Binance, &binance_fetcher as &dyn HistoryFetcher);
 
   loop {
     select! {
       Some((req, _)) = sub.next() => {
-        match req.exchange {
-          Exchanges::Binance => {
-            let kline = binance_fetcher.fetch(&req).await;
-          }
-          _ => {
+        match reg.get(&req.exchange) {
+          Some(fetcher) => {
+            let kline = fetcher.fetch(&req).await;
+          },
+          None => {
             warn!(
               logger,
               "Unknown Exchange Type: {}",
               req.exchange.as_string()
             );
-            continue;
           }
         }
       },

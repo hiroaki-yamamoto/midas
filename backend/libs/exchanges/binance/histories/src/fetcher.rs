@@ -11,6 +11,7 @@ use ::url::Url;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::entities::HistoryFetchRequest;
 use ::errors::{ExecutionFailed, MaximumAttemptExceeded};
+use ::history::traits::Kline as KlineTrait;
 use ::history::HistoryFetcher as HistoryFetcherTrait;
 use ::types::{GenericResult, ThreadSafeResult};
 
@@ -63,11 +64,11 @@ impl HistoryFetcher {
 
 #[async_trait]
 impl HistoryFetcherTrait for HistoryFetcher {
-  type Klines = Vec<Kline>;
+  // type Kline = Kline;
   async fn fetch(
     &self,
     req: &HistoryFetchRequest,
-  ) -> ThreadSafeResult<Self::Klines> {
+  ) -> ThreadSafeResult<Vec<Box<dyn KlineTrait>>> {
     if let Err(e) = self.validate_request(req) {
       return Err(e);
     }
@@ -84,7 +85,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
       let status = resp.status();
       if status.is_success() {
         let payload = resp.json::<BinancePayload>().await?;
-        let klines: Vec<Kline> = payload
+        let klines: Vec<Box<dyn KlineTrait>> = payload
           .iter()
           .filter_map(|item| match Kline::new(req.symbol.clone(), item) {
             Err(err) => {
@@ -97,6 +98,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
             }
             Ok(v) => Some(v),
           })
+          .map(|item| Box::new(item) as Box<dyn KlineTrait>)
           .collect();
         return Ok(klines);
       } else if retry_status_list.contains(&status) {

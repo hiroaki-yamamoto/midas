@@ -8,6 +8,8 @@ use ::entities::{TradeTime, TradeTimeTrait};
 use ::types::casting::{cast_datetime, cast_f64, cast_i64};
 use ::types::ThreadSafeResult;
 
+use ::history::traits::Kline as KlineTrait;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Kline {
   pub symbol: String,
@@ -23,6 +25,8 @@ pub struct Kline {
   pub taker_buy_base_volume: f64,
   pub taker_buy_quote_volume: f64,
 }
+
+impl KlineTrait for Kline {}
 
 impl Kline {
   pub fn new(symbol: String, payload: &Vec<Value>) -> ThreadSafeResult<Self> {
