@@ -18,7 +18,7 @@ history = { path = "../../../rulesets/history" }
 trade_observer = { path = "../../../rulesets/trade_observer" }
 writers = { path = "../../../writers" }
 
-binance_clients = { path = "../clients" }
+clients = { path = "../../clients" }
 binance_symbols = { path = "../symbols" }
 
 async-trait = "0.1.51"

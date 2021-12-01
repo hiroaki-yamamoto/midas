@@ -29,7 +29,7 @@ use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::errors::EmptyError;
 use ::types::{GenericResult, TLSWebSocket, ThreadSafeResult};
 
-use ::binance_clients::constants::WS_ENDPOINT;
+use ::clients::binance::WS_ENDPOINT;
 
 use self::entities::{BookTicker, SubscribeRequest, SubscribeRequestInner};
 use self::pubsub::BookTickerPubSub;

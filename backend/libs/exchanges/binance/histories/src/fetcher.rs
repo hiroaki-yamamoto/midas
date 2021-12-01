@@ -16,7 +16,7 @@ use ::history::HistoryFetcher as HistoryFetcherTrait;
 use ::types::{GenericResult, ThreadSafeResult};
 
 use super::entities::{BinancePayload, Kline, Query};
-use ::binance_clients::constants::REST_ENDPOINT;
+use ::clients::binance::REST_ENDPOINT;
 
 #[derive(Debug, Clone)]
 pub struct HistoryFetcher {
