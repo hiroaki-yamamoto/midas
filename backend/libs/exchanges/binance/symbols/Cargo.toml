@@ -13,7 +13,7 @@ types = { path = "../../../types" }
 subscribe = { path = "../../../subscribe" }
 
 binance_clients = { path = "../clients" }
-base_recorder = { path = "../../../rulesets/base_recorder" }
+writers = { path = "../../../writers" }
 symbol_fetcher = { path = "../../../rulesets/symbol_fetcher" }
 symbol_recorder = { path = "../../../rulesets/symbol_recorder" }
 

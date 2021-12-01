@@ -3,7 +3,7 @@ use ::mongodb::bson::doc;
 use ::mongodb::Database;
 
 #[async_trait]
-pub trait Recorder {
+pub trait DatabaseWriter {
   fn get_database(&self) -> &Database;
   fn get_col_name(&self) -> &str;
   async fn update_indices(&self, flds: &[&str]) {

@@ -14,7 +14,6 @@ use ::ring::hmac;
 use ::serde_qs::to_string as to_qs;
 use ::slog::Logger;
 
-use ::base_recorder::Recorder as RecorderTrait;
 use ::entities::{BookTicker, ExecutionResult, Order, OrderInner, OrderOption};
 use ::errors::{ObjectNotFound, StatusFailure};
 use ::executor::Executor as ExecutorTrait;
@@ -23,6 +22,7 @@ use ::rpc::entities::Exchanges;
 use ::sign::Sign;
 use ::types::retry::retry_async;
 use ::types::ThreadSafeResult;
+use ::writers::DatabaseWriter;
 
 use ::binance_clients::{constants::REST_ENDPOINT, PubClient};
 use ::binance_observers::{TradeObserver, TradeObserverTrait};
@@ -64,7 +64,7 @@ impl Executor {
 }
 
 impl PubClient for Executor {}
-impl RecorderTrait for Executor {
+impl DatabaseWriter for Executor {
   fn get_database(&self) -> &Database {
     return &self.db;
   }

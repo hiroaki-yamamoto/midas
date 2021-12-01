@@ -276,15 +276,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "base_recorder"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures",
- "mongodb",
-]
-
-[[package]]
 name = "binance_clients"
 version = "0.1.0"
 dependencies = [
@@ -298,7 +289,6 @@ version = "0.1.0"
 dependencies = [
  "async-stream",
  "async-trait",
- "base_recorder",
  "binance_clients",
  "binance_histories",
  "binance_observers",
@@ -318,6 +308,7 @@ dependencies = [
  "slog",
  "trade_observer",
  "types",
+ "writers",
 ]
 
 [[package]]
@@ -325,7 +316,6 @@ name = "binance_histories"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "base_recorder",
  "binance_clients",
  "binance_symbols",
  "config",
@@ -349,6 +339,7 @@ dependencies = [
  "trade_observer",
  "types",
  "url",
+ "writers",
 ]
 
 [[package]]
@@ -410,7 +401,6 @@ name = "binance_symbols"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "base_recorder",
  "binance_clients",
  "errors",
  "futures",
@@ -427,6 +417,7 @@ dependencies = [
  "symbol_recorder",
  "types",
  "url",
+ "writers",
 ]
 
 [[package]]
@@ -1545,7 +1536,6 @@ checksum = "078e285eafdfb6c4b434e0d31e8cfcb5115b651496faca5749b88fafd4f23bfd"
 name = "keychain"
 version = "0.1.0"
 dependencies = [
- "base_recorder",
  "entities",
  "futures",
  "mongodb",
@@ -1554,6 +1544,7 @@ dependencies = [
  "rpc",
  "subscribe",
  "types",
+ "writers",
 ]
 
 [[package]]
@@ -3797,6 +3788,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0120db82e8a1e0b9fb3345a539c478767c0048d842860994d96113d5b667bd69"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "writers"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "mongodb",
 ]
 
 [[package]]

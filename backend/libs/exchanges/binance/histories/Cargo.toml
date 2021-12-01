@@ -16,7 +16,7 @@ subscribe = { path = "../../../subscribe" }
 entities = { path = "../../../entities" }
 history = { path = "../../../rulesets/history" }
 trade_observer = { path = "../../../rulesets/trade_observer" }
-base_recorder = { path = "../../../rulesets/base_recorder" }
+writers = { path = "../../../writers" }
 
 binance_clients = { path = "../clients" }
 binance_symbols = { path = "../symbols" }

@@ -13,9 +13,9 @@ use ::subscribe::PubSub;
 use ::rpc::entities::Exchanges;
 use ::types::{GenericResult, ThreadSafeResult};
 
-use ::base_recorder::Recorder;
 pub use ::entities::APIKey;
 use ::entities::APIKeyEvent;
+use ::writers::DatabaseWriter as DBWriterTrait;
 
 use self::pubsub::APIKeyPubSub;
 
@@ -109,7 +109,7 @@ impl KeyChain {
   }
 }
 
-impl Recorder for KeyChain {
+impl DBWriterTrait for KeyChain {
   fn get_database(&self) -> &Database {
     return &self.db;
   }

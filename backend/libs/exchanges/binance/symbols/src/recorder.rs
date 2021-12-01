@@ -7,8 +7,8 @@ use ::mongodb::{Collection, Database};
 use ::types::ThreadSafeResult;
 
 use super::entities::{ListSymbolStream, Symbol};
-use ::base_recorder::Recorder as RecorderTrait;
 use ::symbol_recorder::SymbolRecorder as SymbolRecorderTrait;
+use ::writers::DatabaseWriter as DBWriterTrait;
 
 #[derive(Debug, Clone)]
 pub struct SymbolRecorder {
@@ -27,7 +27,7 @@ impl SymbolRecorder {
   }
 }
 
-impl RecorderTrait for SymbolRecorder {
+impl DBWriterTrait for SymbolRecorder {
   fn get_database(&self) -> &Database {
     return &self.db;
   }

@@ -1,7 +1,7 @@
 [workspace]
 members = [
   "libs/errors",
-  "libs/rulesets/base_recorder",
+  "libs/writers",
   "libs/rulesets/executor",
   "libs/rulesets/sign",
   "libs/rulesets/symbol_fetcher",

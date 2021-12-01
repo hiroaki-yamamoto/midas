@@ -11,7 +11,7 @@ rpc = { path = "../rpc" }
 types = { path = "../types" }
 subscribe = { path = "../subscribe" }
 entities = { path = "../entities" }
-base_recorder = { path = "../rulesets/base_recorder" }
+writers = { path = "../writers" }
 
 futures = "0.3.17"
 mongodb = { version = "2.0.1", default-features = false, features = ["async-std-runtime"] }
