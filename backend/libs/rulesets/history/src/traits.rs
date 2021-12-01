@@ -1,1 +1,3 @@
-pub trait Kline {}
+use ::std::any::Any;
+
+pub trait Kline: Any {}

@@ -16,10 +16,7 @@ impl HistoryWriterTrait for HistoryWriter {
     &self,
     klines: Vec<Box<dyn KlineTrait + Send + Sync>>,
   ) -> ThreadSafeResult<()> {
-    let klines: Vec<Kline> = klines
-      .into_iter()
-      .map(|item| Box::leak(item) as &mut Kline)
-      .collect();
+    let klines: Vec<Kline> = klines.into_iter().collect();
     return Ok(());
   }
 }
