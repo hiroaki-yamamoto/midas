@@ -17,7 +17,7 @@ entities = { path = "../../../entities" }
 trade_observer = { path = "../../../rulesets/trade_observer" }
 symbol_recorder = { path = "../../../rulesets/symbol_recorder" }
 
-binance_clients = { path = "../clients" }
+clients = { path = "../../clients" }
 binance_symbols = { path = "../symbols" }
 
 async-trait = "0.1.51"

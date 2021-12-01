@@ -276,22 +276,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "binance_clients"
-version = "0.1.0"
-dependencies = [
- "reqwest",
- "types",
-]
-
-[[package]]
 name = "binance_executors"
 version = "0.1.0"
 dependencies = [
  "async-stream",
  "async-trait",
- "binance_clients",
  "binance_histories",
  "binance_observers",
+ "clients",
  "entities",
  "errors",
  "executor",
@@ -316,8 +308,8 @@ name = "binance_histories"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "binance_clients",
  "binance_symbols",
+ "clients",
  "config",
  "entities",
  "errors",
@@ -347,10 +339,10 @@ name = "binance_notification"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "binance_clients",
  "binance_executors",
  "binance_histories",
  "binance_symbols",
+ "clients",
  "entities",
  "errors",
  "futures",
@@ -374,8 +366,8 @@ name = "binance_observers"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "binance_clients",
  "binance_symbols",
+ "clients",
  "config",
  "entities",
  "errors",
@@ -401,7 +393,7 @@ name = "binance_symbols"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "binance_clients",
+ "clients",
  "errors",
  "futures",
  "mongodb",
@@ -610,6 +602,14 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "clients"
+version = "0.1.0"
+dependencies = [
+ "reqwest",
+ "types",
 ]
 
 [[package]]

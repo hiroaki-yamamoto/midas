@@ -1,9 +1,7 @@
-pub mod constants;
+pub use reqwest;
+use reqwest::{header, Client as Req};
 
-pub use ::reqwest;
-use ::reqwest::{header, Client as Req};
-
-use ::types::ThreadSafeResult;
+use types::ThreadSafeResult;
 
 pub trait PubClient {
   fn get_client<T>(&self, pub_key: T) -> ThreadSafeResult<Req>

@@ -11,7 +11,7 @@ errors = { path = "../../../errors" }
 types = { path = "../../../types" }
 subscribe = { path = "../../../subscribe" }
 
-binance_clients = { path = "../clients" }
+clients = { path = "../../clients" }
 binance_symbols = { path = "../symbols" }
 binance_histories = { path = "../histories" }
 binance_executors = { path = "../executors" }

@@ -6,7 +6,7 @@ use ::mongodb::Database;
 use ::nats::Connection as Broker;
 use ::slog::Logger;
 
-use ::binance_clients::constants::REST_ENDPOINT;
+use ::clients::binance::REST_ENDPOINT;
 use ::rpc::symbols::SymbolInfo;
 use ::types::ThreadSafeResult;
 

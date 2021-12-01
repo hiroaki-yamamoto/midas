@@ -12,7 +12,7 @@ errors = { path = "../../../errors" }
 rpc = { path = "../../../rpc" }
 keychain = { path = "../../../keychain" }
 
-binance_clients = { path = "../clients" }
+clients = { path = "../../clients" }
 binance_histories = { path = "../histories" }
 binance_observers = { path = "../observers" }
 
