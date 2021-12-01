@@ -276,34 +276,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "binance_executors"
-version = "0.1.0"
-dependencies = [
- "async-stream",
- "async-trait",
- "binance_histories",
- "binance_observers",
- "clients",
- "entities",
- "errors",
- "executor",
- "futures",
- "keychain",
- "mongodb",
- "nats",
- "reqwest",
- "ring",
- "rpc",
- "serde",
- "serde_qs",
- "sign",
- "slog",
- "trade_observer",
- "types",
- "writers",
-]
-
-[[package]]
 name = "binance_histories"
 version = "0.1.0"
 dependencies = [
@@ -339,12 +311,12 @@ name = "binance_notification"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "binance_executors",
  "binance_histories",
  "binance_symbols",
  "clients",
  "entities",
  "errors",
+ "executors",
  "futures",
  "keychain",
  "mongodb",
@@ -974,6 +946,34 @@ dependencies = [
  "errors",
  "futures-core",
  "types",
+]
+
+[[package]]
+name = "executors"
+version = "0.1.0"
+dependencies = [
+ "async-stream",
+ "async-trait",
+ "binance_histories",
+ "binance_observers",
+ "clients",
+ "entities",
+ "errors",
+ "executor",
+ "futures",
+ "keychain",
+ "mongodb",
+ "nats",
+ "reqwest",
+ "ring",
+ "rpc",
+ "serde",
+ "serde_qs",
+ "sign",
+ "slog",
+ "trade_observer",
+ "types",
+ "writers",
 ]
 
 [[package]]

@@ -22,7 +22,7 @@ members = [
   "libs/date_splitter",
   "libs/bot",
 
-  "libs/exchanges/binance/executors",
+  "libs/exchanges/executors",
   "libs/exchanges/binance/histories",
   "libs/exchanges/binance/observers",
   "libs/exchanges/binance/symbols",

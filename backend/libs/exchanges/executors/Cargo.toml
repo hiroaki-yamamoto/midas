@@ -1,5 +1,5 @@
 [package]
-name = "binance_executors"
+name = "executors"
 version = "0.1.0"
 authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
 edition = "2018"
@@ -7,20 +7,20 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-types = { path = "../../../types" }
-errors = { path = "../../../errors" }
-rpc = { path = "../../../rpc" }
-keychain = { path = "../../../keychain" }
+types = { path = "../../types" }
+errors = { path = "../../errors" }
+rpc = { path = "../../rpc" }
+keychain = { path = "../../keychain" }
 
-clients = { path = "../../clients" }
-binance_histories = { path = "../histories" }
-binance_observers = { path = "../observers" }
+clients = { path = "../clients" }
+binance_histories = { path = "../binance/histories" }
+binance_observers = { path = "../binance/observers" }
 
-entities = { path = "../../../entities" }
-executor = { path = "../../../rulesets/executor" }
-trade_observer = { path = "../../../rulesets/trade_observer" }
-sign = { path = "../../../rulesets/sign" }
-writers = { path = "../../../writers" }
+entities = { path = "../../entities" }
+executor = { path = "../../rulesets/executor" }
+trade_observer = { path = "../../rulesets/trade_observer" }
+sign = { path = "../../rulesets/sign" }
+writers = { path = "../../writers" }
 
 async-stream = "0.3.2"
 async-trait = "0.1.51"

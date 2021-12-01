@@ -5,8 +5,8 @@ use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::DateTime;
 use ::serde::{Deserialize, Serialize};
 
-use ::binance_executors::entities::{OrderStatus, Side};
 use ::entities::{Order as CommonOrder, OrderInner as CommonOrderInner};
+use ::executors::binance::entities::{OrderStatus, Side};
 
 use ::errors::ParseError;
 use ::types::casting::cast_datetime_from_i64;
