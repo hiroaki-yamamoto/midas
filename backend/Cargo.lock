@@ -276,48 +276,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "binance_histories"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "binance_symbols",
- "clients",
- "config",
- "entities",
- "errors",
- "futures",
- "history",
- "mongodb",
- "nats",
- "num_cpus",
- "rand 0.8.4",
- "reqwest",
- "rmp-serde",
- "rpc",
- "serde",
- "serde_json",
- "serde_qs",
- "slog",
- "subscribe",
- "tokio",
- "trade_observer",
- "types",
- "url",
- "writers",
-]
-
-[[package]]
 name = "binance_notification"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "binance_histories",
  "binance_symbols",
  "clients",
  "entities",
  "errors",
  "executors",
  "futures",
+ "history",
  "keychain",
  "mongodb",
  "nats",
@@ -954,13 +923,13 @@ version = "0.1.0"
 dependencies = [
  "async-stream",
  "async-trait",
- "binance_histories",
  "binance_observers",
  "clients",
  "entities",
  "errors",
  "executor",
  "futures",
+ "history",
  "keychain",
  "mongodb",
  "nats",
@@ -1272,7 +1241,6 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 name = "historical_service"
 version = "0.1.0"
 dependencies = [
- "binance_histories",
  "binance_symbols",
  "clap",
  "config",
@@ -1300,7 +1268,6 @@ dependencies = [
 name = "historical_worker"
 version = "0.1.0"
 dependencies = [
- "binance_histories",
  "binance_symbols",
  "clap",
  "config",
@@ -1322,14 +1289,28 @@ name = "history"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "clients",
+ "config",
  "entities",
- "futures-core",
+ "errors",
+ "futures",
+ "mongodb",
  "nats",
+ "num_cpus",
+ "rand 0.8.4",
  "reqwest",
+ "rmp-serde",
  "rpc",
  "serde",
+ "serde_json",
+ "serde_qs",
+ "slog",
  "subscribe",
+ "tokio",
+ "trade_observer",
  "types",
+ "url",
+ "writers",
 ]
 
 [[package]]

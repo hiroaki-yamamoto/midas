@@ -1,5 +1,5 @@
 [package]
-name = "binance_histories"
+name = "history"
 version = "0.1.0"
 authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
 edition = "2018"
@@ -7,19 +7,17 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-types = { path = "../../../types" }
-errors = { path = "../../../errors" }
-rpc = { path = "../../../rpc" }
-config = { path = "../../../config" }
-subscribe = { path = "../../../subscribe" }
+types = { path = "../../types" }
+errors = { path = "../../errors" }
+rpc = { path = "../../rpc" }
+config = { path = "../../config" }
+subscribe = { path = "../../subscribe" }
 
-entities = { path = "../../../entities" }
-history = { path = "../../../rulesets/history" }
-trade_observer = { path = "../../../rulesets/trade_observer" }
-writers = { path = "../../../writers" }
+entities = { path = "../../entities" }
+trade_observer = { path = "../../rulesets/trade_observer" }
+writers = { path = "../../writers" }
 
-clients = { path = "../../clients" }
-binance_symbols = { path = "../symbols" }
+clients = { path = "../clients" }
 
 async-trait = "0.1.51"
 futures = "0.3.17"

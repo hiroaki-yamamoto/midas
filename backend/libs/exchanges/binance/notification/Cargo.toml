@@ -13,7 +13,7 @@ subscribe = { path = "../../../subscribe" }
 
 clients = { path = "../../clients" }
 binance_symbols = { path = "../symbols" }
-binance_histories = { path = "../histories" }
+history = { path = "../../history" }
 executors = { path = "../../executors" }
 
 notification = { path = "../../../rulesets/notification" }

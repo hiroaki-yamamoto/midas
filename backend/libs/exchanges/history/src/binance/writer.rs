@@ -1,6 +1,6 @@
+use crate::traits::traits::Kline as KlineTrait;
+use crate::traits::HistoryWriter as HistoryWriterTrait;
 use ::async_trait::async_trait;
-use ::history::traits::Kline as KlineTrait;
-use ::history::HistoryWriter as HistoryWriterTrait;
 use ::mongodb::Collection;
 use ::types::ThreadSafeResult;
 

@@ -13,8 +13,7 @@ config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 subscribe = { path = "../../libs/subscribe" }
 
-history = { path = "../../libs/rulesets/history" }
-binance_histories = { path = "../../libs/exchanges/binance/histories" }
+history = { path = "../../libs/exchanges/history" }
 binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
 
 serde = { version = "1.0.130", features = ["derive"] }

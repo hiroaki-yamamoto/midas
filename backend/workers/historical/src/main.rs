@@ -13,9 +13,9 @@ use ::tokio::signal::unix as signal;
 use ::config::{CmdArgs, Config};
 use ::rpc::entities::Exchanges;
 
-use ::binance_histories::fetcher::HistoryFetcher as BinanceHistoryFetcher;
-use ::binance_histories::pubsub::HistChartPubSub;
-use ::history::HistoryFetcher;
+use ::history::binance::fetcher::HistoryFetcher as BinanceHistoryFetcher;
+use ::history::binance::pubsub::HistChartPubSub;
+use ::history::traits::HistoryFetcher;
 
 #[tokio::main]
 async fn main() {

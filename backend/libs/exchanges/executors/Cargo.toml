@@ -13,7 +13,7 @@ rpc = { path = "../../rpc" }
 keychain = { path = "../../keychain" }
 
 clients = { path = "../clients" }
-binance_histories = { path = "../binance/histories" }
+history = { path = "../history" }
 binance_observers = { path = "../binance/observers" }
 
 entities = { path = "../../entities" }

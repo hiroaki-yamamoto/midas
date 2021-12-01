@@ -8,7 +8,6 @@ use ::mongodb::bson::oid::ObjectId;
 use ::rpc::entities::{BackTestPriceBase, Exchanges};
 use ::types::{GenericResult, ThreadSafeResult};
 
-use ::binance_histories::writer::HistoryWriter;
 use ::entities::{
   BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
 };
@@ -16,6 +15,7 @@ use ::errors::ExecutionFailed;
 use ::executor::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
 };
+use ::history::binance::writer::HistoryWriter;
 
 pub struct Executor {
   spread: f64,
