@@ -68,7 +68,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
   async fn fetch(
     &self,
     req: &HistoryFetchRequest,
-  ) -> ThreadSafeResult<Vec<Box<dyn KlineTrait>>> {
+  ) -> ThreadSafeResult<Vec<Box<dyn KlineTrait + Send + Sync>>> {
     if let Err(e) = self.validate_request(req) {
       return Err(e);
     }
@@ -85,7 +85,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
       let status = resp.status();
       if status.is_success() {
         let payload = resp.json::<BinancePayload>().await?;
-        let klines: Vec<Box<dyn KlineTrait>> = payload
+        let klines: Vec<Box<dyn KlineTrait + Send + Sync>> = payload
           .iter()
           .filter_map(|item| match Kline::new(req.symbol.clone(), item) {
             Err(err) => {
@@ -98,7 +98,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
             }
             Ok(v) => Some(v),
           })
-          .map(|item| Box::new(item) as Box<dyn KlineTrait>)
+          .map(|item| Box::new(item) as Box<dyn KlineTrait + Send + Sync>)
           .collect();
         return Ok(klines);
       } else if retry_status_list.contains(&status) {

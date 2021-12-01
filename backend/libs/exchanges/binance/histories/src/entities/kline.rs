@@ -26,8 +26,6 @@ pub struct Kline {
   pub taker_buy_quote_volume: f64,
 }
 
-impl KlineTrait for Kline {}
-
 impl Kline {
   pub fn new(symbol: String, payload: &Vec<Value>) -> ThreadSafeResult<Self> {
     return Ok(Kline {
@@ -46,6 +44,8 @@ impl Kline {
     });
   }
 }
+
+impl KlineTrait for Kline {}
 
 impl AsRef<Kline> for Kline {
   fn as_ref(&self) -> &Self {

@@ -11,5 +11,5 @@ pub trait HistoryFetcher {
   async fn fetch(
     &self,
     req: &HistoryFetchRequest,
-  ) -> ThreadSafeResult<Vec<Box<dyn Kline>>>;
+  ) -> ThreadSafeResult<Vec<Box<dyn Kline + Send + Sync>>>;
 }
