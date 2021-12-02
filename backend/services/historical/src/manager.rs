@@ -1,11 +1,11 @@
 use ::nats::Connection as NatsConnection;
 
-use ::history::HistoryFetcher;
+use ::history::traits::HistoryFetcher;
 use ::rmp_serde::to_vec as to_msgpack;
 use ::rpc::entities::Exchanges;
 use ::types::ThreadSafeResult;
 
-use history::entities::KlineFetchStatus;
+use history::traits::entities::KlineFetchStatus;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ExchangeManager<T>

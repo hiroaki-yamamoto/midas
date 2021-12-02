@@ -276,33 +276,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "binance_notification"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "binance_symbols",
- "clients",
- "entities",
- "errors",
- "executors",
- "futures",
- "history",
- "keychain",
- "mongodb",
- "nats",
- "notification",
- "rmp-serde",
- "serde",
- "serde_json",
- "slog",
- "subscribe",
- "tokio",
- "tokio-stream",
- "tokio-tungstenite 0.15.0",
- "types",
-]
-
-[[package]]
 name = "binance_observers"
 version = "0.1.0"
 dependencies = [
@@ -1821,7 +1794,24 @@ name = "notification"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "binance_symbols",
+ "clients",
  "entities",
+ "errors",
+ "executors",
+ "futures",
+ "history",
+ "keychain",
+ "mongodb",
+ "nats",
+ "rmp-serde",
+ "serde",
+ "serde_json",
+ "slog",
+ "subscribe",
+ "tokio",
+ "tokio-stream",
+ "tokio-tungstenite 0.15.0",
  "types",
 ]
 
@@ -1829,7 +1819,6 @@ dependencies = [
 name = "notify_worker"
 version = "0.1.0"
 dependencies = [
- "binance_notification",
  "clap",
  "config",
  "futures",

@@ -1,5 +1,5 @@
 [package]
-name = "binance_notification"
+name = "notification"
 version = "0.1.0"
 authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
 edition = "2018"
@@ -7,18 +7,17 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-errors = { path = "../../../errors" }
-types = { path = "../../../types" }
-subscribe = { path = "../../../subscribe" }
+errors = { path = "../../errors" }
+types = { path = "../../types" }
+subscribe = { path = "../../subscribe" }
 
-clients = { path = "../../clients" }
-binance_symbols = { path = "../symbols" }
-history = { path = "../../history" }
-executors = { path = "../../executors" }
+clients = { path = "../clients" }
+binance_symbols = { path = "../binance/symbols" }
+history = { path = "../history" }
+executors = { path = "../executors" }
 
-notification = { path = "../../../rulesets/notification" }
-entities = { path = "../../../entities" }
-keychain = { path = "../../../keychain" }
+entities = { path = "../../entities" }
+keychain = { path = "../../keychain" }
 
 async-trait = "0.1.51"
 nats = "0.16.0"
