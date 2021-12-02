@@ -14,7 +14,7 @@ rpc = { path = "../../libs/rpc" }
 subscribe = { path = "../../libs/subscribe" }
 
 history = { path = "../../libs/exchanges/history" }
-binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
+symbols = { path = "../../libs/exchanges/symbols" }
 
 slog = "2.7.0"
 tokio = { version = "1.13.0", features = ["rt", "rt-multi-thread", "macros", "signal"] }

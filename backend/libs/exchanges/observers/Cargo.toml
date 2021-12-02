@@ -18,7 +18,7 @@ trade_observer = { path = "../../rulesets/trade_observer" }
 symbol_recorder = { path = "../../rulesets/symbol_recorder" }
 
 clients = { path = "../clients" }
-binance_symbols = { path = "../binance/symbols" }
+symbols = { path = "../symbols" }
 
 async-trait = "0.1.51"
 futures = "0.3.17"

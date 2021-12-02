@@ -6,7 +6,7 @@ mod stream;
 
 pub(crate) use self::listen_key::{ListenKey, ListenKeyPair};
 pub use self::stream::{CastedUserStreamEvents, RawUserStreamEvents};
-pub use ::binance_symbols::entities::{
+pub use ::history::binance::entities::{Kline, Param, Query, TradeTime};
+pub use ::symbols::binance::entities::{
   ExchangeInfo, Filters, ListSymbolStream, Symbol,
 };
-pub use ::history::binance::entities::{Kline, Param, Query, TradeTime};

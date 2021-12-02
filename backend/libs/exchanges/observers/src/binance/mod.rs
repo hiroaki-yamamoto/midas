@@ -22,11 +22,11 @@ use ::tokio::time::{interval, sleep};
 use ::tokio_stream::StreamMap;
 use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
-use ::binance_symbols::entities::{ListSymbolStream, Symbol, SymbolEvent};
-use ::binance_symbols::pubsub::SymbolEventPubSub;
-use ::binance_symbols::recorder::SymbolRecorder;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::errors::EmptyError;
+use ::symbols::binance::entities::{ListSymbolStream, Symbol, SymbolEvent};
+use ::symbols::binance::pubsub::SymbolEventPubSub;
+use ::symbols::binance::recorder::SymbolRecorder;
 use ::types::{GenericResult, TLSWebSocket, ThreadSafeResult};
 
 use ::clients::binance::WS_ENDPOINT;

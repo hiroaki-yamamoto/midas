@@ -14,7 +14,7 @@ csrf = { path = "../../libs/csrf" }
 subscribe = { path = "../../libs/subscribe" }
 
 history = { path = "../../libs/exchanges/history" }
-binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
+symbols = { path = "../../libs/exchanges/symbols" }
 
 serde = { version = "1.0.130", features = ["derive"] }
 rmp-serde = "0.15.5"

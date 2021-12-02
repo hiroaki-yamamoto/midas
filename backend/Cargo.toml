@@ -23,7 +23,7 @@ members = [
   "libs/exchanges/executors",
   "libs/exchanges/history",
   "libs/exchanges/observers",
-  "libs/exchanges/binance/symbols",
+  "libs/exchanges/symbols",
   "libs/exchanges/notification",
   "libs/exchanges/clients",
 

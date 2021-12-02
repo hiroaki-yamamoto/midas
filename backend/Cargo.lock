@@ -276,30 +276,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "binance_symbols"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "clients",
- "errors",
- "futures",
- "mongodb",
- "nats",
- "reqwest",
- "rmp-serde",
- "rpc",
- "serde",
- "serde_json",
- "slog",
- "subscribe",
- "symbol_fetcher",
- "symbol_recorder",
- "types",
- "url",
- "writers",
-]
-
-[[package]]
 name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1187,7 +1163,6 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 name = "historical_service"
 version = "0.1.0"
 dependencies = [
- "binance_symbols",
  "clap",
  "config",
  "csrf",
@@ -1205,6 +1180,7 @@ dependencies = [
  "serde_yaml",
  "slog",
  "subscribe",
+ "symbols",
  "tokio",
  "types",
  "warp",
@@ -1214,7 +1190,6 @@ dependencies = [
 name = "historical_worker"
 version = "0.1.0"
 dependencies = [
- "binance_symbols",
  "clap",
  "config",
  "futures",
@@ -1225,6 +1200,7 @@ dependencies = [
  "rpc",
  "slog",
  "subscribe",
+ "symbols",
  "tokio",
  "tokio-stream",
  "types",
@@ -1767,7 +1743,6 @@ name = "notification"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "binance_symbols",
  "clients",
  "entities",
  "errors",
@@ -1782,6 +1757,7 @@ dependencies = [
  "serde_json",
  "slog",
  "subscribe",
+ "symbols",
  "tokio",
  "tokio-stream",
  "tokio-tungstenite 0.15.0",
@@ -1900,7 +1876,6 @@ name = "observers"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "binance_symbols",
  "clients",
  "config",
  "entities",
@@ -1915,6 +1890,7 @@ dependencies = [
  "slog",
  "subscribe",
  "symbol_recorder",
+ "symbols",
  "tokio",
  "tokio-stream",
  "tokio-tungstenite 0.15.0",
@@ -2965,7 +2941,6 @@ dependencies = [
 name = "symbol_service"
 version = "0.1.0"
 dependencies = [
- "binance_symbols",
  "clap",
  "config",
  "csrf",
@@ -2979,9 +2954,34 @@ dependencies = [
  "serde",
  "serde_json",
  "slog",
+ "symbols",
  "tokio",
  "types",
  "warp",
+]
+
+[[package]]
+name = "symbols"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "clients",
+ "errors",
+ "futures",
+ "mongodb",
+ "nats",
+ "reqwest",
+ "rmp-serde",
+ "rpc",
+ "serde",
+ "serde_json",
+ "slog",
+ "subscribe",
+ "symbol_fetcher",
+ "symbol_recorder",
+ "types",
+ "url",
+ "writers",
 ]
 
 [[package]]

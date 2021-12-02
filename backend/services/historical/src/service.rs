@@ -14,12 +14,12 @@ use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
 use subscribe::PubSub;
 
-use ::binance_symbols::fetcher as binance_sym;
 use ::history::binance::fetcher as binance_hist;
 use ::history::traits::entities::KlineFetchStatus;
 use ::history::traits::FetchStatusPubSub;
 use ::rpc::entities::{Exchanges, Status};
 use ::rpc::historical::{HistChartFetchReq, StopRequest};
+use ::symbols::binance::fetcher as binance_sym;
 use ::types::{GenericResult, ThreadSafeResult};
 
 use super::manager::ExchangeManager;

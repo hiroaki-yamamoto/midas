@@ -7,12 +7,12 @@ use ::warp::filters::BoxedFilter;
 use ::warp::reject;
 use ::warp::{Filter, Rejection, Reply};
 
-use ::binance_symbols::{
+use ::num_traits::FromPrimitive;
+use ::rpc::entities::{Exchanges, Status};
+use ::symbols::binance::{
   fetcher as binance_fetcher, recorder as binance_recorder, SymbolFetcher,
   SymbolRecorder,
 };
-use ::num_traits::FromPrimitive;
-use ::rpc::entities::{Exchanges, Status};
 
 use super::entities::BaseCurrencies;
 

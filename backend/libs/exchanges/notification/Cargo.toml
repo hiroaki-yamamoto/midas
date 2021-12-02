@@ -12,7 +12,7 @@ types = { path = "../../types" }
 subscribe = { path = "../../subscribe" }
 
 clients = { path = "../clients" }
-binance_symbols = { path = "../binance/symbols" }
+symbols = { path = "../symbols" }
 history = { path = "../history" }
 executors = { path = "../executors" }
 
