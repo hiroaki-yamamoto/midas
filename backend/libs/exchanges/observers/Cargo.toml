@@ -1,5 +1,5 @@
 [package]
-name = "binance_observers"
+name = "observers"
 version = "0.1.0"
 authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
 edition = "2018"
@@ -7,18 +7,18 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-errors = { path = "../../../errors" }
-types = { path = "../../../types" }
-config = { path = "../../../config" }
-rpc = { path = "../../../rpc" }
-subscribe = { path = "../../../subscribe" }
+errors = { path = "../../errors" }
+types = { path = "../../types" }
+config = { path = "../../config" }
+rpc = { path = "../../rpc" }
+subscribe = { path = "../../subscribe" }
 
-entities = { path = "../../../entities" }
-trade_observer = { path = "../../../rulesets/trade_observer" }
-symbol_recorder = { path = "../../../rulesets/symbol_recorder" }
+entities = { path = "../../entities" }
+trade_observer = { path = "../../rulesets/trade_observer" }
+symbol_recorder = { path = "../../rulesets/symbol_recorder" }
 
-clients = { path = "../../clients" }
-binance_symbols = { path = "../symbols" }
+clients = { path = "../clients" }
+binance_symbols = { path = "../binance/symbols" }
 
 async-trait = "0.1.51"
 futures = "0.3.17"

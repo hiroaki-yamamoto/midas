@@ -24,8 +24,8 @@ use ::types::retry::retry_async;
 use ::types::ThreadSafeResult;
 use ::writers::DatabaseWriter;
 
-use ::binance_observers::{TradeObserver, TradeObserverTrait};
 use ::clients::binance::{PubClient, REST_ENDPOINT};
+use ::observers::binance::{TradeObserver, TradeObserverTrait};
 
 use super::entities::{
   CancelOrderRequest, OrderRequest, OrderResponse, OrderResponseType,

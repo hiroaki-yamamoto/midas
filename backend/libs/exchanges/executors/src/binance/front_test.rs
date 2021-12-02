@@ -19,7 +19,7 @@ use ::entities::{
   BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
 };
 
-use ::binance_observers::TradeObserver;
+use ::observers::binance::TradeObserver;
 
 pub struct Executor {
   observer: TradeObserver,

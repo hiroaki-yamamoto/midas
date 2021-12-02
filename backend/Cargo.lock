@@ -276,33 +276,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "binance_observers"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "binance_symbols",
- "clients",
- "config",
- "entities",
- "errors",
- "futures",
- "mongodb",
- "nats",
- "rmp-serde",
- "rpc",
- "serde",
- "serde_json",
- "slog",
- "subscribe",
- "symbol_recorder",
- "tokio",
- "tokio-stream",
- "tokio-tungstenite 0.15.0",
- "trade_observer",
- "types",
-]
-
-[[package]]
 name = "binance_symbols"
 version = "0.1.0"
 dependencies = [
@@ -896,7 +869,6 @@ version = "0.1.0"
 dependencies = [
  "async-stream",
  "async-trait",
- "binance_observers",
  "clients",
  "entities",
  "errors",
@@ -906,6 +878,7 @@ dependencies = [
  "keychain",
  "mongodb",
  "nats",
+ "observers",
  "reqwest",
  "ring",
  "rpc",
@@ -1891,7 +1864,6 @@ dependencies = [
 name = "observer_service"
 version = "0.1.0"
 dependencies = [
- "binance_observers",
  "clap",
  "config",
  "csrf",
@@ -1899,6 +1871,7 @@ dependencies = [
  "libc",
  "mongodb",
  "nats",
+ "observers",
  "rpc",
  "serde_json",
  "slog",
@@ -1910,16 +1883,43 @@ dependencies = [
 name = "observer_worker"
 version = "0.1.0"
 dependencies = [
- "binance_observers",
  "clap",
  "config",
  "futures",
  "libc",
  "mongodb",
  "nats",
+ "observers",
  "rpc",
  "slog",
  "tokio",
+]
+
+[[package]]
+name = "observers"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "binance_symbols",
+ "clients",
+ "config",
+ "entities",
+ "errors",
+ "futures",
+ "mongodb",
+ "nats",
+ "rmp-serde",
+ "rpc",
+ "serde",
+ "serde_json",
+ "slog",
+ "subscribe",
+ "symbol_recorder",
+ "tokio",
+ "tokio-stream",
+ "tokio-tungstenite 0.15.0",
+ "trade_observer",
+ "types",
 ]
 
 [[package]]
