@@ -16,7 +16,6 @@ use ::slog::Logger;
 
 use ::entities::{BookTicker, ExecutionResult, Order, OrderInner, OrderOption};
 use ::errors::{ObjectNotFound, StatusFailure};
-use ::executor::Executor as ExecutorTrait;
 use ::keychain::KeyChain;
 use ::rpc::entities::Exchanges;
 use ::sign::Sign;
@@ -26,6 +25,8 @@ use ::writers::DatabaseWriter;
 
 use ::clients::binance::{PubClient, REST_ENDPOINT};
 use ::observers::binance::{TradeObserver, TradeObserverTrait};
+
+use crate::traits::Executor as ExecutorTrait;
 
 use super::entities::{
   CancelOrderRequest, OrderRequest, OrderResponse, OrderResponseType,

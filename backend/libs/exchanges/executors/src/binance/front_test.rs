@@ -10,7 +10,7 @@ use ::slog::Logger;
 use ::errors::ExecutionFailed;
 use ::types::ThreadSafeResult;
 
-use ::executor::{
+use crate::traits::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
 };
 use ::trade_observer::TradeObserver as TradeObserverTrait;

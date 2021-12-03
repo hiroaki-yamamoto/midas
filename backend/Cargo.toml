@@ -2,7 +2,6 @@
 members = [
   "libs/errors",
   "libs/writers",
-  "libs/rulesets/executor",
   "libs/rulesets/sign",
   "libs/rulesets/symbol_fetcher",
   "libs/rulesets/symbol_recorder",

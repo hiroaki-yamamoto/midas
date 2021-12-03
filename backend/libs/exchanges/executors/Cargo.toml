@@ -17,7 +17,6 @@ history = { path = "../history" }
 observers = { path = "../observers" }
 
 entities = { path = "../../entities" }
-executor = { path = "../../rulesets/executor" }
 trade_observer = { path = "../../rulesets/trade_observer" }
 sign = { path = "../../rulesets/sign" }
 writers = { path = "../../writers" }
