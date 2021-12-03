@@ -8,7 +8,8 @@ use ::slog::o;
 use ::tokio::signal::unix as signal;
 
 use ::config::{Config, DEFAULT_CONFIG_PATH};
-use ::observers::binance::{self, TradeObserverTrait};
+use ::observers::binance;
+use ::observers::traits::TradeObserver as TradeObserverTrait;
 use ::rpc::entities::Exchanges;
 
 #[derive(Debug, Parser)]

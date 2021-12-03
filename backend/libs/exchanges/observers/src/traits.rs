@@ -1,5 +1,5 @@
 use ::async_trait::async_trait;
-use ::futures_core::stream::BoxStream;
+use ::futures::stream::BoxStream;
 
 use ::entities::BookTicker;
 use ::types::GenericResult;

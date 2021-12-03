@@ -849,7 +849,6 @@ dependencies = [
  "serde_qs",
  "sign",
  "slog",
- "trade_observer",
  "types",
  "writers",
 ]
@@ -1206,6 +1205,7 @@ dependencies = [
  "mongodb",
  "nats",
  "num_cpus",
+ "observers",
  "rand 0.8.4",
  "reqwest",
  "rmp-serde",
@@ -1216,7 +1216,6 @@ dependencies = [
  "slog",
  "subscribe",
  "tokio",
- "trade_observer",
  "types",
  "url",
  "writers",
@@ -1880,7 +1879,6 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tokio-tungstenite 0.15.0",
- "trade_observer",
  "types",
 ]
 
@@ -3258,16 +3256,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f4ed65637b8390770814083d20756f87bfa2c21bf2f110babdc5438351746e4"
 dependencies = [
  "lazy_static",
-]
-
-[[package]]
-name = "trade_observer"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "entities",
- "futures-core",
- "types",
 ]
 
 [[package]]

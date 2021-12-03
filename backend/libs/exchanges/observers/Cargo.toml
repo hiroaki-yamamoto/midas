@@ -14,7 +14,6 @@ rpc = { path = "../../rpc" }
 subscribe = { path = "../../subscribe" }
 
 entities = { path = "../../entities" }
-trade_observer = { path = "../../rulesets/trade_observer" }
 
 clients = { path = "../clients" }
 symbols = { path = "../symbols" }

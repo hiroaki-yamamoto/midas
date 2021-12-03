@@ -2,7 +2,6 @@
 members = [
   "libs/errors",
   "libs/writers",
-  "libs/rulesets/trade_observer",
 
   "libs/entities",
   "libs/csrf",

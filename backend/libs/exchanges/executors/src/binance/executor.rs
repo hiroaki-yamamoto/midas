@@ -24,7 +24,8 @@ use ::types::ThreadSafeResult;
 use ::writers::DatabaseWriter;
 
 use ::clients::binance::{PubClient, REST_ENDPOINT};
-use ::observers::binance::{TradeObserver, TradeObserverTrait};
+use ::observers::binance::TradeObserver;
+use ::observers::traits::TradeObserver as TradeObserverTrait;
 
 use crate::traits::Executor as ExecutorTrait;
 

@@ -34,10 +34,10 @@ use ::clients::binance::WS_ENDPOINT;
 use self::entities::{BookTicker, SubscribeRequest, SubscribeRequestInner};
 use self::pubsub::BookTickerPubSub;
 
+use crate::traits::TradeObserver as TradeObserverTrait;
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{InitError, MaximumAttemptExceeded, WebsocketError};
 use ::symbols::traits::SymbolRecorder as SymbolRecorderTrait;
-pub use ::trade_observer::TradeObserver as TradeObserverTrait;
 
 const NUM_SOCKET: usize = 10;
 const EVENT_DELAY: Duration = Duration::from_secs(1);

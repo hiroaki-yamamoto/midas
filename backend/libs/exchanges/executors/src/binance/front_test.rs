@@ -13,7 +13,7 @@ use ::types::ThreadSafeResult;
 use crate::traits::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
 };
-use ::trade_observer::TradeObserver as TradeObserverTrait;
+use ::observers::traits::TradeObserver as TradeObserverTrait;
 
 use ::entities::{
   BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
