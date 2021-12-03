@@ -15,7 +15,7 @@ use ::warp::{Filter, Reply};
 use subscribe::PubSub;
 
 use ::history::binance::fetcher as binance_hist;
-use ::history::traits::entities::KlineFetchStatus;
+use ::history::entities::KlineFetchStatus;
 use ::history::traits::FetchStatusPubSub;
 use ::rpc::entities::{Exchanges, Status};
 use ::rpc::historical::{HistChartFetchReq, StopRequest};

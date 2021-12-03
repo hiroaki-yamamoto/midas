@@ -1,4 +1,4 @@
-use crate::traits::traits::Kline as KlineTrait;
+use crate::traits::kline::Kline as KlineTrait;
 use crate::traits::HistoryWriter as HistoryWriterTrait;
 use ::async_trait::async_trait;
 use ::mongodb::Collection;

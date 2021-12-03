@@ -8,7 +8,7 @@ use ::entities::{TradeTime, TradeTimeTrait};
 use ::types::casting::{cast_datetime, cast_f64, cast_i64};
 use ::types::ThreadSafeResult;
 
-use crate::traits::traits::Kline as KlineTrait;
+use crate::traits::kline::Kline as KlineTrait;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Kline {

@@ -8,7 +8,7 @@ use ::slog::{warn, Logger};
 use ::tokio::time::sleep;
 use ::url::Url;
 
-use crate::traits::traits::Kline as KlineTrait;
+use crate::traits::kline::Kline as KlineTrait;
 use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::entities::HistoryFetchRequest;

@@ -1,4 +1,4 @@
-use super::traits::Kline as KlineTrait;
+use super::kline::Kline as KlineTrait;
 use ::async_trait::async_trait;
 use ::types::ThreadSafeResult;
 

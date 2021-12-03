@@ -5,7 +5,7 @@ use ::rmp_serde::to_vec as to_msgpack;
 use ::rpc::entities::Exchanges;
 use ::types::ThreadSafeResult;
 
-use history::traits::entities::KlineFetchStatus;
+use history::entities::KlineFetchStatus;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ExchangeManager<T>

@@ -1,5 +1,5 @@
 use ::subscribe::pubsub;
 
-use super::entities::KlineFetchStatus;
+use crate::entities::KlineFetchStatus;
 
 pubsub!(pub, FetchStatusPubSub, KlineFetchStatus, "kline.progress");

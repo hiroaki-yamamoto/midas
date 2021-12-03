@@ -3,7 +3,7 @@ use ::entities::HistoryFetchRequest;
 
 use ::types::ThreadSafeResult;
 
-use super::traits::Kline;
+use super::kline::Kline;
 
 #[async_trait]
 pub trait HistoryFetcher {
