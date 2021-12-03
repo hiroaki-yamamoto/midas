@@ -14,8 +14,6 @@ subscribe = { path = "../../subscribe" }
 
 clients = { path = "../clients" }
 writers = { path = "../../writers" }
-symbol_fetcher = { path = "../../rulesets/symbol_fetcher" }
-symbol_recorder = { path = "../../rulesets/symbol_recorder" }
 
 async-trait = "0.1.51"
 futures = "0.3.17"

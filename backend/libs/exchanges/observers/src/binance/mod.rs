@@ -36,7 +36,7 @@ use self::pubsub::BookTickerPubSub;
 
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{InitError, MaximumAttemptExceeded, WebsocketError};
-use ::symbol_recorder::SymbolRecorder as SymbolRecorderTrait;
+use ::symbols::traits::SymbolRecorder as SymbolRecorderTrait;
 pub use ::trade_observer::TradeObserver as TradeObserverTrait;
 
 const NUM_SOCKET: usize = 10;

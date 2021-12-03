@@ -1,5 +1,5 @@
 use ::async_trait::async_trait;
-use ::futures_core::Stream;
+use ::futures::Stream;
 use ::mongodb::bson::Document;
 use ::mongodb::results::InsertManyResult;
 use ::serde::Serialize;

@@ -2,8 +2,6 @@
 members = [
   "libs/errors",
   "libs/writers",
-  "libs/rulesets/symbol_fetcher",
-  "libs/rulesets/symbol_recorder",
   "libs/rulesets/trade_observer",
 
   "libs/entities",

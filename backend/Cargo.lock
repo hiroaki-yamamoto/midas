@@ -1876,7 +1876,6 @@ dependencies = [
  "serde_json",
  "slog",
  "subscribe",
- "symbol_recorder",
  "symbols",
  "tokio",
  "tokio-stream",
@@ -2906,25 +2905,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "symbol_fetcher"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "types",
-]
-
-[[package]]
-name = "symbol_recorder"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures-core",
- "mongodb",
- "serde",
- "types",
-]
-
-[[package]]
 name = "symbol_service"
 version = "0.1.0"
 dependencies = [
@@ -2964,8 +2944,6 @@ dependencies = [
  "serde_json",
  "slog",
  "subscribe",
- "symbol_fetcher",
- "symbol_recorder",
  "types",
  "url",
  "writers",

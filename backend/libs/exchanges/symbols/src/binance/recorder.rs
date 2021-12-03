@@ -7,7 +7,7 @@ use ::mongodb::{Collection, Database};
 use ::types::ThreadSafeResult;
 
 use super::entities::{ListSymbolStream, Symbol};
-use ::symbol_recorder::SymbolRecorder as SymbolRecorderTrait;
+use crate::traits::SymbolRecorder as SymbolRecorderTrait;
 use ::writers::DatabaseWriter as DBWriterTrait;
 
 #[derive(Debug, Clone)]

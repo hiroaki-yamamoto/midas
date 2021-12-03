@@ -14,9 +14,9 @@ use super::entities::{ExchangeInfo, Symbol};
 use super::manager::SymbolUpdateEventManager;
 use super::recorder::SymbolRecorder;
 
+use crate::traits::SymbolFetcher as SymbolFetcherTrait;
+use crate::traits::SymbolRecorder as SymbolRecorderTrait;
 use ::errors::StatusFailure;
-use symbol_fetcher::SymbolFetcher as SymbolFetcherTrait;
-use symbol_recorder::SymbolRecorder as SymbolRecorderTrait;
 
 #[derive(Debug, Clone)]
 pub struct SymbolFetcher {

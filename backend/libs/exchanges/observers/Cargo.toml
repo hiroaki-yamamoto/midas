@@ -15,7 +15,6 @@ subscribe = { path = "../../subscribe" }
 
 entities = { path = "../../entities" }
 trade_observer = { path = "../../rulesets/trade_observer" }
-symbol_recorder = { path = "../../rulesets/symbol_recorder" }
 
 clients = { path = "../clients" }
 symbols = { path = "../symbols" }
