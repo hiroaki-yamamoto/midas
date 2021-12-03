@@ -18,7 +18,7 @@ observers = { path = "../observers" }
 
 entities = { path = "../../entities" }
 trade_observer = { path = "../../rulesets/trade_observer" }
-sign = { path = "../../rulesets/sign" }
+sign = { path = "../sign" }
 writers = { path = "../../writers" }
 
 async-stream = "0.3.2"

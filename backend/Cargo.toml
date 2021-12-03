@@ -2,7 +2,6 @@
 members = [
   "libs/errors",
   "libs/writers",
-  "libs/rulesets/sign",
   "libs/rulesets/symbol_fetcher",
   "libs/rulesets/symbol_recorder",
   "libs/rulesets/trade_observer",
@@ -19,6 +18,7 @@ members = [
   "libs/date_splitter",
   "libs/bot",
 
+  "libs/exchanges/sign",
   "libs/exchanges/executors",
   "libs/exchanges/history",
   "libs/exchanges/observers",
