@@ -27,7 +27,7 @@ tokio = { version = "1.14.0", features = ["macros", "rt", "rt-multi-thread", "si
 slog = "2.7.0"
 futures = "0.3.18"
 num-traits = "0.2.14"
-libc = "0.2.108"
+libc = "0.2.109"
 warp = { version = "0.3.2", features = ["tls"] }
 serde_json = "1.0.72"
 http = "0.2.5"
