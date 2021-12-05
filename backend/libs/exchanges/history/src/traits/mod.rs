@@ -1,5 +1,4 @@
 mod fetcher;
-pub mod kline;
 mod pubsub;
 mod writer;
 

@@ -8,8 +8,6 @@ use ::entities::{TradeTime, TradeTimeTrait};
 use ::types::casting::{cast_datetime, cast_f64, cast_i64};
 use ::types::ThreadSafeResult;
 
-use crate::traits::kline::Kline as KlineTrait;
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Kline {
   pub symbol: String,
@@ -44,8 +42,6 @@ impl Kline {
     });
   }
 }
-
-impl KlineTrait for Kline {}
 
 impl AsRef<Kline> for Kline {
   fn as_ref(&self) -> &Self {

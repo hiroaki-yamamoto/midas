@@ -3,7 +3,7 @@ use ::entities::HistoryFetchRequest;
 
 use ::types::ThreadSafeResult;
 
-use super::kline::Kline;
+use crate::entities::KlinesByExchange;
 
 #[async_trait]
 pub trait HistoryFetcher {
@@ -11,5 +11,5 @@ pub trait HistoryFetcher {
   async fn fetch(
     &self,
     req: &HistoryFetchRequest,
-  ) -> ThreadSafeResult<Vec<Box<dyn Kline + Send + Sync>>>;
+  ) -> ThreadSafeResult<KlinesByExchange>;
 }

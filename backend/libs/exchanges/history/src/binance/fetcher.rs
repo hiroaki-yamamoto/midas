@@ -8,15 +8,15 @@ use ::slog::{warn, Logger};
 use ::tokio::time::sleep;
 use ::url::Url;
 
-use crate::traits::kline::Kline as KlineTrait;
-use crate::traits::HistoryFetcher as HistoryFetcherTrait;
+use ::clients::binance::REST_ENDPOINT;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::entities::HistoryFetchRequest;
 use ::errors::{ExecutionFailed, MaximumAttemptExceeded};
 use ::types::{GenericResult, ThreadSafeResult};
 
 use super::entities::{BinancePayload, Kline, Query};
-use ::clients::binance::REST_ENDPOINT;
+use crate::entities::KlinesByExchange;
+use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 
 #[derive(Debug, Clone)]
 pub struct HistoryFetcher {
@@ -68,7 +68,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
   async fn fetch(
     &self,
     req: &HistoryFetchRequest,
-  ) -> ThreadSafeResult<Vec<Box<dyn KlineTrait + Send + Sync>>> {
+  ) -> ThreadSafeResult<KlinesByExchange> {
     if let Err(e) = self.validate_request(req) {
       return Err(e);
     }
@@ -85,21 +85,22 @@ impl HistoryFetcherTrait for HistoryFetcher {
       let status = resp.status();
       if status.is_success() {
         let payload = resp.json::<BinancePayload>().await?;
-        let klines: Vec<Box<dyn KlineTrait + Send + Sync>> = payload
-          .iter()
-          .filter_map(|item| match Kline::new(req.symbol.clone(), item) {
-            Err(err) => {
-              warn!(
-                self.logger,
-                "Failed to fetch Kline data: {}",
-                err; "symbol" => &req.symbol
-              );
-              return None;
-            }
-            Ok(v) => Some(v),
-          })
-          .map(|item| Box::new(item) as Box<dyn KlineTrait + Send + Sync>)
-          .collect();
+        let klines: KlinesByExchange = KlinesByExchange::Binance(
+          payload
+            .iter()
+            .filter_map(|item| match Kline::new(req.symbol.clone(), item) {
+              Err(err) => {
+                warn!(
+                  self.logger,
+                  "Failed to fetch Kline data: {}",
+                  err; "symbol" => &req.symbol
+                );
+                return None;
+              }
+              Ok(v) => Some(v),
+            })
+            .collect(),
+        );
         return Ok(klines);
       } else if retry_status_list.contains(&status) {
         let mut retry_secs: i64 = resp
