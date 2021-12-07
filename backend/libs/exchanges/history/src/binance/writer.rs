@@ -5,7 +5,7 @@ use ::futures::future::try_join_all;
 use ::mongodb::bson::{doc, to_document};
 use ::mongodb::options::UpdateModifications;
 use ::mongodb::options::UpdateOptions;
-use ::mongodb::Collection;
+use ::mongodb::{Collection, Database};
 use ::types::ThreadSafeResult;
 
 use super::entities::Kline;
@@ -14,6 +14,14 @@ use crate::traits::HistoryWriter as HistoryWriterTrait;
 
 pub struct HistoryWriter {
   col: Collection<Kline>,
+}
+
+impl HistoryWriter {
+  pub fn new(db: &Database) -> Self {
+    return Self {
+      col: db.collection("binance.klines"),
+    };
+  }
 }
 
 #[async_trait]
