@@ -2,7 +2,6 @@ use ::std::convert::TryFrom;
 
 use ::async_trait::async_trait;
 use ::futures::future::try_join_all;
-use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::{doc, to_document};
 use ::mongodb::options::UpdateModifications;
 use ::mongodb::options::UpdateOptions;
