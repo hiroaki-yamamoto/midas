@@ -4,18 +4,19 @@ use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::options::ClientOptions as MongoDBCliOpt;
 use ::mongodb::Client as DBCli;
 use ::nats::connect;
-use ::slog::{info, warn};
-use ::std::collections::HashMap;
+use ::slog::{error, info};
 use ::subscribe::PubSub;
 use ::tokio::select;
 use ::tokio::signal::unix as signal;
 
 use ::config::{CmdArgs, Config};
-use ::rpc::entities::Exchanges;
 
-use ::history::binance::fetcher::HistoryFetcher as BinanceHistoryFetcher;
+use ::history::binance::fetcher::HistoryFetcher;
 use ::history::binance::pubsub::HistChartPubSub;
-use ::history::traits::HistoryFetcher;
+use ::history::binance::writer::HistoryWriter;
+use ::history::traits::{
+  HistoryFetcher as HistoryFetcherTrait, HistoryWriter as HistoryWriterTrait,
+};
 
 #[tokio::main]
 async fn main() {
@@ -34,25 +35,22 @@ async fn main() {
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
 
-  let mut reg: HashMap<Exchanges, &dyn HistoryFetcher> = HashMap::new();
-  let binance_fetcher =
-    BinanceHistoryFetcher::new(None, logger.clone()).unwrap();
-  reg.insert(Exchanges::Binance, &binance_fetcher as &dyn HistoryFetcher);
+  let fetcher = HistoryFetcher::new(None, logger.clone()).unwrap();
+  let writer = HistoryWriter::new(&db);
 
   loop {
     select! {
       Some((req, _)) = sub.next() => {
-        match reg.get(&req.exchange) {
-          Some(fetcher) => {
-            let kline = fetcher.fetch(&req).await;
+        let klines = match fetcher.fetch(&req).await {
+          Err(e) => {
+            error!(logger, "Failed to fetch klines: {}", e);
+            continue;
           },
-          None => {
-            warn!(
-              logger,
-              "Unknown Exchange Type: {}",
-              req.exchange.as_string()
-            );
-          }
+          Ok(k) => k
+        };
+        if let Err(e) = writer.write(klines).await {
+          error!(logger, "Failed to write the klines: {}", e);
+          continue;
         }
       },
       _ = sig.recv() => {
