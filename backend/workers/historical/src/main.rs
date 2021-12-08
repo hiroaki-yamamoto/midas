@@ -1,3 +1,5 @@
+use ::std::collections::HashMap;
+
 use ::clap::Parser;
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
@@ -10,6 +12,7 @@ use ::tokio::select;
 use ::tokio::signal::unix as signal;
 
 use ::config::{CmdArgs, Config};
+use ::rpc::entities::Exchanges;
 
 use ::history::binance::fetcher::HistoryFetcher;
 use ::history::binance::pubsub::HistChartPubSub;
@@ -35,18 +38,30 @@ async fn main() {
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
 
+  let mut reg: HashMap<Exchanges, Box<dyn HistoryFetcherTrait>> =
+    HashMap::new();
+
   let fetcher = HistoryFetcher::new(None, logger.clone()).unwrap();
   let writer = HistoryWriter::new(&db);
+  reg.insert(Exchanges::Binance, Box::new(fetcher));
 
   loop {
     select! {
       Some((req, _)) = sub.next() => {
-        let klines = match fetcher.fetch(&req).await {
-          Err(e) => {
-            error!(logger, "Failed to fetch klines: {}", e);
-            continue;
+        let klines = match reg.get(&req.exchange) {
+          Some(fetcher) => {
+            match fetcher.fetch(&req).await {
+              Err(e) => {
+                error!(logger, "Failed to fetch klines: {}", e);
+                continue;
+              },
+              Ok(k) => k
+            }
           },
-          Ok(k) => k
+          None => {
+            error!(logger, "Unknown Exchange: {}", req.exchange.as_string());
+            continue;
+          }
         };
         if let Err(e) = writer.write(klines).await {
           error!(logger, "Failed to write the klines: {}", e);
