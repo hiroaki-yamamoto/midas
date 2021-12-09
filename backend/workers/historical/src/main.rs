@@ -11,6 +11,7 @@ use ::subscribe::PubSub;
 use ::tokio::select;
 use ::tokio::signal::unix as signal;
 
+use ::config::redis;
 use ::config::{CmdArgs, Config};
 use ::rpc::entities::Exchanges;
 
@@ -32,6 +33,7 @@ async fn main() {
     DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await.unwrap())
       .unwrap()
       .database("midas");
+  let mut redis = cfg.redis(&logger).unwrap();
 
   let pubsub = HistChartPubSub::new(broker);
   let mut sub = pubsub.subscribe().unwrap();
@@ -67,6 +69,13 @@ async fn main() {
           error!(logger, "Failed to write the klines: {}", e);
           continue;
         }
+        redis.incr(
+          format!(
+            "{}.{}.kline_sync.current",
+            req.exchange.as_string(),
+            req.symbol,
+          ), 1
+        );
       },
       _ = sig.recv() => {
         break;

@@ -1,4 +1,3 @@
-use ::std::error::Error;
 use ::std::fs::{read_to_string, File};
 use ::std::io::Read;
 use ::std::time::Duration;
