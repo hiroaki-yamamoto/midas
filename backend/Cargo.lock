@@ -1219,6 +1219,7 @@ dependencies = [
  "num_cpus",
  "observers",
  "rand 0.8.4",
+ "redis",
  "reqwest",
  "rmp-serde",
  "rpc",

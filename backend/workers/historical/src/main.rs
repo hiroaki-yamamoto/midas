@@ -11,13 +11,13 @@ use ::subscribe::PubSub;
 use ::tokio::select;
 use ::tokio::signal::unix as signal;
 
-use ::config::redis;
 use ::config::{CmdArgs, Config};
 use ::rpc::entities::Exchanges;
 
 use ::history::binance::fetcher::HistoryFetcher;
-use ::history::binance::pubsub::HistChartPubSub;
 use ::history::binance::writer::HistoryWriter;
+use ::history::kvs::CurrentSyncProgressStore;
+use ::history::pubsub::HistChartPubSub;
 use ::history::traits::{
   HistoryFetcher as HistoryFetcherTrait, HistoryWriter as HistoryWriterTrait,
 };
@@ -33,7 +33,8 @@ async fn main() {
     DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await.unwrap())
       .unwrap()
       .database("midas");
-  let mut redis = cfg.redis(&logger).unwrap();
+  let redis = cfg.redis(&logger).unwrap();
+  let mut cur_prog_kvs = CurrentSyncProgressStore::new(redis);
 
   let pubsub = HistChartPubSub::new(broker);
   let mut sub = pubsub.subscribe().unwrap();
@@ -69,13 +70,12 @@ async fn main() {
           error!(logger, "Failed to write the klines: {}", e);
           continue;
         }
-        redis.incr(
-          format!(
-            "{}.{}.kline_sync.current",
-            req.exchange.as_string(),
-            req.symbol,
-          ), 1
-        );
+        if let Err(e) = cur_prog_kvs.incr(
+          req.exchange.as_string(),
+          req.symbol, 1
+        ) {
+          error!(logger, "Failed to report the progress: {}", e);
+        };
       },
       _ = sig.recv() => {
         break;

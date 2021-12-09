@@ -33,3 +33,4 @@ serde = { version = "1.0.130", features = ["derive"] }
 serde_json = "1.0.69"
 num_cpus = "1.13.0"
 reqwest = { version = "0.11.6", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
+redis = "0.21.4"
