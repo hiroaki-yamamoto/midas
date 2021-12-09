@@ -16,8 +16,9 @@ use ::rpc::entities::Exchanges;
 
 use ::history::binance::fetcher::HistoryFetcher;
 use ::history::binance::writer::HistoryWriter;
+use ::history::entities::FetchStatusChanged;
 use ::history::kvs::CurrentSyncProgressStore;
-use ::history::pubsub::HistChartPubSub;
+use ::history::pubsub::{FetchStatusEventPubSub, HistChartPubSub};
 use ::history::traits::{
   HistoryFetcher as HistoryFetcherTrait, HistoryWriter as HistoryWriterTrait,
 };
@@ -36,8 +37,9 @@ async fn main() {
   let redis = cfg.redis(&logger).unwrap();
   let mut cur_prog_kvs = CurrentSyncProgressStore::new(redis);
 
-  let pubsub = HistChartPubSub::new(broker);
+  let pubsub = HistChartPubSub::new(broker.clone());
   let mut sub = pubsub.subscribe().unwrap();
+  let change_event_pub = FetchStatusEventPubSub::new(broker);
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
 
@@ -72,9 +74,15 @@ async fn main() {
         }
         if let Err(e) = cur_prog_kvs.incr(
           req.exchange.as_string(),
-          req.symbol, 1
+          req.symbol.clone(), 1
         ) {
           error!(logger, "Failed to report the progress: {}", e);
+        };
+        if let Err(e) = change_event_pub.publish(&FetchStatusChanged{
+          exchange: req.exchange,
+          symbol: req.symbol,
+        }) {
+          error!(logger, "Failed to broadcast progress changed event: {}", e);
         };
       },
       _ = sig.recv() => {
