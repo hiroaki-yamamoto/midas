@@ -4,6 +4,14 @@ version = "0.1.0"
 authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
 edition = "2018"
 
+[[bin]]
+name = "historical_fetch_worker"
+path = "./src/main_fetcher.rs"
+
+[[bin]]
+name = "historical_date_splitter"
+path = "./src/main_splitter.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
