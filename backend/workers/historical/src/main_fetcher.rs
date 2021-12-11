@@ -21,6 +21,7 @@ use ::history::kvs::CurrentSyncProgressStore;
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartPubSub};
 use ::history::traits::{
   HistoryFetcher as HistoryFetcherTrait, HistoryWriter as HistoryWriterTrait,
+  Store as StoreTrait,
 };
 
 #[tokio::main]
@@ -34,8 +35,8 @@ async fn main() {
     DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await.unwrap())
       .unwrap()
       .database("midas");
-  let redis = cfg.redis(&logger).unwrap();
-  let mut cur_prog_kvs = CurrentSyncProgressStore::new(redis);
+  let mut redis = cfg.redis(&logger).unwrap();
+  let mut cur_prog_kvs = CurrentSyncProgressStore::new(&mut redis);
 
   let pubsub = HistChartPubSub::new(broker.clone());
   let mut sub = pubsub.queue_subscribe("histChart.fetcher").unwrap();

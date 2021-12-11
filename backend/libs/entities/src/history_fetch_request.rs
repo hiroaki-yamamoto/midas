@@ -2,6 +2,7 @@ use ::mongodb::bson::DateTime;
 use ::rpc::entities::Exchanges;
 use ::serde::{Deserialize, Serialize};
 use ::std::time::Duration;
+use ::types::stateful_setter;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HistoryFetchRequest {
@@ -40,4 +41,7 @@ impl HistoryFetchRequest {
       .map(|end| end.to_system_time().duration_since(std_start).ok())
       .flatten();
   }
+
+  stateful_setter!(start, Option<DateTime>);
+  stateful_setter!(end, Option<DateTime>);
 }

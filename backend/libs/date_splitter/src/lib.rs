@@ -44,25 +44,19 @@ impl DateSplitter {
 }
 
 impl Stream for DateSplitter {
-  type Item = SystemTime;
+  type Item = (SystemTime, SystemTime);
 
   fn poll_next(
     mut self: std::pin::Pin<&mut Self>,
     _: &mut std::task::Context<'_>,
   ) -> Poll<Option<Self::Item>> {
     let ret = self.cur.clone();
-    let interval = self.interval;
-
-    if self.cur + interval <= self.end {
-      self.cur += interval;
-    } else {
-      self.cur = self.end;
-    }
+    self.cur = self.predict_next();
 
     if ret >= self.end {
       return Poll::Ready(None);
     } else {
-      return Poll::Ready(Some(ret));
+      return Poll::Ready(Some((ret, self.cur)));
     }
   }
 }
