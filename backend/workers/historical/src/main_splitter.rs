@@ -22,9 +22,9 @@ async fn main() {
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
   let logger = cfg.build_slog();
 
-  let mut redis = cfg.redis(&logger).unwrap();
-  let mut cur_prog_kvs = CurrentSyncProgressStore::new(&mut redis);
-  let mut num_prg_kvs = NumObjectsToFetchStore::new(&mut redis);
+  let redis = cfg.redis(&logger).unwrap();
+  let mut cur_prog_kvs = CurrentSyncProgressStore::new(redis);
+  let mut num_prg_kvs = NumObjectsToFetchStore::new(redis);
   let broker = con_nats(&cfg.broker_url).unwrap();
   let req_pubsub = RawHistChartPubSub::new(broker.clone());
   let mut req_sub =

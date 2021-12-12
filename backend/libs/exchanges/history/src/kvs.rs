@@ -4,23 +4,23 @@ use ::redis::Commands;
 
 use super::traits::Store;
 
-pub struct CurrentSyncProgressStore<'a, T>
+pub struct CurrentSyncProgressStore<T>
 where
   T: Commands,
 {
-  con: &'a mut T,
+  con: T,
 }
 
-impl<'a, T> CurrentSyncProgressStore<'a, T>
+impl<T> CurrentSyncProgressStore<T>
 where
   T: Commands,
 {
-  pub fn new(con: &'a mut T) -> Self {
-    return Self { con };
+  pub fn new(con: T) -> Self {
+    return Self { con: con };
   }
 }
 
-impl<'a, T> Store<T> for CurrentSyncProgressStore<'a, T>
+impl<T> Store<T> for CurrentSyncProgressStore<T>
 where
   T: Commands,
 {
@@ -32,27 +32,27 @@ where
     return format!("{}.{}.kline_sync.current", exchange, symbol);
   }
   fn commands(&mut self) -> &mut T {
-    return self.con;
+    return &mut self.con;
   }
 }
 
-pub struct NumObjectsToFetchStore<'a, T>
+pub struct NumObjectsToFetchStore<T>
 where
   T: Commands,
 {
-  con: &'a mut T,
+  con: T,
 }
 
-impl<'a, T> NumObjectsToFetchStore<'a, T>
+impl<T> NumObjectsToFetchStore<T>
 where
   T: Commands,
 {
-  pub fn new(con: &'a mut T) -> Self {
-    return Self { con };
+  pub fn new(con: T) -> Self {
+    return Self { con: con };
   }
 }
 
-impl<'a, T> Store<T> for NumObjectsToFetchStore<'a, T>
+impl<T> Store<T> for NumObjectsToFetchStore<T>
 where
   T: Commands,
 {
@@ -64,6 +64,6 @@ where
     return format!("{}.{}.kline_sync.num", exchange, symbol);
   }
   fn commands(&mut self) -> &mut T {
-    return self.con;
+    return &mut self.con;
   }
 }

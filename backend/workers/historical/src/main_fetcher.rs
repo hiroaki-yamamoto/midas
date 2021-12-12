@@ -35,8 +35,8 @@ async fn main() {
     DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await.unwrap())
       .unwrap()
       .database("midas");
-  let mut redis = cfg.redis(&logger).unwrap();
-  let mut cur_prog_kvs = CurrentSyncProgressStore::new(&mut redis);
+  let redis = cfg.redis(&logger).unwrap();
+  let mut cur_prog_kvs = CurrentSyncProgressStore::new(redis);
 
   let pubsub = HistChartPubSub::new(broker.clone());
   let mut sub = pubsub.queue_subscribe("histChart.fetcher").unwrap();
