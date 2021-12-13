@@ -3,7 +3,8 @@ use ::std::io::Read;
 use ::std::time::Duration;
 
 use ::reqwest::{Certificate, Client};
-use ::serde::Deserialize;
+use ::serde::de::Error as SerdeError;
+use ::serde::{Deserialize, Deserializer};
 use ::serde_yaml::Result as YaMLResult;
 use ::slog::Logger;
 use ::slog_builder::{build_debug, build_json};
@@ -11,7 +12,7 @@ use ::slog_builder::{build_debug, build_json};
 use ::types::{GenericResult, ThreadSafeResult};
 
 use ::errors::MaximumAttemptExceeded;
-use ::redis::Connection;
+use ::redis::{Client as RedisClient, Connection};
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -37,18 +38,27 @@ pub struct Config {
   pub db_url: String,
   #[serde(rename = "brokerURL")]
   pub broker_url: String,
-  #[serde(rename = "redisURL")]
-  pub redis_url: String,
+  #[serde(rename = "redisURL", deserialize_with = "Config::redis_client")]
+  pub redis: RedisClient,
   #[serde(default)]
   pub debug: bool,
   pub tls: TLS,
 }
 
 impl Config {
+  fn redis_client<'de, D>(de: D) -> Result<RedisClient, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    let url: String = Deserialize::deserialize(de)?;
+    return ::redis::Client::open(url).map_err(|e| SerdeError::custom(e));
+  }
   pub fn redis(&self, logger: &Logger) -> ThreadSafeResult<Connection> {
-    let cli = ::redis::Client::open(self.redis_url.clone())?;
     for _ in 0..10 {
-      match cli.get_connection_with_timeout(Duration::from_secs(1)) {
+      match self
+        .redis
+        .get_connection_with_timeout(Duration::from_secs(1))
+      {
         Ok(o) => return Ok(o),
         Err(e) => {
           ::slog::warn!(
