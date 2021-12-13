@@ -61,7 +61,7 @@ async fn main() {
         }
         while let Some((start, end)) = splitter.next().await {
           let resp = req.clone().start(Some(start.into())).end(Some(end.into()));
-          resp_pubsub.publish(&resp);
+          let _ = resp_pubsub.publish(&resp);
         }
       }
       _ = sig.recv() => {
