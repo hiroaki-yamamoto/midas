@@ -11,12 +11,12 @@ config = { path = "../../libs/config" }
 
 notification = { path = "../../libs/exchanges/notification" }
 
-clap = "3.0.0-beta.5"
-tokio = { version = "1.13.0", features = [
+clap = { version = "3.0.0-rc.4", features = ["derive"] }
+tokio = { version = "1.14.0", features = [
   "rt",
   "rt-multi-thread",
   "signal",
 ] }
 nats = "0.16.0"
-libc = "0.2.107"
-futures = "0.3.17"
+libc = "0.2.112"
+futures = "0.3.18"
