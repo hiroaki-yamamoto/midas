@@ -9,4 +9,4 @@ edition = "2018"
 [dependencies]
 types = { path = "../../types" }
 
-async-trait = "0.1.51"
+async-trait = "0.1.52"

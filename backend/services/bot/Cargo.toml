@@ -19,5 +19,5 @@ reqwest = { version = "0.11.7", features = ["gzip", "brotli", "json", "rustls-tl
 tokio = { version = "1.14.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
 futures = "0.3.18"
 slog = "2.7.0"
-clap = "3.0.0-beta.5"
-libc = "0.2.109"
+clap = "3.0.0-rc.4"
+libc = "0.2.112"
