@@ -11,7 +11,7 @@ rpc = { path = "../../rpc" }
 types = { path = "../../types" }
 subscribe = { path = "../../subscribe" }
 
-async-trait = "0.1.51"
+async-trait = "0.1.52"
 futures-core = "0.3.18"
 nats = "0.16.0"
-serde = { version = "1.0.130", features = ["derive"] }
+serde = { version = "1.0.131", features = ["derive"] }

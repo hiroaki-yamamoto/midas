@@ -11,4 +11,4 @@ types = { path = "../../types" }
 entities = { path = "../entities" }
 
 futures-core = "0.3.18"
-async-trait = "0.1.51"
+async-trait = "0.1.52"
