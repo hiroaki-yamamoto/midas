@@ -11,7 +11,7 @@ binance_observers = { path = "../../libs/exchanges/binance/observers" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 
-clap = "3.0.0-rc.4"
+clap = { version = "3.0.0-rc.4", features = ["derive"] }
 tokio = { version = "1.14.0", features = ["signal", "rt", "rt-multi-thread", "macros"] }
 nats = "0.16.0"
 slog = "2.7.0"
