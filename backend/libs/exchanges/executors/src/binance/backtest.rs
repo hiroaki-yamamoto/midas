@@ -1,7 +1,6 @@
 use ::std::collections::HashMap;
 use std::convert::TryFrom;
 
-use ::async_stream::try_stream;
 use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
@@ -28,7 +27,7 @@ pub struct Executor {
   cur_trade: Option<BookTicker>,
   orders: HashMap<ObjectId, Order>,
   positions: HashMap<ObjectId, OrderInner>,
-  hist_recorder: HistoryWriter,
+  writer: HistoryWriter,
   pub price_base_policy: BackTestPriceBase,
 }
 
@@ -38,6 +37,7 @@ impl Executor {
     spread: f64,
     maker_fee: f64,
     taker_fee: f64,
+    price_base_policy: BackTestPriceBase,
   ) -> GenericResult<Self> {
     return Ok(Self {
       spread,
@@ -46,8 +46,8 @@ impl Executor {
       cur_trade: None,
       orders: HashMap::new(),
       positions: HashMap::new(),
-      hist_recorder: HistoryWriter::new(db),
-      price_base_policy: BackTestPriceBase::HighLowMid,
+      writer: HistoryWriter::new(db),
+      price_base_policy,
     });
   }
 }
@@ -59,12 +59,11 @@ impl ExecutorTrait for Executor {
   ) -> ThreadSafeResult<BoxStream<ThreadSafeResult<BookTicker>>> {
     let half_spread = self.spread / 2.0;
     let price_base = self.price_base_policy.clone();
-    let mut db_stream = self
-      .hist_recorder
+    let writer = self.writer.clone();
+    let db_stream = writer
       .list(None)
       .await?
-      .map(|klines| Vec::<Kline>::try_from(klines))
-      .filter_map(|klines_res| async { klines_res.ok() })
+      .filter_map(|klines| async { Vec::<Kline>::try_from(klines).ok() })
       .map(move |klines| {
         let klines = klines.into_iter().map(|kline| {
           let price = match price_base {
@@ -79,7 +78,7 @@ impl ExecutorTrait for Executor {
               (kline.high_price + kline.low_price) / 2.0
             }
           };
-          return BookTicker {
+          let ticker = BookTicker {
             exchange: Exchanges::Binance,
             symbol: kline.symbol.clone(),
             id: ObjectId::new().to_string(),
@@ -88,21 +87,18 @@ impl ExecutorTrait for Executor {
             ask_qty: kline.volume,
             bid_qty: kline.volume,
           };
+          return ticker;
         });
         return ::futures::stream::iter(klines.collect::<Vec<BookTicker>>());
       })
       .flatten()
-      .boxed();
-    self.cur_trade = None;
-    let stream = try_stream! {
-      while let Some(v) = db_stream.next().await {
-        self.cur_trade = Some(v.clone());
+      .map(move |ticker| {
+        self.cur_trade = Some(ticker.clone());
         self.execute_order(ExecutionType::Taker)?;
-        yield v;
-      }
-      self.cur_trade = None;
-    };
-    return Ok(stream.boxed());
+        return Ok(ticker);
+      })
+      .boxed();
+    return Ok(db_stream);
   }
 
   async fn create_order(

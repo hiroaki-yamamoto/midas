@@ -14,6 +14,7 @@ use super::entities::Kline;
 use crate::entities::KlinesByExchange;
 use crate::traits::HistoryWriter as HistoryWriterTrait;
 
+#[derive(Debug, Clone)]
 pub struct HistoryWriter {
   col: Collection<Kline>,
 }
@@ -43,9 +44,9 @@ impl HistoryWriterTrait for HistoryWriter {
     return Ok(());
   }
   async fn list(
-    &self,
+    self,
     query: impl Into<Option<Document>> + Send + 'async_trait,
-  ) -> MongoResult<BoxStream<KlinesByExchange>> {
+  ) -> MongoResult<BoxStream<'async_trait, KlinesByExchange>> {
     let st = self
       .col
       .find(query, None)

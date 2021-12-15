@@ -10,7 +10,7 @@ use crate::entities::KlinesByExchange;
 pub trait HistoryWriter {
   async fn write(&self, klines: KlinesByExchange) -> ThreadSafeResult<()>;
   async fn list(
-    &self,
+    self,
     query: impl Into<Option<Document>> + Send + 'async_trait,
-  ) -> MongoResult<BoxStream<KlinesByExchange>>;
+  ) -> MongoResult<BoxStream<'async_trait, KlinesByExchange>>;
 }
