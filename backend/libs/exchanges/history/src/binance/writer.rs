@@ -1,10 +1,12 @@
 use ::std::convert::TryFrom;
 
 use ::async_trait::async_trait;
-use ::futures::future::try_join_all;
-use ::mongodb::bson::{doc, to_document};
-use ::mongodb::options::UpdateModifications;
-use ::mongodb::options::UpdateOptions;
+use ::futures::future::{try_join_all, FutureExt};
+use ::futures::stream::BoxStream;
+use ::futures::StreamExt;
+use ::mongodb::bson::{doc, to_document, Document};
+use ::mongodb::error::Result as MongoResult;
+use ::mongodb::options::{UpdateModifications, UpdateOptions};
 use ::mongodb::{Collection, Database};
 use ::types::ThreadSafeResult;
 
@@ -39,5 +41,23 @@ impl HistoryWriterTrait for HistoryWriter {
     }
     try_join_all(defers).await?;
     return Ok(());
+  }
+  async fn list(
+    &self,
+    query: impl Into<Option<Document>> + Send + 'async_trait,
+  ) -> MongoResult<BoxStream<KlinesByExchange>> {
+    let st = self
+      .col
+      .find(query, None)
+      .map(|cur_res| {
+        cur_res.map(|cur| {
+          cur
+            .filter_map(|kline| async { kline.ok() })
+            .map(|kline| KlinesByExchange::Binance(vec![kline]))
+            .boxed()
+        })
+      })
+      .await;
+    return st;
   }
 }
