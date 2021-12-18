@@ -65,16 +65,8 @@ jobs:
           working_directory: ./.circleci
       - run:
           name: Build the package
-          command: |
-            DEPS=`realpath ../deps`
-            export \
-              OPENSSL_DIR=$DEPS/openssl \
-              OPENSSL_LIB_DIR=$DEPS/openssl/lib64
-            cargo build --target x86_64-unknown-linux-musl --release
+          command: cargo build --target x86_64-unknown-linux-musl --release
           working_directory: ./backend
-          environment:
-            PKG_CONFIG_ALLOW_CROSS: '1'
-            OPENSSL_STATIC: 'true'
       - run:
           name: "Print cache request summary"
           command: sccache -s
