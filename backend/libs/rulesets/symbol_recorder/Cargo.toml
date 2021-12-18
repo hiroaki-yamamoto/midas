@@ -10,6 +10,6 @@ edition = "2018"
 types = { path = "../../types" }
 
 async-trait = "0.1.52"
-futures-core = "0.3.18"
+futures-core = "0.3.19"
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
 serde = { version = "1.0.132", features=["derive"] }

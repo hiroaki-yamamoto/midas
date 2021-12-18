@@ -22,7 +22,7 @@ binance_clients = { path = "../clients" }
 binance_symbols = { path = "../symbols" }
 
 async-trait = "0.1.52"
-futures = "0.3.18"
+futures = "0.3.19"
 nats = "0.16.0"
 rand = "0.8.4"
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
