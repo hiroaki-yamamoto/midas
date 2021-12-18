@@ -18,7 +18,7 @@ symbol_fetcher = { path = "../../../rulesets/symbol_fetcher" }
 symbol_recorder = { path = "../../../rulesets/symbol_recorder" }
 
 async-trait = "0.1.52"
-futures = "0.3.18"
+futures = "0.3.19"
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
 reqwest = { version = "0.11.7", features = ["gzip", "brotli", "json"] }
 nats = "0.16.0"
