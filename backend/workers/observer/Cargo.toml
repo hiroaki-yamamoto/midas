@@ -11,10 +11,10 @@ binance_observers = { path = "../../libs/exchanges/binance/observers" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 
-clap = { version = "3.0.0-rc.4", features = ["derive"] }
-tokio = { version = "1.14.0", features = ["signal", "rt", "rt-multi-thread", "macros"] }
+clap = { version = "3.0.0-rc.7", features = ["derive"] }
+tokio = { version = "1.15.0", features = ["signal", "rt", "rt-multi-thread", "macros"] }
 nats = "0.16.0"
 slog = "2.7.0"
 futures = "0.3.18"
 libc = "0.2.112"
-mongodb = { version = "2.0.2", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }

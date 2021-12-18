@@ -12,5 +12,5 @@ errors = { path = "../../errors" }
 types = { path = "../../types" }
 
 async-trait = "0.1.52"
-bson = "2.0.1"
+bson = "2.1.0"
 futures-core = "0.3.18"
