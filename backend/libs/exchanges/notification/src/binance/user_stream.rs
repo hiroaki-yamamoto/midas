@@ -15,13 +15,13 @@ use ::tokio_tungstenite::tungstenite::{
   client::IntoClientRequest, Error as WebSocketError, Message,
 };
 
-use ::binance_clients::constants::{REST_ENDPOINT, WS_ENDPOINT};
-use ::binance_clients::PubClient;
+use ::clients::binance::PubClient;
+use ::clients::binance::{REST_ENDPOINT, WS_ENDPOINT};
 
+use crate::traits::UserStream as UserStreamTrait;
 use ::entities::{APIKey, APIKeyEvent, APIKeyInner};
 use ::errors::{MaximumAttemptExceeded, WebsocketError};
 use ::keychain::pubsub::APIKeyPubSub;
-use ::notification::UserStream as UserStreamTrait;
 use ::subscribe::PubSub;
 use ::types::{GenericResult, TLSWebSocket, ThreadSafeResult};
 
