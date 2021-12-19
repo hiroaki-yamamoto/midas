@@ -1,4 +1,3 @@
-mod manager;
 mod service;
 
 use ::std::error::Error;
