@@ -1,6 +1,7 @@
 import * as jspb from 'google-protobuf'
 
 import * as entities_pb from './entities_pb';
+import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
 
 
 export class HistChartProg extends jspb.Message {
@@ -41,43 +42,37 @@ export namespace HistChartProg {
   }
 }
 
-export class HistChartFetchReq extends jspb.Message {
-  getSymbolsList(): Array<string>;
-  setSymbolsList(value: Array<string>): HistChartFetchReq;
-  clearSymbolsList(): HistChartFetchReq;
-  addSymbols(value: string, index?: number): HistChartFetchReq;
+export class HistoryFetchRequest extends jspb.Message {
+  getExchange(): entities_pb.Exchanges;
+  setExchange(value: entities_pb.Exchanges): HistoryFetchRequest;
+
+  getSymbol(): string;
+  setSymbol(value: string): HistoryFetchRequest;
+
+  getStart(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setStart(value?: google_protobuf_timestamp_pb.Timestamp): HistoryFetchRequest;
+  hasStart(): boolean;
+  clearStart(): HistoryFetchRequest;
+
+  getEnd(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setEnd(value?: google_protobuf_timestamp_pb.Timestamp): HistoryFetchRequest;
+  hasEnd(): boolean;
+  clearEnd(): HistoryFetchRequest;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): HistChartFetchReq.AsObject;
-  static toObject(includeInstance: boolean, msg: HistChartFetchReq): HistChartFetchReq.AsObject;
-  static serializeBinaryToWriter(message: HistChartFetchReq, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): HistChartFetchReq;
-  static deserializeBinaryFromReader(message: HistChartFetchReq, reader: jspb.BinaryReader): HistChartFetchReq;
+  toObject(includeInstance?: boolean): HistoryFetchRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: HistoryFetchRequest): HistoryFetchRequest.AsObject;
+  static serializeBinaryToWriter(message: HistoryFetchRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): HistoryFetchRequest;
+  static deserializeBinaryFromReader(message: HistoryFetchRequest, reader: jspb.BinaryReader): HistoryFetchRequest;
 }
 
-export namespace HistChartFetchReq {
+export namespace HistoryFetchRequest {
   export type AsObject = {
-    symbolsList: Array<string>,
-  }
-}
-
-export class StopRequest extends jspb.Message {
-  getExchangesList(): Array<entities_pb.Exchanges>;
-  setExchangesList(value: Array<entities_pb.Exchanges>): StopRequest;
-  clearExchangesList(): StopRequest;
-  addExchanges(value: entities_pb.Exchanges, index?: number): StopRequest;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): StopRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: StopRequest): StopRequest.AsObject;
-  static serializeBinaryToWriter(message: StopRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): StopRequest;
-  static deserializeBinaryFromReader(message: StopRequest, reader: jspb.BinaryReader): StopRequest;
-}
-
-export namespace StopRequest {
-  export type AsObject = {
-    exchangesList: Array<entities_pb.Exchanges>,
+    exchange: entities_pb.Exchanges,
+    symbol: string,
+    start?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+    end?: google_protobuf_timestamp_pb.Timestamp.AsObject,
   }
 }
 

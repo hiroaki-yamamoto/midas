@@ -81,10 +81,14 @@ impl Service {
                   let _ = sock.flush().await;
                 },
                 Some(msg) = sock.next() => {
-                  let msg = msg.unwrap_or(::warp::ws::Message::close());
+                  if msg.is_err() {
+                    continue;
+                  }
+                  let msg = msg.unwrap();
                   if msg.is_close() {
                     break;
                   }
+
                 },
               }
             },
@@ -94,4 +98,6 @@ impl Service {
       })
       .boxed();
   }
+
+  fn handle_req(&self, msg: &Message) {}
 }

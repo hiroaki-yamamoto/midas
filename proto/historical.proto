@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "entities.proto";
+import "google/protobuf/timestamp.proto";
 
 package historical;
 
@@ -13,10 +14,9 @@ message HistChartProg {
   int64 cur_object_num = 6;
 }
 
-message HistChartFetchReq {
-  repeated string symbols = 2;
-}
-
-message StopRequest {
-  repeated entities.Exchanges exchanges = 1;
+message HistoryFetchRequest {
+  entities.Exchanges exchange = 1;
+  string symbol = 2;
+  google.protobuf.Timestamp start = 3;
+  google.protobuf.Timestamp end = 4;
 }
