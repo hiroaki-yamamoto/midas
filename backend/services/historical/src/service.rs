@@ -3,16 +3,18 @@ use ::std::fmt::Debug;
 use ::futures::{SinkExt, StreamExt};
 use ::mongodb::Database;
 use ::nats::Connection as NatsCon;
-use ::serde_json::to_string as jsonify;
+use ::serde_json::{from_slice as parse_json, to_string as jsonify};
 use ::slog::Logger;
+use ::subscribe::PubSub;
 use ::tokio::select;
 use ::warp::filters::BoxedFilter;
 use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
-use subscribe::PubSub;
 
+use ::entities::HistoryFetchRequest as HistFetchReq;
 use ::history::binance::fetcher as binance_hist;
-use ::history::pubsub::FetchStatusEventPubSub;
+use ::history::pubsub::{FetchStatusEventPubSub, RawHistChartPubSub};
+use ::rpc::historical::HistoryFetchRequest as RPCHistFetchReq;
 use ::types::GenericResult;
 
 #[derive(Debug, Clone)]
@@ -20,6 +22,7 @@ pub struct Service {
   logger: Logger,
   binance: binance_hist::HistoryFetcher,
   status: FetchStatusEventPubSub,
+  splitter: RawHistChartPubSub,
 }
 
 impl Service {
@@ -33,6 +36,7 @@ impl Service {
       logger: log.clone(),
       binance,
       status: FetchStatusEventPubSub::new(nats.clone()),
+      splitter: RawHistChartPubSub::new(nats.clone()),
     };
     return Ok(ret);
   }
@@ -80,15 +84,14 @@ impl Service {
                   }
                   let _ = sock.flush().await;
                 },
-                Some(msg) = sock.next() => {
-                  if msg.is_err() {
-                    continue;
-                  }
-                  let msg = msg.unwrap();
+                Some(Ok(msg)) = sock.next() => {
                   if msg.is_close() {
                     break;
                   }
-
+                  if let Ok(req) = parse_json::<RPCHistFetchReq>(msg.as_bytes()) {
+                    let req: HistFetchReq = req.into();
+                    let _ = self.splitter.publish(&req);
+                  }
                 },
               }
             },
@@ -98,6 +101,4 @@ impl Service {
       })
       .boxed();
   }
-
-  fn handle_req(&self, msg: &Message) {}
 }

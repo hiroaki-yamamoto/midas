@@ -14,6 +14,7 @@ csrf = { path = "../../libs/csrf" }
 subscribe = { path = "../../libs/subscribe" }
 
 history = { path = "../../libs/exchanges/history" }
+entities = { path = "../../libs/entities" }
 symbols = { path = "../../libs/exchanges/symbols" }
 
 serde = { version = "1.0.131", features = ["derive"] }
