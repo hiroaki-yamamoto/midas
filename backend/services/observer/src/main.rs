@@ -15,9 +15,10 @@ use ::tokio::time::interval;
 use ::warp::ws::Message;
 use ::warp::{Filter, Reply};
 
-use ::binance_observers::{self as binance, TradeObserverTrait};
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
+use ::observers::binance;
+use ::observers::traits::TradeObserver as TradeObserverTrait;
 use ::rpc::bookticker::BookTicker;
 use ::rpc::entities::Exchanges;
 

@@ -12,10 +12,11 @@ rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 subscribe = { path = "../../libs/subscribe" }
+errors = { path = "../../libs/errors" }
 
-history = { path = "../../libs/rulesets/history" }
-binance_histories = { path = "../../libs/exchanges/binance/histories" }
-binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
+history = { path = "../../libs/exchanges/history" }
+entities = { path = "../../libs/entities" }
+symbols = { path = "../../libs/exchanges/symbols" }
 
 serde = { version = "1.0.132", features = ["derive"] }
 rmp-serde = "0.15.5"

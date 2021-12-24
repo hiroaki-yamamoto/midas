@@ -9,3 +9,4 @@ pub use self::constants::{
 
 pub use self::cmdargs::CmdArgs;
 pub use self::config::Config;
+pub use ::redis;

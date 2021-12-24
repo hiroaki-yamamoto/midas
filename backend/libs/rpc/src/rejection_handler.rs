@@ -1,3 +1,4 @@
+use ::csrf::CSRFCheckFailed;
 use ::std::convert::Infallible;
 use ::warp::http::StatusCode;
 use ::warp::{reject, reply};
@@ -40,6 +41,11 @@ pub async fn handle_rejection(
     status = Status::new(
       StatusCode::UNSUPPORTED_MEDIA_TYPE,
       "The specified media type is not supported.",
+    );
+  } else if let Some(rej) = err.find::<CSRFCheckFailed>() {
+    status = Status::new(
+      StatusCode::FORBIDDEN,
+      format!("CSRF Token Mismatch: {}", rej),
     );
   } else {
     status = Status::new(

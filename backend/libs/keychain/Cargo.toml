@@ -10,8 +10,8 @@ edition = "2018"
 rpc = { path = "../rpc" }
 types = { path = "../types" }
 subscribe = { path = "../subscribe" }
-entities = { path = "../rulesets/entities" }
-base_recorder = { path = "../rulesets/base_recorder" }
+entities = { path = "../entities" }
+writers = { path = "../writers" }
 
 futures = "0.3.19"
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }

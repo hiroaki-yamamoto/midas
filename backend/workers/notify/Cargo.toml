@@ -9,8 +9,7 @@ edition = "2018"
 [dependencies]
 config = { path = "../../libs/config" }
 
-notification = { path = "../../libs/rulesets/notification" }
-binance_notification = { path = "../../libs/exchanges/binance/notification" }
+notification = { path = "../../libs/exchanges/notification" }
 
 clap = { version = "3.0.0-rc.7", features = ["derive"] }
 tokio = { version = "1.15.0", features = [

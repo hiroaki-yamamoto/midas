@@ -1,8 +1,16 @@
 [package]
-name = "historical-workers"
+name = "historical_worker"
 version = "0.1.0"
 authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
 edition = "2018"
+
+[[bin]]
+name = "historical_fetch_worker"
+path = "./src/main_fetcher.rs"
+
+[[bin]]
+name = "historical_date_splitter"
+path = "./src/main_splitter.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -11,11 +19,11 @@ config = { path = "../../libs/config" }
 types = { path = "../../libs/types" }
 rpc = { path = "../../libs/rpc" }
 
-history = { path = "../../libs/rulesets/history" }
 subscribe = { path = "../../libs/subscribe" }
 
-binance_histories = { path = "../../libs/exchanges/binance/histories" }
-binance_symbols = { path = "../../libs/exchanges/binance/symbols" }
+history = { path = "../../libs/exchanges/history" }
+symbols = { path = "../../libs/exchanges/symbols" }
+date_splitter = { path = "../../libs/date_splitter" }
 
 slog = "2.7.0"
 tokio = { version = "1.15.0", features = ["rt", "rt-multi-thread", "macros", "signal"] }
@@ -25,15 +33,3 @@ mongodb = { version = "2.1.0", default-features = false, features = ["async-std-
 futures = "0.3.19"
 libc = "0.2.112"
 tokio-stream = "0.1.8"
-
-[[bin]]
-name = "historical_fetch_worker"
-path = "src/main_fetcher.rs"
-
-[[bin]]
-name = "historical_record_worker"
-path = "src/main_recorder.rs"
-
-[[bin]]
-name = "historical_aggregator"
-path = "src/main_aggregator.rs"

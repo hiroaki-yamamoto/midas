@@ -276,159 +276,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "base_recorder"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures",
- "mongodb",
-]
-
-[[package]]
-name = "binance_clients"
-version = "0.1.0"
-dependencies = [
- "reqwest",
- "types",
-]
-
-[[package]]
-name = "binance_executors"
-version = "0.1.0"
-dependencies = [
- "async-stream",
- "async-trait",
- "base_recorder",
- "binance_clients",
- "binance_histories",
- "binance_observers",
- "entities",
- "errors",
- "executor",
- "futures",
- "keychain",
- "mongodb",
- "nats",
- "reqwest",
- "ring",
- "rpc",
- "serde",
- "serde_qs",
- "sign",
- "slog",
- "trade_observer",
- "types",
-]
-
-[[package]]
-name = "binance_histories"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "base_recorder",
- "binance_clients",
- "binance_symbols",
- "config",
- "entities",
- "errors",
- "futures",
- "history",
- "mongodb",
- "nats",
- "num_cpus",
- "rand 0.8.4",
- "rmp-serde",
- "rpc",
- "serde",
- "serde_json",
- "serde_qs",
- "slog",
- "subscribe",
- "tokio",
- "trade_observer",
- "types",
- "url",
-]
-
-[[package]]
-name = "binance_notification"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "binance_clients",
- "binance_executors",
- "binance_histories",
- "binance_symbols",
- "entities",
- "errors",
- "futures",
- "keychain",
- "mongodb",
- "nats",
- "notification",
- "rmp-serde",
- "serde",
- "serde_json",
- "slog",
- "subscribe",
- "tokio",
- "tokio-stream",
- "tokio-tungstenite 0.16.1",
- "types",
-]
-
-[[package]]
-name = "binance_observers"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "binance_clients",
- "binance_symbols",
- "config",
- "entities",
- "errors",
- "futures",
- "mongodb",
- "nats",
- "rmp-serde",
- "rpc",
- "serde",
- "serde_json",
- "slog",
- "subscribe",
- "symbol_recorder",
- "tokio",
- "tokio-stream",
- "tokio-tungstenite 0.16.1",
- "trade_observer",
- "types",
-]
-
-[[package]]
-name = "binance_symbols"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "base_recorder",
- "binance_clients",
- "errors",
- "futures",
- "mongodb",
- "nats",
- "reqwest",
- "rmp-serde",
- "rpc",
- "serde",
- "serde_json",
- "slog",
- "subscribe",
- "symbol_fetcher",
- "symbol_recorder",
- "types",
- "url",
-]
-
-[[package]]
 name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -620,6 +467,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "clients"
+version = "0.1.0"
+dependencies = [
+ "reqwest",
+ "types",
+]
+
+[[package]]
+name = "combine"
+version = "4.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2b2f5d0ee456f3928812dfc8c6d9a1d592b98678f6d56db9b0cd2b7bc6c8db5"
+dependencies = [
+ "bytes",
+ "memchr",
+]
+
+[[package]]
 name = "concurrent-queue"
 version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -633,6 +498,8 @@ name = "config"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "errors",
+ "redis",
  "reqwest",
  "serde",
  "serde_yaml",
@@ -816,6 +683,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3ee2393c4a91429dffb4bedf19f4d6abf27d8a732c8ce4980305d782e5426d57"
 
 [[package]]
+name = "date_splitter"
+version = "0.1.0"
+dependencies = [
+ "futures",
+]
+
+[[package]]
 name = "derivative"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -863,6 +737,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 
 [[package]]
+name = "dtoa"
+version = "0.4.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56899898ce76aaf4a0f24d914c97ea6ed976d42fec6ad33fcbb0a1103e07b2b0"
+
+[[package]]
 name = "ed25519"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -906,6 +786,7 @@ dependencies = [
  "bytes",
  "errors",
  "futures-core",
+ "mongodb",
  "num-traits",
  "ring",
  "rpc",
@@ -958,15 +839,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7531096570974c3a9dcf9e4b8e1cede1ec26cf5046219fb3b9d897503b9be59"
 
 [[package]]
-name = "executor"
+name = "executors"
 version = "0.1.0"
 dependencies = [
+ "async-stream",
  "async-trait",
- "bson",
+ "clients",
  "entities",
  "errors",
- "futures-core",
+ "futures",
+ "history",
+ "keychain",
+ "mongodb",
+ "nats",
+ "observers",
+ "reqwest",
+ "ring",
+ "rpc",
+ "serde",
+ "serde_qs",
+ "sign",
+ "slog",
  "types",
+ "writers",
 ]
 
 [[package]]
@@ -1257,35 +1152,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
-name = "historical-workers"
-version = "0.1.0"
-dependencies = [
- "binance_histories",
- "binance_symbols",
- "clap",
- "config",
- "futures",
- "history",
- "libc",
- "mongodb",
- "nats",
- "rpc",
- "slog",
- "subscribe",
- "tokio",
- "tokio-stream",
- "types",
-]
-
-[[package]]
 name = "historical_service"
 version = "0.1.0"
 dependencies = [
- "binance_histories",
- "binance_symbols",
  "clap",
  "config",
  "csrf",
+ "entities",
+ "errors",
  "futures",
  "history",
  "http",
@@ -1300,9 +1174,31 @@ dependencies = [
  "serde_yaml",
  "slog",
  "subscribe",
+ "symbols",
  "tokio",
  "types",
  "warp",
+]
+
+[[package]]
+name = "historical_worker"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "config",
+ "date_splitter",
+ "futures",
+ "history",
+ "libc",
+ "mongodb",
+ "nats",
+ "rpc",
+ "slog",
+ "subscribe",
+ "symbols",
+ "tokio",
+ "tokio-stream",
+ "types",
 ]
 
 [[package]]
@@ -1310,12 +1206,29 @@ name = "history"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "futures-core",
+ "clients",
+ "config",
+ "entities",
+ "errors",
+ "futures",
+ "mongodb",
  "nats",
+ "num_cpus",
+ "observers",
+ "rand 0.8.4",
+ "redis",
+ "reqwest",
+ "rmp-serde",
  "rpc",
  "serde",
+ "serde_json",
+ "serde_qs",
+ "slog",
  "subscribe",
+ "tokio",
  "types",
+ "url",
+ "writers",
 ]
 
 [[package]]
@@ -1517,7 +1430,6 @@ checksum = "078e285eafdfb6c4b434e0d31e8cfcb5115b651496faca5749b88fafd4f23bfd"
 name = "keychain"
 version = "0.1.0"
 dependencies = [
- "base_recorder",
  "entities",
  "futures",
  "mongodb",
@@ -1526,6 +1438,7 @@ dependencies = [
  "rpc",
  "subscribe",
  "types",
+ "writers",
 ]
 
 [[package]]
@@ -1822,7 +1735,24 @@ name = "notification"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "clients",
  "entities",
+ "errors",
+ "executors",
+ "futures",
+ "history",
+ "keychain",
+ "mongodb",
+ "nats",
+ "rmp-serde",
+ "serde",
+ "serde_json",
+ "slog",
+ "subscribe",
+ "symbols",
+ "tokio",
+ "tokio-stream",
+ "tokio-tungstenite 0.16.1",
  "types",
 ]
 
@@ -1830,7 +1760,6 @@ dependencies = [
 name = "notify_worker"
 version = "0.1.0"
 dependencies = [
- "binance_notification",
  "clap",
  "config",
  "futures",
@@ -1903,7 +1832,6 @@ dependencies = [
 name = "observer_service"
 version = "0.1.0"
 dependencies = [
- "binance_observers",
  "clap",
  "config",
  "csrf",
@@ -1911,6 +1839,7 @@ dependencies = [
  "libc",
  "mongodb",
  "nats",
+ "observers",
  "rpc",
  "serde_json",
  "slog",
@@ -1922,16 +1851,41 @@ dependencies = [
 name = "observer_worker"
 version = "0.1.0"
 dependencies = [
- "binance_observers",
  "clap",
  "config",
  "futures",
  "libc",
  "mongodb",
  "nats",
+ "observers",
  "rpc",
  "slog",
  "tokio",
+]
+
+[[package]]
+name = "observers"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "clients",
+ "config",
+ "entities",
+ "errors",
+ "futures",
+ "mongodb",
+ "nats",
+ "rmp-serde",
+ "rpc",
+ "serde",
+ "serde_json",
+ "slog",
+ "subscribe",
+ "symbols",
+ "tokio",
+ "tokio-stream",
+ "tokio-tungstenite 0.16.1",
+ "types",
 ]
 
 [[package]]
@@ -2318,6 +2272,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "redis"
+version = "0.21.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f23ceed4c0e76b322657c2c3352ea116f9ec60a1a1aefeb3c84ed062c50865b"
+dependencies = [
+ "async-trait",
+ "combine",
+ "dtoa",
+ "itoa 0.4.8",
+ "percent-encoding",
+ "sha1",
+ "url",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2459,6 +2428,7 @@ version = "0.1.0"
 dependencies = [
  "bson",
  "clap",
+ "csrf",
  "errors",
  "glob",
  "http",
@@ -2981,29 +2951,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "symbol_fetcher"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "types",
-]
-
-[[package]]
-name = "symbol_recorder"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures-core",
- "mongodb",
- "serde",
- "types",
-]
-
-[[package]]
 name = "symbol_service"
 version = "0.1.0"
 dependencies = [
- "binance_symbols",
  "clap",
  "config",
  "csrf",
@@ -3017,9 +2967,32 @@ dependencies = [
  "serde",
  "serde_json",
  "slog",
+ "symbols",
  "tokio",
  "types",
  "warp",
+]
+
+[[package]]
+name = "symbols"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "clients",
+ "errors",
+ "futures",
+ "mongodb",
+ "nats",
+ "reqwest",
+ "rmp-serde",
+ "rpc",
+ "serde",
+ "serde_json",
+ "slog",
+ "subscribe",
+ "types",
+ "url",
+ "writers",
 ]
 
 [[package]]
@@ -3337,16 +3310,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f4ed65637b8390770814083d20756f87bfa2c21bf2f110babdc5438351746e4"
 dependencies = [
  "lazy_static",
-]
-
-[[package]]
-name = "trade_observer"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "entities",
- "futures-core",
- "types",
 ]
 
 [[package]]
@@ -3808,6 +3771,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0120db82e8a1e0b9fb3345a539c478767c0048d842860994d96113d5b667bd69"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "writers"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "mongodb",
 ]
 
 [[package]]

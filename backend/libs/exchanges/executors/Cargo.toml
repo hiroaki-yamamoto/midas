@@ -1,0 +1,32 @@
+[package]
+name = "executors"
+version = "0.1.0"
+authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+types = { path = "../../types" }
+errors = { path = "../../errors" }
+rpc = { path = "../../rpc" }
+keychain = { path = "../../keychain" }
+
+clients = { path = "../clients" }
+history = { path = "../history" }
+observers = { path = "../observers" }
+
+entities = { path = "../../entities" }
+sign = { path = "../sign" }
+writers = { path = "../../writers" }
+
+async-stream = "0.3.2"
+async-trait = "0.1.52"
+futures = "0.3.19"
+mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
+nats = "0.16.0"
+slog = "2.7.0"
+ring = "0.16.20"
+serde = { version = "1.0.132", features = ["derive"] }
+reqwest = { version = "0.11.7", features = ["gzip", "brotli", "json", "rustls-tls"]}
+serde_qs = "0.8.5"

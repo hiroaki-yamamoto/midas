@@ -5,6 +5,7 @@ mod initialize;
 mod object;
 mod parse;
 mod status;
+mod unknown;
 mod vec_elem;
 mod websocket;
 
@@ -15,5 +16,6 @@ pub use initialize::InitError;
 pub use object::ObjectNotFound;
 pub use parse::ParseError;
 pub use status::StatusFailure;
+pub use unknown::UnknownExchangeError;
 pub use vec_elem::{RawVecElemErrs, VecElementErr, VecElementErrs};
 pub use websocket::WebsocketError;

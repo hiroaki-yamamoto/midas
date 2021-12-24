@@ -7,8 +7,9 @@ use ::nats::connect as new_broker;
 use ::slog::o;
 use ::tokio::signal::unix as signal;
 
-use ::binance_observers::{self as binance, TradeObserverTrait};
 use ::config::{Config, DEFAULT_CONFIG_PATH};
+use ::observers::binance;
+use ::observers::traits::TradeObserver as TradeObserverTrait;
 use ::rpc::entities::Exchanges;
 
 #[derive(Debug, Parser)]

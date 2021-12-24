@@ -1,0 +1,20 @@
+[package]
+name = "entities"
+version = "0.1.0"
+authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rpc = { path = "../rpc" }
+types = { path = "../types" }
+errors = { path = "../errors" }
+
+futures-core = "0.3.19"
+num-traits = "0.2.14"
+serde = { version = "1.0.132", features = ["derive"] }
+bson = "2.1.0"
+bytes = "1.1.0"
+ring = "0.16.20"
+mongodb = { version = "2.0.1", default-features = false, features = ["async-std-runtime"] }
