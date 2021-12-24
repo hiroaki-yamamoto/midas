@@ -4,41 +4,25 @@ import * as entities_pb from './entities_pb';
 import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
 
 
-export class HistChartProg extends jspb.Message {
-  getId(): string;
-  setId(value: string): HistChartProg;
+export class Progress extends jspb.Message {
+  getSize(): number;
+  setSize(value: number): Progress;
 
-  getSymbol(): string;
-  setSymbol(value: string): HistChartProg;
-
-  getNumSymbols(): number;
-  setNumSymbols(value: number): HistChartProg;
-
-  getCurSymbolNum(): number;
-  setCurSymbolNum(value: number): HistChartProg;
-
-  getNumObjects(): number;
-  setNumObjects(value: number): HistChartProg;
-
-  getCurObjectNum(): number;
-  setCurObjectNum(value: number): HistChartProg;
+  getCur(): number;
+  setCur(value: number): Progress;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): HistChartProg.AsObject;
-  static toObject(includeInstance: boolean, msg: HistChartProg): HistChartProg.AsObject;
-  static serializeBinaryToWriter(message: HistChartProg, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): HistChartProg;
-  static deserializeBinaryFromReader(message: HistChartProg, reader: jspb.BinaryReader): HistChartProg;
+  toObject(includeInstance?: boolean): Progress.AsObject;
+  static toObject(includeInstance: boolean, msg: Progress): Progress.AsObject;
+  static serializeBinaryToWriter(message: Progress, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Progress;
+  static deserializeBinaryFromReader(message: Progress, reader: jspb.BinaryReader): Progress;
 }
 
-export namespace HistChartProg {
+export namespace Progress {
   export type AsObject = {
-    id: string,
-    symbol: string,
-    numSymbols: number,
-    curSymbolNum: number,
-    numObjects: number,
-    curObjectNum: number,
+    size: number,
+    cur: number,
   }
 }
 

@@ -12,6 +12,7 @@ rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 subscribe = { path = "../../libs/subscribe" }
+errors = { path = "../../libs/errors" }
 
 history = { path = "../../libs/exchanges/history" }
 entities = { path = "../../libs/entities" }

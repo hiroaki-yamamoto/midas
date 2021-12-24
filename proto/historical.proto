@@ -5,13 +5,9 @@ import "google/protobuf/timestamp.proto";
 
 package historical;
 
-message HistChartProg {
-  string id = 1;
-  string symbol = 2;
-  int64 num_symbols = 3;
-  int64 cur_symbol_num = 4;
-  int64 num_objects = 5;
-  int64 cur_object_num = 6;
+message Progress {
+  int64 size = 5;
+  int64 cur = 6;
 }
 
 message HistoryFetchRequest {

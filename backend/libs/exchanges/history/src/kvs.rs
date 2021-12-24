@@ -1,9 +1,11 @@
 use std::fmt::Display;
 
+pub use ::redis;
 use ::redis::Commands;
 
 use super::traits::Store;
 
+#[derive(Debug)]
 pub struct CurrentSyncProgressStore<T>
 where
   T: Commands,
@@ -36,6 +38,7 @@ where
   }
 }
 
+#[derive(Debug)]
 pub struct NumObjectsToFetchStore<T>
 where
   T: Commands,

@@ -56,7 +56,7 @@ async fn main() {
           error!(logger, "Failed to reset the progress: {:?}", e);
           continue;
         }
-        if let Err(e) = num_prg_kvs.set(req.exchange.as_string(), &req.symbol, splitter.len().unwrap_or(0) as i32) {
+        if let Err(e) = num_prg_kvs.set(req.exchange.as_string(), &req.symbol, splitter.len().unwrap_or(0) as i64) {
           error!(logger, "Failed to set the number of objects to fetch: {:?}", e);
         }
         while let Some((start, end)) = splitter.next().await {

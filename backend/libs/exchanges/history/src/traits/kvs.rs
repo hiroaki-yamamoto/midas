@@ -22,7 +22,16 @@ where
     return self.commands().del(channel_name);
   }
 
-  fn set<E, S>(&mut self, exchange: E, symbol: S, value: i32) -> RedisResult<()>
+  fn get<E, S>(&mut self, exchange: E, symbol: S) -> RedisResult<i64>
+  where
+    E: AsRef<str> + Display,
+    S: AsRef<str> + Display,
+  {
+    let channel_name = self.channel_name(exchange, symbol);
+    return self.commands().get(channel_name);
+  }
+
+  fn set<E, S>(&mut self, exchange: E, symbol: S, value: i64) -> RedisResult<()>
   where
     E: AsRef<str> + Display,
     S: AsRef<str> + Display,
@@ -35,7 +44,7 @@ where
     &mut self,
     exchange: E,
     symbol: S,
-    delta: i32,
+    delta: i64,
   ) -> RedisResult<()>
   where
     E: AsRef<str> + Display,
