@@ -11,7 +11,7 @@ rpc = { path = "../rpc" }
 types = { path = "../types" }
 errors = { path = "../errors" }
 
-serde = { version = "1.0.131", features = ["derive"] }
-mongodb = { version = "2.0.2", default-features = false, features = ["async-std-runtime"] }
+serde = { version = "1.0.132", features = ["derive"] }
+mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
 reqwest = { version = "0.11.7", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
 rand = "0.8.4"

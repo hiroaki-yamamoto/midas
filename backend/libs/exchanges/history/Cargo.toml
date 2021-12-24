@@ -20,16 +20,16 @@ writers = { path = "../../writers" }
 clients = { path = "../clients" }
 
 async-trait = "0.1.52"
-futures = "0.3.18"
+futures = "0.3.19"
 nats = "0.16.0"
 rand = "0.8.4"
-mongodb = { version = "2.0.2", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
 rmp-serde = "0.15.5"
 serde_qs = "0.8.5"
 url = "2.2.2"
 slog = "2.7.0"
-tokio = { version = "1.14.0", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
-serde = { version = "1.0.131", features = ["derive"] }
+tokio = { version = "1.15.0", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
+serde = { version = "1.0.132", features = ["derive"] }
 serde_json = "1.0.73"
 num_cpus = "1.13.0"
 reqwest = { version = "0.11.6", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
