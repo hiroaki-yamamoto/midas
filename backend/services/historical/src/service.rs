@@ -2,10 +2,8 @@ use ::std::fmt::Debug;
 
 use ::futures::{SinkExt, StreamExt};
 use ::http::StatusCode;
-use ::mongodb::Database;
 use ::nats::Connection as NatsCon;
 use ::serde_json::{from_slice as parse_json, to_string as jsonify};
-use ::slog::Logger;
 use ::subscribe::PubSub;
 use ::tokio::select;
 use ::warp::filters::BoxedFilter;
@@ -14,7 +12,6 @@ use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
 
 use ::entities::HistoryFetchRequest as HistFetchReq;
-use ::history::binance::fetcher as binance_hist;
 use ::history::kvs::{redis, CurrentSyncProgressStore, NumObjectsToFetchStore};
 use ::history::pubsub::{FetchStatusEventPubSub, RawHistChartPubSub};
 use ::history::traits::Store;
@@ -24,8 +21,6 @@ use ::types::GenericResult;
 
 #[derive(Debug, Clone)]
 pub struct Service {
-  logger: Logger,
-  binance: binance_hist::HistoryFetcher,
   redis_cli: redis::Client,
   status: FetchStatusEventPubSub,
   splitter: RawHistChartPubSub,
@@ -33,15 +28,10 @@ pub struct Service {
 
 impl Service {
   pub async fn new(
-    log: &Logger,
-    db: &Database,
     nats: &NatsCon,
     redis_cli: &redis::Client,
   ) -> GenericResult<Self> {
-    let binance = binance_hist::HistoryFetcher::new(None, log.clone())?;
     let ret = Self {
-      logger: log.clone(),
-      binance,
       status: FetchStatusEventPubSub::new(nats.clone()),
       splitter: RawHistChartPubSub::new(nats.clone()),
       redis_cli: redis_cli.clone(),
@@ -90,9 +80,8 @@ impl Service {
         mut cur: CurrentSyncProgressStore<redis::Connection>,
         ws: Ws
       | {
-        let ws_svc = me.clone();
         return ws.on_upgrade(|mut sock: WebSocket| async move {
-          let subsc = ws_svc.status.subscribe();
+          let subsc = me.status.subscribe();
           match subsc {
             Err(e) => {
               let msg = format!(
@@ -126,7 +115,7 @@ impl Service {
                   }
                   if let Ok(req) = parse_json::<RPCHistFetchReq>(msg.as_bytes()) {
                     let req: HistFetchReq = req.into();
-                    let _ = ws_svc.splitter.publish(&req);
+                    let _ = me.splitter.publish(&req);
                   }
                 },
               }

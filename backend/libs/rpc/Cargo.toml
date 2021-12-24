@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 errors = {path = "../errors"}
+csrf = {path = "../csrf"}
 
 prost = "0.9.0"
 serde = { version = "1.0.131", features=["derive"] }
