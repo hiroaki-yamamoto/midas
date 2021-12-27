@@ -47,7 +47,6 @@ services:
       - ./etc:/etc/midas
       - ./backend:/opt/code
     depends_on:
-      - database
       - broker
       - historical_worker
   symbol_service:
@@ -71,7 +70,22 @@ services:
       context: ./backend
       dockerfile: devel.dockerfile
       args:
-        - SERVICE=historical_worker
+        - SERVICE=historical_fetch_worker
+    command:
+      - -c
+      - /etc/midas/midas.yml
+    volumes:
+      - ./etc:/etc/midas
+      - ./backend:/opt/code
+    depends_on:
+      - database
+      - broker
+  historical_splitter:
+    build:
+      context: ./backend
+      dockerfile: devel.dockerfile
+      args:
+        - SERVICE=historical_date_splitter
     command:
       - -c
       - /etc/midas/midas.yml
