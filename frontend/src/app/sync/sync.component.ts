@@ -37,9 +37,8 @@ export class SyncComponent {
 
   fetchSymbol() {
     this.symbolButtonEnabled = false;
-    this.symbolClient.refresh<void>(RPCExchanges.BINANCE).subscribe(
-      () => {},
-      (e) => {
+    this.symbolClient.refresh<void>(RPCExchanges.BINANCE).subscribe({
+      error: (e) => {
         this.tooltip.openFromComponent(IconSnackBarComponent, {
           data: {
             icon: faSkullCrossbones,
@@ -49,8 +48,8 @@ export class SyncComponent {
         });
         console.error(e);
       },
-      () => { this.symbolButtonEnabled = true; }
-    );
+      complete: () => { this.symbolButtonEnabled = true; }
+    });
   }
 
   fetchHistoricalData() {
