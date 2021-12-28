@@ -6,8 +6,10 @@ import "google/protobuf/timestamp.proto";
 package historical;
 
 message Progress {
-  int64 size = 5;
-  int64 cur = 6;
+  entities.Exchanges exchange = 1;
+  string symbol = 2;
+  int64 size = 4;
+  int64 cur = 5;
 }
 
 message HistoryFetchRequest {
@@ -15,4 +17,9 @@ message HistoryFetchRequest {
   string symbol = 2;
   google.protobuf.Timestamp start = 3;
   google.protobuf.Timestamp end = 4;
+}
+
+message StatusCheckRequest {
+  entities.Exchanges exchange = 1;
+  string symbol = 2;
 }

@@ -16,7 +16,9 @@ use ::history::kvs::{redis, CurrentSyncProgressStore, NumObjectsToFetchStore};
 use ::history::pubsub::{FetchStatusEventPubSub, RawHistChartPubSub};
 use ::history::traits::Store;
 use ::rpc::entities::Status;
-use ::rpc::historical::{HistoryFetchRequest as RPCHistFetchReq, Progress};
+use ::rpc::historical::{
+  HistoryFetchRequest as RPCHistFetchReq, Progress, StatusCheckRequest,
+};
 use ::types::GenericResult;
 
 #[derive(Debug, Clone)]
@@ -101,7 +103,12 @@ impl Service {
                   let cur = cur.get(
                     item.exchange.as_string(), &item.symbol
                   ).unwrap_or(0);
-                  let prog = Progress {size, cur};
+                  let prog = Progress {
+                    exchange: item.exchange as i32,
+                    symbol: item.symbol.clone(),
+                    size,
+                    cur
+                  };
                   let payload = jsonify(&prog).unwrap_or(String::from(
                     "Failed to serialize the progress data.",
                   ));
@@ -116,6 +123,23 @@ impl Service {
                   if let Ok(req) = parse_json::<RPCHistFetchReq>(msg.as_bytes()) {
                     let req: HistFetchReq = req.into();
                     let _ = me.splitter.publish(&req);
+                  }
+                  if let Ok(req) = parse_json::<StatusCheckRequest>(msg.as_bytes()) {
+                    let exchange = req.exchange().as_string();
+                    let size = size.get(&exchange, &req.symbol).unwrap_or(0);
+                    let cur = cur.get(&exchange, &req.symbol).unwrap_or(0);
+                    let prog = Progress {
+                      exchange: req.exchange,
+                      symbol: req.symbol,
+                      size,
+                      cur
+                    };
+                    let payload = jsonify(&prog).unwrap_or(String::from(
+                      "Failed to serialize the progress data.",
+                    ));
+                    let payload = Message::text(payload);
+                    let _ = sock.send(payload).await;
+                    let _ = sock.flush().await;
                   }
                 },
               }
