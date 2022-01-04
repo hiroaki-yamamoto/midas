@@ -10,6 +10,6 @@ edition = "2018"
 futures = "0.3.19"
 nats = "0.16.0"
 rmp-serde = "0.15.5"
-serde = { version = "1.0.132", features=["derive"] }
+serde = { version = "1.0.133", features=["derive"] }
 tokio = { version = "1.15.0", features = ["sync"] }
 tokio-stream = "0.1.8"

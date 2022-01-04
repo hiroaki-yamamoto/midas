@@ -29,8 +29,8 @@ serde_qs = "0.8.5"
 url = "2.2.2"
 slog = "2.7.0"
 tokio = { version = "1.15.0", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
-serde = { version = "1.0.132", features = ["derive"] }
-serde_json = "1.0.73"
+serde = { version = "1.0.133", features = ["derive"] }
+serde_json = "1.0.74"
 num_cpus = "1.13.1"
 reqwest = { version = "0.11.8", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
 redis = "0.21.4"
