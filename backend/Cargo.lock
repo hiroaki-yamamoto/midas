@@ -624,7 +624,6 @@ dependencies = [
  "rand 0.8.4",
  "serde",
  "serde_json",
- "time 0.2.27",
  "warp",
 ]
 

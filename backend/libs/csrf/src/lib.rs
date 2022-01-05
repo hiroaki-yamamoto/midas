@@ -1,10 +1,10 @@
 mod errors;
 
+use ::cookie::time::Duration as TimeDuration;
 use ::cookie::CookieBuilder;
 use ::hyper::header::SET_COOKIE;
 use ::rand::distributions::Alphanumeric;
 use ::rand::{thread_rng, Rng};
-use ::time::Duration as TimeDuration;
 use ::warp::http::Method;
 use ::warp::reply;
 use ::warp::{Filter, Rejection, Reply};

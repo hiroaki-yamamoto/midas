@@ -12,6 +12,5 @@ hyper = "0.14.16"
 rand = "0.8.4"
 serde = {version = "1.0.133", features=["derive"]}
 serde_json = "1.0.74"
-time = "^0.2.27"
 
 warp = "0.3.2"
