@@ -28,7 +28,7 @@ date_splitter = { path = "../../libs/date_splitter" }
 slog = "2.7.0"
 tokio = { version = "1.15.0", features = ["rt", "rt-multi-thread", "macros", "signal"] }
 nats = "0.16.0"
-clap = { version = "3.0.0-rc.8", features = ["derive"] }
+clap = { version = "3.0.4", features = ["derive"] }
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
 futures = "0.3.19"
 libc = "0.2.112"
