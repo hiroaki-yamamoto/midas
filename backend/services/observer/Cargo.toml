@@ -15,7 +15,7 @@ csrf = { path = "../../libs/csrf" }
 futures = "0.3.19"
 nats = "0.16.0"
 warp = { version = "0.3.2", features = ["tls"] }
-clap = { version = "3.0.4", features = ["derive"] }
+clap = { version = "3.0.5", features = ["derive"] }
 slog = "2.7.0"
 tokio = { version = "1.15.0", features = ["macros", "signal", "time", "rt", "rt-multi-thread"] }
 libc = "0.2.112"
