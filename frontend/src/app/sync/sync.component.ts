@@ -8,7 +8,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { Exchanges as RPCExchanges } from '../rpc/entities_pb';
-import { HistChartProg, HistChartFetchReq } from '../rpc/historical_pb';
+import { Progress, HistoryFetchRequest } from '../rpc/historical_pb';
 
 import { HistoricalService } from '../resources/historical.service';
 import { SymbolService } from '../resources/symbol.service';
@@ -53,12 +53,12 @@ export class SyncComponent {
   }
 
   fetchHistoricalData() {
-    const req = new HistChartFetchReq();
-    req.setSymbolsList(['all']);
+    const req = new HistoryFetchRequest();
+    // req.setSymbolsList(['all']);
     this.historicalClient.sync(RPCExchanges.BINANCE, req).subscribe();
   }
 
-  fetchProgressCompleted(ev: HistChartProg.AsObject) {
+  fetchProgressCompleted(ev: Progress.AsObject) {
     this.historicalClient.deleteProgress(ev.symbol);
   }
 }

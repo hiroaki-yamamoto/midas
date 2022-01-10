@@ -4,14 +4,14 @@ import { Observable } from 'rxjs';
 
 import { ISeekInfo } from './iseek-info';
 import { MidasSocket } from '../websocket';
-import { HistChartProg, HistChartFetchReq } from '../rpc/historical_pb'
+import { Progress, HistoryFetchRequest } from '../rpc/historical_pb'
 import { Exchanges } from '../rpc/entities_pb';
 
 @Injectable({
   providedIn: 'root'
 })
 export class HistoricalService implements OnDestroy {
-  public readonly syncProgress: Map<string, HistChartProg.AsObject>;
+  public readonly syncProgress: Map<string, Progress.AsObject>;
   public readonly symbolProgress: ISeekInfo;
   private socket: MidasSocket;
 
@@ -20,12 +20,8 @@ export class HistoricalService implements OnDestroy {
     this.symbolProgress = {current: 0, size: 0};
     this.socket = new MidasSocket('/historical/subscribe');
     this.socket.addEventListener('message', (ev) => {
-      const obj = JSON.parse(ev.data) as HistChartProg.AsObject;
+      const obj = JSON.parse(ev.data) as Progress.AsObject;
       this.syncProgress.set(obj.symbol, obj);
-      this.symbolProgress.size = obj.numSymbols;
-      if (this.symbolProgress.current < obj.curSymbolNum) {
-        this.symbolProgress.current = obj.curSymbolNum;
-      }
     });
     this.socket.addEventListener('error', (ev) => {
       console.log(ev);
@@ -39,7 +35,7 @@ export class HistoricalService implements OnDestroy {
     }
   }
 
-  sync(exchange: Exchanges, req: HistChartFetchReq): Observable<void> {
+  sync(exchange: Exchanges, req: HistoryFetchRequest): Observable<void> {
     return this.http.post<void>(`/historical/sync/${exchange.valueOf()}`, req.toObject());
   }
 
