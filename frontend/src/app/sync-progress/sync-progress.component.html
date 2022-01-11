@@ -1,10 +1,10 @@
 <div fxLayout="column" fxLayoutAlign="center start" class="progress">
   <mat-progress-bar
-    [value]="progress.curObjectNum / progress.numObjects * 100"
+    [value]="progress.cur / progress.size * 100"
   >
   </mat-progress-bar>
   <div>
     {{ progress.symbol }}
-    {{ progress.curObjectNum }} / {{ progress.numObjects }}
+    {{ progress.cur }} / {{ progress.size }}
   </div>
 </div>

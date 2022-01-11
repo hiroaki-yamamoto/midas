@@ -36,9 +36,12 @@ speed-measure-plugin*.json
 /connect.lock
 /coverage
 /libpeerconnection.log
+logs
+*.log
 npm-debug.log
 yarn-error.log
 testem.log
+.pnpm-debug.log
 /typings
 
 # System Files
@@ -47,3 +50,6 @@ Thumbs.db
 
 # Angular cache
 .angular
+
+# PNPM store
+.pnpm-store

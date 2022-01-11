@@ -10,18 +10,13 @@ import {
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 
-import { create, color } from '@amcharts/amcharts4/core';
-import {
-  XYChart,
-  XYCursor,
-  LineSeries,
-  DateAxis,
-  ValueAxis,
-  Legend,
-} from '@amcharts/amcharts4/charts';
+import * as am from '@amcharts/amcharts5';
+import * as amxy from '@amcharts/amcharts5/xy';
+import am5themes_Animated from '@amcharts/amcharts5/themes/Animated';
 
 import { Bot, Position } from '../rpc/bot_pb';
 import { IGraphStats } from './interfaces';
+import { BrowserOnlyService } from '../browser-only.service';
 
 @Component({
   selector: 'app-bot-panel',
@@ -35,7 +30,7 @@ export class BotPanelComponent implements OnInit {
   @ViewChild('curPosPaginator', {static: true}) curPosPaginator: MatPaginator;
   @ViewChild('arcPosPaginator', { static: true }) arcPosPaginator: MatPaginator;
 
-  private g: XYChart;
+  private chartRoot: am.Root;
 
   public currentPositions: MatTableDataSource<Position>;
   public archivedPositions: MatTableDataSource<Position>;
@@ -44,7 +39,7 @@ export class BotPanelComponent implements OnInit {
     'symbol', 'tradingAmount', 'valuation', 'profitAmount', 'profitPercent',
   ];
 
-  constructor(private zone: NgZone) {
+  constructor(private browserOnly: BrowserOnlyService) {
     this.currentPositions = new MatTableDataSource<Position>([]);
     this.archivedPositions = new MatTableDataSource<Position>([]);
   }
@@ -88,7 +83,6 @@ export class BotPanelComponent implements OnInit {
     }
 
     const botStats: IGraphStats[] = [];
-    const txtColor = color('#ffffff');
 
     for (let i = 0; i < 90; i++) {
       const time = new Date();
@@ -99,60 +93,72 @@ export class BotPanelComponent implements OnInit {
         unrealizedProfitPercent: Math.sin(i / 24) * 100,
       });
     }
-    this.zone.runOutsideAngular(() => {
-      this.g = create(this.profitGraph.nativeElement, XYChart);
-
-      this.g.cursor = new XYCursor();
-      this.g.cursor.lineY.opacity = 0;
-      this.g.legend = new Legend();
-      this.g.legend.labels.template.fill = txtColor;
+    this.browserOnly.browserOnly(() => {
+      let root = am.Root.new(this.profitGraph.nativeElement);
+      root.setThemes([am5themes_Animated.new(root)]);
+      let chart = root.container.children.push(
+        amxy.XYChart.new(root, { panY: true, layout: root.verticalLayout })
+      );
 
       // Create axes
-      const dateAxis = this.g.xAxes.push(new DateAxis());
-      dateAxis.renderer.minGridDistance = 50;
-      dateAxis.renderer.grid.template.location = 0.5;
-      dateAxis.startLocation = 0.5;
-      dateAxis.endLocation = 0.5;
-      dateAxis.renderer.grid.template.stroke = txtColor;
-      dateAxis.renderer.labels.template.fill = txtColor;
-      dateAxis.tooltipDateFormat = 'd MMMM';
+      const dateAxis = chart.xAxes.push(amxy.DateAxis.new(root, {
+        renderer: amxy.AxisRendererX.new(root, { pan: 'zoom' }),
+        baseInterval: { timeUnit: 'day', count: 1 },
+        tooltip: am.Tooltip.new(root, {
+          dateFormatter: am.DateFormatter.new(root, { dateFormat: 'd MMMM' })
+        }),
+        gridIntervals: [{ timeUnit: 'day', count: 1 }],
+        maxDeviation: 0.5,
+      }));
 
       // Create value axis
-      const valueAxis = this.g.yAxes.push(new ValueAxis());
-      valueAxis.renderer.grid.template.stroke = txtColor;
-      valueAxis.renderer.labels.template.fill = txtColor;
+      const valueAxis = chart.yAxes.push(amxy.ValueAxis.new(root, {
+        renderer: amxy.AxisRendererY.new(root, {})
+      }));
 
       // Create realized profitability series.
-      const bot = this.g.series.push(new LineSeries());
-      bot.dataFields.dateX = 'date';
-      bot.dataFields.valueY = 'realizedProfitPercent';
-      bot.strokeWidth = 1;
-      bot.tensionX = 1.0;
-      bot.fillOpacity = 0.5;
-      bot.name = 'Realized Profit Percent';
-      bot.tooltipText =
-        'Realized Trading Profit Ratio: [bold]{realizedProfitPercent}%[/]';
+      const realized = chart.series.push(amxy.LineSeries.new(root, {
+        name: 'Realized Profit Percent',
+        valueXField: 'date',
+        valueYField: 'realizedProfitPercent',
+        calculateAggregates: true,
+        xAxis: dateAxis,
+        yAxis: valueAxis,
+        legendValueText: '{valueY}',
+        tooltip: am.Tooltip.new(root, {
+          pointerOrientation: 'horizontal',
+          labelText: `Realized Trading Profit Ratio: \
+                    [bold]{realizedProfitPercent}%[/]`,
+        }),
+      }));
 
       // Create unrealized profitability series.
-      const uProfitPercent = this.g.series.push(new LineSeries());
-      uProfitPercent.dataFields.dateX = 'date';
-      uProfitPercent.dataFields.valueY = 'unrealizedProfitPercent';
-      uProfitPercent.strokeWidth = 1;
-      uProfitPercent.tensionX = 1.0;
-      uProfitPercent.fillOpacity = 0.5;
-      uProfitPercent.name = 'Realized Profit Percent';
-      uProfitPercent.tooltipText =
-        'Realized Trading Profit Ratio: [bold]{unrealizedProfitPercent}%[/]';
+      const unRealized = chart.series.push(amxy.LineSeries.new(root, {
+        name: 'Un-Realized Profit Percent',
+        valueXField: 'date',
+        valueYField: 'unrealizedProfitPercent',
+        calculateAggregates: true,
+        xAxis: dateAxis,
+        yAxis: valueAxis,
+        legendValueText: '{valueY}',
+        tooltip: am.Tooltip.new(root, {
+          pointerOrientation: 'horizontal',
+          labelText: `Un-Realized Trading Profit Ratio: \
+                    [bold]{unrealizedProfitPercent}%[/]`,
+        }),
+      }));
+      realized.data.setAll(botStats);
+      unRealized.data.setAll(botStats);
 
       // Set the data.
-      this.g.data = botStats;
+      this.chartRoot = root;
     });
   }
 
   close() {
-    this.zone.runOutsideAngular(() => {
-      if (this.g) {
-        this.g.dispose();
+    this.browserOnly.browserOnly(() => {
+      if (this.chartRoot) {
+        this.chartRoot.dispose();
       }
     });
   }

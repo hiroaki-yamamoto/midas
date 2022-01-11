@@ -28,9 +28,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSelectModule } from '@angular/material/select';
 import { MatExpansionModule } from '@angular/material/expansion';
-
-import * as am4core from '@amcharts/amcharts4/core';
-import am4themes_animated from '@amcharts/amcharts4/themes/animated';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { MonacoEditorModule } from 'ngx-monaco-editor'
@@ -106,7 +103,6 @@ export class AppModule {
     tradeObserver: TradeObserverService,
     keychain: KeychainService,
   ) {
-    am4core.useTheme(am4themes_animated);
     tradeObserver.connect();
     keychain.fetch().subscribe();
   }
