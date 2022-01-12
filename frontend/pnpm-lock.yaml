@@ -1,7 +1,7 @@
 lockfileVersion: 5.3
 
 specifiers:
-  '@amcharts/amcharts5': ^5.0.20
+  '@amcharts/amcharts5': ^5.0.21
   '@angular-devkit/build-angular': ~13.1.0
   '@angular-eslint/builder': 13.0.1
   '@angular-eslint/eslint-plugin': 13.0.1
@@ -54,7 +54,7 @@ specifiers:
   zone.js: ~0.11.4
 
 dependencies:
-  '@amcharts/amcharts5': 5.0.20
+  '@amcharts/amcharts5': 5.0.21
   '@angular/animations': 13.1.1_@angular+core@13.1.1
   '@angular/cdk': 13.1.1_879062f7d7cd68a93030a1f176a7ec5d
   '@angular/common': 13.1.1_@angular+core@13.1.1+rxjs@7.5.1
@@ -110,8 +110,8 @@ devDependencies:
 
 packages:
 
-  /@amcharts/amcharts5/5.0.20:
-    resolution: {integrity: sha512-LsuKobxu1JFycq0x35Lg43efSz2IUBfhCRp1Syyhiks1aDT6xcjlI27l1fYW6Bd5X/QZRRIZKoZy7NXgH2CG/Q==}
+  /@amcharts/amcharts5/5.0.21:
+    resolution: {integrity: sha512-8d0TaspvBS9tmQXlNvsEQpyKynjrPjoaKW5uF0S+8eY5EbW8QsV1HG3BRSY96FkPKLUog1SAlB4u77kK7XkwAg==}
     dependencies:
       '@types/d3': 6.7.5
       '@types/d3-chord': 2.0.3
