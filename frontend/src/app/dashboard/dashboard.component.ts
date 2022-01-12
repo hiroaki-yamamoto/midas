@@ -30,7 +30,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     this.browserOnly.browserOnly(() => {
-      let root = am.Root.new(this.graph.nativeElement);
+      this.chartRoot = am.Root.new(this.graph.nativeElement);
+      const root = this.chartRoot;
       root.setThemes([
         am5themes_Animated.new(root),
         am5themes_Dark.new(root),
@@ -42,19 +43,17 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           panX: true,
           wheelX: 'panX',
           wheelY: 'zoomX',
+          cursor: amxy.XYCursor.new(root, {}),
         })
       );
+      chart.get('cursor').lineY.set('visible', false);
       const legend = chart.children.push(am.Legend.new(root, {
         x: am.percent(50),
         centerX: am.percent(50),
       }))
-      // Cursor
-      chart.set('cursor', amxy.XYCursor.new(root, {}));
-
 
       // Create axes
       const dateAxis = chart.xAxes.push(amxy.DateAxis.new(root, {
-        maxDeviation: 0.5,
         renderer: amxy.AxisRendererX.new(root, {}),
         baseInterval: { timeUnit: 'day', count: 1 },
         tooltip: am.Tooltip.new(root, {}),
@@ -63,38 +62,37 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Create value axis
       const valueAxis = chart.yAxes.push(amxy.ValueAxis.new(root, {
-        maxDeviation: 1,
         renderer: amxy.AxisRendererY.new(root, {}),
-        tooltip: am.Tooltip.new(root, {}),
       }));
 
-      const hodl = chart.series.push(amxy.LineSeries.new(root, {
-        name: 'Hodl BTC Profit',
-        valueXField: 'date',
-        valueYField: 'hodl',
-        xAxis: dateAxis,
-        yAxis: valueAxis,
-        tooltip: am.Tooltip.new(root, {}),
-        tooltipText: 'Hodl BTC Profit Ratio: [bold]{valueY}%[/]',
-      }));
-      hodl.data.processor = am.DataProcessor.new(root, {
-        dateFormat: 'yyyy-MM-dd',
-        dateFields: ['date'],
-      });
+      // Create line series
+      const createSeries = (name: string, valueField: string, tooltip: string) => {
+        const ret = chart.series.push(amxy.LineSeries.new(root, {
+          name,
+          valueXField: 'date',
+          valueYField: valueField,
+          xAxis: dateAxis,
+          yAxis: valueAxis,
+          tooltip: am.Tooltip.new(root, {labelText: tooltip}),
+        }));
+        ret.data.processor = am.DataProcessor.new(root, {
+          dateFormat: 'yyyy-MM-dd',
+          dateFields: ['date'],
+        });
+        return ret
+      };
 
-      const bot = chart.series.push(amxy.LineSeries.new(root, {
-        name: 'Bot Trading Profit',
-        valueXField: 'date',
-        valueYField: 'bot',
-        xAxis: dateAxis,
-        yAxis: valueAxis,
-        tooltip: am.Tooltip.new(root, {}),
-        tooltipText: 'Bot Trading Profit Ratio: [bold]{valueY}%[/]',
-      }));
-      bot.data.processor = am.DataProcessor.new(root, {
-        dateFormat: 'yyyy-MM-dd',
-        dateFields: ['date'],
-      });
+      const hodl = createSeries(
+        'Hodl BTC Profit',
+        'hodl',
+        'Hodl BTC Profit Ratio: [bold]{valueY}%[/]',
+      );
+
+      const bot = createSeries(
+        'Bot Trading Profit',
+        'bot',
+        'Bot Trading Profit Ratio: [bold]{valueY}%[/]'
+      );
 
       const data = [];
       const now = new Date();
@@ -111,13 +109,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       hodl.data.setAll(data);
       bot.data.setAll(data);
       legend.data.setAll(chart.series.values);
-      dateAxis.data.setAll(data);
       hodl.appear(1000);
       bot.appear(1000);
       chart.appear(1000, 100);
-
-
-      this.chartRoot = root;
     });
   }
 
