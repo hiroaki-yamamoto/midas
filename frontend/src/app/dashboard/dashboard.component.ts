@@ -12,9 +12,8 @@ import * as amxy from '@amcharts/amcharts5/xy';
 import am5themes_Animated from '@amcharts/amcharts5/themes/Animated';
 import am5themes_Dark from '@amcharts/amcharts5/themes/Dark';
 
-import {Bot, TriggerType} from '../rpc/bot_pb';
+import { Bot } from '../rpc/bot_pb';
 import { BrowserOnlyService } from '../browser-only.service';
-import { leadingComment } from '@angular/compiler';
 
 @Component({
   selector: 'app-dashboard',
