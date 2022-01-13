@@ -46,6 +46,7 @@ import { EditDialogComponent } from './keychain/edit-dialog/edit-dialog.componen
 import { ExchangePipePipe } from './rpc/exchange-pipe.pipe';
 import { DeleteWarnComponent } from './keychain/delete-warn/delete-warn.component';
 import { BotEditorComponent } from './bot-editor/bot-editor.component';
+import { DateGraphComponent } from './date-graph/date-graph.component';
 
 @NgModule({
   declarations: [
@@ -62,6 +63,7 @@ import { BotEditorComponent } from './bot-editor/bot-editor.component';
     BotPanelComponent,
     BotEditorComponent,
     DashboardComponent,
+    DateGraphComponent,
   ],
   imports: [
     BrowserModule,
