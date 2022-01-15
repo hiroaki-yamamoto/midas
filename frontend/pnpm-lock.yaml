@@ -828,8 +828,8 @@ packages:
       regexpu-core: 4.8.0
     dev: true
 
-  /@babel/helper-define-polyfill-provider/0.3.0_@babel+core@7.16.0:
-    resolution: {integrity: sha512-7hfT8lUljl/tM3h+izTX/pO3W3frz2ok6Pk+gzys8iJqDfZrZy2pXjRTZAvG2YmfHun1X4q8/UZRLatMfqc5Tg==}
+  /@babel/helper-define-polyfill-provider/0.3.1_@babel+core@7.16.0:
+    resolution: {integrity: sha512-J9hGMpJQmtWmj46B3kBHmL38UhJGhYX7eqkcq+2gsstyYt341HmPeWspihX43yVRA0mS+8GGk2Gckc7bY/HCmA==}
     peerDependencies:
       '@babel/core': ^7.4.0-0
     dependencies:
@@ -1640,9 +1640,9 @@ packages:
       '@babel/core': 7.16.0
       '@babel/helper-module-imports': 7.16.7
       '@babel/helper-plugin-utils': 7.16.7
-      babel-plugin-polyfill-corejs2: 0.3.0_@babel+core@7.16.0
+      babel-plugin-polyfill-corejs2: 0.3.1_@babel+core@7.16.0
       babel-plugin-polyfill-corejs3: 0.4.0_@babel+core@7.16.0
-      babel-plugin-polyfill-regenerator: 0.3.0_@babel+core@7.16.0
+      babel-plugin-polyfill-regenerator: 0.3.1_@babel+core@7.16.0
       semver: 6.3.0
     transitivePeerDependencies:
       - supports-color
@@ -1796,9 +1796,9 @@ packages:
       '@babel/plugin-transform-unicode-regex': 7.16.7_@babel+core@7.16.0
       '@babel/preset-modules': 0.1.5_@babel+core@7.16.0
       '@babel/types': 7.16.8
-      babel-plugin-polyfill-corejs2: 0.3.0_@babel+core@7.16.0
+      babel-plugin-polyfill-corejs2: 0.3.1_@babel+core@7.16.0
       babel-plugin-polyfill-corejs3: 0.4.0_@babel+core@7.16.0
-      babel-plugin-polyfill-regenerator: 0.3.0_@babel+core@7.16.0
+      babel-plugin-polyfill-regenerator: 0.3.1_@babel+core@7.16.0
       core-js-compat: 3.20.3
       semver: 6.3.0
     transitivePeerDependencies:
@@ -3257,14 +3257,14 @@ packages:
       - supports-color
     dev: true
 
-  /babel-plugin-polyfill-corejs2/0.3.0_@babel+core@7.16.0:
-    resolution: {integrity: sha512-wMDoBJ6uG4u4PNFh72Ty6t3EgfA91puCuAwKIazbQlci+ENb/UU9A3xG5lutjUIiXCIn1CY5L15r9LimiJyrSA==}
+  /babel-plugin-polyfill-corejs2/0.3.1_@babel+core@7.16.0:
+    resolution: {integrity: sha512-v7/T6EQcNfVLfcN2X8Lulb7DjprieyLWJK/zOWH5DUYcAgex9sP3h25Q+DLsX9TloXe3y1O8l2q2Jv9q8UVB9w==}
     peerDependencies:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/compat-data': 7.16.8
       '@babel/core': 7.16.0
-      '@babel/helper-define-polyfill-provider': 0.3.0_@babel+core@7.16.0
+      '@babel/helper-define-polyfill-provider': 0.3.1_@babel+core@7.16.0
       semver: 6.3.0
     transitivePeerDependencies:
       - supports-color
@@ -3276,19 +3276,19 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.16.0
-      '@babel/helper-define-polyfill-provider': 0.3.0_@babel+core@7.16.0
+      '@babel/helper-define-polyfill-provider': 0.3.1_@babel+core@7.16.0
       core-js-compat: 3.20.3
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /babel-plugin-polyfill-regenerator/0.3.0_@babel+core@7.16.0:
-    resolution: {integrity: sha512-dhAPTDLGoMW5/84wkgwiLRwMnio2i1fUe53EuvtKMv0pn2p3S8OCoV1xAzfJPl0KOX7IB89s2ib85vbYiea3jg==}
+  /babel-plugin-polyfill-regenerator/0.3.1_@babel+core@7.16.0:
+    resolution: {integrity: sha512-Y2B06tvgHYt1x0yz17jGkGeeMr5FeKUu+ASJ+N6nB5lQ8Dapfg42i0OVrf8PNGJ3zKL4A23snMi1IRwrqqND7A==}
     peerDependencies:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.16.0
-      '@babel/helper-define-polyfill-provider': 0.3.0_@babel+core@7.16.0
+      '@babel/helper-define-polyfill-provider': 0.3.1_@babel+core@7.16.0
     transitivePeerDependencies:
       - supports-color
     dev: true
