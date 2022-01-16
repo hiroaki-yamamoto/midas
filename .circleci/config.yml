@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  slack: circleci/slack@4.5.2
-
 executors:
   backend-rust:
     docker:
@@ -103,22 +100,9 @@ jobs:
           name: "List compiled files"
           command: ls -lha
           working_directory: ./backend/target/x86_64-unknown-linux-musl/release/bin
-      - slack/notify:
-          event: fail
-          ignore_errors: false
-          template: basic_fail_1
-      - run:
-          name: "Export slack notification on success"
-          command: |
-            echo 'export SLACK_TMPL_PASS=$(cat ./.circleci/slack_template_success.json)' >> $BASH_ENV
-      - slack/notify:
-          event: pass
-          ignore_errors: false
-          template: SLACK_TMPL_PASS
       - persist_to_workspace:
           root: .
           paths:
-            - ./.circleci/slack_template_success.json
             - ./backend/target/x86_64-unknown-linux-musl/release/bin
             - ./backend/prod.dockerfile
   deploy-image:
@@ -156,10 +140,6 @@ jobs:
           name: Push Docker Image
           command: |
             docker push ghcr.io/hiroaki-yamamoto/<<parameters.service_name>>
-      - slack/notify:
-          event: fail
-          ignore_errors: false
-          template: basic_fail_1
       - run: docker logout ghcr.io
   notify:
     docker:
@@ -172,14 +152,6 @@ jobs:
       - run:
           name: "Install essential tools"
           command: "apt-get update && apt-get install -y jq curl"
-      - run:
-          name: "Export slack notification on success"
-          command: |
-            echo 'export SLACK_TMPL_PASS=$(cat ./.circleci/slack_template_success.json)' >> $BASH_ENV
-      - slack/notify:
-          event: always
-          ignore_errors: false
-          template: SLACK_TMPL_PASS
 
 devel-filter: &devel-filter
   filters:
