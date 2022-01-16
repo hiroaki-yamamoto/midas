@@ -22,7 +22,7 @@ keychain = { path = "../../keychain" }
 async-trait = "0.1.52"
 nats = "0.16.0"
 rmp-serde = "0.15.5"
-serde_json = "1.0.74"
+serde_json = "1.0.75"
 slog = "2.7.0"
 tokio = { version = "1.15.0", features = ["time", "macros"] }
 tokio-stream = "0.1.8"
