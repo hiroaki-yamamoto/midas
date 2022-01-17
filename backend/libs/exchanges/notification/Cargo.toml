@@ -21,7 +21,7 @@ keychain = { path = "../../keychain" }
 
 async-trait = "0.1.52"
 nats = "0.16.0"
-rmp-serde = "0.15.5"
+rmp-serde = "1.0.0"
 serde_json = "1.0.75"
 slog = "2.7.0"
 tokio = { version = "1.15.0", features = ["time", "macros"] }

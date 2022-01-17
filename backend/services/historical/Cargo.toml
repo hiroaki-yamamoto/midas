@@ -19,7 +19,7 @@ entities = { path = "../../libs/entities" }
 symbols = { path = "../../libs/exchanges/symbols" }
 
 serde = { version = "1.0.133", features = ["derive"] }
-rmp-serde = "0.15.5"
+rmp-serde = "1.0.0"
 nats = "0.16.0"
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
 clap = { version = "3.0.7", features = ["derive"] }
