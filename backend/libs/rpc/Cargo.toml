@@ -11,10 +11,10 @@ errors = {path = "../errors"}
 csrf = {path = "../csrf"}
 
 prost = "0.9.0"
-serde = { version = "1.0.133", features=["derive"] }
+serde = { version = "1.0.134", features=["derive"] }
 num-traits = "0.2.14"
 num-derive = "0.3.3"
-clap = { version = "3.0.7", features = ["derive"] }
+clap = { version = "3.0.10", features = ["derive"] }
 http = "0.2.6"
 bson = "2.1.0"
 warp = "0.3.2"

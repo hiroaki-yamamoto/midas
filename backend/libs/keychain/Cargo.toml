@@ -16,4 +16,4 @@ writers = { path = "../writers" }
 futures = "0.3.19"
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
 rmp-serde = "1.0.0"
-nats = "0.16.0"
+nats = "0.17.0"
