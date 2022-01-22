@@ -20,4 +20,4 @@ slog = "2.7.0"
 tokio = { version = "1.15.0", features = ["macros", "signal", "time", "rt", "rt-multi-thread"] }
 libc = "0.2.113"
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
-serde_json = "1.0.76"
+serde_json = "1.0.77"
