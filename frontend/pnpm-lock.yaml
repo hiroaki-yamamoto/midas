@@ -6334,7 +6334,7 @@ packages:
       http-proxy: 1.18.1
       isbinaryfile: 4.0.8
       lodash: 4.17.21
-      log4js: 6.4.0
+      log4js: 6.4.1
       mime: 2.6.0
       minimatch: 3.0.4
       qjobs: 1.2.0
@@ -6494,8 +6494,8 @@ packages:
       is-unicode-supported: 0.1.0
     dev: true
 
-  /log4js/6.4.0:
-    resolution: {integrity: sha512-ysc/XUecZJuN8NoKOssk3V0cQ29xY4fra6fnigZa5VwxFsCsvdqsdnEuAxNN89LlHpbE4KUD3zGcn+kFqonSVQ==}
+  /log4js/6.4.1:
+    resolution: {integrity: sha512-iUiYnXqAmNKiIZ1XSAitQ4TmNs8CdZYTAWINARF3LjnsLN8tY5m0vRwd6uuWj/yNY0YHxeZodnbmxKFUOM2rMg==}
     engines: {node: '>=8.0'}
     dependencies:
       date-format: 4.0.3
