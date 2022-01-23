@@ -8,8 +8,8 @@ edition = "2018"
 
 [dependencies]
 futures = "0.3.19"
-nats = "0.16.0"
+nats = "0.17.0"
 rmp-serde = "1.0.0"
-serde = { version = "1.0.133", features=["derive"] }
+serde = { version = "1.0.135", features=["derive"] }
 tokio = { version = "1.15.0", features = ["sync"] }
 tokio-stream = "0.1.8"
