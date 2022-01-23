@@ -81,7 +81,7 @@ jobs:
           key: sccache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - save_cache:
           paths:
-            - ~/.cargo/registry
+            - '~/.cargo'
           key: cargo-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - run:
           name: "Collect executable"
