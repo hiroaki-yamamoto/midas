@@ -6,7 +6,7 @@ set -e
 export CC="musl-gcc -fPIE -pie -O2"
 
 BASEDIR=`dirname $0`
-DOWNLOAD_URL='http://www.multiprecision.org/downloads/mpc-1.2.0.tar.gz'
+DOWNLOAD_URL='https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz'
 FILENAME=`basename $DOWNLOAD_URL`
 EXTRACTED_NAME=`basename ${FILENAME} .tar.gz`
 WORK_DIR=`realpath $BASEDIR`
