@@ -26,13 +26,7 @@ jobs:
           command: |
             echo $PREV_REV
       - restore_cache:
-          key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
-      - restore_cache:
-          key: rustup-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
-      - restore_cache:
-          key: sccache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
-      - restore_cache:
-          key: cargo-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
+          key: cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - run:
           name: "Install musl tools"
           command: "apt-get update && apt-get install -y musl-tools jq curl lld clang"
@@ -70,20 +64,11 @@ jobs:
           command: sccache -s
       - save_cache:
           paths:
-            - ./backend/target
-          key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
-      - save_cache:
-          paths:
-            - ~/.rustup
-          key: rustup-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
-      - save_cache:
-          paths:
-            - ~/.cache/sccache
-          key: sccache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
-      - save_cache:
-          paths:
+            - './backend/target'
+            - '~/.rustup'
+            - '~/.cache/sccache'
             - '~/.cargo'
-          key: cargo-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
+          key: cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - run:
           name: "Collect executable"
           command: |
