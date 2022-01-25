@@ -142,17 +142,6 @@ jobs:
           command: |
             docker push ghcr.io/hiroaki-yamamoto/<<parameters.service_name>>
       - run: docker logout ghcr.io
-  notify:
-    docker:
-      - image: ubuntu
-        environment:
-          BASH_ENV: /etc/profile
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: "Install essential tools"
-          command: "apt-get update && apt-get install -y jq curl"
 
 devel-filter: &devel-filter
   filters:
@@ -237,18 +226,3 @@ workflows:
             branches:
               only: master
           service_name: bot_service
-      - notify:
-          name: "Deploy Success Notification"
-          filters:
-            branches:
-              only: master
-          requires:
-            - Historical Kline Service Deployment
-            - Historical Kline Fetch Worker Deployment
-            - Historical Kline Date Split Worker Deployment
-            - Symbol Service Deployment
-            - Trade Observer Worker Deployment
-            - Trade Observer Service Deployment
-            - Keychain Service Deployment
-            - Notification Worker Deployment
-            - Bot Service Deployment
