@@ -1,5 +1,3 @@
-use ::std::convert::TryFrom;
-
 use ::mongodb::Database;
 use ::nats::Connection as Broker;
 use ::slog::{o, Logger};
@@ -7,7 +5,6 @@ use ::warp::filters::BoxedFilter;
 use ::warp::reject;
 use ::warp::{Filter, Rejection, Reply};
 
-use ::num_traits::FromPrimitive;
 use ::rpc::entities::{Exchanges, Status};
 use ::symbols::binance::{
   fetcher as binance_fetcher, recorder as binance_recorder,
@@ -67,18 +64,26 @@ impl Service {
     let me = self.clone();
     return ::warp::path("base")
       .and(::warp::get())
-      .and(::warp::path::param::<i32>())
-      .and_then(|param: i32| async move {
-        return Exchanges::try_from(param)
-          .map(|exchange| (exchange,))
-          .map_err(|_| ::warp::reject::not_found());
-      })
-      .untuple_one()
+      .and(Exchanges::by_param())
       .map(move |exchange: Exchanges| me.get_recorder(exchange))
       .and_then(handle_base_currencies)
       .map(|base: Vec<String>| {
         return Box::new(::warp::reply::json(&BaseCurrencies::new(base)));
       });
+  }
+
+  fn supported_currencies(
+    &self,
+  ) -> impl Filter<Extract = (impl Reply,), Error = ::warp::Rejection>
+       + Clone
+       + Send
+       + Sync
+       + 'static {
+    return ::warp::path("currencies")
+      .and(::warp::get())
+      .and(Exchanges::by_param())
+      .map(|exchange| self.get_recorder(exchange))
+      .map(|recorder| {});
   }
 
   async fn refresh(
@@ -91,17 +96,7 @@ impl Service {
     let me = self.clone();
     return ::warp::path("refresh")
       .and(::warp::post())
-      .and(::warp::path::param::<i32>())
-      .and_then(|param: i32| async move {
-        let exchange: Exchanges = match FromPrimitive::from_i32(param) {
-          Some(v) => v,
-          None => {
-            return Err(::warp::reject::not_found());
-          }
-        };
-        return Ok((exchange,));
-      })
-      .untuple_one()
+      .and(Exchanges::by_param())
       .map(move |exchange: Exchanges| me.get_fetcher(exchange))
       .and_then(handle_fetcher)
       .map(move |_| {

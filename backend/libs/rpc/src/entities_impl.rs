@@ -5,6 +5,7 @@ use ::bson::oid::ObjectId;
 use ::http::{status::InvalidStatusCode, StatusCode};
 use ::num_traits::FromPrimitive;
 use ::warp::reject::Reject;
+use ::warp::Filter;
 
 use ::errors::ParseError;
 
@@ -13,6 +14,21 @@ impl Exchanges {
     return String::from(match self {
       Exchanges::Binance => "binance",
     });
+  }
+
+  pub fn by_param(
+  ) -> impl Filter<Extract = (Exchanges,), Error = ::warp::Rejection>
+       + Clone
+       + Send
+       + Sync
+       + 'static {
+    return ::warp::path::param::<i32>()
+      .and_then(|param: i32| async move {
+        return Exchanges::try_from(param)
+          .map(|exchange| (exchange,))
+          .map_err(|_| ::warp::reject::not_found());
+      })
+      .untuple_one();
   }
 }
 
