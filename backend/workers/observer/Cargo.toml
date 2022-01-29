@@ -11,10 +11,10 @@ observers = { path = "../../libs/exchanges/observers" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 
-clap = { version = "3.0.10", features = ["derive"] }
-tokio = { version = "1.15.0", features = ["signal", "rt", "rt-multi-thread", "macros"] }
+clap = { version = "3.0.13", features = ["derive"] }
+tokio = { version = "1.16.1", features = ["signal", "rt", "rt-multi-thread", "macros"] }
 nats = "0.17.0"
 slog = "2.7.0"
 futures = "0.3.19"
-libc = "0.2.113"
+libc = "0.2.116"
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
