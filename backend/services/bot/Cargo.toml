@@ -16,8 +16,8 @@ csrf = { path = "../../libs/csrf" }
 warp = { version = "0.3.2", features = ["tls"] }
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
 reqwest = { version = "0.11.9", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
-tokio = { version = "1.15.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
+tokio = { version = "1.16.1", features = ["macros", "rt", "rt-multi-thread", "signal"] }
 futures = "0.3.19"
 slog = "2.7.0"
-clap = { version = "3.0.10", features = ["derive"] }
-libc = "0.2.113"
+clap = { version = "3.0.13", features = ["derive"] }
+libc = "0.2.116"
