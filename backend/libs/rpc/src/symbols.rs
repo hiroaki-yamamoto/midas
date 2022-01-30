@@ -14,7 +14,7 @@ pub struct SymbolInfo {
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct BaseCurrencyList {
+pub struct SymbolList {
     #[prost(string, repeated, tag="1")]
-    pub base_currencies: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    pub symbols: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }

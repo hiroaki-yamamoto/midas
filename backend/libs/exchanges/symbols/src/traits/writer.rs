@@ -4,12 +4,13 @@ use ::mongodb::bson::Document;
 use ::mongodb::results::InsertManyResult;
 use ::serde::Serialize;
 
+use super::entities::Symbol as SymbolTrait;
 use ::types::ThreadSafeResult;
 
 #[async_trait]
 pub trait SymbolRecorder {
-  type ListStream: Stream + Send + 'static;
-  type Type: Serialize + Send + 'static;
+  type Type: SymbolTrait + Serialize + Send + 'static;
+  type ListStream: Stream<Item = Self::Type> + Send + 'static;
   async fn list(
     &self,
     query: impl Into<Option<Document>> + Send + 'async_trait,

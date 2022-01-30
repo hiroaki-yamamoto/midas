@@ -1,4 +1,3 @@
-mod entities;
 mod service;
 
 use ::std::net::SocketAddr;

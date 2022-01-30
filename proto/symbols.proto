@@ -9,6 +9,6 @@ message SymbolInfo {
   string quote = 4;
 }
 
-message BaseCurrencyList {
-  repeated string baseCurrencies = 1;
+message SymbolList {
+  repeated string symbols = 1;
 }

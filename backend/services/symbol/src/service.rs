@@ -1,3 +1,4 @@
+use ::futures::StreamExt;
 use ::mongodb::Database;
 use ::nats::Connection as Broker;
 use ::slog::{o, Logger};
@@ -6,12 +7,11 @@ use ::warp::reject;
 use ::warp::{Filter, Rejection, Reply};
 
 use ::rpc::entities::{Exchanges, Status};
+use ::rpc::symbols::SymbolList;
 use ::symbols::binance::{
   fetcher as binance_fetcher, recorder as binance_recorder,
 };
-use ::symbols::traits::{SymbolFetcher, SymbolRecorder};
-
-use super::entities::BaseCurrencies;
+use ::symbols::traits::{Symbol as SymbolTrait, SymbolFetcher, SymbolRecorder};
 
 #[derive(Clone)]
 pub struct Service {
@@ -51,7 +51,11 @@ impl Service {
   }
 
   pub async fn route(&self) -> BoxedFilter<(impl Reply,)> {
-    return self.refresh().await.or(self.base_currencies()).boxed();
+    return self
+      .refresh()
+      .or(self.base_currencies())
+      .or(self.supported_currencies())
+      .boxed();
   }
 
   fn base_currencies(
@@ -65,10 +69,10 @@ impl Service {
     return ::warp::path("base")
       .and(::warp::get())
       .and(Exchanges::by_param())
-      .map(move |exchange: Exchanges| me.get_recorder(exchange))
+      .map(move |exchange| me.get_recorder(exchange))
       .and_then(handle_base_currencies)
       .map(|base: Vec<String>| {
-        return Box::new(::warp::reply::json(&BaseCurrencies::new(base)));
+        return Box::new(::warp::reply::json(&SymbolList { symbols: base }));
       });
   }
 
@@ -79,14 +83,18 @@ impl Service {
        + Send
        + Sync
        + 'static {
+    let me = self.clone();
     return ::warp::path("currencies")
       .and(::warp::get())
       .and(Exchanges::by_param())
-      .map(|exchange| self.get_recorder(exchange))
-      .map(|recorder| {});
+      .map(move |exchange| me.get_recorder(exchange))
+      .and_then(handle_supported_currencies)
+      .map(|symbols: Vec<String>| {
+        return Box::new(::warp::reply::json(&SymbolList { symbols: symbols }));
+      });
   }
 
-  async fn refresh(
+  fn refresh(
     &self,
   ) -> impl Filter<Extract = (impl Reply,), Error = ::warp::Rejection>
        + Clone
@@ -97,12 +105,25 @@ impl Service {
     return ::warp::path("refresh")
       .and(::warp::post())
       .and(Exchanges::by_param())
-      .map(move |exchange: Exchanges| me.get_fetcher(exchange))
+      .map(move |exchange| me.get_fetcher(exchange))
       .and_then(handle_fetcher)
       .map(move |_| {
         return Box::new(::warp::reply());
       });
   }
+}
+
+async fn handle_supported_currencies(
+  recorder: impl SymbolRecorder + Send + Sync,
+) -> Result<Vec<String>, Rejection> {
+  let symbols = recorder.list(None).await.map_err(|err| {
+    reject::custom(Status::new(
+      ::warp::http::StatusCode::SERVICE_UNAVAILABLE,
+      format!("{}", err),
+    ))
+  })?;
+  let symbols = symbols.map(|sym| sym.symbol()).collect().await;
+  return Ok(symbols);
 }
 
 async fn handle_base_currencies(
