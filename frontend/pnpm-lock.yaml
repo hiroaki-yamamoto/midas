@@ -142,12 +142,12 @@ packages:
       sourcemap-codec: 1.4.8
     dev: true
 
-  /@ampproject/remapping/2.0.2:
-    resolution: {integrity: sha512-sE8Gx+qSDMLoJvb3QarJJlDQK7SSY4rK3hxp4XsiANeFOmjU46ZI7Y9adAQRJrmbz8zbtZkp3mJTT+rGxtF0XA==}
+  /@ampproject/remapping/2.0.3:
+    resolution: {integrity: sha512-DmIAguV77yFP0MGVFWknCMgSLAtsLR3VlRTteR6xgMpIfYtwaZuMvjGv5YlpiqN7S/5q87DHyuIx8oa15kiyag==}
     engines: {node: '>=6.0.0'}
     dependencies:
-      '@jridgewell/trace-mapping': 0.2.6
-      sourcemap-codec: 1.4.8
+      '@jridgewell/sourcemap-codec': 1.4.9
+      '@jridgewell/trace-mapping': 0.2.7
     dev: true
 
   /@angular-devkit/architect/0.1302.2:
@@ -698,7 +698,7 @@ packages:
     resolution: {integrity: sha512-x/5Ea+RO5MvF9ize5DeVICJoVrNv0Mi2RnIABrZEKYvPEpldXwauPkgvYA17cKa6WpU3LoYvYbuEMFtSNFsarA==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@ampproject/remapping': 2.0.2
+      '@ampproject/remapping': 2.0.3
       '@babel/code-frame': 7.16.7
       '@babel/generator': 7.17.0
       '@babel/helper-compilation-targets': 7.16.7_@babel+core@7.17.0
@@ -2028,11 +2028,15 @@ packages:
     engines: {node: '>=6.0.0'}
     dev: true
 
-  /@jridgewell/trace-mapping/0.2.6:
-    resolution: {integrity: sha512-rVJf5dSMEBxnDEwtAT5x8+p6tZ+xU6Ocm+cR1MYL2gMsRi4MMzVf9Pvq6JaxIsEeKAyYmo2U+yPQN4QfdTfFnA==}
+  /@jridgewell/sourcemap-codec/1.4.9:
+    resolution: {integrity: sha512-iKsUDLGOrC5pSdVTyb8zJI/f55wItTzGtfGWiWPWTc8h2P4oucax7XOGSRq9V2aA1nwE8qMaGvwdXk3PZRtgjg==}
+    dev: true
+
+  /@jridgewell/trace-mapping/0.2.7:
+    resolution: {integrity: sha512-ZKfRhw6eK2vvdWqpU7DQq49+BZESqh5rmkYpNhuzkz01tapssl2sNNy6uMUIgrTtUWQDijomWJzJRCoevVrfgw==}
     dependencies:
       '@jridgewell/resolve-uri': 3.0.4
-      sourcemap-codec: 1.4.8
+      '@jridgewell/sourcemap-codec': 1.4.9
     dev: true
 
   /@ngtools/webpack/13.2.2_202cb1456d8d9601586f65ea76c96372:
