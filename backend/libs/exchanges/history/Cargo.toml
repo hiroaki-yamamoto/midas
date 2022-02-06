@@ -20,7 +20,7 @@ writers = { path = "../../writers" }
 clients = { path = "../clients" }
 
 async-trait = "0.1.52"
-futures = "0.3.19"
+futures = "0.3.21"
 nats = "0.17.0"
 rand = "0.8.4"
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
