@@ -1882,6 +1882,16 @@ packages:
       '@cspotcode/source-map-consumer': 0.8.0
     dev: true
 
+  /@csstools/postcss-progressive-custom-properties/1.1.0_postcss@8.4.5:
+    resolution: {integrity: sha512-DO76V3295AqhjJZvgeaDP5GAGAat4g6wYfF8X+1n+76MpJat8ffY5bCJ9eSUqFY71nImxXgaDTRYJcRnA9oo7g==}
+    engines: {node: ^12 || ^14 || >=16}
+    peerDependencies:
+      postcss: ^8.3
+    dependencies:
+      postcss: 8.4.5
+      postcss-value-parser: 4.2.0
+    dev: true
+
   /@discoveryjs/json-ext/0.5.6:
     resolution: {integrity: sha512-ws57AidsDvREKrZKYffXddNkyaF14iHNHm8VQnZH6t99E8gczjNN0GpvcGny0imC80yQ0tHz1xVUKk/KFQSUyA==}
     engines: {node: '>=10.0.0'}
@@ -7643,12 +7653,13 @@ packages:
       postcss: 8.4.5
     dev: true
 
-  /postcss-lab-function/4.0.4_postcss@8.4.5:
-    resolution: {integrity: sha512-TAEW8X/ahMYV33mvLFQARtBPAy1VVJsiR9VVx3Pcbu+zlqQj0EIyJ/Ie1/EwxwIt530CWtEDzzTXBDzfdb+qIQ==}
+  /postcss-lab-function/4.1.0_postcss@8.4.5:
+    resolution: {integrity: sha512-59uHN/2wRaOd7whDyeaJ82E0kncIEeJkwcmvXFPNus8v1YMhtv2IUo9OtOAncn7sifZVMRsyoPlhxwckTjn4cQ==}
     engines: {node: ^12 || ^14 || >=16}
     peerDependencies:
       postcss: ^8.4
     dependencies:
+      '@csstools/postcss-progressive-custom-properties': 1.1.0_postcss@8.4.5
       postcss: 8.4.5
       postcss-value-parser: 4.2.0
     dev: true
@@ -7793,7 +7804,7 @@ packages:
       postcss-gap-properties: 3.0.3_postcss@8.4.5
       postcss-image-set-function: 4.0.6_postcss@8.4.5
       postcss-initial: 4.0.1_postcss@8.4.5
-      postcss-lab-function: 4.0.4_postcss@8.4.5
+      postcss-lab-function: 4.1.0_postcss@8.4.5
       postcss-logical: 5.0.4_postcss@8.4.5
       postcss-media-minmax: 5.0.0_postcss@8.4.5
       postcss-nesting: 10.1.2_postcss@8.4.5
