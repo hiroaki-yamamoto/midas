@@ -13,7 +13,7 @@ config = { path = "../../libs/config" }
 
 clap = { version = "3.0.14", features = ["derive"] }
 tokio = { version = "1.16.1", features = ["signal", "rt", "rt-multi-thread", "macros"] }
-nats = "0.17.0"
+nats = "0.18.1"
 slog = "2.7.0"
 futures = "0.3.21"
 libc = "0.2.117"
