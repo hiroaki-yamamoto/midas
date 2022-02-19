@@ -31,5 +31,5 @@ nats = "0.18.1"
 clap = { version = "3.1.0", features = ["derive"] }
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
 futures = "0.3.21"
-libc = "0.2.118"
+libc = "0.2.119"
 tokio-stream = "0.1.8"
