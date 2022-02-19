@@ -255,6 +255,7 @@ impl TradeObserver {
           "Got Pong frame somehow... why?? Anyway, Ingoring."
         );
       }
+      _ => {}
     }
     return Ok(());
   }
