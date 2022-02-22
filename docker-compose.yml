@@ -6,7 +6,6 @@ services:
       MONGO_INITDB_DATABASE: midas
     volumes:
       - "./db:/data/db"
-      - "./etc/mongo/scripts:/docker-entrypoint-initdb.d"
   broker:
     image: nats-streaming:scratch
   redis:
@@ -48,6 +47,7 @@ services:
       - ./backend:/opt/code
     depends_on:
       - broker
+      - redis
       - historical_worker
   symbol_service:
     build:
@@ -79,6 +79,7 @@ services:
       - ./backend:/opt/code
     depends_on:
       - database
+      - redis
       - broker
   historical_splitter:
     build:
@@ -94,6 +95,7 @@ services:
       - ./backend:/opt/code
     depends_on:
       - database
+      - redis
       - broker
   binance_trade_observer_worker:
     build:
