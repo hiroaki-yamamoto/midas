@@ -4,5 +4,5 @@ use ::types::ThreadSafeResult;
 
 #[async_trait]
 pub trait SymbolFetcher {
-  async fn refresh(&self) -> ThreadSafeResult<()>;
+  async fn refresh(&self) -> ThreadSafeResult<Vec<String>>;
 }

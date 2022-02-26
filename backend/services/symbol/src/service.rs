@@ -107,8 +107,8 @@ impl Service {
       .and(Exchanges::by_param())
       .map(move |exchange| me.get_fetcher(exchange))
       .and_then(handle_fetcher)
-      .map(move |_| {
-        return Box::new(::warp::reply());
+      .map(move |sym| {
+        return Box::new(::warp::reply::json(&SymbolList { symbols: sym }));
       });
   }
 }
@@ -139,7 +139,11 @@ async fn handle_base_currencies(
 
 async fn handle_fetcher(
   fetcher: impl SymbolFetcher + Send + Sync,
-) -> Result<(), Rejection> {
-  let _ = fetcher.refresh().await;
-  return Ok(());
+) -> Result<Vec<String>, Rejection> {
+  return fetcher.refresh().await.map_err(|err| {
+    reject::custom(Status::new(
+      ::warp::http::StatusCode::SERVICE_UNAVAILABLE,
+      format!("{}", err),
+    ))
+  });
 }
