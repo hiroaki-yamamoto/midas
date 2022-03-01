@@ -4,6 +4,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { InfoComponent } from './info/info.component';
 import { KeychainComponent } from './keychain/keychain.component';
 import { BotEditorComponent } from './bot-editor/bot-editor.component';
+import { SyncComponent } from './sync/sync.component';
 
 
 const routes: Routes = [
@@ -22,6 +23,10 @@ const routes: Routes = [
   {
     path: 'edit-bot',
     component: BotEditorComponent,
+  },
+  {
+    path: 'sync',
+    component: SyncComponent,
   }
 ];
 
