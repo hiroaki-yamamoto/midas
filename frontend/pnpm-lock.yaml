@@ -6658,8 +6658,8 @@ packages:
       yallist: 4.0.0
     dev: true
 
-  /lru-cache/7.4.0:
-    resolution: {integrity: sha512-YOfuyWa/Ee+PXbDm40j9WXyJrzQUynVbgn4Km643UYcWNcrSfRkKL0WaiUcxcIbkXcVTgNpDqSnPXntWXT75cw==}
+  /lru-cache/7.4.1:
+    resolution: {integrity: sha512-NCD7/WRlFmADccuHjsRUYqdluYBr//n/O0fesCb/n52FoGcgKh8o4Dpm7YIbZwVcDs8rPBQbCZLmWWsp6m+xGQ==}
     engines: {node: '>=12'}
     dev: true
 
@@ -6710,7 +6710,7 @@ packages:
       http-proxy-agent: 5.0.0
       https-proxy-agent: 5.0.0
       is-lambda: 1.0.1
-      lru-cache: 7.4.0
+      lru-cache: 7.4.1
       minipass: 3.1.6
       minipass-collect: 1.0.2
       minipass-fetch: 2.0.2
