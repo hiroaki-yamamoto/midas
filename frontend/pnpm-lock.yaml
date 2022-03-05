@@ -3315,7 +3315,7 @@ packages:
     dependencies:
       browserslist: 4.19.3
       caniuse-lite: 1.0.30001313
-      fraction.js: 4.1.3
+      fraction.js: 4.2.0
       normalize-range: 0.1.2
       picocolors: 1.0.0
       postcss: 8.4.5
@@ -5494,8 +5494,8 @@ packages:
     engines: {node: '>=0.8'}
     dev: false
 
-  /fraction.js/4.1.3:
-    resolution: {integrity: sha512-pUHWWt6vHzZZiQJcM6S/0PXfS+g6FM4BF5rj9wZyreivhQPdsh5PpE25VtSNxq80wHS5RfY51Ii+8Z0Zl/pmzg==}
+  /fraction.js/4.2.0:
+    resolution: {integrity: sha512-MhLuK+2gUcnZe8ZHlaaINnQLl0xRIGRfcGk2yl8xoQAfHrSsL3rYu6FCmBdkdbhc9EPlwyGHewaRsvwRMJtAlA==}
     dev: true
 
   /fresh/0.5.2:
