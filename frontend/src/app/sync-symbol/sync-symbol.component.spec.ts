@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SyncProgressComponent } from './sync-progress.component';
+import { SyncSymbolComponent } from './sync-symbol.component';
 
-describe('SyncProgressComponent', () => {
-  let component: SyncProgressComponent;
-  let fixture: ComponentFixture<SyncProgressComponent>;
+describe('SyncSymbolComponent', () => {
+  let component: SyncSymbolComponent;
+  let fixture: ComponentFixture<SyncSymbolComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ SyncProgressComponent ]
+      declarations: [ SyncSymbolComponent ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SyncProgressComponent);
+    fixture = TestBed.createComponent(SyncSymbolComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

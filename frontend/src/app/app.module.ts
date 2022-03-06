@@ -28,15 +28,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSelectModule } from '@angular/material/select';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatMenuModule } from '@angular/material/menu';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { MonacoEditorModule } from 'ngx-monaco-editor'
 
 import { BotPanelComponent } from './bot-panel/bot-panel.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { SyncComponent } from './sync/sync.component';
 import { IconSnackBarComponent } from './icon-snackbar/icon-snackbar.component';
-import { SyncProgressComponent } from './sync-progress/sync-progress.component';
 import { InfoComponent } from './info/info.component';
 import { TradeObserverService } from './resources/trade-observer.service';
 import { KeychainService } from './resources/keychain.service';
@@ -47,13 +46,13 @@ import { ExchangePipePipe } from './rpc/exchange-pipe.pipe';
 import { DeleteWarnComponent } from './keychain/delete-warn/delete-warn.component';
 import { BotEditorComponent } from './bot-editor/bot-editor.component';
 import { DateGraphComponent } from './date-graph/date-graph.component';
+import { SyncSymbolComponent } from './sync-symbol/sync-symbol.component';
+import { SyncHistoryComponent } from './sync-history/sync-history.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    SyncComponent,
     IconSnackBarComponent,
-    SyncProgressComponent,
     InfoComponent,
     BookTickerComponent,
     KeychainComponent,
@@ -64,6 +63,8 @@ import { DateGraphComponent } from './date-graph/date-graph.component';
     BotEditorComponent,
     DashboardComponent,
     DateGraphComponent,
+    SyncSymbolComponent,
+    SyncHistoryComponent,
   ],
   imports: [
     BrowserModule,
@@ -93,6 +94,7 @@ import { DateGraphComponent } from './date-graph/date-graph.component';
     MatSortModule,
     MatIconModule,
     MatListModule,
+    MatMenuModule,
     FontAwesomeModule,
   ],
   providers: [

@@ -4,7 +4,8 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { InfoComponent } from './info/info.component';
 import { KeychainComponent } from './keychain/keychain.component';
 import { BotEditorComponent } from './bot-editor/bot-editor.component';
-import { SyncComponent } from './sync/sync.component';
+import { SyncSymbolComponent } from './sync-symbol/sync-symbol.component';
+import { SyncHistoryComponent } from './sync-history/sync-history.component';
 
 
 const routes: Routes = [
@@ -25,8 +26,12 @@ const routes: Routes = [
     component: BotEditorComponent,
   },
   {
-    path: 'sync',
-    component: SyncComponent,
+    path: 'sync-symbol',
+    component: SyncSymbolComponent,
+  },
+  {
+    path: 'sync-history',
+    component: SyncHistoryComponent,
   }
 ];
 

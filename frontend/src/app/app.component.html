@@ -2,7 +2,13 @@
   Midas
   <ul>
     <li><a mat-button i18n routerLink="/">Dashboard</a></li>
-    <li><a mat-button i18n routerLink="/sync">Sync</a></li>
+    <li>
+      <button mat-button i18n [matMenuTriggerFor]="syncMenu">Sync</button>
+      <mat-menu #syncMenu>
+        <a mat-menu-item mat-button i18n routerLink="/sync-symbol">Symbol</a>
+        <a mat-menu-item mat-button i18n routerLink="/sync-history">Historical Chart</a>
+      </mat-menu>
+    </li>
     <li><a mat-button i18n routerLink="/info">Info</a></li>
     <li><a mat-button i18n routerLink="/api">API</a></li>
   </ul>

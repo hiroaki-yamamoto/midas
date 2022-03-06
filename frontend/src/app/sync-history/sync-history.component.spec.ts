@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SyncComponent } from './sync.component';
+import { SyncHistoryComponent } from './sync-history.component';
 
-describe('SyncComponent', () => {
-  let component: SyncComponent;
-  let fixture: ComponentFixture<SyncComponent>;
+describe('SyncHistoryComponent', () => {
+  let component: SyncHistoryComponent;
+  let fixture: ComponentFixture<SyncHistoryComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ SyncComponent ]
+      declarations: [ SyncHistoryComponent ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SyncComponent);
+    fixture = TestBed.createComponent(SyncHistoryComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
