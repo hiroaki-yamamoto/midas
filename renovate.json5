@@ -23,13 +23,9 @@
     "extends": ["schedule:weekends"]
   },
   "packageRules": [
-    {
-      packageNames: ["typescript"],
-      "allowedVersions": "<4.5.0"
-    },
-    {
-      "packageNames": ["time"],
-      "allowedVersions": "<0.3"
-    }
+    // {
+    //   "packageNames": ["time"],
+    //   "allowedVersions": "<0.3"
+    // }
   ]
 }
