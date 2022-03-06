@@ -29,4 +29,4 @@ slog = "2.7.0"
 ring = "0.16.20"
 serde = { version = "1.0.136", features = ["derive"] }
 reqwest = { version = "0.11.9", features = ["gzip", "brotli", "json", "rustls-tls"]}
-serde_qs = "0.9.0"
+serde_qs = "0.9.1"
