@@ -48,9 +48,9 @@ specifiers:
   ngx-monaco-editor: ^12.0.0
   protractor: ~7.0.0
   rxjs: ~7.5.0
-  ts-node: ~10.6.0
+  ts-node: ~10.7.0
   tslib: ^2.3.1
-  typescript: <4.6.0
+  typescript: <4.6.3
   zone.js: ~0.11.4
 
 dependencies:
@@ -105,7 +105,7 @@ devDependencies:
   karma-jasmine: 4.0.1_karma@6.3.17
   karma-jasmine-html-reporter: 1.7.0_d63185f8de84f984ad7c6427ff04984c
   protractor: 7.0.0
-  ts-node: 10.6.0_417302ea145567f640c434d0edb74695
+  ts-node: 10.7.0_417302ea145567f640c434d0edb74695
   typescript: 4.4.4
 
 packages:
@@ -9077,8 +9077,8 @@ packages:
     hasBin: true
     dev: true
 
-  /ts-node/10.6.0_417302ea145567f640c434d0edb74695:
-    resolution: {integrity: sha512-CJen6+dfOXolxudBQXnVjRVvYTmTWbyz7cn+xq2XTsvnaXbHqr4gXSCNbS2Jj8yTZMuGwUoBESLaOkLascVVvg==}
+  /ts-node/10.7.0_417302ea145567f640c434d0edb74695:
+    resolution: {integrity: sha512-TbIGS4xgJoX2i3do417KSaep1uRAW/Lu+WAL2doDHC0D6ummjirVOXU5/7aiZotbQ5p1Zp9tP7U6cYhA0O7M8A==}
     hasBin: true
     peerDependencies:
       '@swc/core': '>=1.2.50'
