@@ -2691,9 +2691,9 @@ dependencies = [
 
 [[package]]
 name = "serde_qs"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f1b4c668bdc08a896117f4ab11d7e7b0f7af643a9ab5bed2bd33ee0d3ef5434"
+checksum = "9dfafda9a9479d9ac6188b6fc1f84b850cd3f3b5faff6d13e6e45d1296e92ee8"
 dependencies = [
  "percent-encoding",
  "serde",
