@@ -23,9 +23,9 @@
     "extends": ["schedule:weekends"]
   },
   "packageRules": [
-    {
-      "packageNames": ["time"],
-      "allowedVersions": "<0.3"
-    }
+    // {
+    //   "packageNames": ["time"],
+    //   "allowedVersions": "<0.3"
+    // }
   ]
 }
