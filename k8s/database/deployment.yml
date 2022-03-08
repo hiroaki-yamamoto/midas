@@ -2,9 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: database
-  namespace: midas
-  labels:
-    app: database
 spec:
   replicas: 1
   selector:

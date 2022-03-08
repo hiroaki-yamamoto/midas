@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: broker
+  template:
+    metadata:
+      labels:
+        app: broker
+    spec:
+      containers:
+        - name: broker
+          image: nats-streaming:scratch
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          ports:
+            - containerPort: 4222
+            - containerPort: 8222
+            - containerPort: 6222
