@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database
+  namespace: midas
+  labels:
+    app: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      containers:
+        - name: database
+          image: mongo
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          ports:
+            - containerPort: 27017
+            - containerPort: 27018
+            - containerPort: 27019
+          volumeMounts:
+            - mountPath: /data/db
+              name: dbVol
+      volumes:
+        - name: dbVol
+          persistentVolumeClaim:
+            claimName: databasePVC
