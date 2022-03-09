@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kvs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kvs
+  template:
+    metadata:
+      labels:
+        app: kvs
+    spec:
+      containers:
+        - name: kvs
+          image: redis:alpine
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
