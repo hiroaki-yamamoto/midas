@@ -19,13 +19,16 @@ spec:
             limits:
               cpu: 1000m
               memory: 1Gi
-          ports:
-            - containerPort: 27017
-            - containerPort: 27018
-            - containerPort: 27019
+          # ports:
+          #   - containerPort: 27017
+          #   - containerPort: 27018
+          #   - containerPort: 27019
           volumeMounts:
             - mountPath: /data/db
               name: dbVol
+          env:
+            - name: MONGO_INITDB_DATABASE
+              value: midas
       volumes:
         - name: dbVol
           persistentVolumeClaim:
