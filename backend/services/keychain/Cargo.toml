@@ -12,7 +12,7 @@ rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 
-clap = { version = "3.1.5", features = ["derive"] }
+clap = { version = "3.1.6", features = ["derive"] }
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
 tokio = { version = "1.17.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
 warp = { version = "0.3.2", features = ["tls"] }
