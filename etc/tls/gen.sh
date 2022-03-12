@@ -20,6 +20,8 @@ openssl req \
   -subj '/C=JP/ST=Tokyo/L=Tokyo/O=AAAA Midas Root Authority/OU=IT/CN=localhost' \
   -out $DEST/root-ca.pem
 
+echo "Generated root-ca.pem. Add it to your browser when accessing the app."
+
 openssl ecparam \
   -name prime256v1 \
   -genkey \
