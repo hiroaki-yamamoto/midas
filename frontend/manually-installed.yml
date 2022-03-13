@@ -1,0 +1,5 @@
+# The following packages are required by other packages, but manually installed
+# because of reasons (e.g. build failure).
+- d3-shape
+- svg-arc-to-cubic-bezier
+- d3-path

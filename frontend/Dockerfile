@@ -1,8 +1,4 @@
-FROM node:alpine
+FROM nginx:alpine
 
-RUN corepack enable
-
-RUN mkdir -p /opt/code
-WORKDIR /opt/code
-
-ENTRYPOINT [ "./run.sh" ]
+COPY ./dist/frontend/ /srv/http
+COPY nginx.conf /etc/nginx/

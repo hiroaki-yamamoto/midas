@@ -28,7 +28,10 @@
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
             "tsConfig": "tsconfig.app.json",
+            "optimization": true,
             "aot": true,
+            "buildOptimizer": false,
+            "sourceMap": true,
             "assets": [
               "src/favicon.ico",
               "src/assets",
@@ -71,14 +74,12 @@
                   "with": "src/environments/environment.prod.ts"
                 }
               ],
-              "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
               "preserveSymlinks": true,
               "namedChunks": false,
               "extractLicenses": true,
               "vendorChunk": false,
-              "buildOptimizer": false,
               "budgets": [
                 {
                   "type": "initial",

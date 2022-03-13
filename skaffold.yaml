@@ -1,0 +1,17 @@
+apiVersion: skaffold/v2beta27
+kind: Config
+metadata:
+  name: midas
+build:
+  artifacts:
+    - image: frontend
+      context: ./frontend
+      hooks:
+        before:
+          - command: [pnpm, run, build]
+            os: [windows, darwin, linux]
+            dir: ./frontend
+      docker:
+        dockerfile: Dockerfile
+        noCache: false
+        squash: false
