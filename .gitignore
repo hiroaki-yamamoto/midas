@@ -4,5 +4,4 @@ deps
 
 .ninja_deps
 .ninja_log
-etc/tls/browser
-etc/tls/svc
+tls/certs
