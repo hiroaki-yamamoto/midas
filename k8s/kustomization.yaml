@@ -4,6 +4,7 @@ resources:
   - broker/deployment.yml
   - kvs/deployment.yml
   - database
+  - frontend
   - namespace.yml
   - storage.yml
 namespace: midas
