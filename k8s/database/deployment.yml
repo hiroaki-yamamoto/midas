@@ -24,12 +24,12 @@ spec:
           #   - containerPort: 27018
           #   - containerPort: 27019
           volumeMounts:
-            - mountPath: /data/db
-              name: dbVol
+            - name: db-volume
+              mountPath: /data/db
           env:
             - name: MONGO_INITDB_DATABASE
               value: midas
       volumes:
-        - name: dbVol
+        - name: db-volume
           persistentVolumeClaim:
-            claimName: databasePVC
+            claimName: database-pvc

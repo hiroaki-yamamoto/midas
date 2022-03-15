@@ -8,3 +8,14 @@ resources:
   - namespace.yml
   - storage.yml
 namespace: midas
+configMapGenerator:
+  - name: browser-cert
+    files:
+      - ./tls/certs/browser.crt
+      - ./tls/certs/browser.key
+      - ./tls/certs/root-ca.pem
+  - name: svc-cert
+    files:
+      - ./tls/certs/svc.crt
+      - ./tls/certs/svc.key
+      - ./tls/certs/root-ca.pem

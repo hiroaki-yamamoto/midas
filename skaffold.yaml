@@ -5,7 +5,7 @@ metadata:
 build:
   artifacts:
     - image: frontend
-      context: ./frontend
+      context: frontend
       hooks:
         before:
           - command: [pnpm, run, build]
@@ -15,3 +15,7 @@ build:
         dockerfile: Dockerfile
         noCache: false
         squash: false
+deploy:
+  kustomize:
+    paths:
+      - ./k8s

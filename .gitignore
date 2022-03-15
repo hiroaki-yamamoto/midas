@@ -4,4 +4,4 @@ deps
 
 .ninja_deps
 .ninja_log
-tls/certs
+k8s/tls/certs
