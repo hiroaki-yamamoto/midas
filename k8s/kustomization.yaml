@@ -6,7 +6,6 @@ resources:
   - database
   - frontend
   - namespace.yml
-  - storage.yml
 namespace: midas
 configMapGenerator:
   - name: browser-cert
