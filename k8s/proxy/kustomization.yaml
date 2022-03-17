@@ -5,4 +5,3 @@ resources:
   - proxy-headers.yml
   - config.yml
   - ingress.yml
-  - svc.yml

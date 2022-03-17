@@ -21,10 +21,17 @@ spec:
             cpu: 1000m
             memory: 1Gi
         volumeMounts:
-          - name: certs
-            mountPath: "/etc/certs"
+          - name: svc-cert
+            mountPath: "/etc/certs/svc"
+            readOnly: true
+          - name: root-key
+            mountPath: "/etc/certs/root"
+            readOnly: true
       volumes:
-        - name: certs
-          configMap:
-            name: svc-cert
+        - name: svc-cert
+          secret:
+            secretName: svc-cert
+        - name: root-key
+          secret:
+            secretName: root-key
 status: {}

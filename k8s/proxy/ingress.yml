@@ -7,9 +7,23 @@ metadata:
   labels:
     app: midas
 spec:
-  tls: []
-  defaultBackend:
-    service:
-      name: frontend
-      port:
-        name: https
+  tls:
+    - hosts:
+        - "minikube"
+      secretName: proxy-cert
+  rules:
+    - host: "minikube"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  name: https
+  # defaultBackend:
+  #   service:
+  #     name: frontend
+  #     port:
+  #       name: https

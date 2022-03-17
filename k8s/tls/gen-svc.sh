@@ -4,28 +4,25 @@
 set -e
 
 genSvcKeys() {
-  DEST=$1
+  ROOT=$1
+  DEST=$2
 
-  # openssl ecparam \
-  #   -name prime256v1 \
-  #   -genkey \
-  #   -out $DEST/svc.key
-  openssl genrsa -out $DEST/svc.key 4096
+  openssl genrsa -out $DEST/tls.key 4096
 
   openssl req \
     -new \
     -nodes \
-    -key $DEST/svc.key \
+    -key $DEST/tls.key \
     -subj '/C=JP/ST=Tokyo/L=Tokyo/O=AAAA Midas Signning Service/OU=IT/CN=localhost' \
-    -out $DEST/svc.csr
+    -out $DEST/tls.csr
 
   openssl x509 \
     -req \
-    -in $DEST/svc.csr \
-    -CA $DEST/root-ca.pem \
-    -CAkey $DEST/root.key \
+    -in $DEST/tls.csr \
+    -CA $ROOT/root-ca.pem \
+    -CAkey $ROOT/root.key \
     -CAcreateserial \
-    -out $DEST/svc.crt \
+    -out $DEST/tls.crt \
     -days 730 \
     -sha256 \
     -extfile svc.cfg

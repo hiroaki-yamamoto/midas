@@ -9,7 +9,7 @@ build:
       hooks:
         before:
           - command: [pnpm, run, build]
-            os: [windows, darwin, linux]
+            os: [darwin, linux]
             dir: ./frontend
       docker:
         dockerfile: Dockerfile
@@ -20,12 +20,8 @@ deploy:
     paths:
       - ./k8s
     hooks:
-      after:
+      before:
         - host:
             command: [./gen.sh]
-            os: [darwin, linux]
-            dir: ./k8s/tls
-        - host:
-            command: [./upload-proxy-cert.sh]
             os: [darwin, linux]
             dir: ./k8s/tls

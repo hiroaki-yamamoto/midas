@@ -5,25 +5,28 @@ set -e
 
 HERE=`dirname $0`
 CERTS=$HERE/certs
-mkdir -p $CERTS
+ROOT_DIR=$CERTS/root
+SVC_DIR=$CERTS/svc
+PROXY_DIR=$CERTS/proxy
+mkdir -p $CERTS $ROOT_DIR $SVC_DIR $PROXY_DIR
 
-if [ -f  $CERTS/root.key -a -f $CERTS/root-ca.pem ];then
+if [ -f  $ROOT_DIR/root.key -a -f $ROOT_DIR/root-ca.pem ];then
   echo "Skipped root key generation. Files exist."
 else
   source $HERE/gen-root.sh
-  genRootKeys $CERTS
+  genRootKeys $ROOT_DIR
 fi
 
-if [ -f  $CERTS/svc.key -a -f $CERTS/svc.csr -a -f $CERTS/svc.crt ];then
+if [ -f  $SVC_DIR/tls.key -a -f $SVC_DIR/tls.csr -a -f $SVC_DIR/tls.crt ];then
   echo "Skipped service certificate generation. Files exist."
 else
   source $HERE/gen-svc.sh
-  genSvcKeys $CERTS
+  genSvcKeys $ROOT_DIR $SVC_DIR
 fi
 
-if [ -f  $CERTS/browser.key -a -f $CERTS/browser.csr -a -f $CERTS/browser.crt ];then
-  echo "Skipped browser certificate generation. Files exist."
+if [ -f  $PROXY_DIR/tls.key -a -f $PROXY_DIR/tls.csr -a -f $PROXY_DIR/tls.crt ];then
+  echo "Skipped proxy certificate generation. Files exist."
 else
-  source $HERE/gen-browser.sh
-  genBrowserKeys $CERTS
+  source $HERE/gen-proxy.sh
+  genProxyKeys $ROOT_DIR $PROXY_DIR
 fi

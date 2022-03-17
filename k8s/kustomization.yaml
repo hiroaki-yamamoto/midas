@@ -8,14 +8,19 @@ resources:
   - namespace.yml
   - proxy
 namespace: midas
-configMapGenerator:
-  - name: browser-cert
+secretGenerator:
+  - name: proxy-cert
+    type: kubernetes.io/tls
     files:
-      - ./tls/certs/browser.crt
-      - ./tls/certs/browser.key
-      - ./tls/certs/root-ca.pem
+      - ./tls/certs/proxy/tls.crt
+      - ./tls/certs/proxy/tls.key
   - name: svc-cert
+    type: kubernetes.io/tls
     files:
-      - ./tls/certs/svc.crt
-      - ./tls/certs/svc.key
-      - ./tls/certs/root-ca.pem
+      - ./tls/certs/svc/tls.crt
+      - ./tls/certs/svc/tls.key
+  - name: root-key
+    files:
+      - ./tls/certs/root/root-ca.pem
+      - ./tls/certs/root/root-ca.srl
+      - ./tls/certs/root/root.key
