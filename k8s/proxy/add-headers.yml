@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: add-headers
+data:
+  Strict-Transport-Security: "max-age=15768000; includeSubdomains"
+  X-Frame-Options: sameorigin

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: proxy-headers
+  namespace: midas
+data:
+  Host: $host
+  X-Real-IP: $remote_addr
+  Upgrade: $http_upgrade
+  Connection: $connection_upgrade

@@ -19,3 +19,13 @@ deploy:
   kustomize:
     paths:
       - ./k8s
+    hooks:
+      after:
+        - host:
+            command: [./gen.sh]
+            os: [darwin, linux]
+            dir: ./k8s/tls
+        - host:
+            command: [./upload-proxy-cert.sh]
+            os: [darwin, linux]
+            dir: ./k8s/tls
