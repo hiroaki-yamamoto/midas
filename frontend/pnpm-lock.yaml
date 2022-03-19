@@ -4883,7 +4883,7 @@ packages:
     engines: {node: '>=0.10.0'}
     hasBin: true
     dependencies:
-      jake: 10.8.2
+      jake: 10.8.3
     dev: true
 
   /electron-to-chromium/1.4.88:
@@ -6469,8 +6469,8 @@ packages:
       istanbul-lib-report: 3.0.0
     dev: true
 
-  /jake/10.8.2:
-    resolution: {integrity: sha512-eLpKyrfG3mzvGE2Du8VoPbeSkRry093+tyNjdYaBbJS9v17knImYGNXQCUV0gLxQtF82m3E8iRb/wdSQZLoq7A==}
+  /jake/10.8.3:
+    resolution: {integrity: sha512-qeoeVK7eSYbs1r9zPLweN0KJfUPqUQyM/WtJC8kmUJoYzfkK/MqcJNNkrOY3CtoWyg8LytAAwyNMk3NGsDs3OQ==}
     hasBin: true
     dependencies:
       async: 0.9.2
@@ -7833,8 +7833,8 @@ packages:
       postcss: 8.4.5
     dev: true
 
-  /postcss-custom-properties/12.1.4_postcss@8.4.5:
-    resolution: {integrity: sha512-i6AytuTCoDLJkWN/MtAIGriJz3j7UX6bV7Z5t+KgFz+dwZS15/mlTJY1S0kRizlk6ba0V8u8hN50Fz5Nm7tdZw==}
+  /postcss-custom-properties/12.1.5_postcss@8.4.5:
+    resolution: {integrity: sha512-FHbbB/hRo/7cxLGkc2NS7cDRIDN1oFqQnUKBiyh4b/gwk8DD8udvmRDpUhEK836kB8ggUCieHVOvZDnF9XhI3g==}
     engines: {node: ^12 || ^14 || >=16}
     peerDependencies:
       postcss: ^8.4
@@ -7874,8 +7874,8 @@ packages:
       postcss-value-parser: 4.2.0
     dev: true
 
-  /postcss-env-function/4.0.5_postcss@8.4.5:
-    resolution: {integrity: sha512-gPUJc71ji9XKyl0WSzAalBeEA/89kU+XpffpPxSaaaZ1c48OL36r1Ep5R6+9XAPkIiDlSvVAwP4io12q/vTcvA==}
+  /postcss-env-function/4.0.6_postcss@8.4.5:
+    resolution: {integrity: sha512-kpA6FsLra+NqcFnL81TnsU+Z7orGtDTxcOhl6pwXeEq1yFPpRMkCDpHhrz8CFQDr/Wfm0jLiNQ1OsGGPjlqPwA==}
     engines: {node: ^12 || ^14 || >=16}
     peerDependencies:
       postcss: ^8.4
@@ -8091,11 +8091,11 @@ packages:
       postcss-color-hex-alpha: 8.0.3_postcss@8.4.5
       postcss-color-rebeccapurple: 7.0.2_postcss@8.4.5
       postcss-custom-media: 8.0.0_postcss@8.4.5
-      postcss-custom-properties: 12.1.4_postcss@8.4.5
+      postcss-custom-properties: 12.1.5_postcss@8.4.5
       postcss-custom-selectors: 6.0.0_postcss@8.4.5
       postcss-dir-pseudo-class: 6.0.4_postcss@8.4.5
       postcss-double-position-gradients: 3.1.1_postcss@8.4.5
-      postcss-env-function: 4.0.5_postcss@8.4.5
+      postcss-env-function: 4.0.6_postcss@8.4.5
       postcss-focus-visible: 6.0.4_postcss@8.4.5
       postcss-focus-within: 5.0.4_postcss@8.4.5
       postcss-font-variant: 5.0.0_postcss@8.4.5
