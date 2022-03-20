@@ -20,7 +20,7 @@ entities = { path = "../../entities" }
 sign = { path = "../sign" }
 writers = { path = "../../writers" }
 
-async-stream = "0.3.2"
+async-stream = "0.3.3"
 async-trait = "0.1.52"
 futures = "0.3.21"
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
@@ -28,5 +28,5 @@ nats = "0.18.1"
 slog = "2.7.0"
 ring = "0.16.20"
 serde = { version = "1.0.136", features = ["derive"] }
-reqwest = { version = "0.11.9", features = ["gzip", "brotli", "json", "rustls-tls"]}
+reqwest = { version = "0.11.10", features = ["gzip", "brotli", "json", "rustls-tls"]}
 serde_qs = "0.9.1"
