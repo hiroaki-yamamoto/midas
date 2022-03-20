@@ -10,6 +10,4 @@ spec:
     targetPort: 50000
   selector:
     app: frontend
-  type: LoadBalancer
-status:
-  loadBalancer: {}
+  type: NodePort
