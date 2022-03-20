@@ -44,7 +44,7 @@ services:
       - /etc/midas/midas.yml
     volumes:
       - ./etc:/etc/midas
-      - ./tls:/etc/tls:ro
+      - ./k8s/tls:/etc/tls:ro
       - ./backend:/opt/code
     depends_on:
       - broker
@@ -61,7 +61,7 @@ services:
       - /etc/midas/midas.yml
     volumes:
       - ./etc:/etc/midas
-      - ./tls:/etc/tls:ro
+      - ./k8s/tls:/etc/tls:ro
       - ./backend:/opt/code
     depends_on:
       - database
@@ -78,7 +78,7 @@ services:
       - /etc/midas/midas.yml
     volumes:
       - ./etc:/etc/midas
-      - ./tls:/etc/tls:ro
+      - ./k8s/tls:/etc/tls:ro
       - ./backend:/opt/code
     depends_on:
       - database
@@ -95,7 +95,7 @@ services:
       - /etc/midas/midas.yml
     volumes:
       - ./etc:/etc/midas
-      - ./tls:/etc/tls:ro
+      - ./k8s/tls:/etc/tls:ro
       - ./backend:/opt/code
     depends_on:
       - database
@@ -114,7 +114,7 @@ services:
       - binance
     volumes:
       - ./etc:/etc/midas
-      - ./tls:/etc/tls:ro
+      - ./k8s/tls:/etc/tls:ro
       - ./backend:/opt/code
     depends_on:
       - database
@@ -130,7 +130,7 @@ services:
       - /etc/midas/midas.yml
     volumes:
       - ./etc:/etc/midas
-      - ./tls:/etc/tls:ro
+      - ./k8s/tls:/etc/tls:ro
       - ./backend:/opt/code
     depends_on:
       - database
@@ -146,7 +146,7 @@ services:
       - /etc/midas/midas.yml
     volumes:
       - ./etc:/etc/midas
-      - ./tls:/etc/tls:ro
+      - ./k8s/tls:/etc/tls:ro
       - ./backend:/opt/code
     depends_on:
       - broker
@@ -161,7 +161,7 @@ services:
       - /etc/midas/midas.yml
     volumes:
       - ./etc:/etc/midas
-      - ./tls:/etc/tls:ro
+      - ./k8s/tls:/etc/tls:ro
       - ./backend:/opt/code
   keychain_service:
     build:
@@ -174,7 +174,7 @@ services:
       - /etc/midas/midas.yml
     volumes:
       - ./etc:/etc/midas
-      - ./tls:/etc/tls:ro
+      - ./k8s/tls:/etc/tls:ro
       - ./backend:/opt/code
     depends_on:
       - database
@@ -186,7 +186,7 @@ services:
       - /etc/midas/midas.yml
     volumes:
       - ./etc:/etc/midas
-      - ./tls:/etc/tls:ro
+      - ./k8s/tls:/etc/tls:ro
       - ./backend/services/transpiler:/opt/code
       - /opt/code/node_modules
   bot_service:
@@ -200,7 +200,7 @@ services:
       - /etc/midas/midas.yml
     volumes:
       - ./etc:/etc/midas
-      - ./tls:/etc/tls:ro
+      - ./k8s/tls:/etc/tls:ro
       - ./backend:/opt/code
     depends_on:
       - database
@@ -212,5 +212,5 @@ services:
       NODE_OPTIONS: --openssl-legacy-provider
     volumes:
       - ./frontend:/opt/code
-      - ./tls:/etc/tls:ro
+      - ./k8s/tls:/etc/tls:ro
       - /opt/code/node_modules

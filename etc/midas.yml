@@ -4,7 +4,7 @@ redisURL: redis://redis/
 host: '[::]:50000'
 debug: true
 tls:
-  privateKey: /etc/tls/certs/svc.key
-  cert: /etc/tls/certs/svc.crt
-  ca: /etc/tls/certs/root-ca.pem
-  root: /etc/tls/certs/root.key
+  privateKey: /etc/tls/certs/svc/tls.key
+  cert: /etc/tls/certs/svc/tls.key
+  ca: /etc/tls/certs/root/root-ca.pem
+  root: /etc/tls/certs/root/root.key
