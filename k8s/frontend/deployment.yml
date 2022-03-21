@@ -24,14 +24,8 @@ spec:
           - name: svc-cert
             mountPath: "/etc/certs/svc"
             readOnly: true
-          - name: root-key
-            mountPath: "/etc/certs/root"
-            readOnly: true
       volumes:
         - name: svc-cert
           secret:
             secretName: svc-cert
-        - name: root-key
-          secret:
-            secretName: root-key
 status: {}

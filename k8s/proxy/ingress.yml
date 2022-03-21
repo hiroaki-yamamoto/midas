@@ -5,7 +5,8 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/backend-protocol: HTTPS
     nginx.ingress.kubernetes.io/secure-backends: "true"
-    nginx.ingress.kubernetes.io/proxy-ssl-secret: svc-cert
+    nginx.ingress.kubernetes.io/proxy-ssl-verify: "true"
+    nginx.ingress.kubernetes.io/proxy-ssl-secret: midas/svc-cert
   name: ingress
   labels:
     app: midas
@@ -25,8 +26,3 @@ spec:
                 name: frontend
                 port:
                   name: https
-  # defaultBackend:
-  #   service:
-  #     name: frontend
-  #     port:
-  #       name: https
