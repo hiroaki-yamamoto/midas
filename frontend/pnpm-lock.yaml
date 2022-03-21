@@ -70,7 +70,7 @@ dependencies:
   '@angular/platform-browser': 13.3.0_8ec06fc754f66949568270178091a62a
   '@angular/platform-browser-dynamic': 13.3.0_522f35f06a6bd1631064e8f0c1b49642
   '@angular/router': 13.3.0_d037e1833dddfd5b0ec8645fd962f740
-  '@fortawesome/angular-fontawesome': 0.10.1_b1d190784fe163af2951357a9666852a
+  '@fortawesome/angular-fontawesome': 0.10.2_b1d190784fe163af2951357a9666852a
   '@fortawesome/fontawesome-svg-core': 6.1.0
   '@fortawesome/free-brands-svg-icons': 6.1.0
   '@fortawesome/free-regular-svg-icons': 6.1.0
@@ -1969,10 +1969,10 @@ packages:
     resolution: {integrity: sha512-59SgoZ3EXbkfSX7b63tsou/SDGzwUEK6MuB5sKqgVK1/XE0fxmpsOb9DQI8LXW3KfGnAjImCGhhEb7uPPAUVNA==}
     dev: false
 
-  /@fortawesome/angular-fontawesome/0.10.1_b1d190784fe163af2951357a9666852a:
-    resolution: {integrity: sha512-4nVRm+NcLcdaNrNFhThb/7/tb5CDm0vQwJFyljR3XMCQyEr94hMX5SiUYbvYm9YJVImMYfdpR0lO0B8sh12Vbw==}
+  /@fortawesome/angular-fontawesome/0.10.2_b1d190784fe163af2951357a9666852a:
+    resolution: {integrity: sha512-VxsCAo2lK74KwD236AKAhGpiethfz9yqCViIG2iRAZqgNmuZ6ihwumjbLW32n6hV4fFvCqLcHmpngoEl3TNiOg==}
     peerDependencies:
-      '@fortawesome/fontawesome-svg-core': ~1.2.27 || ~1.3.0-beta2
+      '@fortawesome/fontawesome-svg-core': ~1.2.27 || ~1.3.0-beta2 || ^6.1.0
     dependencies:
       '@fortawesome/fontawesome-svg-core': 6.1.0
       tslib: 2.3.1
@@ -5841,7 +5841,7 @@ packages:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 3.0.4
+      minimatch: 3.1.2
       once: 1.4.0
       path-is-absolute: 1.0.1
 
@@ -7056,12 +7056,12 @@ packages:
     resolution: {integrity: sha512-yJHVQEhyqPLUTgt9B83PXu6W3rx4MvvHvSUvToogpwoGDOUQ+yDrR0HRot+yOCdCO7u4hX3pWft6kWBBcqh0UA==}
     dependencies:
       brace-expansion: 1.1.11
+    dev: true
 
   /minimatch/3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
     dependencies:
       brace-expansion: 1.1.11
-    dev: true
 
   /minimist/1.2.5:
     resolution: {integrity: sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==}
