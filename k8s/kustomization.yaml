@@ -1,23 +1,12 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  - tls
   - broker/deployment.yml
   - kvs/deployment.yml
   - database
   - frontend
   - namespace.yml
   - proxy
+  - services
 namespace: midas
-generatorOptions:
-  disableNameSuffixHash: true
-secretGenerator:
-  - name: proxy-cert
-    files:
-      - tls.crt=./tls/certs/proxy/tls.crt
-      - tls.key=./tls/certs/proxy/tls.key
-      - ca.crt=./tls/certs/root/root-ca.pem
-  - name: svc-cert
-    files:
-      - tls.crt=./tls/certs/svc/tls.crt
-      - tls.key=./tls/certs/svc/tls.key
-      - ca.crt=./tls/certs/root/root-ca.pem

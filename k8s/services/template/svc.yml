@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: template
+  name: template
+spec:
+  ports:
+  - name: port
+    protocol: TCP
+    port: 50000
+    targetPort: 50000
+  selector:
+    app: template
+  type: NodePort
+status:
+  loadBalancer: {}

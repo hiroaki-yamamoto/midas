@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+generatorOptions:
+  disableNameSuffixHash: true
+secretGenerator:
+  - name: proxy-cert
+    files:
+      - tls.crt=./certs/proxy/tls.crt
+      - tls.key=./certs/proxy/tls.key
+      - ca.crt=./certs/root/root-ca.pem
+  - name: svc-cert
+    files:
+      - tls.crt=./certs/svc/tls.crt
+      - tls.key=./certs/svc/tls.key
+      - ca.crt=./certs/root/root-ca.pem

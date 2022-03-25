@@ -21,7 +21,6 @@ pub struct TLS {
   pub prv_key: String,
   pub cert: String,
   pub ca: String,
-  pub root: String,
 }
 
 #[derive(Debug, Deserialize)]
