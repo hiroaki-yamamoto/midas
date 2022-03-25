@@ -1,9 +1,9 @@
 FROM alpine
 
 ARG SERVICE
-ENV SERVICE=${SERVICE}
 ENV RUST_BACKTRACE=1
 
 WORKDIR /opt/code
+COPY ./target/x86_64-unknown-linux-musl/debug/${SERVICE} /app
 
-ENTRYPOINT [ "./run.sh" ]
+ENTRYPOINT [ "/app" ]

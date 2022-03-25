@@ -14,7 +14,13 @@ patches:
       - op: replace
         path: /metadata/name
         value: historical
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/name
+        value: historical-service
 
 images:
   - name: template
-    newName: historical_service
+    newName: historical-service

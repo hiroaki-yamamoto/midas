@@ -18,6 +18,7 @@ spec:
       containers:
       - image: template
         name: template
+        # command: ["-c", "/etc/midas/midas.yml"]
         resources:
             limits:
               cpu: 1000m
@@ -27,7 +28,7 @@ spec:
             mountPath: "/etc/midas"
             readOnly: true
           - name: svc-cert
-            mountPath: "/etc/midas/certs/svc"
+            mountPath: "/etc/midas/certs"
             readOnly: true
       volumes:
         - name: svc-cert

@@ -6,4 +6,4 @@ resources:
 configMapGenerator:
   - name: config
     files:
-      - midas.yml=config.yml
+      - config.yml

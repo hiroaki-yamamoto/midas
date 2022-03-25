@@ -11,10 +11,13 @@ build:
           - command: [pnpm, run, build]
             os: [darwin, linux]
             dir: ./frontend
+      docker: {}
+    - image: historical-service
+      context: backend
       docker:
-        dockerfile: Dockerfile
-        noCache: false
-        squash: false
+        dockerfile: devel.dockerfile
+        buildArgs:
+          SERVICE: historical_service
 deploy:
   kustomize:
     paths:
