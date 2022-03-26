@@ -19,7 +19,7 @@ writers = { path = "../../writers" }
 
 clients = { path = "../clients" }
 
-async-trait = "0.1.52"
+async-trait = "0.1.53"
 futures = "0.3.21"
 nats = "0.18.1"
 rand = "0.8.5"
