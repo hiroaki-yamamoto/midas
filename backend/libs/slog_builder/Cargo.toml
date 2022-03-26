@@ -8,5 +8,5 @@ edition = "2018"
 
 [dependencies]
 slog = "2.7.0"
-slog-json = "2.6.0"
+slog-json = "2.6.1"
 slog-term = "2.9.0"
