@@ -21,7 +21,3 @@ spec:
             limits:
               cpu: 1000m
               memory: 1Gi
-          # ports:
-          #   - containerPort: 4222
-          #   - containerPort: 8222
-          #   - containerPort: 6222
