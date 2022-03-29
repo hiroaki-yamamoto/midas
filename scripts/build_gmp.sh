@@ -3,6 +3,7 @@
 
 set -e
 
+source ./curl.sh
 export CC="musl-gcc -fPIE -pie -O2"
 
 BASEDIR=`dirname $0`
