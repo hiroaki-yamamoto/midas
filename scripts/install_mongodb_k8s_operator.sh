@@ -13,6 +13,7 @@ WORKDIR=`realpath $BASEDIR`
 VERSION='0.7.3'
 NAME="mongodb-kubernetes-operator-$VERSION"
 ARCHIVE_NAME="$NAME.tar.gz"
+MIDAS_NAMESPACE=`yq '.metadata.name' $WORKDIR/../k8s/namespace.yml`
 
 source ./curl.sh
 
@@ -21,12 +22,12 @@ curl -o $WORKDIR/$ARCHIVE_NAME \
 
 tar xzvf $WORKDIR/$ARCHIVE_NAME
 rm $WORKDIR/$ARCHIVE_NAME
-kubectl apply -f mongodb_namespace.yml \
-  --dry-run=client -o yaml
+kubectl apply -f ${WORKDIR}/../k8s/namespace.yml
 cd $WORKDIR/$NAME
-kubectl apply -f config/crd/bases/mongodbcommunity.mongodb.com_mongodbcommunity.yaml \
-  --dry-run=client -o yaml
-kubectl apply -k config/rbac/ --namespace mongodb \
-  --dry-run=client -o yaml
-kubectl apply -f config/manager/manager.yaml --namespace mongodb \
-  --dry-run=client -o yaml
+kubectl apply -f config/crd/bases/mongodbcommunity.mongodb.com_mongodbcommunity.yaml
+kubectl apply -k config/rbac/ --namespace $MIDAS_NAMESPACE
+kubectl apply -f config/manager/manager.yaml --namespace $MIDAS_NAMESPACE
+cd -
+rm -rf $WORKDIR/$NAME
+
+echo "Setup Done."
