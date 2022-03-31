@@ -5,6 +5,7 @@ resources:
   - broker
   - kvs/deployment.yml
   - database
+  - database-manager
   - frontend
   - namespace.yml
   - proxy

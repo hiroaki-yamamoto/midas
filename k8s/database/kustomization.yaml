@@ -5,3 +5,12 @@ resources:
 labels:
   - pairs:
       app: database
+generatorOptions:
+  disableNameSuffixHash: true
+secretGenerator:
+  - name: midas-db-pw
+    literals:
+      - "password=midas"
+  - name: admin-db-pw
+    literals:
+      - "password=admin"

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database-manager
+  template:
+    metadata:
+      labels:
+        app: database-manager
+    spec:
+      containers:
+      - name: database-manager
+        image: mongo-express
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        volumeMounts:
+          - name: svc-cert
+            mountPath: "/etc/certs"
+            readOnly: true
+        env:
+          - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+            value: admin
+          - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+            value: admin
+          - name: ME_CONFIG_MONGODB_SERVER
+            value: database-svc
+          - name: ME_CONFIG_SITE_BASEURL
+            value: /admin/
+          - name: ME_CONFIG_SITE_SSL_ENABLED
+            value: 'true'
+          - name: ME_CONFIG_SITE_SSL_CRT_PATH
+            value: /etc/certs/tls.crt
+          - name: ME_CONFIG_SITE_SSL_KEY_PATH
+            value: /etc/certs/tls.key
+      volumes:
+        - name: svc-cert
+          secret:
+            secretName: svc-cert
