@@ -126,7 +126,7 @@ packages:
       '@types/geojson': 7946.0.8
       '@types/polylabel': 1.0.5
       '@types/svg-arc-to-cubic-bezier': 3.2.0
-      d3: 7.4.1
+      d3: 7.4.2
       d3-chord: 3.0.1
       d3-geo: 3.0.1
       d3-sankey: 0.12.3
@@ -4368,8 +4368,8 @@ packages:
       internmap: 1.0.1
     dev: false
 
-  /d3-array/3.1.3:
-    resolution: {integrity: sha512-qwW+3phQqmogYyRDI9hC8AWNeTdyYexazuq/dDM7QgujVDVexwNOxVMUJt+0BRpCw/4S4+byuYTV51kttK/Bzw==}
+  /d3-array/3.1.4:
+    resolution: {integrity: sha512-H8lM97Gr9+LAR4WVHETCMt6LlWtLJVMCKsz1ojors+/PvAs2QqdLa20BuYvU11/DU+nLF0GVWL5Rv3jSgo2KmA==}
     engines: {node: '>=12'}
     dependencies:
       internmap: 2.0.3
@@ -4407,7 +4407,7 @@ packages:
     resolution: {integrity: sha512-0Oc4D0KyhwhM7ZL0RMnfGycLN7hxHB8CMmwZ3+H26PWAG0ozNuYG5hXSDNgmP1SgJkQMrlG6cP20HoaSbvcJTQ==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.1.3
+      d3-array: 3.1.4
     dev: false
 
   /d3-delaunay/6.0.2:
@@ -4470,7 +4470,7 @@ packages:
     resolution: {integrity: sha512-Wt23xBych5tSy9IYAM1FR2rWIBFWa52B/oF/GYe5zbdHrg08FU8+BuI6X4PvTwPDdqdAdq04fuWJpELtsaEjeA==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.1.3
+      d3-array: 3.1.4
     dev: false
 
   /d3-hierarchy/3.1.2:
@@ -4527,7 +4527,7 @@ packages:
     resolution: {integrity: sha512-GZW464g1SH7ag3Y7hXjf8RoUuAFIqklOAq3MRl4OaWabTFJY9PN/E1YklhXLh+OQ3fM9yS2nOkCoS+WLZ6kvxQ==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.1.3
+      d3-array: 3.1.4
       d3-format: 3.1.0
       d3-interpolate: 3.0.1
       d3-time: 3.0.0
@@ -4562,7 +4562,7 @@ packages:
     resolution: {integrity: sha512-zmV3lRnlaLI08y9IMRXSDshQb5Nj77smnfpnd2LrBa/2K281Jijactokeak14QacHs/kKq0AQ121nidNYlarbQ==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.1.3
+      d3-array: 3.1.4
     dev: false
 
   /d3-timer/3.0.1:
@@ -4595,11 +4595,11 @@ packages:
       d3-transition: 3.0.1_d3-selection@3.0.0
     dev: false
 
-  /d3/7.4.1:
-    resolution: {integrity: sha512-Qch6FQJTiC8w0ys/Ouex5CofkHBKvFSWa0M7wYWuZIkVeLIukJ0G8pAUmV/EEwAXZrs3xxNXOzCbtSBDC8hRxw==}
+  /d3/7.4.2:
+    resolution: {integrity: sha512-7VK+QBAWtNDbP2EU/ThkXgjd0u1MsXYYgCK2ElQ4BBWh0usE75tHVVeYx47m2pqQEy4isYKAA0tAFSln0l+9EQ==}
     engines: {node: '>=12'}
     dependencies:
-      d3-array: 3.1.3
+      d3-array: 3.1.4
       d3-axis: 3.0.0
       d3-brush: 3.0.0
       d3-chord: 3.0.1
