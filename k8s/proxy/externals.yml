@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-manager
+spec:
+  selector:
+    app: db-manager
+  type: ExternalName
+  externalName: manager.midas-db.svc.cluster.local

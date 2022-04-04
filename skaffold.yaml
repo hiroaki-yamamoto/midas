@@ -6,18 +6,24 @@ build:
   artifacts:
     - image: frontend
       context: frontend
+      docker: {}
       hooks:
         before:
           - command: [pnpm, run, build]
             os: [darwin, linux]
             dir: ./frontend
-      docker: {}
     - image: historical-service
       context: backend
       docker:
         dockerfile: devel.dockerfile
         buildArgs:
           SERVICE: historical_service
+    - image: historical-fetch-worker
+      context: backend
+      docker:
+        dockerfile: devel.dockerfile
+        buildArgs:
+          SERVICE: historical_fetch_worker
 deploy:
   kustomize:
     paths:

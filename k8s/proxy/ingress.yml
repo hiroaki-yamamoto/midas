@@ -23,9 +23,9 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: database-manager
+                name: db-manager
                 port:
-                  name: https
+                  number: 8081
           - path: /
             pathType: Prefix
             backend:

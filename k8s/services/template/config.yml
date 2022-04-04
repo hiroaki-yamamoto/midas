@@ -1,9 +1,0 @@
-dbURL: mongodb://database-svc
-brokerURL: nats://broker:4222
-redisURL: redis://redis/
-host: '[::]:50000'
-debug: true
-tls:
-  privateKey: /etc/midas/certs/tls.key
-  cert: /etc/midas/certs/tls.key
-  ca: /etc/midas/certs/ca.crt

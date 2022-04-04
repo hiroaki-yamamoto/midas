@@ -1,0 +1,9 @@
+dbURL: mongodb://database-svc.midas-db.svc.cluster.local
+brokerURL: nats://broker.midas.svc.cluster.local:4222
+redisURL: redis://kvs.midas.svc.cluster.local/
+host: '[::]:50000'
+debug: true
+tls:
+  privateKey: /etc/midas/certs/tls.key
+  cert: /etc/midas/certs/tls.key
+  ca: /etc/midas/certs/ca.crt

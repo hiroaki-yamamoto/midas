@@ -13,7 +13,8 @@ WORKDIR=`realpath $BASEDIR`
 VERSION='0.7.3'
 NAME="mongodb-kubernetes-operator-$VERSION"
 ARCHIVE_NAME="$NAME.tar.gz"
-MIDAS_NAMESPACE=`yq '.metadata.name' $WORKDIR/../k8s/namespace.yml`
+NAMESPACE_PATH="${WORKDIR}/../k8s/database/namespace.yml"
+MIDAS_NAMESPACE=`yq '.metadata.name' $NAMESPACE_PATH`
 
 source ./curl.sh
 
@@ -22,7 +23,7 @@ curl -o $WORKDIR/$ARCHIVE_NAME \
 
 tar xzvf $WORKDIR/$ARCHIVE_NAME
 rm $WORKDIR/$ARCHIVE_NAME
-kubectl apply -f ${WORKDIR}/../k8s/namespace.yml
+kubectl apply -f $NAMESPACE_PATH
 cd $WORKDIR/$NAME
 kubectl apply -f config/crd/bases/mongodbcommunity.mongodb.com_mongodbcommunity.yaml
 kubectl apply -k config/rbac/ --namespace $MIDAS_NAMESPACE

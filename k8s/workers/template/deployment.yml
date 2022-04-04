@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: template
+  name: template
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: template
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: template
+    spec:
+      containers:
+      - image: template
+        name: template
+        # command: ["-c", "/etc/midas/midas.yml"]
+        resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+        volumeMounts:
+          - name: config
+            mountPath: "/etc/midas"
+            readOnly: true
+          - name: svc-cert
+            mountPath: "/etc/midas/certs"
+            readOnly: true
+      volumes:
+        - name: svc-cert
+          secret:
+            secretName: svc-cert
+        - name: config
+          configMap:
+            name: config

@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: database-manager
+  name: manager
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: database-manager
+      app: manager
   template:
     metadata:
       labels:
-        app: database-manager
+        app: manager
     spec:
       containers:
-      - name: database-manager
+      - name: manager
         image: mongo-express
         resources:
           limits:
