@@ -26,6 +26,13 @@ spec:
                 name: db-manager
                 port:
                   number: 8081
+          - path: /historical
+            pathType: Prefix
+            backend:
+              service:
+                name: historical
+                port:
+                  number: 50000
           - path: /
             pathType: Prefix
             backend:

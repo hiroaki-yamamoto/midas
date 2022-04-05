@@ -3,7 +3,27 @@ kind: Service
 metadata:
   name: db-manager
 spec:
-  selector:
-    app: db-manager
   type: ExternalName
   externalName: manager.midas-db.svc.cluster.local
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: historical
+spec:
+  type: ExternalName
+  externalName: historical.midas-svcs.svc.cluster.local
+
+# ---
+
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: backend-ports
+# spec:
+#   ports:
+#   - name: client
+#     port: 50000
+#     targetPort: 50000
