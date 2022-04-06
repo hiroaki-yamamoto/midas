@@ -2,7 +2,7 @@
 name = "historical_worker"
 version = "0.1.0"
 authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
-edition = "2018"
+edition = "2021"
 
 [[bin]]
 name = "historical_fetch_worker"
