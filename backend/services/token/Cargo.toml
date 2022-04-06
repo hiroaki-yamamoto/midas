@@ -9,6 +9,8 @@ edition = "2018"
 [dependencies]
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
+access_logger = { path = "../../libs/access_logger" }
+rpc = { path = "../../libs/rpc" }
 
 slog = "2.7.0"
 clap = { version = "3.1.8", features = ["derive"] }

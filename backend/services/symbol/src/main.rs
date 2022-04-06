@@ -11,8 +11,10 @@ use ::slog::{info, o};
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
 
+use ::access_logger::log;
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
+use ::rpc::rejection_handler::handle_rejection;
 
 use self::service::Service;
 
@@ -23,6 +25,7 @@ async fn main() {
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
   let logger = cfg.build_slog();
+  let access_logger = log(logger.clone());
   let db = DBCli::with_options(DBCliOpt::parse(&cfg.db_url).await.unwrap())
     .unwrap()
     .database("midas");
@@ -31,7 +34,11 @@ async fn main() {
   let svc =
     Service::new(&db, broker, logger.new(o!("scope" => "SymbolService"))).await;
   let csrf = CSRF::new(CSRFOption::builder());
-  let router = csrf.protect().and(svc.route().await);
+  let router = csrf
+    .protect()
+    .and(svc.route().await)
+    .with(access_logger)
+    .recover(handle_rejection);
 
   info!(logger, "Opened REST server on {}", host);
   let (_, svr) = ::warp::serve(router)

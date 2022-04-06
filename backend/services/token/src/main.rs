@@ -8,8 +8,10 @@ use ::tokio::signal::unix as signal;
 use ::warp::reply;
 use ::warp::Filter;
 
+use ::access_logger::log;
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
+use ::rpc::rejection_handler::handle_rejection;
 
 #[tokio::main]
 async fn main() {
@@ -25,7 +27,10 @@ async fn main() {
     .or(::warp::options())
     .and(::warp::path("csrf"))
     .map(|_| reply::reply());
-  let route = csrf.generate_cookie(route);
+  let route = csrf
+    .generate_cookie(route)
+    .with(log(logger.clone()))
+    .recover(handle_rejection);
 
   info!(logger, "Opened REST server on {}", host);
   let (_, svr) = ::warp::serve(route)

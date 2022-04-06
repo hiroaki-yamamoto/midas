@@ -15,6 +15,7 @@ use ::tokio::time::interval;
 use ::warp::ws::Message;
 use ::warp::{Filter, Reply};
 
+use ::access_logger::log;
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
 use ::observers::binance;
@@ -97,6 +98,7 @@ async fn main() {
   let logger = cfg.build_slog();
   let route_logger = logger.clone();
   let csrf = CSRF::new(CSRFOption::builder());
+  let access_logger = log(logger.clone());
   let route = csrf
     .protect()
     .and(warp::path::param())
@@ -118,7 +120,8 @@ async fn main() {
       },
     )
     .and(::warp::ws())
-    .map(handle_websocket);
+    .map(handle_websocket)
+    .with(access_logger);
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let host: SocketAddr = cfg.host.parse().unwrap();

@@ -11,6 +11,7 @@ observers = { path = "../../libs/exchanges/observers" }
 config = { path = "../../libs/config" }
 rpc = { path = "../../libs/rpc" }
 csrf = { path = "../../libs/csrf" }
+access_logger = { path = "../../libs/access_logger" }
 
 futures = "0.3.21"
 nats = "0.18.1"

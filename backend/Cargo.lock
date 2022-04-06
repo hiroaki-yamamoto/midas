@@ -3,6 +3,16 @@
 version = 3
 
 [[package]]
+name = "access_logger"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "slog",
+ "warp",
+]
+
+[[package]]
 name = "adler"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -321,6 +331,7 @@ dependencies = [
 name = "bot_service"
 version = "0.1.0"
 dependencies = [
+ "access_logger",
  "bot",
  "clap",
  "config",
@@ -1188,6 +1199,7 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 name = "historical_service"
 version = "0.1.0"
 dependencies = [
+ "access_logger",
  "clap",
  "config",
  "csrf",
@@ -1479,6 +1491,7 @@ dependencies = [
 name = "keychain_service"
 version = "0.1.0"
 dependencies = [
+ "access_logger",
  "clap",
  "config",
  "csrf",
@@ -1881,6 +1894,7 @@ dependencies = [
 name = "observer_service"
 version = "0.1.0"
 dependencies = [
+ "access_logger",
  "clap",
  "config",
  "csrf",
@@ -3051,6 +3065,7 @@ dependencies = [
 name = "symbol_service"
 version = "0.1.0"
 dependencies = [
+ "access_logger",
  "clap",
  "config",
  "csrf",
@@ -3276,11 +3291,13 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 name = "token_service"
 version = "0.1.0"
 dependencies = [
+ "access_logger",
  "clap",
  "config",
  "csrf",
  "futures",
  "libc",
+ "rpc",
  "slog",
  "tokio",
  "warp",

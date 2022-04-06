@@ -11,6 +11,7 @@ use ::slog::info;
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
 
+use ::access_logger::log;
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
 use ::rpc::rejection_handler::handle_rejection;
@@ -24,6 +25,7 @@ async fn main() {
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
   let logger = cfg.build_slog();
+  let access_logger = log(logger.clone());
   let db =
     DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await.unwrap())
       .unwrap()
@@ -32,7 +34,11 @@ async fn main() {
   let host: SocketAddr = cfg.host.parse().unwrap();
   let csrf = CSRF::new(CSRFOption::builder());
   let route = construct(&db, http_cli);
-  let route = csrf.protect().and(route).recover(handle_rejection);
+  let route = csrf
+    .protect()
+    .and(route)
+    .with(access_logger)
+    .recover(handle_rejection);
 
   info!(logger, "Opened REST server on {}", host);
   let (_, svr) = ::warp::serve(route)

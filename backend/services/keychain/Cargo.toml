@@ -11,6 +11,7 @@ keychain = { path = "../../libs/keychain" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
+access_logger = { path = "../../libs/access_logger" }
 
 clap = { version = "3.1.8", features = ["derive"] }
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }

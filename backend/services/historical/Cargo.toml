@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 types = { path = "../../libs/types" }
 rpc = { path = "../../libs/rpc" }
+access_logger = { path = "../../libs/access_logger" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 subscribe = { path = "../../libs/subscribe" }

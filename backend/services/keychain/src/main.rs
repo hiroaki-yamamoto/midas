@@ -13,6 +13,7 @@ use ::slog::Logger;
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
 
+use ::access_logger::log;
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
 use ::keychain::{APIKey, KeyChain};
@@ -38,6 +39,7 @@ async fn main() {
   let config = Config::from_fpath(Some(opts.config)).unwrap();
   let logger = config.build_slog();
   let logger_in_handler = logger.clone();
+  let log_access = log(logger.clone());
   let broker = connect(config.broker_url.as_str()).unwrap();
   let db_cli = Client::with_uri_str(&config.db_url).await.unwrap();
   let db = db_cli.database("midas");
@@ -139,6 +141,7 @@ async fn main() {
       .or(post_handler)
       .or(patch_handler)
       .or(delete_handler)
+      .with(log_access)
       .recover(handle_rejection),
   );
   let mut sig =

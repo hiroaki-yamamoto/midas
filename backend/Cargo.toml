@@ -15,6 +15,7 @@ members = [
   "libs/date_splitter",
   "libs/bot",
   "libs/probe",
+  "libs/access_logger",
 
   "libs/exchanges/sign",
   "libs/exchanges/executors",

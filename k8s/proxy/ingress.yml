@@ -2,11 +2,42 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/backend-protocol: HTTPS
     nginx.ingress.kubernetes.io/secure-backends: "true"
     nginx.ingress.kubernetes.io/proxy-ssl-verify: "true"
     nginx.ingress.kubernetes.io/proxy-ssl-secret: midas/svc-cert
-  name: ingress
+  name: backend-ingress
+  labels:
+    app: midas
+spec:
+  tls:
+    - hosts:
+        - "minikube"
+      secretName: proxy-cert
+  rules:
+    - host: "minikube"
+      http:
+        paths:
+          - path: /historical(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: historical
+                port:
+                  number: 50000
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    nginx.ingress.kubernetes.io/secure-backends: "true"
+    nginx.ingress.kubernetes.io/proxy-ssl-verify: "true"
+    nginx.ingress.kubernetes.io/proxy-ssl-secret: midas/svc-cert
+  name: frontend-ingress
   labels:
     app: midas
 spec:
@@ -25,13 +56,6 @@ spec:
                 name: db-manager
                 port:
                   number: 8081
-          - path: /historical
-            pathType: Prefix
-            backend:
-              service:
-                name: historical
-                port:
-                  number: 50000
           - path: /
             pathType: Prefix
             backend:
