@@ -5,6 +5,7 @@ use ::std::net::SocketAddr;
 use ::clap::Parser;
 use ::futures::FutureExt;
 use ::libc::{SIGINT, SIGTERM};
+use ::probe::probe;
 use ::slog::{info, warn};
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
@@ -26,7 +27,11 @@ async fn main() {
   let host: SocketAddr = cfg.host.parse().unwrap();
   let svc = Service::new(&broker, &redis).await.unwrap();
   let csrf = CSRF::new(CSRFOption::builder());
-  let route = csrf.protect().and(svc.route()).recover(handle_rejection);
+  let route = csrf
+    .protect()
+    .and(svc.route())
+    .or(probe())
+    .recover(handle_rejection);
 
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();

@@ -5,5 +5,5 @@ host: '[::]:50000'
 debug: true
 tls:
   privateKey: /etc/midas/certs/tls.key
-  cert: /etc/midas/certs/tls.key
+  cert: /etc/midas/certs/tls.crt
   ca: /etc/midas/certs/ca.crt
