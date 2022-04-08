@@ -4,3 +4,4 @@ kind: Kustomization
 namePrefix: historical-
 resources:
   - "fetch"
+  - "splitter"

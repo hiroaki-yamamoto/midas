@@ -24,6 +24,12 @@ build:
         dockerfile: devel.dockerfile
         buildArgs:
           SERVICE: historical_fetch_worker
+    - image: historical-date-split-worker
+      context: backend
+      docker:
+        dockerfile: devel.dockerfile
+        buildArgs:
+          SERVICE: historical_date_splitter
 deploy:
   kustomize:
     paths:
