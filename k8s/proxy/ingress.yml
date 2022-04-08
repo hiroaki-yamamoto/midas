@@ -26,6 +26,13 @@ spec:
                 name: historical
                 port:
                   number: 50000
+          - path: /symbol(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: symbol
+                port:
+                  number: 50000
 
 ---
 

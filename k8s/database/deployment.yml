@@ -18,6 +18,8 @@ spec:
       roles:
         - db: midas
           name: readWrite
+        - db: admin
+          name: read
     - name: admin
       scramCredentialsSecretName: admin
       passwordSecretRef:

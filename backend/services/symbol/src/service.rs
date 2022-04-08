@@ -50,7 +50,7 @@ impl Service {
     };
   }
 
-  pub async fn route(&self) -> BoxedFilter<(impl Reply,)> {
+  pub fn route(&self) -> BoxedFilter<(impl Reply,)> {
     return self
       .refresh()
       .or(self.base_currencies())

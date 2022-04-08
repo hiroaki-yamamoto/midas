@@ -14,6 +14,7 @@ errors = { path = "../../libs/errors" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 access_logger = { path = "../../libs/access_logger" }
+probe = { path = "../../libs/probe" }
 
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
 slog = "2.7.0"

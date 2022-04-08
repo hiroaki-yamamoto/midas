@@ -30,6 +30,12 @@ build:
         dockerfile: devel.dockerfile
         buildArgs:
           SERVICE: historical_date_splitter
+    - image: symbol-service
+      context: backend
+      docker:
+        dockerfile: devel.dockerfile
+        buildArgs:
+          SERVICE: symbol_service
 deploy:
   kustomize:
     paths:

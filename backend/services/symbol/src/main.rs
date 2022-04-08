@@ -14,6 +14,7 @@ use ::warp::Filter;
 use ::access_logger::log;
 use ::config::{CmdArgs, Config};
 use ::csrf::{CSRFOption, CSRF};
+use ::probe::probe;
 use ::rpc::rejection_handler::handle_rejection;
 
 use self::service::Service;
@@ -36,7 +37,7 @@ async fn main() {
   let csrf = CSRF::new(CSRFOption::builder());
   let router = csrf
     .protect()
-    .and(svc.route().await)
+    .and(probe().or(svc.route()))
     .with(access_logger)
     .recover(handle_rejection);
 
