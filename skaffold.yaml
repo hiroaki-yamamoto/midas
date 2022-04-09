@@ -36,6 +36,12 @@ build:
         dockerfile: devel.dockerfile
         buildArgs:
           SERVICE: symbol_service
+    - image: trade-observer-worker
+      context: backend
+      docker:
+        dockerfile: devel.dockerfile
+        buildArgs:
+          SERVICE: observer_worker
 deploy:
   kustomize:
     paths:
