@@ -3831,7 +3831,7 @@ packages:
       fs-minipass: 2.1.0
       glob: 7.2.0
       infer-owner: 1.0.4
-      lru-cache: 7.8.0
+      lru-cache: 7.8.1
       minipass: 3.1.6
       minipass-collect: 1.0.2
       minipass-flush: 1.0.5
@@ -6950,8 +6950,8 @@ packages:
       yallist: 4.0.0
     dev: true
 
-  /lru-cache/7.8.0:
-    resolution: {integrity: sha512-AmXqneQZL3KZMIgBpaPTeI6pfwh+xQ2vutMsyqOu1TBdEXFZgpG/80wuJ531w2ZN7TI0/oc8CPxzh/DKQudZqg==}
+  /lru-cache/7.8.1:
+    resolution: {integrity: sha512-E1v547OCgJvbvevfjgK9sNKIVXO96NnsTsFPBlg4ZxjhsJSODoH9lk8Bm0OxvHNm6Vm5Yqkl/1fErDxhYL8Skg==}
     engines: {node: '>=12'}
     dev: true
 
@@ -7003,7 +7003,7 @@ packages:
       http-proxy-agent: 5.0.0
       https-proxy-agent: 5.0.0
       is-lambda: 1.0.1
-      lru-cache: 7.8.0
+      lru-cache: 7.8.1
       minipass: 3.1.6
       minipass-collect: 1.0.2
       minipass-fetch: 2.1.0
@@ -8837,7 +8837,7 @@ packages:
     engines: {node: ^10.0.0 || ^12.0.0 || ^14.0.0 || >=16.0.0}
     hasBin: true
     dependencies:
-      lru-cache: 7.8.0
+      lru-cache: 7.8.1
     dev: true
 
   /send/0.17.2:
