@@ -176,7 +176,7 @@ workflows:
           filters:
             branches:
               only: master
-          service_name: observer_worker
+          service_name: trade_observer_worker
       - deploy-image:
           name: "Trade Observer Service Deployment"
           requires:
@@ -184,7 +184,7 @@ workflows:
           filters:
             branches:
               only: master
-          service_name: observer_service
+          service_name: trade_observer_service
       - deploy-image:
           name: "Keychain Service Deployment"
           requires:
