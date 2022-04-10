@@ -1,5 +1,5 @@
 [package]
-name = "observer_worker"
+name = "trade_observer_service"
 version = "0.1.0"
 authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
 edition = "2021"
@@ -8,13 +8,17 @@ edition = "2021"
 
 [dependencies]
 observers = { path = "../../libs/exchanges/observers" }
-rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
+rpc = { path = "../../libs/rpc" }
+csrf = { path = "../../libs/csrf" }
+access_logger = { path = "../../libs/access_logger" }
 
-clap = { version = "3.1.8", features = ["derive"] }
-tokio = { version = "1.17.0", features = ["signal", "rt", "rt-multi-thread", "macros"] }
-nats = "0.18.1"
-slog = "2.7.0"
 futures = "0.3.21"
+nats = "0.18.1"
+warp = { version = "0.3.2", features = ["tls"] }
+clap = { version = "3.1.8", features = ["derive"] }
+slog = "2.7.0"
+tokio = { version = "1.17.0", features = ["macros", "signal", "time", "rt", "rt-multi-thread"] }
 libc = "0.2.122"
 mongodb = { version = "2.1.0", default-features = false, features = ["async-std-runtime"] }
+serde_json = "1.0.79"

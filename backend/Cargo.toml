@@ -27,12 +27,12 @@ members = [
 
   "services/historical",
   "services/symbol",
-  "services/observer",
+  "services/trade_observer",
   "services/token",
   "services/keychain",
   "services/bot",
 
   "workers/historical",
-  "workers/observer",
+  "workers/trade_observer",
   "workers/notify"
 ]

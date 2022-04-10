@@ -1891,42 +1891,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "observer_service"
-version = "0.1.0"
-dependencies = [
- "access_logger",
- "clap",
- "config",
- "csrf",
- "futures",
- "libc",
- "mongodb",
- "nats",
- "observers",
- "rpc",
- "serde_json",
- "slog",
- "tokio",
- "warp",
-]
-
-[[package]]
-name = "observer_worker"
-version = "0.1.0"
-dependencies = [
- "clap",
- "config",
- "futures",
- "libc",
- "mongodb",
- "nats",
- "observers",
- "rpc",
- "slog",
- "tokio",
-]
-
-[[package]]
 name = "observers"
 version = "0.1.0"
 dependencies = [
@@ -3470,6 +3434,42 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90442985ee2f57c9e1b548ee72ae842f4a9a20e3f417cc38dbc5dc684d9bb4ee"
 dependencies = [
  "lazy_static",
+]
+
+[[package]]
+name = "trade_observer_service"
+version = "0.1.0"
+dependencies = [
+ "access_logger",
+ "clap",
+ "config",
+ "csrf",
+ "futures",
+ "libc",
+ "mongodb",
+ "nats",
+ "observers",
+ "rpc",
+ "serde_json",
+ "slog",
+ "tokio",
+ "warp",
+]
+
+[[package]]
+name = "trade_observer_worker"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "config",
+ "futures",
+ "libc",
+ "mongodb",
+ "nats",
+ "observers",
+ "rpc",
+ "slog",
+ "tokio",
 ]
 
 [[package]]

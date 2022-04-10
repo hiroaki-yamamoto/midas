@@ -26,6 +26,16 @@ spec:
   type: ExternalName
   externalName: symbol.midas-svcs.svc.cluster.local
 
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: trade-observer
+spec:
+  type: ExternalName
+  externalName: trade-observer.midas-svcs.svc.cluster.local
+
 # ---
 
 # apiVersion: v1

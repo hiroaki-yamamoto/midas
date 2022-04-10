@@ -41,13 +41,19 @@ build:
       docker:
         dockerfile: devel.dockerfile
         buildArgs:
-          SERVICE: observer_worker
+          SERVICE: trade_observer_worker
     - image: notify-worker
       context: backend
       docker:
         dockerfile: devel.dockerfile
         buildArgs:
           SERVICE: notify_worker
+    - image: trade-observer-service
+      context: backend
+      docker:
+        dockerfile: devel.dockerfile
+        buildArgs:
+          SERVICE: trade_observer_service
 deploy:
   kustomize:
     paths:

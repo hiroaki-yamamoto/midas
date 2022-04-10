@@ -33,6 +33,13 @@ spec:
                 name: symbol
                 port:
                   number: 50000
+          - path: /bookticker(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: trade-observer
+                port:
+                  number: 50000
 
 ---
 

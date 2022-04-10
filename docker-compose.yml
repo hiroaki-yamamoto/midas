@@ -140,7 +140,7 @@ services:
       context: ./backend
       dockerfile: devel.dockerfile
       args:
-        - SERVICE=observer_service
+        - SERVICE=trade_observer_service
     command:
       - -c
       - /etc/midas/midas.yml
