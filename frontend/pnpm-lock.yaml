@@ -497,7 +497,7 @@ packages:
       sourcemap-codec: 1.4.8
       tslib: 2.3.1
       typescript: 4.5.5
-      yargs: 17.4.0
+      yargs: 17.4.1
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -586,7 +586,7 @@ packages:
       '@angular/compiler-cli': 13.3.2_b078074d6cf893af3ffdbd15aae91391
       '@babel/core': 7.17.2
       glob: 7.2.0
-      yargs: 17.4.0
+      yargs: 17.4.1
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -7506,7 +7506,7 @@ packages:
       tsconfig-paths: 3.14.1
       tslib: 2.3.1
       v8-compile-cache: 2.3.0
-      yargs: 17.4.0
+      yargs: 17.4.1
       yargs-parser: 21.0.1
     transitivePeerDependencies:
       - supports-color
@@ -10109,8 +10109,8 @@ packages:
       yargs-parser: 20.2.9
     dev: true
 
-  /yargs/17.4.0:
-    resolution: {integrity: sha512-WJudfrk81yWFSOkZYpAZx4Nt7V4xp7S/uJkX0CnxovMCt1wCE8LNftPpNuF9X/u9gN5nsD7ycYtRcDf2pL3UiA==}
+  /yargs/17.4.1:
+    resolution: {integrity: sha512-WSZD9jgobAg3ZKuCQZSa3g9QOJeCCqLoLAykiWgmXnDo9EPnn4RPf5qVTtzgOx66o6/oqhcA5tHtJXpG8pMt3g==}
     engines: {node: '>=12'}
     dependencies:
       cliui: 7.0.4
