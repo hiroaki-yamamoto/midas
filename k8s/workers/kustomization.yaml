@@ -4,8 +4,9 @@ kind: Kustomization
 namespace: midas-workers
 
 resources:
-  - "./namespace.yml"
   - "../tls"
+  - "./namespace.yml"
   - "../config"
   - "./historical"
   - "./trade-observer"
+  - "./notify"

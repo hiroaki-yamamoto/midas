@@ -42,6 +42,12 @@ build:
         dockerfile: devel.dockerfile
         buildArgs:
           SERVICE: observer_worker
+    - image: notify-worker
+      context: backend
+      docker:
+        dockerfile: devel.dockerfile
+        buildArgs:
+          SERVICE: notify_worker
 deploy:
   kustomize:
     paths:
