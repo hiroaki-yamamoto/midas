@@ -45,3 +45,13 @@ metadata:
 spec:
   type: ExternalName
   externalName: token.midas-svcs.svc.cluster.local
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: keychain
+spec:
+  type: ExternalName
+  externalName: keychain.midas-svcs.svc.cluster.local

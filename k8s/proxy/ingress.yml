@@ -47,6 +47,13 @@ spec:
                 name: token
                 port:
                   number: 50000
+          - path: /keychain(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: keychain
+                port:
+                  number: 50000
 
 ---
 

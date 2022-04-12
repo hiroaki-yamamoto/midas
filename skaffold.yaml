@@ -60,6 +60,12 @@ build:
         dockerfile: devel.dockerfile
         buildArgs:
           SERVICE: token_service
+    - image: keychain-service
+      context: backend
+      docker:
+        dockerfile: devel.dockerfile
+        buildArgs:
+          SERVICE: keychain_service
 deploy:
   kustomize:
     paths:
