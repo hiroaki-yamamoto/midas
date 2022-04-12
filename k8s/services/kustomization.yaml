@@ -9,3 +9,4 @@ resources:
   - ./historical
   - ./symbol
   - ./observer
+  - ./token

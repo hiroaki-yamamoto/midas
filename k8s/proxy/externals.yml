@@ -36,14 +36,12 @@ spec:
   type: ExternalName
   externalName: trade-observer.midas-svcs.svc.cluster.local
 
-# ---
+---
 
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: backend-ports
-# spec:
-#   ports:
-#   - name: client
-#     port: 50000
-#     targetPort: 50000
+apiVersion: v1
+kind: Service
+metadata:
+  name: token
+spec:
+  type: ExternalName
+  externalName: token.midas-svcs.svc.cluster.local

@@ -54,6 +54,12 @@ build:
         dockerfile: devel.dockerfile
         buildArgs:
           SERVICE: trade_observer_service
+    - image: token-service
+      context: backend
+      docker:
+        dockerfile: devel.dockerfile
+        buildArgs:
+          SERVICE: token_service
 deploy:
   kustomize:
     paths:
