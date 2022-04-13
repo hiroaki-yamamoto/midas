@@ -20,9 +20,12 @@ spec:
         name: template
         args: ["-c", "/etc/midas/config.yml"]
         resources:
-            limits:
-              cpu: 1000m
-              memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
         volumeMounts:
           - name: config
             mountPath: "/etc/midas"
