@@ -1,5 +1,6 @@
 *
 !run.sh
+!services/transpiler
 
 !target/x86_64-unknown-linux-musl/debug
 target/x86_64-unknown-linux-musl/debug/.fingerprint
@@ -18,3 +19,4 @@ target/x86_64-unknown-linux-musl/release/examples
 target/x86_64-unknown-linux-musl/release/incremental
 target/x86_64-unknown-linux-musl/release/.cargo-lock
 target/x86_64-unknown-linux-musl/release/*.d
+node_modules

@@ -54,6 +54,13 @@ spec:
                 name: keychain
                 port:
                   number: 50000
+          - path: /transpiler(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: transpiler
+                port:
+                  number: 50000
 
 ---
 

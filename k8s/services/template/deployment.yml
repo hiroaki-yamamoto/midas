@@ -18,7 +18,7 @@ spec:
       containers:
       - image: template
         name: template
-        # command: ["-c", "/etc/midas/midas.yml"]
+        args: ["-c", "/etc/midas/config.yml"]
         resources:
             limits:
               cpu: 1000m

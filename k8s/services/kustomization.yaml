@@ -11,3 +11,4 @@ resources:
   - ./observer
   - ./token
   - ./keychain
+  - ./transpiler

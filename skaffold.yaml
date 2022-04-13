@@ -66,6 +66,12 @@ build:
         dockerfile: devel.dockerfile
         buildArgs:
           SERVICE: keychain_service
+    - image: transpiler-service
+      context: backend
+      docker:
+        dockerfile: nodejs.dockerfile
+        buildArgs:
+          CODE_PATH: services/transpiler
 deploy:
   kustomize:
     paths:
