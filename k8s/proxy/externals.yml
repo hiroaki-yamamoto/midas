@@ -65,3 +65,13 @@ metadata:
 spec:
   type: ExternalName
   externalName: transpiler.midas-svcs.svc.cluster.local
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: bot
+spec:
+  type: ExternalName
+  externalName: bot.midas-svcs.svc.cluster.local

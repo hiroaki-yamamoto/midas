@@ -72,6 +72,12 @@ build:
         dockerfile: nodejs.dockerfile
         buildArgs:
           CODE_PATH: services/transpiler
+    - image: bot-service
+      context: backend
+      docker:
+        dockerfile: devel.dockerfile
+        buildArgs:
+          SERVICE: bot_service
 deploy:
   kustomize:
     paths:

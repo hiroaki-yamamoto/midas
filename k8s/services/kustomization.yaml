@@ -12,3 +12,4 @@ resources:
   - ./token
   - ./keychain
   - ./transpiler
+  - ./bot
