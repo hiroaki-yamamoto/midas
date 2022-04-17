@@ -46,8 +46,6 @@ import { ExchangePipePipe } from './rpc/exchange-pipe.pipe';
 import { DeleteWarnComponent } from './keychain/delete-warn/delete-warn.component';
 import { BotEditorComponent } from './bot-editor/bot-editor.component';
 import { DateGraphComponent } from './date-graph/date-graph.component';
-import { SyncSymbolComponent } from './sync-symbol/sync-symbol.component';
-import { SyncHistoryComponent } from './sync-history/sync-history.component';
 import { SyncComponent } from './sync/sync.component';
 
 @NgModule({
@@ -64,8 +62,6 @@ import { SyncComponent } from './sync/sync.component';
     BotEditorComponent,
     DashboardComponent,
     DateGraphComponent,
-    SyncSymbolComponent,
-    SyncHistoryComponent,
     SyncComponent,
   ],
   imports: [

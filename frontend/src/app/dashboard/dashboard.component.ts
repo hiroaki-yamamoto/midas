@@ -23,7 +23,7 @@ export class DashboardComponent implements OnInit {
 
   public botsInfo: Bot[];
   public data: IGraphData[];
-  public series: ISeries[] = [
+  public readonly series: ISeries[] = [
     {
       name: 'Hodl BTC Profit',
       valueField: 'hodl',
@@ -38,6 +38,7 @@ export class DashboardComponent implements OnInit {
 
   constructor() {
     this.data = [];
+    this.botsInfo = [];
     const now = new Date();
     for (let i = 0; i < 365; i++) {
       const time = new Date(now.getTime());
@@ -51,7 +52,6 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.botsInfo = [];
     for (let i = 0; i < 5; i++) {
       const info = new Bot();
       info.setId(`test-bot-${i}`);
