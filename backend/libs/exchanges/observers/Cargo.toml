@@ -21,7 +21,7 @@ symbols = { path = "../symbols" }
 async-trait = "0.1.53"
 futures = "0.3.21"
 mongodb = { version = "2.2.0", default-features = false, features = ["async-std-runtime"] }
-nats = "0.18.1"
+nats = "0.19.0"
 rmp-serde = "1.0.0"
 serde_json = "1.0.79"
 slog = "2.7.0"
