@@ -48,6 +48,7 @@ import { BotEditorComponent } from './bot-editor/bot-editor.component';
 import { DateGraphComponent } from './date-graph/date-graph.component';
 import { SyncSymbolComponent } from './sync-symbol/sync-symbol.component';
 import { SyncHistoryComponent } from './sync-history/sync-history.component';
+import { SyncComponent } from './sync/sync.component';
 
 @NgModule({
   declarations: [
@@ -65,6 +66,7 @@ import { SyncHistoryComponent } from './sync-history/sync-history.component';
     DateGraphComponent,
     SyncSymbolComponent,
     SyncHistoryComponent,
+    SyncComponent,
   ],
   imports: [
     BrowserModule,
