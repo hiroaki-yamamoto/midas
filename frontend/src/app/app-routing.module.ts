@@ -9,10 +9,6 @@ import { SyncComponent } from './sync/sync.component';
 
 const routes: Routes = [
   {
-    path: '',
-    component: DashboardComponent,
-  },
-  {
     path: 'info',
     component: InfoComponent,
   },
@@ -27,6 +23,14 @@ const routes: Routes = [
   {
     path: 'sync/:exchange',
     component: SyncComponent,
+  },
+  {
+    path: '',
+    component: DashboardComponent,
+  },
+  {
+    path: '**',
+    redirectTo: ''
   }
 ];
 
