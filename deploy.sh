@@ -16,7 +16,7 @@ buildFrontend() {
 }
 
 deploy() {
-  skaffold build -q | skaffold deploy --build-artifacts -
+  skaffold run --build-concurrency=0
 }
 
 echo "Building Backend"

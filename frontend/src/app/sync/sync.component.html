@@ -1,1 +1,23 @@
-<p>sync works!</p>
+<section>
+  <header>
+    <h1 i18n>Exchange Info Syncronization: {{ exchange | exchangePipe | titlecase }}</h1>
+  </header>
+  <mat-card>
+    <mat-card-title i18n>Symbol Syncronization</mat-card-title>
+    <mat-card-content>
+      <p i18n>
+        Before syncronize exchange information, or the symbol data is old,
+        you will need to synchronize symbol information.
+      </p>
+      <p i18n>
+        To synchronize symbol information, click
+        "Syncronize Symbol Information" button below.
+      </p>
+    </mat-card-content>
+    <mat-card-actions>
+      <button i18n mat-raised-button color="primary" [disabled]="alreadySynced">
+        <fa-icon [icon]="rotateIcon"></fa-icon> Synchronize Symbol Information
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</section>

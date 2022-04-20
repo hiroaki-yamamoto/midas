@@ -7,11 +7,6 @@ build:
     - image: frontend
       context: frontend
       docker: {}
-      hooks:
-        before:
-          - command: [pnpm, run, build]
-            os: [darwin, linux]
-            dir: ./frontend
     - image: historical-service
       context: backend
       docker:
