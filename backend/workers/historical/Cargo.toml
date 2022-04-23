@@ -28,8 +28,8 @@ date_splitter = { path = "../../libs/date_splitter" }
 slog = "2.7.0"
 tokio = { version = "1.17.0", features = ["rt", "rt-multi-thread", "macros", "signal"] }
 nats = "0.19.0"
-clap = { version = "3.1.9", features = ["derive"] }
-mongodb = { version = "2.2.0", default-features = false, features = ["async-std-runtime"] }
+clap = { version = "3.1.12", features = ["derive"] }
+mongodb = { version = "2.2.1", default-features = false, features = ["async-std-runtime"] }
 futures = "0.3.21"
-libc = "0.2.123"
+libc = "0.2.124"
 tokio-stream = "0.1.8"
