@@ -15,7 +15,9 @@
       </p>
     </mat-card-content>
     <mat-card-actions>
-      <button i18n mat-raised-button color="primary" [disabled]="alreadySynced">
+      <button i18n mat-raised-button color="primary"
+        [disabled]="!syncHandler.syncButtonEnabled"
+        (click)="syncSymbol()">
         <fa-icon [icon]="rotateIcon"></fa-icon> Synchronize Symbol Information
       </button>
     </mat-card-actions>

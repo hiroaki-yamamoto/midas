@@ -32,23 +32,23 @@ export namespace SymbolInfo {
   }
 }
 
-export class BaseCurrencyList extends jspb.Message {
-  getBasecurrenciesList(): Array<string>;
-  setBasecurrenciesList(value: Array<string>): BaseCurrencyList;
-  clearBasecurrenciesList(): BaseCurrencyList;
-  addBasecurrencies(value: string, index?: number): BaseCurrencyList;
+export class SymbolList extends jspb.Message {
+  getSymbolsList(): Array<string>;
+  setSymbolsList(value: Array<string>): SymbolList;
+  clearSymbolsList(): SymbolList;
+  addSymbols(value: string, index?: number): SymbolList;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): BaseCurrencyList.AsObject;
-  static toObject(includeInstance: boolean, msg: BaseCurrencyList): BaseCurrencyList.AsObject;
-  static serializeBinaryToWriter(message: BaseCurrencyList, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): BaseCurrencyList;
-  static deserializeBinaryFromReader(message: BaseCurrencyList, reader: jspb.BinaryReader): BaseCurrencyList;
+  toObject(includeInstance?: boolean): SymbolList.AsObject;
+  static toObject(includeInstance: boolean, msg: SymbolList): SymbolList.AsObject;
+  static serializeBinaryToWriter(message: SymbolList, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): SymbolList;
+  static deserializeBinaryFromReader(message: SymbolList, reader: jspb.BinaryReader): SymbolList;
 }
 
-export namespace BaseCurrencyList {
+export namespace SymbolList {
   export type AsObject = {
-    basecurrenciesList: Array<string>,
+    symbolsList: Array<string>,
   }
 }
 

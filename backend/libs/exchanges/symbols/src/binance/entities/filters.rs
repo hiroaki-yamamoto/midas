@@ -15,6 +15,14 @@ pub enum Filters {
     multiplier_down: String,
     avg_price_mins: Option<f64>,
   },
+  #[serde(rename = "PERCENT_PRICE_BY_SIDE", rename_all = "camelCase")]
+  PrecentPriceBySide {
+    bid_multiplier_up: String,
+    bid_multiplier_down: String,
+    ask_multiplier_up: String,
+    ask_multiplier_down: String,
+    avg_price_mins: u32,
+  },
   #[serde(rename = "LOT_SIZE", rename_all = "camelCase")]
   LotSize {
     min_qty: String,
@@ -42,5 +50,12 @@ pub enum Filters {
     min_qty: String,
     max_qty: String,
     step_size: String,
+  },
+  #[serde(rename = "TRAILING_DELTA", rename_all = "camelCase")]
+  TrailingDelta {
+    min_trailing_above_delta: u32,
+    max_trailing_above_delta: u32,
+    min_trailing_below_delta: u32,
+    max_trailing_below_delta: u32,
   },
 }

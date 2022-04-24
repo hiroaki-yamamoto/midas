@@ -3,6 +3,12 @@
 
 set -e
 
+buildFrontendProto() {
+  cd proto
+  ./build.sh
+  cd -
+}
+
 buildBackend() {
   cd backend
   ./build.sh
@@ -19,6 +25,8 @@ deploy() {
   skaffold run --build-concurrency=0
 }
 
+echo "Generating proto code to typescript"
+buildFrontendProto
 echo "Building Backend"
 buildBackend
 echo "Building Frontend"
