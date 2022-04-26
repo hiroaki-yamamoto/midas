@@ -1,24 +1,42 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, Injectable, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
 
 import { faRotate } from '@fortawesome/free-solid-svg-icons';
 
 import { Exchanges } from '../rpc/entities_pb';
-import { SymbolList } from '../rpc/symbols_pb';
+import { SymbolInfo } from '../rpc/symbols_pb';
+import { i18nMetaToJSDoc } from '@angular/compiler/src/render3/view/i18n/meta';
 
+@Injectable({ providedIn: 'root'})
 class SymbolSyncHandler {
-  public symbols: string[] = [];
-  public syncButtonEnabled: boolean = true
-  public next(symbols: SymbolList.AsObject) {
-    this.symbols = symbols.symbolsList;
+  public symbols: MatTableDataSource<SymbolInfo.AsObject>;
+  public syncButtonEnabled;
+  public ignoreSyncBtnReEnable: boolean;
+
+  constructor() {
+    this.symbols = new MatTableDataSource<SymbolInfo.AsObject>();
+    this.syncButtonEnabled = true;
+    this.ignoreSyncBtnReEnable = false;
+  }
+  public setPaginator(paginator: MatPaginator) {
+    this.symbols.paginator = paginator;
+  }
+  public next(symbols: {symbols: SymbolInfo.AsObject[]}) {
+    this.symbols.data = symbols.symbols;
   }
   public error(e) {
+    this.symbols.data.length = 0;
     console.error(e);
     this.complete();
   }
   public complete() {
-    setTimeout(() => { this.syncButtonEnabled = true }, 3000);
+    if (!this.ignoreSyncBtnReEnable) {
+      setTimeout(() => { this.syncButtonEnabled = true }, 3000);
+    }
+    this.ignoreSyncBtnReEnable = false;
   }
 }
 
@@ -27,23 +45,35 @@ class SymbolSyncHandler {
   templateUrl: './sync.component.html',
   styleUrls: ['./sync.component.scss']
 })
-export class SyncComponent implements OnInit {
+export class SyncComponent implements OnInit, AfterViewInit {
 
   public exchange: Exchanges;
   public rotateIcon = faRotate;
-  public syncHandler = new SymbolSyncHandler();
+  public dispCol = ['symbol'];
+  @ViewChild(MatPaginator) symbolPaginator: MatPaginator;
 
-  constructor(private curRoute: ActivatedRoute, private http: HttpClient) {}
+  constructor(
+    private curRoute: ActivatedRoute,
+    private http: HttpClient,
+    public syncHandler: SymbolSyncHandler,
+  ) {}
 
   ngOnInit(): void {
     this.curRoute.paramMap.subscribe((params: ParamMap) => {
       this.exchange = parseInt(params.get('exchange'), 10) as Exchanges;
+      this.syncHandler.ignoreSyncBtnReEnable = true;
+      this.http.get(`/symbol/currencies/${this.exchange}`)
+        .subscribe(this.syncHandler);
     });
+  }
+
+  ngAfterViewInit(): void {
+    this.syncHandler.setPaginator(this.symbolPaginator);
   }
 
   public syncSymbol(): void {
     this.syncHandler.syncButtonEnabled = false;
-    this.http.post(`/symbol/refresha/${this.exchange}`, undefined)
+    this.http.post(`/symbol/refresh/${this.exchange}`, undefined)
       .subscribe(this.syncHandler);
   }
 

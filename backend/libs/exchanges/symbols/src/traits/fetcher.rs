@@ -2,7 +2,10 @@ use ::async_trait::async_trait;
 
 use ::types::ThreadSafeResult;
 
+use super::entities::Symbol;
+
 #[async_trait]
 pub trait SymbolFetcher {
-  async fn refresh(&self) -> ThreadSafeResult<Vec<String>>;
+  type SymbolType: Symbol;
+  async fn refresh(&self) -> ThreadSafeResult<Vec<Self::SymbolType>>;
 }

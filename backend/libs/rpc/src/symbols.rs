@@ -15,6 +15,13 @@ pub struct SymbolInfo {
 #[serde(rename_all = "camelCase")]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SymbolList {
+    #[prost(message, repeated, tag="1")]
+    pub symbols: ::prost::alloc::vec::Vec<SymbolInfo>,
+}
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BaseSymbols {
     #[prost(string, repeated, tag="1")]
     pub symbols: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }

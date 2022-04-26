@@ -7,11 +7,11 @@ use ::warp::reject;
 use ::warp::{Filter, Rejection, Reply};
 
 use ::rpc::entities::{Exchanges, Status};
-use ::rpc::symbols::SymbolList;
+use ::rpc::symbols::{BaseSymbols, SymbolInfo, SymbolList};
 use ::symbols::binance::{
   fetcher as binance_fetcher, recorder as binance_recorder,
 };
-use ::symbols::traits::{Symbol as SymbolTrait, SymbolFetcher, SymbolRecorder};
+use ::symbols::traits::{SymbolFetcher, SymbolRecorder};
 
 #[derive(Clone)]
 pub struct Service {
@@ -72,7 +72,7 @@ impl Service {
       .map(move |exchange| me.get_recorder(exchange))
       .and_then(handle_base_currencies)
       .map(|base: Vec<String>| {
-        return Box::new(::warp::reply::json(&SymbolList { symbols: base }));
+        return Box::new(::warp::reply::json(&BaseSymbols { symbols: base }));
       });
   }
 
@@ -89,7 +89,7 @@ impl Service {
       .and(Exchanges::by_param())
       .map(move |exchange| me.get_recorder(exchange))
       .and_then(handle_supported_currencies)
-      .map(|symbols: Vec<String>| {
+      .map(|symbols: Vec<SymbolInfo>| {
         return Box::new(::warp::reply::json(&SymbolList { symbols: symbols }));
       });
   }
@@ -115,14 +115,14 @@ impl Service {
 
 async fn handle_supported_currencies(
   recorder: impl SymbolRecorder + Send + Sync,
-) -> Result<Vec<String>, Rejection> {
+) -> Result<Vec<SymbolInfo>, Rejection> {
   let symbols = recorder.list(None).await.map_err(|err| {
     reject::custom(Status::new(
       ::warp::http::StatusCode::SERVICE_UNAVAILABLE,
       format!("{}", err),
     ))
   })?;
-  let symbols = symbols.map(|sym| sym.symbol()).collect().await;
+  let symbols: Vec<SymbolInfo> = symbols.map(|sym| sym.into()).collect().await;
   return Ok(symbols);
 }
 
@@ -139,11 +139,15 @@ async fn handle_base_currencies(
 
 async fn handle_fetcher(
   fetcher: impl SymbolFetcher + Send + Sync,
-) -> Result<Vec<String>, Rejection> {
-  return fetcher.refresh().await.map_err(|err| {
-    reject::custom(Status::new(
-      ::warp::http::StatusCode::SERVICE_UNAVAILABLE,
-      format!("{}", err),
-    ))
-  });
+) -> Result<Vec<SymbolInfo>, Rejection> {
+  return fetcher
+    .refresh()
+    .await
+    .map(|sym_list| sym_list.into_iter().map(|sym| sym.into()).collect())
+    .map_err(|err| {
+      reject::custom(Status::new(
+        ::warp::http::StatusCode::SERVICE_UNAVAILABLE,
+        format!("{}", err),
+      ))
+    });
 }

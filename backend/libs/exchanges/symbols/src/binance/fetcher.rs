@@ -14,7 +14,6 @@ use super::entities::{ExchangeInfo, Symbol};
 use super::manager::SymbolUpdateEventManager;
 use super::recorder::SymbolRecorder;
 
-use crate::traits::Symbol as SymbolTrait;
 use crate::traits::SymbolFetcher as SymbolFetcherTrait;
 use crate::traits::SymbolRecorder as SymbolRecorderTrait;
 use ::errors::StatusFailure;
@@ -49,7 +48,8 @@ impl SymbolFetcher {
 
 #[async_trait]
 impl SymbolFetcherTrait for SymbolFetcher {
-  async fn refresh(&self) -> ThreadSafeResult<Vec<String>> {
+  type SymbolType = Symbol;
+  async fn refresh(&self) -> ThreadSafeResult<Vec<Self::SymbolType>> {
     let mut url: url::Url = REST_ENDPOINT.parse()?;
     url = url.join("/api/v3/exchangeInfo")?;
     let resp = ::reqwest::get(url.clone()).await?;
@@ -71,15 +71,7 @@ impl SymbolFetcherTrait for SymbolFetcher {
       )
       .await;
       update?;
-      return Ok(
-        self
-          .recorder
-          .list(None)
-          .await?
-          .map(|sym| sym.symbol())
-          .collect()
-          .await,
-      );
+      return Ok(self.recorder.list(None).await?.collect().await);
     } else {
       return Err(Box::new(StatusFailure {
         url: Some(url.clone()),

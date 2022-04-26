@@ -1,5 +1,6 @@
 import * as jspb from 'google-protobuf'
 
+import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
 
 
 export class SymbolInfo extends jspb.Message {
@@ -33,10 +34,10 @@ export namespace SymbolInfo {
 }
 
 export class SymbolList extends jspb.Message {
-  getSymbolsList(): Array<string>;
-  setSymbolsList(value: Array<string>): SymbolList;
+  getSymbolsList(): Array<SymbolInfo>;
+  setSymbolsList(value: Array<SymbolInfo>): SymbolList;
   clearSymbolsList(): SymbolList;
-  addSymbols(value: string, index?: number): SymbolList;
+  addSymbols(value?: SymbolInfo, index?: number): SymbolInfo;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): SymbolList.AsObject;
@@ -47,6 +48,26 @@ export class SymbolList extends jspb.Message {
 }
 
 export namespace SymbolList {
+  export type AsObject = {
+    symbolsList: Array<SymbolInfo.AsObject>,
+  }
+}
+
+export class BaseSymbols extends jspb.Message {
+  getSymbolsList(): Array<string>;
+  setSymbolsList(value: Array<string>): BaseSymbols;
+  clearSymbolsList(): BaseSymbols;
+  addSymbols(value: string, index?: number): BaseSymbols;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): BaseSymbols.AsObject;
+  static toObject(includeInstance: boolean, msg: BaseSymbols): BaseSymbols.AsObject;
+  static serializeBinaryToWriter(message: BaseSymbols, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): BaseSymbols;
+  static deserializeBinaryFromReader(message: BaseSymbols, reader: jspb.BinaryReader): BaseSymbols;
+}
+
+export namespace BaseSymbols {
   export type AsObject = {
     symbolsList: Array<string>,
   }
