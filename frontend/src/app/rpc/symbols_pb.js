@@ -15,8 +15,6 @@ var jspb = require('google-protobuf');
 var goog = jspb;
 var global = (function() { return this || window || global || self || Function('return this')(); }).call(null);
 
-var google_protobuf_timestamp_pb = require('google-protobuf/google/protobuf/timestamp_pb.js');
-goog.object.extend(proto, google_protobuf_timestamp_pb);
 goog.exportSymbol('proto.symbols.BaseSymbols', null, global);
 goog.exportSymbol('proto.symbols.SymbolInfo', null, global);
 goog.exportSymbol('proto.symbols.SymbolList', null, global);

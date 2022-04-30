@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package symbols;
 
-import "google/protobuf/timestamp.proto";
-
 message SymbolInfo {
   string symbol = 1;
   string status = 2;

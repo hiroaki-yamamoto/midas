@@ -8,7 +8,6 @@ import { faRotate } from '@fortawesome/free-solid-svg-icons';
 
 import { Exchanges } from '../rpc/entities_pb';
 import { SymbolInfo } from '../rpc/symbols_pb';
-import { i18nMetaToJSDoc } from '@angular/compiler/src/render3/view/i18n/meta';
 
 @Injectable({ providedIn: 'root'})
 class SymbolSyncHandler {
@@ -49,7 +48,7 @@ export class SyncComponent implements OnInit, AfterViewInit {
 
   public exchange: Exchanges;
   public rotateIcon = faRotate;
-  public dispCol = ['symbol'];
+  public dispCol = ['symbol', 'syncBtns'];
   @ViewChild(MatPaginator) symbolPaginator: MatPaginator;
 
   constructor(
@@ -75,6 +74,11 @@ export class SyncComponent implements OnInit, AfterViewInit {
     this.syncHandler.syncButtonEnabled = false;
     this.http.post(`/symbol/refresh/${this.exchange}`, undefined)
       .subscribe(this.syncHandler);
+  }
+
+  public find(event: Event) {
+    const text = (event.target as HTMLInputElement).value;
+    this.syncHandler.symbols.filter = text.trim().toLowerCase();
   }
 
 }
