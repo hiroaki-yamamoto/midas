@@ -20,7 +20,7 @@ history = { path = "../../libs/exchanges/history" }
 entities = { path = "../../libs/entities" }
 symbols = { path = "../../libs/exchanges/symbols" }
 
-serde = { version = "1.0.136", features = ["derive"] }
+serde = { version = "1.0.137", features = ["derive"] }
 rmp-serde = "1.1.0"
 nats = "0.19.1"
 mongodb = { version = "2.2.1", default-features = false, features = ["async-std-runtime"] }
