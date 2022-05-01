@@ -16,7 +16,7 @@ access_logger = { path = "../../libs/access_logger" }
 futures = "0.3.21"
 nats = "0.19.1"
 warp = { version = "0.3.2", features = ["tls"] }
-clap = { version = "3.1.13", features = ["derive"] }
+clap = { version = "3.1.14", features = ["derive"] }
 slog = "2.7.0"
 tokio = { version = "1.18.0", features = ["macros", "signal", "time", "rt", "rt-multi-thread"] }
 libc = "0.2.125"
