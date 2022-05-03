@@ -52,7 +52,7 @@
         <mat-header-row *matHeaderRowDef="dispCol"></mat-header-row>>
         <mat-row *matRowDef="let row; columns: dispCol;"></mat-row>>
       </mat-table>
-      <mat-paginator [pageSizeOptions]="[5, 10, 20]"
+      <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]"
         showFirstLastButtons
         aria-label="Select page of periodic elements"
         #symbolPaginator>
