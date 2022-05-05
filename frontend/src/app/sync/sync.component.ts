@@ -24,7 +24,7 @@ class SymbolSyncHandler {
     this.symbols.paginator = paginator;
   }
   public next(symbols: {symbols: SymbolInfo.AsObject[]}) {
-    this.symbols.data = symbols.symbols;
+    this.symbols.data = Array.from(new Set(symbols.symbols));
   }
   public error(e) {
     this.symbols.data.length = 0;
@@ -50,12 +50,15 @@ export class SyncComponent implements OnInit, AfterViewInit {
   public rotateIcon = faRotate;
   public dispCol = ['symbol', 'syncBtns'];
   @ViewChild(MatPaginator) symbolPaginator: MatPaginator;
+  public symbolsUnderSync: Set<string>;
 
   constructor(
     private curRoute: ActivatedRoute,
     private http: HttpClient,
     public syncHandler: SymbolSyncHandler,
-  ) {}
+  ) {
+    this.symbolsUnderSync = new Set();
+  }
 
   ngOnInit(): void {
     this.curRoute.paramMap.subscribe((params: ParamMap) => {
@@ -68,6 +71,24 @@ export class SyncComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.syncHandler.setPaginator(this.symbolPaginator);
+  }
+
+  public isDisabledAll(): boolean {
+    const symbols = new Set(
+      this.syncHandler.symbols.data.map((value) => { return value.symbol; })
+    );
+    this.symbolsUnderSync.forEach((symbol) => { symbols.delete(symbol); });
+    return symbols.size === 0;
+  }
+
+  public syncAll(): void {
+    this.symbolsUnderSync = new Set(
+      this.syncHandler.symbols.data.map((value) => {return value.symbol;})
+    );
+  }
+
+  public sync(symbol: string): void {
+    this.symbolsUnderSync.add(symbol);
   }
 
   public syncSymbol(): void {

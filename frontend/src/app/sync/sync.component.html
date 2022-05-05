@@ -39,12 +39,15 @@
         </ng-container>
         <ng-container matColumnDef="syncBtns">
           <mat-header-cell *matHeaderCellDef>
-            <button mat-raised-button color="accent" i18n>
+            <button i18n mat-raised-button color="accent"
+              [disabled]="isDisabledAll()" (click)="syncAll()">
               Sync All Symbols
             </button>
           </mat-header-cell>>
           <mat-cell *matCellDef="let symbol">
-            <button mat-raised-button color="primary" i18n>
+            <button i18n mat-raised-button color="primary"
+              [disabled]="symbolsUnderSync.has(symbol.symbol)"
+              (click)="sync(symbol.symbol)">
               Sync {{ symbol.symbol }}
             </button>
           </mat-cell>>
