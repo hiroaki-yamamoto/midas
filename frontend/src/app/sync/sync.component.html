@@ -45,12 +45,17 @@
             </button>
           </mat-header-cell>>
           <mat-cell *matCellDef="let symbol">
-            <button i18n mat-raised-button color="primary"
-              [disabled]="symbolsUnderSync.has(symbol.symbol)"
-              (click)="sync(symbol.symbol)">
-              Sync {{ symbol.symbol }}
-            </button>
-          </mat-cell>>
+            <div *ngIf="!symbolsUnderSync.has(symbol.symbol)">
+              <button i18n mat-raised-button color="primary" (click)="sync(symbol.symbol)">
+                Sync {{ symbol.symbol }}
+              </button>
+            </div>
+            <div id="syncProgressBar"
+              *ngIf="symbolsUnderSync.has(symbol.symbol)"
+              fxLayout="column">
+              <mat-progress-bar mode="determinate" value="50"></mat-progress-bar>
+            </div>
+          </mat-cell>
         </ng-container>
         <mat-header-row *matHeaderRowDef="dispCol"></mat-header-row>>
         <mat-row *matRowDef="let row; columns: dispCol;"></mat-row>>
