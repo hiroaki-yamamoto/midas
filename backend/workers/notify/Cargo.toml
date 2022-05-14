@@ -12,7 +12,7 @@ config = { path = "../../libs/config" }
 notification = { path = "../../libs/exchanges/notification" }
 
 clap = { version = "3.1.17", features = ["derive"] }
-tokio = { version = "1.18.1", features = [
+tokio = { version = "1.18.2", features = [
   "rt",
   "rt-multi-thread",
   "signal",
