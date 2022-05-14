@@ -1,0 +1,5 @@
+<mat-progress-bar mode="determinate" [value]="Math.min(current / max, 1) * 100">
+</mat-progress-bar>
+<div fxLayout="row" fxLayoutAlign="end none">
+  In progress: {{ current }} / {{ max }}
+</div>

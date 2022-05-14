@@ -48,6 +48,7 @@ import { DeleteWarnComponent } from './keychain/delete-warn/delete-warn.componen
 import { BotEditorComponent } from './bot-editor/bot-editor.component';
 import { DateGraphComponent } from './date-graph/date-graph.component';
 import { SyncComponent } from './sync/sync.component';
+import { ProgressBarComponent } from './progress-bar/progress-bar.component';
 
 @NgModule({
   declarations: [
@@ -64,6 +65,7 @@ import { SyncComponent } from './sync/sync.component';
     DashboardComponent,
     DateGraphComponent,
     SyncComponent,
+    ProgressBarComponent,
   ],
   imports: [
     BrowserModule,
