@@ -3,6 +3,7 @@ import { ActivatedRoute, ParamMap } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
+import { Sort } from '@angular/material/sort';
 
 import { faRotate } from '@fortawesome/free-solid-svg-icons';
 
@@ -101,5 +102,4 @@ export class SyncComponent implements OnInit, AfterViewInit {
     const text = (event.target as HTMLInputElement).value;
     this.syncHandler.symbols.filter = text.trim().toLowerCase();
   }
-
 }

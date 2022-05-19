@@ -32,13 +32,13 @@
         <span matPrefix><mat-icon>search</mat-icon> &nbsp;</span>
         <input matInput (keyup)="find($event)" placeholder="Ex. BTC" #input>
       </mat-form-field>
-      <mat-table [dataSource]="syncHandler.symbols">
+      <mat-table matSort [dataSource]="syncHandler.symbols">
         <ng-container matColumnDef="symbol">
-          <mat-header-cell *matHeaderCellDef>Symbol</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Symbol</mat-header-cell>
           <mat-cell *matCellDef="let symbol"> {{ symbol.symbol }} </mat-cell>
         </ng-container>
         <ng-container matColumnDef="syncBtns">
-          <mat-header-cell *matHeaderCellDef>
+          <mat-header-cell *matHeaderCellDef mat-sort-header="sync">
             <button i18n mat-raised-button color="accent"
               [disabled]="isDisabledAll()" (click)="syncAll()">
               Sync All Symbols
