@@ -8,7 +8,7 @@ edition = "2021"
 
 [dependencies]
 futures = "0.3.21"
-nats = "0.20.0"
+nats = "0.20.1"
 rmp-serde = "1.1.0"
 serde = { version = "1.0.137", features=["derive"] }
 tokio = { version = "1.18.2", features = ["sync"] }
