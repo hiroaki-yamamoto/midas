@@ -9,6 +9,7 @@ import { faRotate } from '@fortawesome/free-solid-svg-icons';
 
 import { Exchanges } from '../rpc/entities_pb';
 import { SymbolInfo } from '../rpc/symbols_pb';
+import { Progress } from '../rpc/historical_pb';
 
 @Injectable({ providedIn: 'root'})
 class SymbolSyncHandler {
@@ -51,14 +52,14 @@ export class SyncComponent implements OnInit, AfterViewInit {
   public rotateIcon = faRotate;
   public dispCol = ['symbol', 'syncBtns'];
   @ViewChild(MatPaginator) symbolPaginator: MatPaginator;
-  public symbolsUnderSync: Set<string>;
+  public WIPSymbols: {[key: string]: Progress.AsObject} | null;
 
   constructor(
     private curRoute: ActivatedRoute,
     private http: HttpClient,
     public syncHandler: SymbolSyncHandler,
   ) {
-    this.symbolsUnderSync = new Set();
+    this.WIPSymbols = {};
   }
 
   ngOnInit(): void {
@@ -78,18 +79,21 @@ export class SyncComponent implements OnInit, AfterViewInit {
     const symbols = new Set(
       this.syncHandler.symbols.data.map((value) => { return value.symbol; })
     );
-    this.symbolsUnderSync.forEach((symbol) => { symbols.delete(symbol); });
+    Object.keys(this.WIPSymbols)
+      .forEach((symbol) => { symbols.delete(symbol); });
     return symbols.size === 0;
   }
 
   public syncAll(): void {
-    this.symbolsUnderSync = new Set(
-      this.syncHandler.symbols.data.map((value) => {return value.symbol;})
-    );
+    this.syncHandler.symbols.data.forEach((value) => {
+      if (!(value.symbol in this.WIPSymbols)) {
+        this.WIPSymbols[value.symbol] = null;
+      }
+    });
   }
 
   public sync(symbol: string): void {
-    this.symbolsUnderSync.add(symbol);
+    this.WIPSymbols[symbol] = null;
   }
 
   public syncSymbol(): void {

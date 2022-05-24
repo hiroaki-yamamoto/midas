@@ -45,15 +45,17 @@
             </button>
           </mat-header-cell>>
           <mat-cell *matCellDef="let symbol">
-            <div *ngIf="!symbolsUnderSync.has(symbol.symbol)">
+            <div *ngIf="WIPSymbols[symbol.symbol] === undefined">
               <button i18n mat-raised-button color="primary" (click)="sync(symbol.symbol)">
                 Sync {{ symbol.symbol }}
               </button>
             </div>
             <div id="syncProgressBar"
-              *ngIf="symbolsUnderSync.has(symbol.symbol)"
+              *ngIf="WIPSymbols[symbol.symbol] !== undefined"
               fxLayout="column">
-              <app-progress-bar current="150" max="1500"></app-progress-bar>
+              <app-progress-bar current="150" max="1500"
+                [mode]="(WIPSymbols[symbol.symbol] === null)?'indeterminate':'determinate'">
+              </app-progress-bar>
             </div>
           </mat-cell>
         </ng-container>

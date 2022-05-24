@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { ProgressBarMode } from '@angular/material/progress-bar';
 
 @Component({
   selector: 'app-progress-bar',
@@ -8,6 +9,7 @@ import { Component, Input } from '@angular/core';
 export class ProgressBarComponent {
   @Input() public current: number;
   @Input() public max: number;
+  @Input() public mode: ProgressBarMode;
   public Math = Math;
 
   constructor() { }
