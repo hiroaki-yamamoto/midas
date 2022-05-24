@@ -26,9 +26,7 @@ jobs:
           command: |
             echo $PREV_REV
       - restore_cache:
-          key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
-      - restore_cache:
-          key: build-cache-{{ .Branch }}
+          key: cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - run:
           name: "Install musl tools"
           command: |
@@ -72,11 +70,8 @@ jobs:
       - save_cache:
           paths:
             - './backend/target'
-          key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
-      - save_cache:
-          paths:
             - '~/.cache/sccache'
-          key: build-cache-{{ .Branch }}
+          key: cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - run:
           name: "Collect executable"
           command: |
