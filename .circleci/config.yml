@@ -6,7 +6,7 @@ executors:
       - image: rust
     environment:
       SCCACHE_VER: v0.3.0
-      # RUSTC_WRAPPER: /usr/local/bin/sccache
+      RUSTC_WRAPPER: /usr/local/bin/sccache
   docker-build:
     docker:
       - image: docker
@@ -27,25 +27,29 @@ jobs:
             echo $PREV_REV
       - restore_cache:
           key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
+      - restore_cache:
+          key: build-cache-{{ .Branch }}
       - run:
           name: "Install musl tools"
-          command: "apt-get update && apt-get install -y musl-tools jq curl lld clang cmake"
+          command: |
+            apt-get update
+            apt-get install -y musl-tools jq curl lld clang cmake protoc
       - run: rustup component add rustfmt
       - run:
           name: "Install musl package"
           command: "rustup target add x86_64-unknown-linux-musl"
-      # - run:
-      #     name: "Install sccache"
-      #     command: |
-      #       TARGET="sccache-${SCCACHE_VER}-x86_64-unknown-linux-musl"
-      #       SCCACHE_ARCHIVE="${TARGET}.tar.gz"
-      #       SCCACHE_URL='https://github.com/mozilla/sccache/releases/download/'
-      #       SCCACHE_URL="${SCCACHE_URL}${SCCACHE_VER}/${SCCACHE_ARCHIVE}"
-      #       curl -fLC - ${SCCACHE_URL} -o ${SCCACHE_ARCHIVE}
-      #       tar xzf ${SCCACHE_ARCHIVE}
-      #       mv "${TARGET}/sccache" $RUSTC_WRAPPER
-      #       rm -rf ${SCCACHE_ARCHIVE} ${TARGET}
-      #       chmod u+x $RUSTC_WRAPPER
+      - run:
+          name: "Install sccache"
+          command: |
+            TARGET="sccache-${SCCACHE_VER}-x86_64-unknown-linux-musl"
+            SCCACHE_ARCHIVE="${TARGET}.tar.gz"
+            SCCACHE_URL='https://github.com/mozilla/sccache/releases/download/'
+            SCCACHE_URL="${SCCACHE_URL}${SCCACHE_VER}/${SCCACHE_ARCHIVE}"
+            curl -fLC - ${SCCACHE_URL} -o ${SCCACHE_ARCHIVE}
+            tar xzf ${SCCACHE_ARCHIVE}
+            mv "${TARGET}/sccache" $RUSTC_WRAPPER
+            rm -rf ${SCCACHE_ARCHIVE} ${TARGET}
+            chmod u+x $RUSTC_WRAPPER
       - run:
           name: "Extract musl dependencies"
           command: |
@@ -60,14 +64,17 @@ jobs:
           command: |
             cargo build --target x86_64-unknown-linux-musl --release
           working_directory: ./backend
-      # - run:
-      #     name: "Print cache request summary"
-      #     command: sccache -s
+      - run:
+          name: "Print cache request summary"
+          command: sccache -s
       - save_cache:
           paths:
             - './backend/target'
-            # - '~/.cache/sccache'
           key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
+      - save_cache:
+          paths:
+            - '~/.cache/sccache'
+          key: build-cache-{{ .Branch }}
       - run:
           name: "Collect executable"
           command: |
