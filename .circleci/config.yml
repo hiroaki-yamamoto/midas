@@ -6,7 +6,7 @@ executors:
       - image: rust
     environment:
       SCCACHE_VER: v0.3.0
-      RUSTC_WRAPPER: /usr/local/bin/sccache
+      # RUSTC_WRAPPER: /usr/local/bin/sccache
   docker-build:
     docker:
       - image: docker
@@ -34,18 +34,18 @@ jobs:
       - run:
           name: "Install musl package"
           command: "rustup target add x86_64-unknown-linux-musl"
-      - run:
-          name: "Install sccache"
-          command: |
-            TARGET="sccache-${SCCACHE_VER}-x86_64-unknown-linux-musl"
-            SCCACHE_ARCHIVE="${TARGET}.tar.gz"
-            SCCACHE_URL='https://github.com/mozilla/sccache/releases/download/'
-            SCCACHE_URL="${SCCACHE_URL}${SCCACHE_VER}/${SCCACHE_ARCHIVE}"
-            curl -fLC - ${SCCACHE_URL} -o ${SCCACHE_ARCHIVE}
-            tar xzf ${SCCACHE_ARCHIVE}
-            mv "${TARGET}/sccache" $RUSTC_WRAPPER
-            rm -rf ${SCCACHE_ARCHIVE} ${TARGET}
-            chmod u+x $RUSTC_WRAPPER
+      # - run:
+      #     name: "Install sccache"
+      #     command: |
+      #       TARGET="sccache-${SCCACHE_VER}-x86_64-unknown-linux-musl"
+      #       SCCACHE_ARCHIVE="${TARGET}.tar.gz"
+      #       SCCACHE_URL='https://github.com/mozilla/sccache/releases/download/'
+      #       SCCACHE_URL="${SCCACHE_URL}${SCCACHE_VER}/${SCCACHE_ARCHIVE}"
+      #       curl -fLC - ${SCCACHE_URL} -o ${SCCACHE_ARCHIVE}
+      #       tar xzf ${SCCACHE_ARCHIVE}
+      #       mv "${TARGET}/sccache" $RUSTC_WRAPPER
+      #       rm -rf ${SCCACHE_ARCHIVE} ${TARGET}
+      #       chmod u+x $RUSTC_WRAPPER
       - run:
           name: "Extract musl dependencies"
           command: |
@@ -60,13 +60,13 @@ jobs:
           command: |
             cargo build --target x86_64-unknown-linux-musl --release
           working_directory: ./backend
-      - run:
-          name: "Print cache request summary"
-          command: sccache -s
+      # - run:
+      #     name: "Print cache request summary"
+      #     command: sccache -s
       - save_cache:
           paths:
             - './backend/target'
-            - '~/.cache/sccache'
+            # - '~/.cache/sccache'
           key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - run:
           name: "Collect executable"
