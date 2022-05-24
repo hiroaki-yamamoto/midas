@@ -33,7 +33,9 @@ jobs:
           name: "Install musl tools"
           command: |
             apt-get update
-            apt-get install -y musl-tools jq curl lld clang cmake protoc
+            apt-get install -y \
+              musl-tools jq curl lld clang cmake protobuf-compiler \
+              libprotobuf-dev
       - run: rustup component add rustfmt
       - run:
           name: "Install musl package"
