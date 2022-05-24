@@ -5,7 +5,7 @@ executors:
     docker:
       - image: rust
     environment:
-      SCCACHE_VER: v0.2.15
+      SCCACHE_VER: v0.3.0
       RUSTC_WRAPPER: /usr/local/bin/sccache
   docker-build:
     docker:
@@ -27,8 +27,6 @@ jobs:
             echo $PREV_REV
       - restore_cache:
           key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
-      - restore_cache:
-          key: build-cache-{{ .Branch }}
       - run:
           name: "Install musl tools"
           command: "apt-get update && apt-get install -y musl-tools jq curl lld clang cmake"
@@ -58,11 +56,6 @@ jobs:
             tar xJvf mpc.txz -C ../deps
           working_directory: ./.circleci
       - run:
-          name: Build the dependent components
-          command: |
-            cargo build --target x86_64-unknown-linux-musl --release --lib
-          working_directory: ./backend
-      - run:
           name: Build the package
           command: |
             cargo build --target x86_64-unknown-linux-musl --release
@@ -73,11 +66,8 @@ jobs:
       - save_cache:
           paths:
             - './backend/target'
-          key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
-      - save_cache:
-          paths:
             - '~/.cache/sccache'
-          key: build-cache-{{ .Branch }}
+          key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
       - run:
           name: "Collect executable"
           command: |
