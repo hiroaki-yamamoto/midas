@@ -26,7 +26,9 @@ jobs:
           command: |
             echo $PREV_REV
       - restore_cache:
-          key: cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
+          key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
+      - restore_cache:
+          key: build-cache-{{ .Branch }}
       - run:
           name: "Install musl tools"
           command: "apt-get update && apt-get install -y musl-tools jq curl lld clang cmake"
@@ -65,8 +67,11 @@ jobs:
       - save_cache:
           paths:
             - './backend/target'
+          key: target-cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
+      - save_cache:
+          paths:
             - '~/.cache/sccache'
-          key: cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
+          key: build-cache-{{ .Branch }}
       - run:
           name: "Collect executable"
           command: |
