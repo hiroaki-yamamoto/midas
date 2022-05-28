@@ -10,7 +10,7 @@ edition = "2021"
 errors = {path = "../errors"}
 csrf = {path = "../csrf"}
 
-prost = "0.10.3"
+prost = "0.10.4"
 serde = { version = "1.0.137", features=["derive"] }
 num-traits = "0.2.15"
 num-derive = "0.3.3"
@@ -20,5 +20,5 @@ bson = "2.2.0"
 warp = "0.3.2"
 
 [build-dependencies]
-prost-build = "0.10.3"
+prost-build = "0.10.4"
 glob = "0.3.0"
