@@ -9,4 +9,4 @@ resources:
   - proxy-headers.yml
   - config.yml
   - externals.yml
-  - ingress.yml
+  - ingress

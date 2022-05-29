@@ -17,6 +17,7 @@ genRootKeys() {
     -nodes \
     -key $DEST/root.key \
     -subj '/C=JP/ST=Tokyo/L=Tokyo/O=AAAA Midas Root Authority/OU=IT/CN=localhost' \
+    -days 3650 \
     -out $DEST/root-ca.pem
 
   echo "Generated root keys. Add root-ca.pem to your browser when accessing the app."

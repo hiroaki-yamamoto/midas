@@ -1,0 +1,22 @@
+- op: add
+  path: /spec/rules
+  value:
+    - host: "minikube"
+      http:
+        paths: []
+    - host: "virt"
+      http:
+        paths: []
+- op: add
+  path: /spec/rules/0/http/paths
+  value:
+    - path: /admin
+      pathType: Prefix
+      backend:
+        service:
+          name: db-manager
+          port:
+            number: 8081
+- op: copy
+  from: /spec/rules/0/http/paths
+  path: /spec/rules/1/http/paths

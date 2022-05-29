@@ -1,0 +1,64 @@
+- op: add
+  path: /spec/rules
+  value:
+    - host: "minikube"
+      http:
+        paths: []
+    - host: "virt"
+      http:
+        paths: []
+- op: add
+  path: /spec/rules/0/http/paths
+  value:
+    - path: /historical(/|$)(.*)
+      pathType: Prefix
+      backend:
+        service:
+          name: historical
+          port:
+            number: 50000
+    - path: /symbol(/|$)(.*)
+      pathType: Prefix
+      backend:
+        service:
+          name: symbol
+          port:
+            number: 50000
+    - path: /bookticker(/|$)(.*)
+      pathType: Prefix
+      backend:
+        service:
+          name: trade-observer
+          port:
+            number: 50000
+    - path: /token(/|$)(.*)
+      pathType: Prefix
+      backend:
+        service:
+          name: token
+          port:
+            number: 50000
+    - path: /keychain(/|$)(.*)
+      pathType: Prefix
+      backend:
+        service:
+          name: keychain
+          port:
+            number: 50000
+    - path: /transpiler(/|$)(.*)
+      pathType: Prefix
+      backend:
+        service:
+          name: transpiler
+          port:
+            number: 50000
+    - path: /bot(/|$)(.*)
+      pathType: Prefix
+      backend:
+        service:
+          name: bot
+          port:
+            number: 50000
+- op: copy
+  from: /spec/rules/0/http/paths
+  path: /spec/rules/1/http/paths

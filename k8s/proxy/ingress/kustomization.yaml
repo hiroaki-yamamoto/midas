@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - headers/admin.yml
+  - headers/backend.yml
+  - headers/frontend.yml
+
+patches:
+  - target:
+      version: v1
+      kind: Ingress
+      name: backend-ingress
+    path: hosts.yml
+  - target:
+      version: v1
+      kind: Ingress
+      name: backend-ingress
+    path: paths/backend.yml
+  - target:
+      version: v1
+      kind: Ingress
+      name: frontend-ingress
+    path: hosts.yml
+  - target:
+      version: v1
+      kind: Ingress
+      name: frontend-ingress
+    path: paths/frontend.yml
+  - target:
+      version: v1
+      kind: Ingress
+      name: admin-ingress
+    path: hosts.yml
+  - target:
+      version: v1
+      kind: Ingress
+      name: admin-ingress
+    path: paths/admin.yml
