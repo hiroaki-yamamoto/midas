@@ -3,7 +3,6 @@ import { ActivatedRoute, ParamMap } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
-import { Sort } from '@angular/material/sort';
 
 import { faRotate } from '@fortawesome/free-solid-svg-icons';
 
@@ -11,13 +10,15 @@ import { Exchanges } from '../rpc/entities_pb';
 import { SymbolInfo } from '../rpc/symbols_pb';
 import { Progress } from '../rpc/historical_pb';
 
-@Injectable({ providedIn: 'root'})
+import { HistoricalService } from '../resources/historical.service';
+
+@Injectable({ providedIn: 'root' })
 class SymbolSyncHandler {
   public symbols: MatTableDataSource<SymbolInfo.AsObject>;
   public syncButtonEnabled;
   public ignoreSyncBtnReEnable: boolean;
 
-  constructor() {
+  constructor(private histSrv: HistoricalService) {
     this.symbols = new MatTableDataSource<SymbolInfo.AsObject>();
     this.syncButtonEnabled = true;
     this.ignoreSyncBtnReEnable = false;
@@ -25,7 +26,7 @@ class SymbolSyncHandler {
   public setPaginator(paginator: MatPaginator) {
     this.symbols.paginator = paginator;
   }
-  public next(symbols: {symbols: SymbolInfo.AsObject[]}) {
+  public next(symbols: { symbols: SymbolInfo.AsObject[] }) {
     this.symbols.data = Array.from(new Set(symbols.symbols));
   }
   public error(e) {
@@ -52,7 +53,7 @@ export class SyncComponent implements OnInit, AfterViewInit {
   public rotateIcon = faRotate;
   public dispCol = ['symbol', 'syncBtns'];
   @ViewChild(MatPaginator) symbolPaginator: MatPaginator;
-  public WIPSymbols: {[key: string]: Progress.AsObject} | null;
+  public WIPSymbols: { [key: string]: Progress.AsObject } | null;
 
   constructor(
     private curRoute: ActivatedRoute,
