@@ -26,10 +26,10 @@ symbols = { path = "../../libs/exchanges/symbols" }
 date_splitter = { path = "../../libs/date_splitter" }
 
 slog = "2.7.0"
-tokio = { version = "1.18.2", features = ["rt", "rt-multi-thread", "macros", "signal"] }
+tokio = { version = "1.19.0", features = ["rt", "rt-multi-thread", "macros", "signal"] }
 nats = "0.20.1"
 clap = { version = "3.1.18", features = ["derive"] }
-mongodb = { version = "2.2.1", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.2.2", default-features = false, features = ["async-std-runtime"] }
 futures = "0.3.21"
 libc = "0.2.126"
 tokio-stream = "0.1.8"
