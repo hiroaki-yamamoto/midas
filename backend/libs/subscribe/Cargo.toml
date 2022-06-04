@@ -12,4 +12,4 @@ nats = "0.20.1"
 rmp-serde = "1.1.0"
 serde = { version = "1.0.137", features=["derive"] }
 tokio = { version = "1.19.0", features = ["sync"] }
-tokio-stream = "0.1.8"
+tokio-stream = "0.1.9"
