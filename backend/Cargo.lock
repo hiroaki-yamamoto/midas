@@ -242,9 +242,9 @@ checksum = "30696a84d817107fc028e049980e09d5e140e8da8f1caeb17e8e950658a3cea9"
 
 [[package]]
 name = "async-trait"
-version = "0.1.53"
+version = "0.1.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed6aa3524a2dfcf9fe180c51eae2b58738348d819517ceadf95789c51fff7600"
+checksum = "96cf8829f67d2eab0b2dfa42c5d0ef737e0724e4a82b01b3e292456202b19716"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -395,13 +395,12 @@ dependencies = [
 
 [[package]]
 name = "bson"
-version = "2.2.0"
+version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f60a2c7c80a7850b56df4b8e98e8e4932c34877b8add4f13e8350499cc1e4572"
+checksum = "a24ecf39f5a314493ede1bb015984735d41aa6aedb59cafb95492d40cd893330"
 dependencies = [
  "ahash",
  "base64",
- "chrono",
  "hex",
  "indexmap",
  "lazy_static",
@@ -409,6 +408,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_json",
+ "time 0.3.9",
  "uuid",
 ]
 
@@ -1670,9 +1670,9 @@ dependencies = [
 
 [[package]]
 name = "mongodb"
-version = "2.2.1"
+version = "2.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49a2fe500edae1ffc8e4bbc731e54a44638e5ec59fbff967f1cb8306867f5b53"
+checksum = "28f3943e379e9dcaaab9dc319c308a8caaf9e7ff083c6838dff740afbba59df7"
 dependencies = [
  "async-std",
  "async-std-resolver",
@@ -1684,7 +1684,6 @@ dependencies = [
  "derivative",
  "futures-core",
  "futures-executor",
- "futures-io",
  "futures-util",
  "hex",
  "hmac",
@@ -2178,11 +2177,11 @@ checksum = "dbf0c48bc1d91375ae5c3cd81e3722dff1abcf81a30960240640d223f59fe0e5"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.37"
+version = "1.0.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec757218438d5fda206afc041538b2f6d889286160d649a86a24d37e1235afd1"
+checksum = "c54b25569025b7fc9651de43004ae593a75ad88543b17178aa5e1b9c4f15f56f"
 dependencies = [
- "unicode-xid",
+ "unicode-ident",
 ]
 
 [[package]]
@@ -3107,13 +3106,13 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.91"
+version = "1.0.96"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b683b2b825c8eef438b77c36a06dc262294da3d5a5813fac20da149241dcd44d"
+checksum = "0748dd251e24453cb8717f0354206b91557e4ec8703673a4b30208f2abaf1ebf"
 dependencies = [
  "proc-macro2",
  "quote",
- "unicode-xid",
+ "unicode-ident",
 ]
 
 [[package]]
@@ -3303,9 +3302,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.18.2"
+version = "1.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4903bf0427cf68dddd5aa6a93220756f8be0c34fcfa9f5e6191e103e15a31395"
+checksum = "95eec79ea28c00a365f539f1961e9278fbcaf81c0ff6aaf0e93c181352446948"
 dependencies = [
  "bytes",
  "libc",
@@ -3365,9 +3364,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-stream"
-version = "0.1.8"
+version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50145484efff8818b5ccd256697f36863f587da82cf8b409c53adf1e840798e3"
+checksum = "df54d54117d6fdc4e4fea40fe1e4e566b3505700e148a6827e59b34b0d2600d9"
 dependencies = [
  "futures-core",
  "pin-project-lite",
@@ -3649,6 +3648,12 @@ name = "unicode-bidi"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a01404663e3db436ed2746d9fefef640d868edae3cceb81c3b8d5732fda678f"
+
+[[package]]
+name = "unicode-ident"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d22af068fba1eb5edcb4aea19d382b2a3deb4c8f9d475c589b6ada9e0fd493ee"
 
 [[package]]
 name = "unicode-normalization"

@@ -15,9 +15,9 @@ subscribe = { path = "../../subscribe" }
 clients = { path = "../clients" }
 writers = { path = "../../writers" }
 
-async-trait = "0.1.53"
+async-trait = "0.1.56"
 futures = "0.3.21"
-mongodb = { version = "2.2.1", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.2.2", default-features = false, features = ["async-std-runtime"] }
 reqwest = { version = "0.11.10", features = ["gzip", "brotli", "json"] }
 nats = "0.20.1"
 serde = { version = "1.0.137", features=["derive"] }

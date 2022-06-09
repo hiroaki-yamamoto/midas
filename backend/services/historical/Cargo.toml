@@ -23,10 +23,10 @@ symbols = { path = "../../libs/exchanges/symbols" }
 serde = { version = "1.0.137", features = ["derive"] }
 rmp-serde = "1.1.0"
 nats = "0.20.1"
-mongodb = { version = "2.2.1", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.2.2", default-features = false, features = ["async-std-runtime"] }
 clap = { version = "3.1.18", features = ["derive"] }
 serde_yaml = "0.8.24"
-tokio = { version = "1.18.2", features = ["macros", "rt", "rt-multi-thread", "signal", "sync"] }
+tokio = { version = "1.19.1", features = ["macros", "rt", "rt-multi-thread", "signal", "sync"] }
 slog = "2.7.0"
 futures = "0.3.21"
 num-traits = "0.2.15"
