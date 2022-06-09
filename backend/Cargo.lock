@@ -3047,8 +3047,6 @@ dependencies = [
  "nats",
  "rmp-serde",
  "serde",
- "tokio",
- "tokio-stream",
 ]
 
 [[package]]
