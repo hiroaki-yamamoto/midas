@@ -7,15 +7,15 @@ import { Progress, HistoryFetchRequest } from '../rpc/historical_pb'
   providedIn: 'root'
 })
 export class HistoricalService implements OnDestroy {
-  public readonly syncProgress: Map<string, Progress.AsObject>;
+  public readonly progress: Map<string, Progress.AsObject>;
   private socket: MidasSocket;
 
   constructor() {
-    this.syncProgress = new Map();
+    this.progress = new Map();
     this.socket = new MidasSocket('/historical/subscribe');
     this.socket.addEventListener('message', (ev) => {
       const obj = JSON.parse(ev.data) as Progress.AsObject;
-      this.syncProgress.set(obj.symbol, obj);
+      this.progress.set(obj.symbol, obj);
     });
     this.socket.addEventListener('error', (ev) => {
       console.log(ev);
@@ -34,6 +34,6 @@ export class HistoricalService implements OnDestroy {
   }
 
   deleteProgress(symbol: string) {
-    this.syncProgress.delete(symbol);
+    this.progress.delete(symbol);
   }
 }

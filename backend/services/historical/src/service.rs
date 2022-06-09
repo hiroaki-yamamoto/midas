@@ -122,7 +122,10 @@ impl Service {
                   }
                   if let Ok(req) = parse_json::<RPCHistFetchReq>(msg.as_bytes()) {
                     let req: HistFetchReq = req.into();
-                    let _ = me.splitter.publish(&req);
+                    match me.splitter.publish(&req) {
+                      Ok(_) => { println!("Published Sync Start and End Date"); }
+                      Err(e) => { println!("Publishing Sync Date Failed: {:?}", e); }
+                    }
                   }
                   if let Ok(req) = parse_json::<StatusCheckRequest>(msg.as_bytes()) {
                     let exchange = req.exchange().as_string();

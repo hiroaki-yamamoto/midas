@@ -8,7 +8,8 @@ import { faRotate } from '@fortawesome/free-solid-svg-icons';
 
 import { Exchanges } from '../rpc/entities_pb';
 import { SymbolInfo } from '../rpc/symbols_pb';
-import { Progress } from '../rpc/historical_pb';
+import { HistoryFetchRequest } from '../rpc/historical_pb';
+import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
 
 import { HistoricalService } from '../resources/historical.service';
 
@@ -18,7 +19,7 @@ class SymbolSyncHandler {
   public syncButtonEnabled;
   public ignoreSyncBtnReEnable: boolean;
 
-  constructor(private histSrv: HistoricalService) {
+  constructor(public progSock: HistoricalService) {
     this.symbols = new MatTableDataSource<SymbolInfo.AsObject>();
     this.syncButtonEnabled = true;
     this.ignoreSyncBtnReEnable = false;
@@ -53,14 +54,12 @@ export class SyncComponent implements OnInit, AfterViewInit {
   public rotateIcon = faRotate;
   public dispCol = ['symbol', 'syncBtns'];
   @ViewChild(MatPaginator) symbolPaginator: MatPaginator;
-  public WIPSymbols: { [key: string]: Progress.AsObject } | null;
 
   constructor(
     private curRoute: ActivatedRoute,
     private http: HttpClient,
     public syncHandler: SymbolSyncHandler,
   ) {
-    this.WIPSymbols = {};
   }
 
   ngOnInit(): void {
@@ -80,21 +79,26 @@ export class SyncComponent implements OnInit, AfterViewInit {
     const symbols = new Set(
       this.syncHandler.symbols.data.map((value) => { return value.symbol; })
     );
-    Object.keys(this.WIPSymbols)
-      .forEach((symbol) => { symbols.delete(symbol); });
+    this.syncHandler.progSock.progress.forEach((_, symbol) => { symbols.delete(symbol); });
     return symbols.size === 0;
   }
 
   public syncAll(): void {
     this.syncHandler.symbols.data.forEach((value) => {
-      if (!(value.symbol in this.WIPSymbols)) {
-        this.WIPSymbols[value.symbol] = null;
+      if (!this.syncHandler.progSock.progress.has(value.symbol)) {
+        this.syncHandler.progSock.progress.set(value.symbol, null);
       }
     });
   }
 
   public sync(symbol: string): void {
-    this.WIPSymbols[symbol] = null;
+    this.syncHandler.progSock.progress.set(symbol, null);
+    const req = new HistoryFetchRequest();
+    req.setExchange(this.exchange);
+    req.setSymbol(symbol);
+    req.setStart(new Timestamp());
+    req.setEnd(Timestamp.fromDate(new Date()));
+    this.syncHandler.progSock.sync(req);
   }
 
   public syncSymbol(): void {
