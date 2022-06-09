@@ -126,8 +126,7 @@ impl Service {
                       Ok(_) => { println!("Published Sync Start and End Date"); }
                       Err(e) => { println!("Publishing Sync Date Failed: {:?}", e); }
                     }
-                  }
-                  if let Ok(req) = parse_json::<StatusCheckRequest>(msg.as_bytes()) {
+                  } else if let Ok(req) = parse_json::<StatusCheckRequest>(msg.as_bytes()) {
                     let exchange = req.exchange().as_string();
                     let size = size.get(&exchange, &req.symbol).unwrap_or(0);
                     let cur = cur.get(&exchange, &req.symbol).unwrap_or(0);
