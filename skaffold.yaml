@@ -83,3 +83,7 @@ deploy:
             command: [./gen.sh]
             os: [darwin, linux]
             dir: ./k8s/tls
+        - host:
+            command: [./install_mongodb_k8s_operator.sh]
+            os: [darwin, linux]
+            dir: ./scripts
