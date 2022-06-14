@@ -10,7 +10,7 @@ fi
 
 BASEDIR=`dirname $0`
 WORKDIR=`realpath $BASEDIR`
-VERSION='0.7.3'
+VERSION='0.7.4'
 NAME="mongodb-kubernetes-operator-$VERSION"
 ARCHIVE_NAME="$NAME.tar.gz"
 NAMESPACE_PATH="${WORKDIR}/../k8s/database/namespace.yml"
