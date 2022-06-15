@@ -1,14 +1,15 @@
 use ::std::io::{Error as IOError, ErrorKind};
 
 use ::futures::{Stream, StreamExt};
-use ::nats::{Message, Subscription};
+use ::nats::{Message, Subscription as NatsSub};
 use ::rmp_serde::from_slice as from_msgpack;
 use ::serde::de::DeserializeOwned;
+
 use ::tokio::sync::mpsc::unbounded_channel;
 use ::tokio_stream::wrappers::UnboundedReceiverStream;
 
 pub fn to_stream_raw(
-  sub: Subscription,
+  sub: NatsSub,
 ) -> impl Stream<Item = Message> + Send + Sync {
   let (sender, receiver) = unbounded_channel();
   let _ = sub.with_handler(move |msg| {
@@ -21,7 +22,7 @@ pub fn to_stream_raw(
 }
 
 pub fn to_stream<T>(
-  sub: Subscription,
+  sub: NatsSub,
 ) -> impl Stream<Item = (T, Message)> + Send + Sync
 where
   T: DeserializeOwned + Send + Sync,
