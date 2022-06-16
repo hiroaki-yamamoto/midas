@@ -4,14 +4,14 @@ use ::clap::Parser;
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
 use ::nats::connect as con_nats;
-use ::slog::error;
+use ::slog::{error, info};
 use ::tokio::select;
 use ::tokio::signal::unix as signal;
 
 use ::config::{CmdArgs, Config};
 use ::date_splitter::DateSplitter;
 use ::history::kvs::{CurrentSyncProgressStore, NumObjectsToFetchStore};
-use ::history::pubsub::{HistChartPubSub, RawHistChartPubSub};
+use ::history::pubsub::{HistChartDateSplitPubSub, HistChartPubSub};
 use ::history::traits::Store as StoreTrait;
 use ::rpc::entities::Exchanges;
 use ::subscribe::PubSub;
@@ -27,7 +27,7 @@ async fn main() {
   let mut num_prg_kvs =
     NumObjectsToFetchStore::new(cfg.redis(&logger).unwrap());
   let broker = con_nats(&cfg.broker_url).unwrap();
-  let req_pubsub = RawHistChartPubSub::new(broker.clone());
+  let req_pubsub = HistChartDateSplitPubSub::new(broker.clone());
   let mut req_sub =
     req_pubsub.queue_subscribe("histChartDateSplitter").unwrap();
   let resp_pubsub = HistChartPubSub::new(broker);
@@ -38,6 +38,7 @@ async fn main() {
   loop {
     select! {
       Some((req, _)) = req_sub.next() => {
+        info!(logger, "Triggered");
         let start = req.start.map(|start| start.to_system_time()).unwrap_or(UNIX_EPOCH);
         let end = req.end.map(|end| end.to_system_time()).unwrap_or(UNIX_EPOCH);
         let splitter = match req.exchange {
@@ -67,7 +68,7 @@ async fn main() {
           let resp = req.clone().start(Some(start.into())).end(Some(end.into()));
           let _ = resp_pubsub.publish(&resp);
         }
-      }
+      },
       _ = sig.recv() => {
         break;
       },

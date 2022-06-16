@@ -284,7 +284,7 @@ impl TradeObserver {
       select! {
         Some(symbol) = initial_symbols_stream.next() => {
           add_buf.insert(symbol.symbol);
-        }
+        },
         Some((event, _)) = symbol_event.next() => {
           match event {
             SymbolEvent::Add(symbol) => {

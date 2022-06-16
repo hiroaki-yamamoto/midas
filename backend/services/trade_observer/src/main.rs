@@ -73,7 +73,7 @@ fn handle_websocket(
             let _ = socket.flush().await;
             needs_flush = false;
           }
-        }
+        },
         Some(msg) = socket.next() => {
           let msg = msg.unwrap_or(::warp::filters::ws::Message::close());
           if msg.is_close() {

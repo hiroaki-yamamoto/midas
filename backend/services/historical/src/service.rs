@@ -13,7 +13,7 @@ use ::warp::{Filter, Reply};
 
 use ::entities::HistoryFetchRequest as HistFetchReq;
 use ::history::kvs::{redis, CurrentSyncProgressStore, NumObjectsToFetchStore};
-use ::history::pubsub::{FetchStatusEventPubSub, RawHistChartPubSub};
+use ::history::pubsub::{FetchStatusEventPubSub, HistChartDateSplitPubSub};
 use ::history::traits::Store;
 use ::rpc::entities::Status;
 use ::rpc::historical::{
@@ -25,7 +25,7 @@ use ::types::GenericResult;
 pub struct Service {
   redis_cli: redis::Client,
   status: FetchStatusEventPubSub,
-  splitter: RawHistChartPubSub,
+  splitter: HistChartDateSplitPubSub,
 }
 
 impl Service {
@@ -35,7 +35,7 @@ impl Service {
   ) -> GenericResult<Self> {
     let ret = Self {
       status: FetchStatusEventPubSub::new(nats.clone()),
-      splitter: RawHistChartPubSub::new(nats.clone()),
+      splitter: HistChartDateSplitPubSub::new(nats.clone()),
       redis_cli: redis_cli.clone(),
     };
     return Ok(ret);

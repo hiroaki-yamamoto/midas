@@ -11,9 +11,9 @@ pubsub!(
 );
 pubsub!(
   pub,
-  RawHistChartPubSub,
+  HistChartDateSplitPubSub,
   HistoryFetchRequest,
-  "histChart.request.raw"
+  "histChart.splitDate"
 );
 pubsub!(
   pub,
