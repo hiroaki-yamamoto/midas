@@ -87,3 +87,7 @@ deploy:
             command: [./install_mongodb_k8s_operator.sh]
             os: [darwin, linux]
             dir: ./scripts
+        - host:
+            command: [./helm_dep.sh]
+            os: [darwin, linux]
+            dir: ./k8s

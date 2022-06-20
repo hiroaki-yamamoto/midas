@@ -1,0 +1,8 @@
+nats:
+  image: nats:2.8.4-scratch
+  pullPolicy: IfNotPresent
+  logging:
+    trace:
+    logtime:
+    connectErrorReports:
+    reconnectErrorReports:
