@@ -39,9 +39,7 @@ pub fn to_stream<T>(
 where
   T: DeserializeOwned + Send + Sync,
 {
-  let stream = to_stream_raw(sub);
-  let stream = stream
+  return to_stream_raw(sub)
     .map(|msg| from_msgpack::<T>(&msg.data).map(|d| (d, msg)))
     .filter_map(|res| async { res.ok() });
-  return stream;
 }

@@ -27,7 +27,8 @@ where
 
   fn publish(&self, entity: &T) -> IOResult<()> {
     let msg = Self::serialize(entity)?;
-    return self.get_broker().publish(self.get_subject(), msg);
+    let res = self.get_broker().publish(self.get_subject(), msg);
+    return res;
   }
 
   fn subscribe(&self) -> IOResult<BoxStream<(T, Message)>> {
