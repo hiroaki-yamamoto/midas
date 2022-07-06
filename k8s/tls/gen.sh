@@ -3,6 +3,8 @@
 
 set -e
 
+source ./openssl.sh
+
 HERE=`dirname $0`
 CERTS=$HERE/certs
 ROOT_DIR=$CERTS/root
