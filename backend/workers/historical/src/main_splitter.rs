@@ -1,11 +1,12 @@
 use ::std::time::{Duration, UNIX_EPOCH};
 
 use ::clap::Parser;
+use ::futures::future::FutureExt;
+use ::futures::select;
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
 use ::nats::connect as con_nats;
 use ::slog::{error, info};
-use ::tokio::select;
 use ::tokio::signal::unix as signal;
 
 use ::config::{CmdArgs, Config};
@@ -37,39 +38,41 @@ async fn main() {
 
   loop {
     select! {
-      Some((req, _)) = req_sub.next() => {
-        info!(logger, "Triggered");
-        let start = req.start.map(|start| start.to_system_time()).unwrap_or(UNIX_EPOCH);
-        let end = req.end.map(|end| end.to_system_time()).unwrap_or(UNIX_EPOCH);
-        let splitter = match req.exchange {
-          Exchanges::Binance => {
-            DateSplitter::new(start, end, Duration::from_secs(60))
-          },
-        };
-        let mut splitter = match splitter {
-          Err(e) => {
-            error!(logger, "Failed to initialize DateSplitter: {:?}", e);
+      cur = req_sub.next().fuse() => {
+        if let Some((req, _)) = cur {
+          info!(logger, "Triggered");
+          let start = req.start.map(|start| start.to_system_time()).unwrap_or(UNIX_EPOCH);
+          let end = req.end.map(|end| end.to_system_time()).unwrap_or(UNIX_EPOCH);
+          let splitter = match req.exchange {
+            Exchanges::Binance => {
+              DateSplitter::new(start, end, Duration::from_secs(60))
+            },
+          };
+          let mut splitter = match splitter {
+            Err(e) => {
+              error!(logger, "Failed to initialize DateSplitter: {:?}", e);
+              continue;
+            },
+            Ok(v) => v
+          };
+          if let Err(e) = cur_prog_kvs.reset(req.exchange.as_string(), &req.symbol) {
+            error!(logger, "Failed to reset the progress: {:?}", e);
             continue;
-          },
-          Ok(v) => v
-        };
-        if let Err(e) = cur_prog_kvs.reset(req.exchange.as_string(), &req.symbol) {
-          error!(logger, "Failed to reset the progress: {:?}", e);
-          continue;
-        }
-        if let Err(e) = num_prg_kvs.set(
-          req.exchange.as_string(),
-          &req.symbol,
-          splitter.len().unwrap_or(0) as i64
-        ) {
-          error!(logger, "Failed to set the number of objects to fetch: {:?}", e);
-        }
-        while let Some((start, end)) = splitter.next().await {
-          let resp = req.clone().start(Some(start.into())).end(Some(end.into()));
-          let _ = resp_pubsub.publish(&resp);
+          }
+          if let Err(e) = num_prg_kvs.set(
+            req.exchange.as_string(),
+            &req.symbol,
+            splitter.len().unwrap_or(0) as i64
+          ) {
+            error!(logger, "Failed to set the number of objects to fetch: {:?}", e);
+          }
+          while let Some((start, end)) = splitter.next().await {
+            let resp = req.clone().start(Some(start.into())).end(Some(end.into()));
+            let _ = resp_pubsub.publish(&resp);
+          }
         }
       },
-      _ = sig.recv() => {
+      _ = sig.recv().fuse() => {
         break;
       },
     }
