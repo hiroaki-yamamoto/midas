@@ -3,6 +3,10 @@ use ::futures::{Stream, StreamExt};
 use ::nats::{Message, Subscription as NatsSub};
 use ::rmp_serde::from_slice as from_msgpack;
 use ::serde::de::DeserializeOwned;
+use ::std::{thread, time};
+use std::time::Duration;
+
+const SLEEP_TIMER: time::Duration = Duration::from_micros(1);
 
 pub struct Sub {
   sub: NatsSub,
@@ -20,6 +24,8 @@ impl Stream for Sub {
     self: std::pin::Pin<&mut Self>,
     _: &mut std::task::Context<'_>,
   ) -> Poll<Option<Self::Item>> {
+    thread::sleep(SLEEP_TIMER);
+    println!("Pooling...");
     return match self.sub.try_next() {
       Some(v) => Poll::Ready(Some(v)),
       None => Poll::Pending,
