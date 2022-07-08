@@ -59,9 +59,11 @@ async fn event_loop(cfg: &Config) -> ThreadSafeResult<()> {
           let resp = req.clone().start(Some(start.into())).end(Some(end.into()));
           let _ = resp_pubsub.publish(&resp);
         }
-      }
+      },
+      else => {break;}
     }
   }
+  return Ok(());
 }
 
 #[tokio::main]
