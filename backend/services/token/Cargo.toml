@@ -13,7 +13,7 @@ access_logger = { path = "../../libs/access_logger" }
 rpc = { path = "../../libs/rpc" }
 
 slog = "2.7.0"
-clap = { version = "3.1.18", features = ["derive"] }
+clap = { version = "3.2.8", features = ["derive"] }
 tokio = { version = "1.19.2", features = ["macros", "rt", "rt-multi-thread", "signal"] }
 futures = "0.3.21"
 libc = "0.2.126"
