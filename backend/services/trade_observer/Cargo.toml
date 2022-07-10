@@ -14,7 +14,7 @@ csrf = { path = "../../libs/csrf" }
 access_logger = { path = "../../libs/access_logger" }
 
 futures = "0.3.21"
-nats = "0.21.0"
+nats = "0.22.0"
 warp = { version = "0.3.2", features = ["tls"] }
 clap = { version = "3.2.8", features = ["derive"] }
 slog = "2.7.0"
