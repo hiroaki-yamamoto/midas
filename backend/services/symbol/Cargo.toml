@@ -22,7 +22,7 @@ clap = { version = "3.2.8", features = ["derive"] }
 tokio = { version = "1.19.2", features = ["macros", "rt", "rt-multi-thread", "signal"] }
 futures = "0.3.21"
 libc = "0.2.126"
-nats = "0.21.0"
+nats = "0.22.0"
 warp = { version = "0.3.2", features = ["tls"] }
 num-traits = "0.2.15"
 serde = { version = "1.0.138", features = ["derive"] }
