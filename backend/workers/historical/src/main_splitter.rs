@@ -29,6 +29,15 @@ async fn main() {
   let mut num_prg_kvs =
     NumObjectsToFetchStore::new(cfg.redis(&logger).unwrap());
   let broker = con_nats(&cfg.broker_url).unwrap();
+  // let sub = broker
+  //   .queue_subscribe("histChart.splitDate", "histChartDateSplitter")
+  //   .unwrap();
+  // loop {
+  //   if let Ok(msg) = sub.next_timeout(::std::time::Duration::from_micros(1)) {
+  //     println!("Received Msg: {:?}", msg);
+  //   }
+  // }
+
   let req_pubsub = HistChartDateSplitPubSub::new(broker.clone());
   let mut req_sub =
     req_pubsub.queue_subscribe("histChartDateSplitter").unwrap();
