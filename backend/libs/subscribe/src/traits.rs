@@ -2,14 +2,12 @@ use ::std::io::Result as IOResult;
 use ::std::io::{Error as IOError, ErrorKind as IOErrKind};
 use ::std::time::Duration;
 
-use ::futures::stream::BoxStream;
-use ::futures::StreamExt;
 use ::nats::{Connection as NatsCon, Message};
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde::de::DeserializeOwned;
 use ::serde::ser::Serialize;
 
-use super::streams::to_stream;
+use super::streams::Sub;
 
 pub trait PubSub<T>
 where
@@ -31,21 +29,18 @@ where
     return res;
   }
 
-  fn subscribe(&self) -> IOResult<BoxStream<(T, Message)>> {
-    let sub = self.get_broker().subscribe(self.get_subject())?;
-    let st = to_stream::<T>(sub);
-    return Ok(st.boxed());
+  fn subscribe(&self) -> IOResult<Sub<'_, T>> {
+    let con = self.get_broker();
+    let sub = con.subscribe(self.get_subject())?;
+    let sub = Sub::new(con, sub);
+    return Ok(sub);
   }
 
-  fn queue_subscribe(
-    &self,
-    queue_name: &str,
-  ) -> IOResult<BoxStream<(T, Message)>> {
-    let sub = self
-      .get_broker()
-      .queue_subscribe(self.get_subject(), queue_name)?;
-    let st = to_stream::<T>(sub);
-    return Ok(st.boxed());
+  fn queue_subscribe(&self, queue_name: &str) -> IOResult<Sub<'_, T>> {
+    let con = self.get_broker();
+    let sub = con.queue_subscribe(self.get_subject(), queue_name)?;
+    let sub = Sub::new(con, sub);
+    return Ok(sub);
   }
 
   fn request<S>(&self, entity: &T) -> IOResult<(S, Message)>
