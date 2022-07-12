@@ -52,9 +52,6 @@ where
       .flatten()
       .map(|tup| Poll::Ready(Some(tup)))
       .unwrap_or(Poll::Pending);
-    if poll.is_pending() {
-      ctx.waker().clone().wake_by_ref();
-    }
     return poll;
   }
 }
