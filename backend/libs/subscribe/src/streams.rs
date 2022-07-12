@@ -38,13 +38,13 @@ where
   type Item = (T, Message);
   fn poll_next(
     self: std::pin::Pin<&mut Self>,
-    _: &mut std::task::Context<'_>,
+    ctx: &mut std::task::Context<'_>,
   ) -> Poll<Option<Self::Item>> {
     if let Err(e) = self.con.flush() {
       println!("Nats Flushing Failure: {:?}", e);
       return Poll::Ready(None);
     }
-    return self
+    let poll = self
       .sub
       .next_timeout(POLL_TIMEOUT)
       .ok()
@@ -52,5 +52,9 @@ where
       .flatten()
       .map(|tup| Poll::Ready(Some(tup)))
       .unwrap_or(Poll::Pending);
+    if poll.is_pending() {
+      ctx.waker().clone().wake_by_ref();
+    }
+    return poll;
   }
 }
