@@ -29,6 +29,15 @@ where
       p: PhantomData,
     };
   }
+
+  pub fn ublock_next(&self) -> Option<(T, Message)> {
+    return self
+      .sub
+      .next_timeout(POLL_TIMEOUT)
+      .ok()
+      .map(|msg| from_msgpack::<T>(&msg.data).map(|obj| (obj, msg)).ok())
+      .flatten();
+  }
 }
 
 impl<'a, T> Stream for Sub<'a, T>
@@ -38,18 +47,14 @@ where
   type Item = (T, Message);
   fn poll_next(
     self: std::pin::Pin<&mut Self>,
-    ctx: &mut std::task::Context<'_>,
+    _: &mut std::task::Context<'_>,
   ) -> Poll<Option<Self::Item>> {
     if let Err(e) = self.con.flush() {
       println!("Nats Flushing Failure: {:?}", e);
       return Poll::Ready(None);
     }
     let poll = self
-      .sub
-      .next_timeout(POLL_TIMEOUT)
-      .ok()
-      .map(|msg| from_msgpack::<T>(&msg.data).map(|obj| (obj, msg)).ok())
-      .flatten()
+      .ublock_next()
       .map(|tup| Poll::Ready(Some(tup)))
       .unwrap_or(Poll::Pending);
     return poll;

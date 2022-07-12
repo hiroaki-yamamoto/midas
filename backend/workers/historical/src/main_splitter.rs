@@ -29,9 +29,9 @@ async fn main() {
   let mut num_prg_kvs =
     NumObjectsToFetchStore::new(cfg.redis(&logger).unwrap());
   let broker = con_nats(&cfg.broker_url).unwrap();
-  // let sub = broker
-  //   .queue_subscribe("histChart.splitDate", "histChartDateSplitter")
-  //   .unwrap();
+  let sub = broker
+    .queue_subscribe("histChart.splitDate", "histChartDateSplitter")
+    .unwrap();
   // loop {
   //   if let Ok(msg) = sub.next_timeout(::std::time::Duration::from_micros(1)) {
   //     println!("Received Msg: {:?}", msg);
@@ -45,38 +45,38 @@ async fn main() {
 
   loop {
     select! {
-      Some((req, _)) = req_sub.next() => {
-        println!("Triggered");
-        // let start = req.start.map(|start| start.to_system_time()).unwrap_or(UNIX_EPOCH);
-        // let end = req.end.map(|end| end.to_system_time()).unwrap_or(UNIX_EPOCH);
-        // let splitter = match req.exchange {
-        //   Exchanges::Binance => {
-        //     DateSplitter::new(start, end, Duration::from_secs(60))
-        //   },
-        // };
-        // let mut splitter = match splitter {
-        //   Err(e) => {
-        //     error!(logger, "Failed to initialize DateSplitter: {:?}", e);
-        //     continue;
-        //   },
-        //   Ok(v) => v
-        // };
-        // if let Err(e) = cur_prog_kvs.reset(req.exchange.as_string(), &req.symbol) {
-        //   error!(logger, "Failed to reset the progress: {:?}", e);
-        //   continue;
-        // }
-        // if let Err(e) = num_prg_kvs.set(
-        //   req.exchange.as_string(),
-        //   &req.symbol,
-        //   splitter.len().unwrap_or(0) as i64
-        // ) {
-        //   error!(logger, "Failed to set the number of objects to fetch: {:?}", e);
-        // }
-        // while let Some((start, end)) = splitter.next().await {
-        //   let resp = req.clone().start(Some(start.into())).end(Some(end.into()));
-        //   let _ = resp_pubsub.publish(&resp);
-        // }
-      },
+      // Some((req, _)) = req_sub.next() => {
+      //   println!("Triggered");
+      //   let start = req.start.map(|start| start.to_system_time()).unwrap_or(UNIX_EPOCH);
+      //   let end = req.end.map(|end| end.to_system_time()).unwrap_or(UNIX_EPOCH);
+      //   let splitter = match req.exchange {
+      //     Exchanges::Binance => {
+      //       DateSplitter::new(start, end, Duration::from_secs(60))
+      //     },
+      //   };
+      //   let mut splitter = match splitter {
+      //     Err(e) => {
+      //       error!(logger, "Failed to initialize DateSplitter: {:?}", e);
+      //       continue;
+      //     },
+      //     Ok(v) => v
+      //   };
+      //   if let Err(e) = cur_prog_kvs.reset(req.exchange.as_string(), &req.symbol) {
+      //     error!(logger, "Failed to reset the progress: {:?}", e);
+      //     continue;
+      //   }
+      //   if let Err(e) = num_prg_kvs.set(
+      //     req.exchange.as_string(),
+      //     &req.symbol,
+      //     splitter.len().unwrap_or(0) as i64
+      //   ) {
+      //     error!(logger, "Failed to set the number of objects to fetch: {:?}", e);
+      //   }
+      //   while let Some((start, end)) = splitter.next().await {
+      //     let resp = req.clone().start(Some(start.into())).end(Some(end.into()));
+      //     let _ = resp_pubsub.publish(&resp);
+      //   }
+      // },
       _ = sig.recv() => {break;},
     }
   }
