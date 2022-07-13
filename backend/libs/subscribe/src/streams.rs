@@ -68,8 +68,8 @@ where
     ctx: &mut std::task::Context<'_>,
   ) -> Poll<Option<Self::Item>> {
     let mut state = self.state.lock().unwrap();
+    state.waker = Some(ctx.waker().clone());
     if state.cur.is_none() {
-      state.waker = Some(ctx.waker().clone());
       return Poll::Pending;
     }
     let poll = Poll::Ready(state.cur.clone());
