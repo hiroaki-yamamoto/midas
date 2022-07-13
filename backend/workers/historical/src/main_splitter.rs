@@ -38,6 +38,7 @@ async fn main() {
     req_pubsub.queue_subscribe("histChartDateSplitter").unwrap();
   let resp_pubsub = HistChartPubSub::new(broker.clone());
 
+  info!(logger, "Ready...");
   loop {
     // broker.flush_timeout(Duration::from_micros(1)).unwrap();
     // if let Some((req, _)) = req_sub.ublock_next() {
