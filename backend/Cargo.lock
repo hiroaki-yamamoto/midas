@@ -385,6 +385,7 @@ checksum = "a24ecf39f5a314493ede1bb015984735d41aa6aedb59cafb95492d40cd893330"
 dependencies = [
  "ahash",
  "base64",
+ "chrono",
  "hex",
  "indexmap",
  "lazy_static",
@@ -451,6 +452,7 @@ dependencies = [
  "libc",
  "num-integer",
  "num-traits",
+ "serde",
  "time 0.1.44",
  "winapi",
 ]
@@ -834,6 +836,7 @@ version = "0.1.0"
 dependencies = [
  "bson",
  "bytes",
+ "chrono",
  "errors",
  "futures-core",
  "mongodb",
@@ -1238,7 +1241,6 @@ dependencies = [
  "subscribe",
  "symbols",
  "tokio",
- "tokio-stream",
  "types",
 ]
 

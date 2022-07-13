@@ -1,5 +1,5 @@
 use ::std::convert::From;
-use ::std::time::UNIX_EPOCH;
+use ::std::time::{SystemTime, UNIX_EPOCH};
 
 use ::entities::HistoryFetchRequest;
 use ::serde::Serialize;
@@ -22,8 +22,8 @@ impl From<HistoryFetchRequest> for Query {
 
 impl From<&HistoryFetchRequest> for Query {
   fn from(value: &HistoryFetchRequest) -> Self {
-    let std_start = value.start.map(|d| d.to_system_time());
-    let std_end = value.end.map(|d| d.to_system_time());
+    let std_start: Option<SystemTime> = value.start.map(|d| d.into());
+    let std_end: Option<SystemTime> = value.end.map(|d| d.into());
 
     return Self {
       symbol: value.symbol.clone(),

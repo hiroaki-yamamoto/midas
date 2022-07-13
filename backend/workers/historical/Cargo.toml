@@ -32,4 +32,3 @@ clap = { version = "3.2.8", features = ["derive"] }
 mongodb = { version = "2.2.2", default-features = false, features = ["async-std-runtime"] }
 futures = "0.3.21"
 libc = "0.2.126"
-tokio-stream = "0.1.9"

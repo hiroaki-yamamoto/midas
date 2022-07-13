@@ -35,7 +35,15 @@ where
       .sub
       .next_timeout(POLL_TIMEOUT)
       .ok()
-      .map(|msg| from_msgpack::<T>(&msg.data).map(|obj| (obj, msg)).ok())
+      .map(|msg| {
+        let obj = from_msgpack::<T>(&msg.data).map(|obj| (obj, msg));
+        if let Err(ref e) = obj {
+          println!("Msg deserialization failure: {:?}", e);
+        } else {
+          println!("Msg deserialized");
+        }
+        return obj.ok();
+      })
       .flatten();
   }
 }
