@@ -1,70 +1,79 @@
+use ::std::sync::{Arc, Mutex};
+use ::std::task::Waker;
+use ::std::thread;
+
 use ::futures::task::Poll;
 use ::futures::Stream;
-use ::nats::{Connection as NatsCon, Message, Subscription as NatsSub};
+use ::nats::{Message, Subscription as NatsSub};
 use ::rmp_serde::from_slice as from_msgpack;
 use ::serde::de::DeserializeOwned;
-use ::std::marker::PhantomData;
-use ::std::time::Duration;
 
-const POLL_TIMEOUT: Duration = Duration::from_micros(1);
-
-#[derive(Debug)]
-pub struct Sub<'a, T>
+pub struct Sub<T>
 where
-  T: DeserializeOwned,
+  T: DeserializeOwned + Clone + Send + Sync,
 {
-  con: &'a NatsCon,
-  sub: NatsSub,
-  p: PhantomData<T>,
+  state: Arc<Mutex<State<T>>>,
 }
 
-impl<'a, T> Sub<'a, T>
+struct State<T>
 where
-  T: DeserializeOwned,
+  T: DeserializeOwned + Clone + Send + Sync,
 {
-  pub fn new(con: &'a NatsCon, sub: NatsSub) -> Self {
-    return Self {
-      con,
-      sub,
-      p: PhantomData,
-    };
-  }
+  cur: Option<(T, Message)>,
+  waker: Option<Waker>,
+}
 
-  pub fn ublock_next(&self) -> Option<(T, Message)> {
-    return self
-      .sub
-      .next_timeout(POLL_TIMEOUT)
-      .ok()
-      .map(|msg| {
-        let obj = from_msgpack::<T>(&msg.data).map(|obj| (obj, msg));
-        if let Err(ref e) = obj {
-          println!("Msg deserialization failure: {:?}", e);
-        } else {
-          println!("Msg deserialized");
+impl<T> Sub<T>
+where
+  T: DeserializeOwned + Clone + Send + Sync + 'static,
+{
+  pub fn new(sub: NatsSub) -> Self {
+    let state = Arc::new(Mutex::new(State {
+      waker: None,
+      cur: None,
+    }));
+    let threaded_ctx = state.clone();
+    thread::spawn(move || loop {
+      let msg = sub
+        .next()
+        .map(|msg| {
+          let obj = from_msgpack::<T>(&msg.data).map(|obj| (obj, msg));
+          if let Err(ref e) = obj {
+            println!("Msg deserialization failure: {:?}", e);
+          } else {
+            println!("Msg deserialized");
+          }
+          return obj.ok();
+        })
+        .flatten();
+      if let Some(msg) = msg {
+        let mut ctx = threaded_ctx.lock().unwrap();
+        ctx.cur = Some(msg);
+        if let Some(waker) = ctx.waker.take() {
+          waker.wake();
         }
-        return obj.ok();
-      })
-      .flatten();
+      }
+    });
+    return Self { state };
   }
 }
 
-impl<'a, T> Stream for Sub<'a, T>
+impl<T> Stream for Sub<T>
 where
-  T: DeserializeOwned,
+  T: DeserializeOwned + Clone + Send + Sync,
 {
   type Item = (T, Message);
   fn poll_next(
     self: std::pin::Pin<&mut Self>,
-    _: &mut std::task::Context<'_>,
+    ctx: &mut std::task::Context<'_>,
   ) -> Poll<Option<Self::Item>> {
-    if let Err(e) = self.con.flush() {
-      println!("Nats Flushing Failure: {:?}", e);
-      return Poll::Ready(None);
+    let mut state = self.state.lock().unwrap();
+    if state.cur.is_none() {
+      state.waker = Some(ctx.waker().clone());
+      return Poll::Pending;
     }
-    let poll = self
-      .ublock_next()
-      .map(|tup| Poll::Ready(Some(tup)))
-      .unwrap_or(Poll::Pending);
+    let poll = Poll::Ready(state.cur.clone());
+    state.cur = None;
     return poll;
   }
 }

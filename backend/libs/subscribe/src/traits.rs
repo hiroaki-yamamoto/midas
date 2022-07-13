@@ -11,7 +11,7 @@ use super::streams::Sub;
 
 pub trait PubSub<T>
 where
-  T: DeserializeOwned + Serialize + Send + Sync + 'static,
+  T: DeserializeOwned + Serialize + Clone + Send + Sync + 'static,
 {
   fn get_subject(&self) -> &str;
   fn get_broker(&self) -> &NatsCon;
@@ -29,17 +29,17 @@ where
     return res;
   }
 
-  fn subscribe(&self) -> IOResult<Sub<'_, T>> {
+  fn subscribe(&self) -> IOResult<Sub<T>> {
     let con = self.get_broker();
     let sub = con.subscribe(self.get_subject())?;
-    let sub = Sub::new(con, sub);
+    let sub = Sub::new(sub);
     return Ok(sub);
   }
 
-  fn queue_subscribe(&self, queue_name: &str) -> IOResult<Sub<'_, T>> {
+  fn queue_subscribe(&self, queue_name: &str) -> IOResult<Sub<T>> {
     let con = self.get_broker();
     let sub = con.queue_subscribe(self.get_subject(), queue_name)?;
-    let sub = Sub::new(con, sub);
+    let sub = Sub::new(sub);
     return Ok(sub);
   }
 
