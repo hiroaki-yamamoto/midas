@@ -11,8 +11,8 @@ observers = { path = "../../libs/exchanges/observers" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 
-clap = { version = "3.2.8", features = ["derive"] }
-tokio = { version = "1.19.2", features = ["signal", "rt", "rt-multi-thread", "macros"] }
+clap = { version = "3.2.12", features = ["derive"] }
+tokio = { version = "1.20.0", features = ["signal", "rt", "rt-multi-thread", "macros"] }
 nats = "0.22.0"
 slog = "2.7.0"
 futures = "0.3.21"
