@@ -13,7 +13,7 @@ use ::futures::stream::{BoxStream, StreamExt};
 use ::futures::FutureExt;
 use ::mongodb::bson::doc;
 use ::mongodb::Database;
-use ::nats::Connection as Broker;
+use ::nats::jetstream::JetStream as Broker;
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::slog::Logger;
 use ::subscribe::PubSub;
@@ -54,7 +54,7 @@ pub struct TradeObserver {
 impl TradeObserver {
   pub async fn new(
     db: Option<Database>,
-    broker: Broker,
+    broker: &Broker,
     logger: Logger,
   ) -> Self {
     let recorder = match db {

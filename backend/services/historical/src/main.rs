@@ -22,7 +22,7 @@ async fn main() {
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
   let logger = cfg.build_slog();
   info!(logger, "Historical Kline Service");
-  let broker = ::nats::connect(&cfg.broker_url).unwrap();
+  let broker = cfg.nats_cli().unwrap();
   let redis = cfg.redis;
   let host: SocketAddr = cfg.host.parse().unwrap();
   let svc = Service::new(&broker, &redis).await.unwrap();

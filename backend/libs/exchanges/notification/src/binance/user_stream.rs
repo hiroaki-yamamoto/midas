@@ -4,7 +4,7 @@ use ::std::time::Duration;
 use ::async_trait::async_trait;
 use ::futures::future::join_all;
 use ::futures::{SinkExt, StreamExt};
-use ::nats::Connection as Broker;
+use ::nats::jetstream::JetStream as Broker;
 use ::serde_json::{from_slice as from_json_bin, from_str as from_json_str};
 use ::slog::Logger;
 use ::tokio::select;

@@ -3,7 +3,7 @@ use ::futures::future::join;
 use ::futures::stream::StreamExt;
 use ::mongodb::bson::{doc, Document};
 use ::mongodb::Database;
-use ::nats::Connection as Broker;
+use ::nats::jetstream::JetStream as NatsJS;
 use ::slog::Logger;
 
 use ::clients::binance::REST_ENDPOINT;
@@ -20,16 +20,16 @@ use ::errors::StatusFailure;
 
 #[derive(Debug, Clone)]
 pub struct SymbolFetcher {
-  broker: Broker,
+  broker: NatsJS,
   recorder: SymbolRecorder,
   log: Logger,
 }
 
 impl SymbolFetcher {
-  pub async fn new(log: Logger, broker: Broker, db: Database) -> Self {
+  pub async fn new(log: Logger, broker: &NatsJS, db: Database) -> Self {
     let recorder = SymbolRecorder::new(db).await;
     let ret = Self {
-      broker,
+      broker: broker.clone(),
       recorder,
       log,
     };
@@ -61,7 +61,7 @@ impl SymbolFetcherTrait for SymbolFetcher {
       let new_symbols = info.symbols.clone();
       let update_event_manager = SymbolUpdateEventManager::new(
         self.log.clone(),
-        self.broker.clone(),
+        &self.broker,
         new_symbols.clone(),
         old_symbols,
       );

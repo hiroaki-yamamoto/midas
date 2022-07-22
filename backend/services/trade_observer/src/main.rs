@@ -5,7 +5,7 @@ use ::std::time::Duration;
 use ::clap::Parser;
 use ::futures::{FutureExt, SinkExt, StreamExt};
 use ::libc::{SIGINT, SIGTERM};
-use ::nats::{connect as broker_con, Connection as NatsCon};
+use ::nats::jetstream::JetStream as NatsJS;
 use ::rpc::entities::Status;
 use ::serde_json::to_string;
 use ::slog::{o, Logger};
@@ -25,7 +25,7 @@ use ::rpc::entities::Exchanges;
 
 async fn get_exchange(
   exchange: Exchanges,
-  broker: NatsCon,
+  broker: &NatsJS,
   logger: Logger,
 ) -> Option<impl TradeObserverTrait> {
   return match exchange {
@@ -94,7 +94,7 @@ fn handle_websocket(
 async fn main() {
   let cmd: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(cmd.config)).unwrap();
-  let broker = broker_con(cfg.broker_url.as_str()).unwrap();
+  let broker = cfg.nats_cli().unwrap();
   let logger = cfg.build_slog();
   let route_logger = logger.clone();
   let csrf = CSRF::new(CSRFOption::builder());
@@ -107,11 +107,11 @@ async fn main() {
     })
     .untuple_one()
     .and_then(
-      |exchange: String, broker: NatsCon, logger: Logger| async move {
+      |exchange: String, broker: NatsJS, logger: Logger| async move {
         let exchange: Exchanges =
           exchange.parse().map_err(|_| ::warp::reject::not_found())?;
         let observer = match exchange {
-          Exchanges::Binance => get_exchange(exchange, broker, logger).await,
+          Exchanges::Binance => get_exchange(exchange, &broker, logger).await,
         };
         return match observer {
           None => Err(::warp::reject::not_found()),

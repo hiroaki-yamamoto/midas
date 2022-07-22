@@ -1,6 +1,6 @@
 use ::std::collections::HashSet;
 
-use ::nats::Connection as NatsCon;
+use ::nats::jetstream::JetStream as NatsJS;
 use ::slog::Logger;
 
 use super::entities::{Symbol, SymbolEvent};
@@ -16,7 +16,7 @@ pub struct SymbolUpdateEventManager {
 }
 
 impl SymbolUpdateEventManager {
-  pub fn new<S, T>(log: Logger, broker: NatsCon, new: S, old: T) -> Self
+  pub fn new<S, T>(log: Logger, broker: &NatsJS, new: S, old: T) -> Self
   where
     S: IntoIterator<Item = Symbol> + Clone,
     T: IntoIterator<Item = Symbol> + Clone,

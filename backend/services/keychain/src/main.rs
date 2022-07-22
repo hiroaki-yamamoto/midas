@@ -8,7 +8,6 @@ use ::http::StatusCode;
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::bson::{doc, oid::ObjectId};
 use ::mongodb::Client;
-use ::nats::connect;
 use ::slog::Logger;
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
@@ -40,7 +39,7 @@ async fn main() {
   let logger = config.build_slog();
   let logger_in_handler = logger.clone();
   let log_access = log(logger.clone());
-  let broker = connect(config.broker_url.as_str()).unwrap();
+  let broker = config.nats_cli().unwrap();
   let db_cli = Client::with_uri_str(&config.db_url).await.unwrap();
   let db = db_cli.database("midas");
   let keychain = KeyChain::new(broker, db).await;

@@ -1,6 +1,6 @@
 use ::futures::StreamExt;
 use ::mongodb::Database;
-use ::nats::Connection as Broker;
+use ::nats::jetstream::JetStream as NatsJS;
 use ::slog::{o, Logger};
 use ::warp::filters::BoxedFilter;
 use ::warp::reject;
@@ -20,11 +20,11 @@ pub struct Service {
 }
 
 impl Service {
-  pub async fn new(db: &Database, broker: Broker, log: Logger) -> Self {
+  pub async fn new(db: &Database, broker: &NatsJS, log: Logger) -> Self {
     return Self {
       binance_fetcher: binance_fetcher::SymbolFetcher::new(
         log.new(o!("scope" => "BinanceSymbolFetcher")),
-        broker.clone(),
+        broker,
         db.clone(),
       )
       .await,

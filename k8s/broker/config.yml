@@ -6,3 +6,8 @@ nats:
     logtime: true
     connectErrorReports: 1
     reconnectErrorReports: 1
+  jetstream:
+    enabled: true
+    memStorage:
+      enabled: true
+      size: 2Gi

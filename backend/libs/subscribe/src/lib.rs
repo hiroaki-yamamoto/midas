@@ -8,19 +8,19 @@ macro_rules! pubsub {
   ($accessor: vis, $name: ident, $entity: ty, $sub_name: expr) => {
     #[derive(Debug, Clone)]
     $accessor struct $name {
-      con: ::nats::Connection
+      js: ::nats::jetstream::JetStream
     }
 
     impl $name {
-      pub fn new(con: ::nats::Connection) -> Self {
-        return Self { con };
+      pub fn new(js: ::nats::jetstream::JetStream) -> Self {
+        return Self { js };
       }
-      ::types::stateful_setter!(con, ::nats::Connection);
+      ::types::stateful_setter!(js, ::nats::jetstream::JetStream);
     }
 
     impl ::subscribe::PubSub<$entity> for $name {
-      fn get_broker(&self) -> &::nats::Connection {
-        return &self.con;
+      fn get_natsjs(&self) -> &::nats::jetstream::JetStream {
+        return &self.js;
       }
       fn get_subject(&self) -> &str {
         return $sub_name;

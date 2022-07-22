@@ -9,7 +9,7 @@ use ::futures::{FutureExt, StreamExt};
 use ::mongodb::bson::{doc, oid::ObjectId, to_document, DateTime};
 use ::mongodb::options::{UpdateModifications, UpdateOptions};
 use ::mongodb::{Collection, Database};
-use ::nats::Connection as NatsCon;
+use ::nats::jetstream::JetStream as NatsJS;
 use ::ring::hmac;
 use ::serde_qs::to_string as to_qs;
 use ::slog::Logger;
@@ -37,18 +37,18 @@ use super::entities::{
 #[derive(Debug, Clone)]
 pub struct Executor {
   keychain: KeyChain,
-  broker: NatsCon,
+  broker: NatsJS,
   db: Database,
   log: Logger,
   positions: Collection<OrderResponse<f64, DateTime>>,
 }
 
 impl Executor {
-  pub async fn new(broker: NatsCon, db: Database, log: Logger) -> Self {
+  pub async fn new(broker: &NatsJS, db: Database, log: Logger) -> Self {
     let keychain = KeyChain::new(broker.clone(), db.clone()).await;
     let positions = db.collection("binance.positions");
     let me = Self {
-      broker,
+      broker: broker.clone(),
       keychain,
       db,
       log,
@@ -83,7 +83,7 @@ impl ExecutorTrait for Executor {
     let stream = try_stream! {
       let observer = TradeObserver::new(
       Some(self.db.clone()),
-      self.broker.clone(),
+      &self.broker,
       self.log.clone(),
     )
     .await;

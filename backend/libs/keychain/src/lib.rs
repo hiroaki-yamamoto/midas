@@ -7,7 +7,7 @@ use ::mongodb::bson::{doc, Document};
 use ::mongodb::error::Result;
 use ::mongodb::options::UpdateModifications;
 use ::mongodb::{Collection, Database};
-use ::nats::Connection as NatsCon;
+use ::nats::jetstream::JetStream as NatsJS;
 use ::subscribe::PubSub;
 
 use ::rpc::entities::Exchanges;
@@ -27,7 +27,7 @@ pub struct KeyChain {
 }
 
 impl KeyChain {
-  pub async fn new(broker: NatsCon, db: Database) -> Self {
+  pub async fn new(broker: NatsJS, db: Database) -> Self {
     let col = db.collection("apiKeyChains");
     let ret = Self {
       pubsub: APIKeyPubSub::new(broker),

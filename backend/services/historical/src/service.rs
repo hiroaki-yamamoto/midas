@@ -2,7 +2,7 @@ use ::std::fmt::Debug;
 
 use ::futures::{SinkExt, StreamExt};
 use ::http::StatusCode;
-use ::nats::Connection as NatsCon;
+use ::nats::jetstream::JetStream as NatsJS;
 use ::serde_json::{from_slice as parse_json, to_string as jsonify};
 use ::subscribe::PubSub;
 use ::tokio::select;
@@ -30,7 +30,7 @@ pub struct Service {
 
 impl Service {
   pub async fn new(
-    nats: &NatsCon,
+    nats: &NatsJS,
     redis_cli: &redis::Client,
   ) -> GenericResult<Self> {
     let ret = Self {

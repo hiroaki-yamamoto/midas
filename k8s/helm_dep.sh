@@ -41,9 +41,3 @@ helmInstall broker nats/nats \
   -n $MIDAS_NAMESPACE --create-namespace \
   -f $WORKDIR/./broker/config.yml
 kubectl apply -f $WORKDIR/./broker/svc.yml -n midas
-BROKER_HOST=`yq '.metadata.name' $WORKDIR/./broker/svc.yml`
-helmInstall stan nats/stan \
-  -n $MIDAS_NAMESPACE --create-namespace \
-  --set stan.nats.url="nats://$BROKER_HOST.$MIDAS_NAMESPACE.svc.cluster.local:4222" \
-  --set stan.replicas=1 \
-  --set store.type="memory"

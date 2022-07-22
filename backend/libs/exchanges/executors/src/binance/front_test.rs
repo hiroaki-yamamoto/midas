@@ -4,7 +4,7 @@ use ::async_stream::try_stream;
 use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
-use ::nats::Connection as NatsCon;
+use ::nats::jetstream::JetStream as NatsJS;
 use ::slog::Logger;
 
 use ::errors::ExecutionFailed;
@@ -33,7 +33,7 @@ pub struct Executor {
 impl Executor {
   pub async fn new(
     logger: Logger,
-    broker: NatsCon,
+    broker: &NatsJS,
     maker_fee: f64,
     taker_fee: f64,
   ) -> Self {

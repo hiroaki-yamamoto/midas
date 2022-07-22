@@ -12,6 +12,8 @@ use ::slog_builder::{build_debug, build_json};
 use ::types::{GenericResult, ThreadSafeResult};
 
 use ::errors::MaximumAttemptExceeded;
+use ::nats::connect as nats_connect;
+use ::nats::jetstream::{new as nats_js_new, JetStream as NatsJS};
 use ::redis::{Client as RedisClient, Connection};
 
 #[derive(Debug, Clone, Deserialize)]
@@ -98,5 +100,12 @@ impl Config {
   pub fn build_rest_client(&self) -> GenericResult<Client> {
     let ca = Certificate::from_pem(read_to_string(&self.tls.ca)?.as_bytes())?;
     return Ok(Client::builder().add_root_certificate(ca).build()?);
+  }
+
+  pub fn nats_cli(&self) -> GenericResult<NatsJS> {
+    let broker = nats_connect(&self.broker_url)?;
+    let js = nats_js_new(broker);
+    js.add_stream("midas")?;
+    return Ok(js);
   }
 }

@@ -6,7 +6,6 @@ use ::clap::Parser;
 use ::futures::FutureExt;
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::{options::ClientOptions as DBCliOpt, Client as DBCli};
-use ::nats::connect as connect_broker;
 use ::slog::{info, o};
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
@@ -30,10 +29,11 @@ async fn main() {
   let db = DBCli::with_options(DBCliOpt::parse(&cfg.db_url).await.unwrap())
     .unwrap()
     .database("midas");
-  let broker = connect_broker(&cfg.broker_url).unwrap();
+  let broker = cfg.nats_cli().unwrap();
   let host: SocketAddr = cfg.host.parse().unwrap();
   let svc =
-    Service::new(&db, broker, logger.new(o!("scope" => "SymbolService"))).await;
+    Service::new(&db, &broker, logger.new(o!("scope" => "SymbolService")))
+      .await;
   let csrf = CSRF::new(CSRFOption::builder());
   let router = csrf
     .protect()

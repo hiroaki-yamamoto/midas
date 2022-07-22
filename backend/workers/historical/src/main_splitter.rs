@@ -28,7 +28,7 @@ async fn main() {
     CurrentSyncProgressStore::new(cfg.redis(&logger).unwrap());
   let mut num_prg_kvs =
     NumObjectsToFetchStore::new(cfg.redis(&logger).unwrap());
-  let broker = con_nats(&cfg.broker_url).unwrap();
+  let broker = cfg.nats_cli().unwrap();
   let sub = broker
     .queue_subscribe("histChart.splitDate", "histChartDateSplitter")
     .unwrap();
