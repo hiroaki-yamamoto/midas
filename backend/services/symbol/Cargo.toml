@@ -16,14 +16,14 @@ csrf = { path = "../../libs/csrf" }
 access_logger = { path = "../../libs/access_logger" }
 probe = { path = "../../libs/probe" }
 
-mongodb = { version = "2.2.2", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime"] }
 slog = "2.7.0"
-clap = { version = "3.2.12", features = ["derive"] }
+clap = { version = "3.2.14", features = ["derive"] }
 tokio = { version = "1.20.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
 futures = "0.3.21"
 libc = "0.2.126"
 nats = "0.22.0"
 warp = { version = "0.3.2", features = ["tls"] }
 num-traits = "0.2.15"
-serde = { version = "1.0.139", features = ["derive"] }
+serde = { version = "1.0.140", features = ["derive"] }
 serde_json = "1.0.82"
