@@ -13,9 +13,9 @@ errors = { path = "../errors" }
 
 futures-core = "0.3.21"
 num-traits = "0.2.15"
-serde = { version = "1.0.139", features = ["derive"] }
+serde = { version = "1.0.140", features = ["derive"] }
 bson = "2.3.0"
-bytes = "1.1.0"
+bytes = "1.2.0"
 ring = "0.16.20"
-mongodb = { version = "2.2.2", default-features = false, features = ["async-std-runtime", "bson-chrono-0_4"] }
+mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime", "bson-chrono-0_4"] }
 chrono = { version = "0.4.19", features = ["serde"] }
