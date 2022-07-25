@@ -105,7 +105,6 @@ impl Config {
   pub fn nats_cli(&self) -> GenericResult<NatsJS> {
     let broker = nats_connect(&self.broker_url)?;
     let js = nats_js_new(broker);
-    js.add_stream("midas")?;
     return Ok(js);
   }
 }

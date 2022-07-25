@@ -6,7 +6,7 @@ use ::rmp_serde::to_vec as to_msgpack;
 use ::serde::de::DeserializeOwned;
 use ::serde::ser::Serialize;
 
-use super::streams::{JSSubs, Sub};
+use super::streams::Sub;
 
 pub trait PubSub<T>
 where
@@ -30,15 +30,24 @@ where
 
   fn subscribe(&self) -> IOResult<Sub<T>> {
     let con = self.get_natsjs();
-    let sub = con.pull_subscribe(self.get_subject())?;
-    let sub = Sub::new(JSSubs::Pull(sub));
+    // con.add_consumer("midas", self.get_subject())?;
+    let sub = con.subscribe(self.get_subject())?;
+    let sub = Sub::new(sub);
     return Ok(sub);
   }
 
   fn queue_subscribe(&self, queue_name: &str) -> IOResult<Sub<T>> {
     let con = self.get_natsjs();
+    // con.add_consumer(
+    //   "midas",
+    //   ConsumerConfig {
+    //     deliver_subject: Some(self.get_subject().to_string()),
+    //     durable_name: Some(self.get_subject().to_string()),
+    //     ..Default::default()
+    //   },
+    // )?;
     let sub = con.queue_subscribe(self.get_subject(), queue_name)?;
-    let sub = Sub::new(JSSubs::Push(sub));
+    let sub = Sub::new(sub);
     return Ok(sub);
   }
 }

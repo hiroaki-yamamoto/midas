@@ -7,17 +7,17 @@ pubsub!(
   pub,
   HistChartPubSub,
   HistoryFetchRequest,
-  "histChart.request"
+  "HistChartRequest"
 );
 pubsub!(
   pub,
   HistChartDateSplitPubSub,
   HistoryFetchRequest,
-  "histChart.splitDate"
+  "HistChartDateSplit"
 );
 pubsub!(
   pub,
   FetchStatusEventPubSub,
   FetchStatusChanged,
-  "histChart.progChanged"
+  "HistChartProgressChanged"
 );

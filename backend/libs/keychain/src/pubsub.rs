@@ -1,4 +1,4 @@
 use ::entities::APIKeyEvent;
 use ::subscribe::pubsub;
 
-pubsub!(pub, APIKeyPubSub, APIKeyEvent, "apikey");
+pubsub!(pub, APIKeyPubSub, APIKeyEvent, "APIKey");

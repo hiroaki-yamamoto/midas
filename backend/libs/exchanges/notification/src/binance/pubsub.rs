@@ -6,13 +6,13 @@ pubsub!(
   pub,
   NotifyPubSub,
   CastedUserStreamEvents,
-  "binance.user_stream.notify"
+  "BinanceUserStreamNotify"
 );
 
-pubsub!(pub, ReauthPubSub, String, "binance.user_stream.reauth");
+pubsub!(pub, ReauthPubSub, String, "BinanceUserStreamReAuth");
 pubsub!(
   pub,
   ListenKeyPubSub,
   ListenKeyPair,
-  "binance.user_stream.listen_key"
+  "BinanceUserStreamListenKey"
 );

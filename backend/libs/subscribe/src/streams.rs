@@ -4,26 +4,10 @@ use ::std::thread;
 
 use ::futures::task::Poll;
 use ::futures::Stream;
-use ::nats::jetstream::{
-  PullSubscription as NatsPullSub, PushSubscription as NatsPushSub,
-};
+use ::nats::jetstream::PushSubscription as NatsPushSub;
 use ::nats::Message;
 use ::rmp_serde::from_slice as from_msgpack;
 use ::serde::de::DeserializeOwned;
-
-pub enum JSSubs {
-  Pull(NatsPullSub),
-  Push(NatsPushSub),
-}
-
-impl JSSubs {
-  pub fn next(&self) -> Option<Message> {
-    return match self {
-      Self::Pull(sub) => sub.next(),
-      Self::Push(sub) => sub.next(),
-    };
-  }
-}
 
 pub struct Sub<T>
 where
@@ -44,7 +28,7 @@ impl<T> Sub<T>
 where
   T: DeserializeOwned + Clone + Send + Sync + 'static,
 {
-  pub fn new(sub: JSSubs) -> Self {
+  pub fn new(sub: NatsPushSub) -> Self {
     let state = Arc::new(Mutex::new(State {
       waker: None,
       cur: None,

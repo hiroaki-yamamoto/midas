@@ -29,9 +29,9 @@ async fn main() {
   let mut num_prg_kvs =
     NumObjectsToFetchStore::new(cfg.redis(&logger).unwrap());
   let broker = cfg.nats_cli().unwrap();
-  let sub = broker
-    .queue_subscribe("histChart.splitDate", "histChartDateSplitter")
-    .unwrap();
+  // let sub = broker
+  //   .queue_subscribe("histChart.splitDate", "histChartDateSplitter")
+  //   .unwrap();
 
   let req_pubsub = HistChartDateSplitPubSub::new(broker.clone());
   let mut req_sub =
