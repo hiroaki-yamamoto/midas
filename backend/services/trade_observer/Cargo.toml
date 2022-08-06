@@ -19,6 +19,6 @@ warp = { version = "0.3.2", features = ["tls"] }
 clap = { version = "3.2.16", features = ["derive"] }
 slog = "2.7.0"
 tokio = { version = "1.20.1", features = ["macros", "signal", "time", "rt", "rt-multi-thread"] }
-libc = "0.2.126"
+libc = "0.2.127"
 mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime"] }
-serde_json = "1.0.82"
+serde_json = "1.0.83"

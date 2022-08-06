@@ -31,4 +31,4 @@ nats = "0.22.0"
 clap = { version = "3.2.16", features = ["derive"] }
 mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime"] }
 futures = "0.3.21"
-libc = "0.2.126"
+libc = "0.2.127"
