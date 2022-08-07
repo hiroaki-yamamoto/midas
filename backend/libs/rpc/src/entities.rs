@@ -24,6 +24,17 @@ pub struct InsertOneResult {
 pub enum Exchanges {
     Binance = 0,
 }
+impl Exchanges {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Exchanges::Binance => "Binance",
+        }
+    }
+}
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[derive(::num_derive::FromPrimitive, ::clap::Parser)]
@@ -36,4 +47,20 @@ pub enum BackTestPriceBase {
     Low = 3,
     OpenCloseMid = 4,
     HighLowMid = 5,
+}
+impl BackTestPriceBase {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            BackTestPriceBase::Close => "Close",
+            BackTestPriceBase::Open => "Open",
+            BackTestPriceBase::High => "High",
+            BackTestPriceBase::Low => "Low",
+            BackTestPriceBase::OpenCloseMid => "OpenCloseMid",
+            BackTestPriceBase::HighLowMid => "HighLowMid",
+        }
+    }
 }
