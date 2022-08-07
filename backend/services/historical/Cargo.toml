@@ -22,7 +22,7 @@ symbols = { path = "../../libs/exchanges/symbols" }
 
 serde = { version = "1.0.142", features = ["derive"] }
 rmp-serde = "1.1.0"
-nats = "0.22.0"
+nats = "0.23.0"
 mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime"] }
 clap = { version = "3.2.16", features = ["derive"] }
 serde_yaml = "0.9.4"
