@@ -41,8 +41,6 @@ where
           let obj = from_msgpack::<T>(&msg.data).map(|obj| (obj, msg));
           if let Err(ref e) = obj {
             println!("Msg deserialization failure: {:?}", e);
-          } else {
-            println!("Msg deserialized");
           }
           return obj.ok();
         })

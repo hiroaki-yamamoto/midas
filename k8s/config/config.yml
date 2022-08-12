@@ -1,7 +1,7 @@
 dbURL: mongodb://midas:midas@database-svc.midas-db.svc.cluster.local/midas?authMechanism=SCRAM-SHA-256
 brokerURL: nats://broker.midas.svc.cluster.local:4222
-redisURL: redis://kvs.midas.svc.cluster.local/
-host: '[::]:50000'
+redisURL: redis://kvs.midas.svc.cluster.local:6379/
+host: "[::]:50000"
 debug: true
 tls:
   privateKey: /etc/midas/certs/tls.key

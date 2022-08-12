@@ -25,8 +25,8 @@ deploy() {
   skaffold run --build-concurrency=0
 }
 
-echo "Generating proto code to typescript"
-buildFrontendProto
+# echo "Generating proto code to typescript"
+# buildFrontendProto
 echo "Building Backend"
 buildBackend
 echo "Building Frontend"
