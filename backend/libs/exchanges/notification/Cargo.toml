@@ -29,4 +29,4 @@ tokio-stream = "0.1.9"
 tokio-tungstenite = { version = "0.17.2", features = ["native-tls"] }
 futures = "0.3.21"
 mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime"] }
-serde = { version = "1.0.142", features=["derive"] }
+serde = { version = "1.0.143", features=["derive"] }
