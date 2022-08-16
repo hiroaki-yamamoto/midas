@@ -11,11 +11,11 @@ rpc = { path = "../rpc" }
 types = { path = "../types" }
 errors = { path = "../errors" }
 
-futures-core = "0.3.21"
+futures-core = "0.3.23"
 num-traits = "0.2.15"
-serde = { version = "1.0.142", features = ["derive"] }
+serde = { version = "1.0.143", features = ["derive"] }
 bson = "2.4.0"
 bytes = "1.2.1"
 ring = "0.16.20"
 mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime", "bson-chrono-0_4"] }
-chrono = { version = "0.4.20", features = ["serde"] }
+chrono = { version = "0.4.22", features = ["serde"] }
