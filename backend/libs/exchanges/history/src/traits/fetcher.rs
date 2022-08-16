@@ -1,3 +1,5 @@
+use ::std::time::SystemTime;
+
 use ::async_trait::async_trait;
 use ::entities::HistoryFetchRequest;
 
@@ -12,4 +14,8 @@ pub trait HistoryFetcher {
     &self,
     req: &HistoryFetchRequest,
   ) -> ThreadSafeResult<KlinesByExchange>;
+  async fn first_trade_date(
+    &self,
+    symbol: &str,
+  ) -> ThreadSafeResult<SystemTime>;
 }

@@ -1,5 +1,6 @@
 use ::std::fmt::Debug;
 use ::std::time::Duration as StdDur;
+use std::time::SystemTime;
 
 use ::async_trait::async_trait;
 use ::rand::random;
@@ -7,11 +8,13 @@ use ::serde_qs::to_string as to_qs;
 use ::slog::{warn, Logger};
 use ::tokio::time::sleep;
 use ::url::Url;
+use entities::TradeTimeTrait;
 
 use ::clients::binance::REST_ENDPOINT;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::entities::HistoryFetchRequest;
 use ::errors::{ExecutionFailed, MaximumAttemptExceeded};
+use ::rpc::entities::Exchanges;
 use ::types::{GenericResult, ThreadSafeResult};
 
 use super::entities::{BinancePayload, Kline, Query};
@@ -33,19 +36,6 @@ impl HistoryFetcher {
       logger,
     });
   }
-
-  // async fn get_first_trade_date(
-  //   &self,
-  //   symbol: String,
-  // ) -> GenericResult<TradeTime<SystemTime>> {
-  //   let req = &Param {
-  //     symbol: symbol.clone(),
-  //     num_symbols: 1,
-  //     entire_data_len: 1,
-  //     start_time: SystemTime::UNIX_EPOCH.into(),
-  //     end_time: None,
-  //   };
-  // }
 
   fn validate_request(
     &self,
@@ -132,5 +122,24 @@ impl HistoryFetcherTrait for HistoryFetcher {
       sleep(wait_dur).await;
     }
     return Err(Box::new(MaximumAttemptExceeded::default()));
+  }
+
+  async fn first_trade_date(
+    &self,
+    symbol: &str,
+  ) -> ThreadSafeResult<SystemTime> {
+    let req = HistoryFetchRequest::new(
+      Exchanges::Binance,
+      symbol,
+      Some(SystemTime::UNIX_EPOCH.into()),
+      None,
+    );
+    let KlinesByExchange::Binance(klines) = self.fetch(&req).await?;
+    let result = klines
+      .into_iter()
+      .min_by_key(|kline| kline.open_time())
+      .map(|kline| kline.open_time())
+      .unwrap_or(SystemTime::now());
+    return Ok(result);
   }
 }
