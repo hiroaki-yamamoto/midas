@@ -20,7 +20,7 @@ use ::history::kvs::CurrentSyncProgressStore;
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartPubSub};
 use ::history::traits::{
   HistoryFetcher as HistoryFetcherTrait, HistoryWriter as HistoryWriterTrait,
-  Store as StoreTrait,
+  IncrementalStore,
 };
 
 #[tokio::main]
