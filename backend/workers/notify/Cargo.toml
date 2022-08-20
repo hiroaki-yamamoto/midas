@@ -18,5 +18,5 @@ tokio = { version = "1.20.1", features = [
   "signal",
 ] }
 nats = "0.23.0"
-libc = "0.2.131"
+libc = "0.2.132"
 futures = "0.3.23"

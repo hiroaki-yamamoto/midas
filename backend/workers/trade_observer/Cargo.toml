@@ -16,5 +16,5 @@ tokio = { version = "1.20.1", features = ["signal", "rt", "rt-multi-thread", "ma
 nats = "0.23.0"
 slog = "2.7.0"
 futures = "0.3.23"
-libc = "0.2.131"
+libc = "0.2.132"
 mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime"] }
