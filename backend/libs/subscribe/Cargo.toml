@@ -10,4 +10,4 @@ edition = "2021"
 futures = "0.3.23"
 nats = "0.23.0"
 rmp-serde = "1.1.0"
-serde = { version = "1.0.143", features=["derive"] }
+serde = { version = "1.0.144", features=["derive"] }
