@@ -29,7 +29,7 @@ serde_qs = "0.10.1"
 url = "2.2.2"
 slog = "2.7.0"
 tokio = { version = "1.20.1", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
-serde = { version = "1.0.143", features = ["derive"] }
+serde = { version = "1.0.144", features = ["derive"] }
 serde_json = "1.0.83"
 num_cpus = "1.13.1"
 reqwest = { version = "0.11.11", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }

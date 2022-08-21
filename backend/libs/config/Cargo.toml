@@ -11,7 +11,7 @@ types = { path = "../types" }
 slog_builder = { path = "../slog_builder" }
 errors = { path = "../errors" }
 
-serde = { version = "1.0.143", features = ["derive"] }
+serde = { version = "1.0.144", features = ["derive"] }
 serde_yaml = "0.9.9"
 clap = { version = "3.2.17", features = ["derive"] }
 slog = "2.7.0"
