@@ -9,9 +9,12 @@ use ::tokio::signal::unix as signal;
 
 use ::config::{CmdArgs, Config};
 use ::date_splitter::DateSplitter;
+use ::history::binance::fetcher::HistoryFetcher as BinanceHistFetcher;
 use ::history::kvs::{CurrentSyncProgressStore, NumObjectsToFetchStore};
 use ::history::pubsub::{HistChartDateSplitPubSub, HistChartPubSub};
-use ::history::traits::Store as StoreTrait;
+use ::history::traits::{
+  HistoryFetcher as HistFetchTrait, Store as StoreTrait,
+};
 use ::rpc::entities::Exchanges;
 use ::subscribe::PubSub;
 
@@ -38,17 +41,21 @@ async fn main() {
   loop {
     select! {
       Some((req, _)) = req_sub.next() => {
-        let start = req.start.map(|start| start.into()).unwrap_or(UNIX_EPOCH);
+        let mut start = req.start.map(|start| start.into()).unwrap_or(UNIX_EPOCH);
         let end = req.end.map(|end| end.into()).unwrap_or(UNIX_EPOCH);
         info!(
           logger,
           "Start splitting currency {:?} from {:?} to {:?}",
           req.symbol, start, end,
         );
+        let fetcher = match req.exchange {
+          Exchanges::Binance => BinanceHistFetcher::new(None, logger.clone()),
+        };
+        if let Ok(fetcher) = fetcher {
+          start = fetcher.first_trade_date(&req.symbol).await.unwrap_or(start);
+        }
         let splitter = match req.exchange {
-          Exchanges::Binance => {
-            DateSplitter::new(start, end, Duration::from_secs(60))
-          },
+          Exchanges::Binance => DateSplitter::new(start, end, Duration::from_secs(60)),
         };
         let mut splitter = match splitter {
           Err(e) => {
