@@ -13,7 +13,7 @@ rpc = { path = "../../libs/rpc" }
 csrf = { path = "../../libs/csrf" }
 access_logger = { path = "../../libs/access_logger" }
 
-futures = "0.3.23"
+futures = "0.3.24"
 nats = "0.23.0"
 warp = { version = "0.3.2", features = ["tls"] }
 clap = { version = "3.2.20", features = ["derive"] }

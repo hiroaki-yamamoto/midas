@@ -15,6 +15,6 @@ clap = { version = "3.2.20", features = ["derive"] }
 tokio = { version = "1.21.0", features = ["signal", "rt", "rt-multi-thread", "macros"] }
 nats = "0.23.0"
 slog = "2.7.0"
-futures = "0.3.23"
+futures = "0.3.24"
 libc = "0.2.132"
 mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime"] }
