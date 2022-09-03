@@ -19,7 +19,7 @@ clients = { path = "../clients" }
 symbols = { path = "../symbols" }
 
 async-trait = "0.1.57"
-futures = "0.3.23"
+futures = "0.3.24"
 mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime"] }
 nats = "0.23.0"
 rmp-serde = "1.1.0"
