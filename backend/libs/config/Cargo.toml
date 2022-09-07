@@ -12,9 +12,9 @@ slog_builder = { path = "../slog_builder" }
 errors = { path = "../errors" }
 
 serde = { version = "1.0.144", features = ["derive"] }
-serde_yaml = "0.9.10"
-clap = { version = "3.2.17", features = ["derive"] }
+serde_yaml = "0.9.11"
+clap = { version = "3.2.20", features = ["derive"] }
 slog = "2.7.0"
 reqwest = { version = "0.11.11", features = ["gzip", "brotli", "json", "rustls-tls"] }
-redis = { version = "0.21.5", features = ["connection-manager", "tokio-comp"] }
+redis = { version = "0.21.6", features = ["connection-manager", "tokio-comp"] }
 nats = "0.23.0"
