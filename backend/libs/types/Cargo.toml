@@ -9,7 +9,7 @@ edition = "2021"
 [dependencies]
 errors = { path = "../errors" }
 
-url = "2.2.2"
+url = "2.3.1"
 serde = { version = "1.0.144", features = ["derive"] }
 tokio = { version = "1.21.0", features = ["sync", "net"] }
 mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime"] }
