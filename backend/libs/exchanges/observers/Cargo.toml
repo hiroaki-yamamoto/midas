@@ -27,5 +27,5 @@ serde_json = "1.0.85"
 slog = "2.7.0"
 tokio = { version = "1.21.1", features = ["macros", "time"] }
 tokio-tungstenite = { version = "0.17.2", features = ["native-tls"] }
-serde = { version = "1.0.144", features = ["derive"] }
+serde = { version = "1.0.145", features = ["derive"] }
 tokio-stream = "0.1.10"
