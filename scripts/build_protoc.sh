@@ -27,7 +27,7 @@ protoc() {
 }
 
 grpc() {
-  local VERSION='1.3.1'
+  local VERSION='1.4.0'
   local FILENAME="protoc-gen-grpc-web-$VERSION-linux-x86_64"
   local OUT_FILE='protoc-gen-grpc-web'
   local REPO=https://github.com/grpc/grpc-web
