@@ -28,9 +28,9 @@ rmp-serde = "1.1.0"
 serde_qs = "0.10.1"
 url = "2.3.1"
 slog = "2.7.0"
-tokio = { version = "1.21.0", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
-serde = { version = "1.0.144", features = ["derive"] }
+tokio = { version = "1.21.1", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
+serde = { version = "1.0.145", features = ["derive"] }
 serde_json = "1.0.85"
 num_cpus = "1.13.1"
-reqwest = { version = "0.11.11", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
+reqwest = { version = "0.11.12", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
 redis = { version = "0.21.6", features = ["connection-manager", "tokio-comp"] }
