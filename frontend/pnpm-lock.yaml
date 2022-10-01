@@ -6565,7 +6565,7 @@ packages:
       http-proxy: 1.18.1
       isbinaryfile: 4.0.10
       lodash: 4.17.21
-      log4js: 6.6.1
+      log4js: 6.7.0
       mime: 2.6.0
       minimatch: 3.1.2
       mkdirp: 0.5.6
@@ -6752,8 +6752,8 @@ packages:
       wrap-ansi: 6.2.0
     dev: true
 
-  /log4js/6.6.1:
-    resolution: {integrity: sha512-J8VYFH2UQq/xucdNu71io4Fo+purYYudyErgBbswWKO0MC6QVOERRomt5su/z6d3RJSmLyTGmXl3Q/XjKCf+/A==}
+  /log4js/6.7.0:
+    resolution: {integrity: sha512-KA0W9ffgNBLDj6fZCq/lRbgR6ABAodRIDHrZnS48vOtfKa4PzWImb0Md1lmGCdO3n3sbCm/n1/WmrNlZ8kCI3Q==}
     engines: {node: '>=8.0'}
     dependencies:
       date-format: 4.0.14
