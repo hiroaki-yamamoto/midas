@@ -15,12 +15,12 @@ access_logger = { path = "../../libs/access_logger" }
 
 clap = { version = "3.2.22", features = ["derive"] }
 mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime"] }
-tokio = { version = "1.21.1", features = ["macros", "rt", "rt-multi-thread", "signal"] }
-warp = { version = "0.3.2", features = ["tls"] }
+tokio = { version = "1.21.2", features = ["macros", "rt", "rt-multi-thread", "signal"] }
+warp = { version = "0.3.3", features = ["tls"] }
 slog = "2.7.0"
 futures = "0.3.24"
 serde = { version = "1.0.145", features=["derive"] }
-libc = "0.2.133"
+libc = "0.2.134"
 num-traits = "0.2.15"
 http = "0.2.8"
 nats = "0.23.0"
