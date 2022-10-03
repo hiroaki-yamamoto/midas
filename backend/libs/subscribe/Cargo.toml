@@ -9,5 +9,5 @@ edition = "2021"
 [dependencies]
 futures = "0.3.24"
 nats = "0.23.0"
-rmp-serde = "1.1.0"
+rmp-serde = "1.1.1"
 serde = { version = "1.0.145", features=["derive"] }
