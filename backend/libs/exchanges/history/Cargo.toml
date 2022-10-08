@@ -23,7 +23,7 @@ async-trait = "0.1.57"
 futures = "0.3.24"
 nats = "0.23.0"
 rand = "0.8.5"
-mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }
 rmp-serde = "1.1.1"
 serde_qs = "0.10.1"
 url = "2.3.1"
