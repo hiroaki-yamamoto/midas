@@ -22,7 +22,7 @@ specifiers:
   '@angular/platform-browser': ~14.2.0
   '@angular/platform-browser-dynamic': ~14.2.0
   '@angular/router': ~14.2.0
-  '@cypress/schematic': 2.1.1
+  '@cypress/schematic': 2.2.0
   '@fortawesome/angular-fontawesome': ^0.11.0
   '@fortawesome/fontawesome-svg-core': ^6.1.1
   '@fortawesome/free-brands-svg-icons': ^6.1.1
@@ -92,14 +92,14 @@ devDependencies:
   '@angular-eslint/template-parser': 14.1.2_ypn2ylkkyfa5i233caldtndbqa
   '@angular/cli': 14.2.4
   '@angular/compiler-cli': 14.2.4_nxatuvuhdirshnwtu54yawq3ya
-  '@cypress/schematic': 2.1.1_aae2f6lyi74bsq6xzr4imx5tdm
+  '@cypress/schematic': 2.2.0_aae2f6lyi74bsq6xzr4imx5tdm
   '@types/google-protobuf': 3.15.6
   '@types/jasmine': 4.3.0
   '@types/jasminewd2': 2.0.10
   '@types/node': 16.11.63
   '@typescript-eslint/eslint-plugin': 5.39.0_xyciw6oqjoiiono4dhv3uhn5my
   '@typescript-eslint/parser': 5.39.0_ypn2ylkkyfa5i233caldtndbqa
-  cypress: 10.9.0
+  cypress: 10.10.0
   d3-path: 3.0.1
   d3-shape: 3.1.0
   eslint: 8.24.0
@@ -2048,8 +2048,8 @@ packages:
       uuid: 8.3.2
     dev: true
 
-  /@cypress/schematic/2.1.1_aae2f6lyi74bsq6xzr4imx5tdm:
-    resolution: {integrity: sha512-Kf4QeNk8IVx3tdybls+xq8CbqsZwqR9dZjE3ELZhfG2rZeId9SSG6F2GpR4Xly5ROkX0BuQVeuIFNSkDxWAtPg==}
+  /@cypress/schematic/2.2.0_aae2f6lyi74bsq6xzr4imx5tdm:
+    resolution: {integrity: sha512-CK26TiXohnvx/Vs5QMlFsaHDU6xPsqHBppWOrPFuwcvw83sTAE0e3FjNgGrajZhAWNPCswhiLiV+oJtMgVcAFg==}
     peerDependencies:
       '@angular/cli': '>=12'
       '@angular/core': '>=12'
@@ -4206,8 +4206,8 @@ packages:
     resolution: {integrity: sha512-GAj5FOq0Hd+RsCGVJxZuKaIDXDf3h6GQoNEjFgbLLI/trgtavwUbSnZ5pVfg27DVCaWjIohryS0JFwIJyT2cMg==}
     dev: true
 
-  /cypress/10.9.0:
-    resolution: {integrity: sha512-MjIWrRpc+bQM9U4kSSdATZWZ2hUqHGFEQTF7dfeZRa4MnalMtc88FIE49USWP2ZVtfy5WPBcgfBX+YorFqGElA==}
+  /cypress/10.10.0:
+    resolution: {integrity: sha512-bU8r44x1NIYAUNNXt3CwJpLOVth7HUv2hUhYCxZmgZ1IugowDvuHNpevnoZRQx1KKOEisLvIJW+Xen5Pjn41pg==}
     engines: {node: '>=12.0.0'}
     hasBin: true
     requiresBuild: true
