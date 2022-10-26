@@ -23,14 +23,14 @@ async-trait = "0.1.57"
 futures = "0.3.24"
 nats = "0.23.0"
 rand = "0.8.5"
-mongodb = { version = "2.3.0", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }
 rmp-serde = "1.1.1"
 serde_qs = "0.10.1"
 url = "2.3.1"
 slog = "2.7.0"
 tokio = { version = "1.21.2", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
 serde = { version = "1.0.145", features = ["derive"] }
-serde_json = "1.0.85"
+serde_json = "1.0.86"
 num_cpus = "1.13.1"
 reqwest = { version = "0.11.12", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
-redis = { version = "0.21.6", features = ["connection-manager", "tokio-comp"] }
+redis = { version = "0.22.0", features = ["connection-manager", "tokio-comp"] }
