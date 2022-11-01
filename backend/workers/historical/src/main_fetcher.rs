@@ -38,7 +38,7 @@ async fn main() {
   let mut cur_prog_kvs = CurrentSyncProgressStore::new(redis);
 
   let pubsub = HistChartPubSub::new(broker.clone());
-  let mut sub = pubsub.queue_subscribe("histChart.fetcher").unwrap();
+  let mut sub = pubsub.queue_subscribe("histChartFetcher").unwrap();
   let change_event_pub = FetchStatusEventPubSub::new(broker);
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();

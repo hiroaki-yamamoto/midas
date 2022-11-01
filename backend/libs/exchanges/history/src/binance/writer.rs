@@ -36,7 +36,7 @@ impl HistoryWriterTrait for HistoryWriter {
       let kline_doc = to_document(&kline)?;
       defers.push(self.col.update_one(
         doc! {"_id": kline.id},
-        UpdateModifications::Document(kline_doc),
+        UpdateModifications::Document(doc! { "$set": kline_doc }),
         UpdateOptions::builder().upsert(true).build(),
       ));
     }
