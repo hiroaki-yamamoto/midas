@@ -53,6 +53,7 @@ async fn main() {
   loop {
     select! {
       Some((req, _)) = sub.next() => {
+        info!(logger, "Request Payload Received");
         let klines = match reg.get(&req.exchange) {
           Some(fetcher) => {
             match fetcher.fetch(&req).await {

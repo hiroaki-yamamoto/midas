@@ -77,12 +77,23 @@ async fn main() {
         }
         while let Some((start, end)) = splitter.next().await {
           let resp = req.clone().start(Some(start.into())).end(Some(end.into()));
-          let _ = resp_pubsub.publish(&resp);
-          info!(
-            logger,
-            "Sent the split date data (start: {:?}, end: {:?})",
-            start, end
-          );
+          let result = resp_pubsub.publish(&resp);
+          match result {
+            Ok(_) => {
+              info!(
+                logger,
+                "Sent the split date data (start: {:?}, end: {:?})",
+                start, end
+              );
+            },
+            Err(e) => {
+              error!(
+                logger,
+                "Error occured while sending splite date data: {:?}",
+                e
+              );
+            }
+          }
         }
       },
       _ = sig.recv() => {break;},
