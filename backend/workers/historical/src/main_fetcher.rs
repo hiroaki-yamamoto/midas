@@ -3,8 +3,6 @@ use ::std::collections::HashMap;
 use ::clap::Parser;
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::mongodb::options::ClientOptions as MongoDBCliOpt;
-use ::mongodb::Client as DBCli;
 use ::slog::{error, info};
 use ::subscribe::PubSub;
 use ::tokio::select;
@@ -30,10 +28,7 @@ async fn main() {
   let logger = cfg.build_slog();
   info!(logger, "Kline fetch worker");
   let broker = cfg.nats_cli().unwrap();
-  let db =
-    DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await.unwrap())
-      .unwrap()
-      .database("midas");
+  let db = cfg.db().await.unwrap();
   let redis = cfg.redis(&logger).unwrap();
   let mut cur_prog_kvs = CurrentSyncProgressStore::new(redis);
 

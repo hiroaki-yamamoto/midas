@@ -2,6 +2,10 @@ use ::std::fs::{read_to_string, File};
 use ::std::io::Read;
 use ::std::time::Duration;
 
+use ::mongodb::error::Result as DBResult;
+use ::mongodb::{
+  options::ClientOptions as DBCliOpt, Client as DBCli, Database as DB,
+};
 use ::reqwest::{Certificate, Client};
 use ::serde::de::Error as SerdeError;
 use ::serde::{Deserialize, Deserializer};
@@ -54,6 +58,7 @@ impl Config {
     let url: String = Deserialize::deserialize(de)?;
     return ::redis::Client::open(url).map_err(|e| SerdeError::custom(e));
   }
+
   pub fn redis(&self, logger: &Logger) -> ThreadSafeResult<Connection> {
     for _ in 0..10 {
       match self
@@ -73,6 +78,12 @@ impl Config {
       }
     }
     return Err(Box::new(MaximumAttemptExceeded::default()));
+  }
+
+  pub async fn db(&self) -> DBResult<DB> {
+    let opt = DBCliOpt::parse(self.db_url.to_owned()).await?;
+    let cli = DBCli::with_options(opt)?;
+    return Ok(cli.database("midas"));
   }
   pub fn from_stream<T>(st: T) -> YaMLResult<Self>
   where

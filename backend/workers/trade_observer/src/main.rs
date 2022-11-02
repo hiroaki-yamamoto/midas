@@ -1,8 +1,6 @@
 use ::clap::Parser;
 use ::futures::future::{select, Either};
 use ::libc::{SIGINT, SIGTERM};
-use ::mongodb::options::ClientOptions as MongoDBCliOpt;
-use ::mongodb::Client as DBCli;
 use ::slog::o;
 use ::tokio::signal::unix as signal;
 
@@ -26,10 +24,7 @@ async fn main() {
   let config = Config::from_fpath(Some(cmd_args.config)).unwrap();
 
   let broker = config.nats_cli().unwrap();
-  let db =
-    DBCli::with_options(MongoDBCliOpt::parse(&config.db_url).await.unwrap())
-      .unwrap()
-      .database("midas");
+  let db = config.db().await.unwrap();
   let logger = config.build_slog();
   let exchange: Box<dyn TradeObserverTrait> = match cmd_args.exchange {
     Exchanges::Binance => Box::new(

@@ -7,7 +7,6 @@ use ::futures::StreamExt;
 use ::http::StatusCode;
 use ::libc::{SIGINT, SIGTERM};
 use ::mongodb::bson::{doc, oid::ObjectId};
-use ::mongodb::Client;
 use ::slog::Logger;
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
@@ -40,8 +39,7 @@ async fn main() {
   let logger_in_handler = logger.clone();
   let log_access = log(logger.clone());
   let broker = config.nats_cli().unwrap();
-  let db_cli = Client::with_uri_str(&config.db_url).await.unwrap();
-  let db = db_cli.database("midas");
+  let db = config.db().await.unwrap();
   let keychain = KeyChain::new(broker, db).await;
 
   let path_param = ::warp::any()

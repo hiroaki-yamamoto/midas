@@ -5,8 +5,6 @@ use ::std::net::SocketAddr;
 use ::clap::Parser;
 use ::futures::FutureExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::mongodb::options::ClientOptions as MongoDBCliOpt;
-use ::mongodb::Client as DBCli;
 use ::slog::info;
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
@@ -26,10 +24,7 @@ async fn main() {
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
   let logger = cfg.build_slog();
   let access_logger = log(logger.clone());
-  let db =
-    DBCli::with_options(MongoDBCliOpt::parse(&cfg.db_url).await.unwrap())
-      .unwrap()
-      .database("midas");
+  let db = cfg.db().await.unwrap();
   let http_cli = cfg.build_rest_client().unwrap();
   let host: SocketAddr = cfg.host.parse().unwrap();
   let csrf = CSRF::new(CSRFOption::builder());
