@@ -22,7 +22,6 @@ rpc = { path = "../../libs/rpc" }
 subscribe = { path = "../../libs/subscribe" }
 
 history = { path = "../../libs/exchanges/history" }
-symbols = { path = "../../libs/exchanges/symbols" }
 date_splitter = { path = "../../libs/date_splitter" }
 
 slog = "2.7.0"

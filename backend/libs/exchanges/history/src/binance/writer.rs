@@ -10,6 +10,8 @@ use ::mongodb::options::{UpdateModifications, UpdateOptions};
 use ::mongodb::{Collection, Database};
 use ::types::ThreadSafeResult;
 
+use ::writers::DatabaseWriter;
+
 use super::entities::Kline;
 use crate::entities::KlinesByExchange;
 use crate::traits::HistoryWriter as HistoryWriterTrait;
@@ -17,13 +19,27 @@ use crate::traits::HistoryWriter as HistoryWriterTrait;
 #[derive(Debug, Clone)]
 pub struct HistoryWriter {
   col: Collection<Kline>,
+  db: Database,
 }
 
 impl HistoryWriter {
-  pub fn new(db: &Database) -> Self {
-    return Self {
+  pub async fn new(db: &Database) -> Self {
+    let me = Self {
       col: db.collection("binance.klines"),
+      db: db.clone(),
     };
+    me.update_indices(&["symbol"]).await;
+    return me;
+  }
+}
+
+#[async_trait]
+impl DatabaseWriter for HistoryWriter {
+  fn get_database(&self) -> &Database {
+    return &self.db;
+  }
+  fn get_col_name(&self) -> &str {
+    return self.col.name();
   }
 }
 

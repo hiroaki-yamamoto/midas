@@ -42,7 +42,7 @@ async fn main() {
     HashMap::new();
 
   let fetcher = HistoryFetcher::new(None, logger.clone()).unwrap();
-  let writer = HistoryWriter::new(&db);
+  let writer = HistoryWriter::new(&db).await;
   reg.insert(Exchanges::Binance, Box::new(fetcher));
 
   loop {

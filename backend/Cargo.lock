@@ -1217,7 +1217,6 @@ dependencies = [
  "serde_yaml",
  "slog",
  "subscribe",
- "symbols",
  "tokio",
  "types",
  "warp",
@@ -1238,7 +1237,6 @@ dependencies = [
  "rpc",
  "slog",
  "subscribe",
- "symbols",
  "tokio",
  "types",
 ]

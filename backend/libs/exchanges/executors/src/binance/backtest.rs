@@ -46,7 +46,7 @@ impl Executor {
       cur_trade: None,
       orders: HashMap::new(),
       positions: HashMap::new(),
-      writer: HistoryWriter::new(db),
+      writer: HistoryWriter::new(db).await,
       price_base_policy,
     });
   }
