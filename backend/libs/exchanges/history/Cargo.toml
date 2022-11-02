@@ -14,7 +14,6 @@ config = { path = "../../config" }
 subscribe = { path = "../../subscribe" }
 
 entities = { path = "../../entities" }
-observers = { path = "../observers" }
 writers = { path = "../../writers" }
 
 clients = { path = "../clients" }

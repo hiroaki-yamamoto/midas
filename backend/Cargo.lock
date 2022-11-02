@@ -1254,7 +1254,6 @@ dependencies = [
  "mongodb",
  "nats",
  "num_cpus",
- "observers",
  "rand",
  "redis",
  "reqwest",
