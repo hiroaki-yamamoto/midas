@@ -2,12 +2,14 @@ use ::async_trait::async_trait;
 use ::futures::stream::BoxStream;
 use ::mongodb::bson::Document;
 use ::mongodb::error::Result as MongoResult;
+use ::mongodb::results::DeleteResult;
 use ::types::ThreadSafeResult;
 
 use crate::entities::KlinesByExchange;
 
 #[async_trait]
 pub trait HistoryWriter {
+  async fn delete_by_symbol(&self, symbol: &str) -> MongoResult<DeleteResult>;
   async fn write(&self, klines: KlinesByExchange) -> ThreadSafeResult<()>;
   async fn list(
     self,

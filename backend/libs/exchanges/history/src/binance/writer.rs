@@ -7,6 +7,7 @@ use ::futures::StreamExt;
 use ::mongodb::bson::{doc, to_document, Document};
 use ::mongodb::error::Result as MongoResult;
 use ::mongodb::options::{UpdateModifications, UpdateOptions};
+use ::mongodb::results::DeleteResult;
 use ::mongodb::{Collection, Database};
 use ::types::ThreadSafeResult;
 
@@ -45,6 +46,10 @@ impl DatabaseWriter for HistoryWriter {
 
 #[async_trait]
 impl HistoryWriterTrait for HistoryWriter {
+  async fn delete_by_symbol(&self, symbol: &str) -> MongoResult<DeleteResult> {
+    return self.col.delete_many(doc! {"symbol": symbol}, None).await;
+  }
+
   async fn write(&self, klines: KlinesByExchange) -> ThreadSafeResult<()> {
     let klines = Vec::<Kline>::try_from(klines)?;
     let mut defers = vec![];
@@ -59,6 +64,7 @@ impl HistoryWriterTrait for HistoryWriter {
     try_join_all(defers).await?;
     return Ok(());
   }
+
   async fn list(
     self,
     query: impl Into<Option<Document>> + Send + 'async_trait,
