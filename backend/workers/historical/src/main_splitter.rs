@@ -10,10 +10,12 @@ use ::tokio::signal::unix as signal;
 use ::config::{CmdArgs, Config};
 use ::date_splitter::DateSplitter;
 use ::history::binance::fetcher::HistoryFetcher as BinanceHistFetcher;
+use ::history::binance::writer::HistoryWriter as BinanceHistoryWriter;
 use ::history::kvs::{CurrentSyncProgressStore, NumObjectsToFetchStore};
 use ::history::pubsub::{HistChartDateSplitPubSub, HistChartPubSub};
 use ::history::traits::{
-  HistoryFetcher as HistFetchTrait, Store as StoreTrait,
+  HistoryFetcher as HistFetchTrait, HistoryWriter as HistoryWriterTrait,
+  Store as StoreTrait,
 };
 use ::rpc::entities::Exchanges;
 use ::subscribe::PubSub;
@@ -31,6 +33,7 @@ async fn main() {
   let mut num_prg_kvs =
     NumObjectsToFetchStore::new(cfg.redis(&logger).unwrap());
   let broker = cfg.nats_cli().unwrap();
+  let db = cfg.db().await.unwrap();
 
   let req_pubsub = HistChartDateSplitPubSub::new(broker.clone());
   let mut req_sub =
@@ -48,8 +51,18 @@ async fn main() {
           "Start splitting currency {:?} from {:?} to {:?}",
           req.symbol, start, end,
         );
-        let fetcher = match req.exchange {
-          Exchanges::Binance => BinanceHistFetcher::new(None, logger.clone()),
+        let (fetcher, writer) = match req.exchange {
+          Exchanges::Binance => (
+            BinanceHistFetcher::new(None, logger.clone()),
+            BinanceHistoryWriter::new(&db).await,
+          ),
+        };
+        if let Err(e) = writer.delete_by_symbol(&req.symbol).await {
+          error!(
+            logger,
+            "Failed to clean historycal data of {:?}: {:?}", req.symbol, e
+          );
+          continue;
         };
         if let Ok(fetcher) = fetcher {
           start = fetcher.first_trade_date(&req.symbol).await.unwrap_or(start);

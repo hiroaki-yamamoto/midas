@@ -1,13 +1,12 @@
 use ::std::convert::TryFrom;
 
 use ::async_trait::async_trait;
-use ::futures::future::{try_join_all, FutureExt};
+use ::futures::future::FutureExt;
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
-use ::mongodb::bson::{doc, to_document, Document};
+use ::mongodb::bson::{doc, Document};
 use ::mongodb::error::Result as MongoResult;
-use ::mongodb::options::{UpdateModifications, UpdateOptions};
-use ::mongodb::results::DeleteResult;
+use ::mongodb::results::{DeleteResult, InsertManyResult};
 use ::mongodb::{Collection, Database};
 use ::types::ThreadSafeResult;
 
@@ -50,19 +49,12 @@ impl HistoryWriterTrait for HistoryWriter {
     return self.col.delete_many(doc! {"symbol": symbol}, None).await;
   }
 
-  async fn write(&self, klines: KlinesByExchange) -> ThreadSafeResult<()> {
+  async fn write(
+    &self,
+    klines: KlinesByExchange,
+  ) -> ThreadSafeResult<InsertManyResult> {
     let klines = Vec::<Kline>::try_from(klines)?;
-    let mut defers = vec![];
-    for kline in klines {
-      let kline_doc = to_document(&kline)?;
-      defers.push(self.col.update_one(
-        doc! {"_id": kline.id},
-        UpdateModifications::Document(doc! { "$set": kline_doc }),
-        UpdateOptions::builder().upsert(true).build(),
-      ));
-    }
-    try_join_all(defers).await?;
-    return Ok(());
+    return Ok(self.col.insert_many(klines, None).await?);
   }
 
   async fn list(
