@@ -1,5 +1,5 @@
 nats:
-  image: nats:2.9.5-scratch
+  image: nats:2.9.6-scratch
   pullPolicy: IfNotPresent
   logging:
     trace: true
