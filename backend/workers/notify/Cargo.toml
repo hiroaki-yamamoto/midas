@@ -19,4 +19,4 @@ tokio = { version = "1.21.2", features = [
 ] }
 nats = "0.23.0"
 libc = "0.2.135"
-futures = "0.3.24"
+futures = "0.3.25"
