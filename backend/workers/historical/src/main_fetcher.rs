@@ -40,6 +40,7 @@ async fn main() {
 
   let mut reg: HashMap<Exchanges, Box<dyn HistoryFetcherTrait>> =
     HashMap::new();
+  // let mut dupe_map: HashMap<String, HashSet<(_, _)>> = HashMap::new();
 
   let fetcher = HistoryFetcher::new(None, logger.clone()).unwrap();
   let writer = HistoryWriter::new(&db).await;
@@ -49,6 +50,21 @@ async fn main() {
     select! {
       Some((req, _)) = sub.next() => {
         info!(logger, "Request Payload Received");
+        // if let Some(dupe_list) = dupe_map.get_mut(&req.symbol) {
+        //   if dupe_list.contains(&(req.start, req.end)) {
+        //     warn!(
+        //       logger,
+        //       "Dupe detected: (Symbol: {:?}, Start: {:?}, End: {:?})",
+        //       req.symbol, req.start, req.end
+        //     );
+        //   } else {
+        //     dupe_list.insert((req.start, req.end));
+        //   }
+        // } else {
+        //   let mut dupe_list = HashSet::new();
+        //   dupe_list.insert((req.start, req.end));
+        //   dupe_map.insert(req.symbol.clone(), dupe_list);
+        // }
         let klines = match reg.get(&req.exchange) {
           Some(fetcher) => {
             match fetcher.fetch(&req).await {
