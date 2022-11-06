@@ -35,7 +35,7 @@ impl DateSplitter {
     }
     return Ok((ret + 1) as usize);
   }
-  pub fn predict_next(&self) -> SystemTime {
+  fn predict_next(&self) -> SystemTime {
     if self.cur + self.interval <= self.end {
       return self.cur + self.interval;
     }

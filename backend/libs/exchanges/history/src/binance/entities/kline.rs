@@ -1,6 +1,6 @@
 use ::std::time::SystemTime;
 
-use ::mongodb::bson::{oid::ObjectId, DateTime as MongoDateTime};
+use ::mongodb::bson::DateTime as MongoDateTime;
 use ::serde::{Deserialize, Serialize};
 use ::serde_json::Value;
 
@@ -10,8 +10,6 @@ use ::types::ThreadSafeResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Kline {
-  #[serde(rename = "_id")]
-  pub id: Option<ObjectId>,
   pub symbol: String,
   pub open_time: MongoDateTime,
   pub open_price: f64,
@@ -29,7 +27,6 @@ pub struct Kline {
 impl Kline {
   pub fn new(symbol: String, payload: &Vec<Value>) -> ThreadSafeResult<Self> {
     return Ok(Kline {
-      id: None,
       symbol,
       open_time: cast_datetime("open_time", &payload[0])?,
       open_price: cast_f64("open_price", &payload[1])?,

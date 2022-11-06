@@ -60,7 +60,7 @@ async fn main() {
         if let Err(e) = writer.delete_by_symbol(&req.symbol).await {
           error!(
             logger,
-            "Failed to clean historycal data of {:?}: {:?}", req.symbol, e
+            "Failed to clean historical data of {:?}: {:?}", req.symbol, e
           );
           continue;
         };
@@ -89,23 +89,10 @@ async fn main() {
           error!(logger, "Failed to set the number of objects to fetch: {:?}", e);
         }
         while let Some((start, end)) = splitter.next().await {
-          let resp = req.clone().start(Some(start.into())).end(Some(end.into()));
-          let result = resp_pubsub.publish(&resp);
-          match result {
-            Ok(_) => {
-              info!(
-                logger,
-                "Sent the split date data (start: {:?}, end: {:?})",
-                start, end
-              );
-            },
-            Err(e) => {
-              error!(
-                logger,
-                "Error occured while sending splite date data: {:?}",
-                e
-              );
-            }
+          if let Err(e) = resp_pubsub.publish(
+            &req.clone().start(Some(start.into())).end(Some(end.into()))
+          ) {
+            error!(logger, "Error occured while sending splite date data: {:?}", e);
           }
         }
       },
