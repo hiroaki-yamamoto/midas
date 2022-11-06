@@ -15,6 +15,6 @@ rpc = { path = "../../libs/rpc" }
 slog = "2.7.0"
 clap = { version = "4.0.15", features = ["derive"] }
 tokio = { version = "1.21.2", features = ["macros", "rt", "rt-multi-thread", "signal"] }
-futures = "0.3.24"
+futures = "0.3.25"
 libc = "0.2.135"
 warp = { version = "0.3.3", features = ["tls"] }
