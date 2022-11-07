@@ -275,7 +275,7 @@ impl TradeObserver {
   ) -> ThreadSafeResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
     let nats_symbol = self.symbol_event.clone();
-    let mut symbol_event = nats_symbol.queue_subscribe("trade_observer")?;
+    let mut symbol_event = nats_symbol.subscribe()?;
     let mut clear_sym_map_flag = false;
     let mut initial_symbols_stream = self.init().await?;
     let mut symbol_indices: HashMap<String, (usize, usize)> = HashMap::new();

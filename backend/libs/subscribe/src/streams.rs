@@ -4,7 +4,7 @@ use ::std::thread;
 
 use ::futures::task::Poll;
 use ::futures::Stream;
-use ::nats::jetstream::PushSubscription as NatsPushSub;
+use ::nats::jetstream::PullSubscription as NatsPullSub;
 use ::nats::Message;
 use ::rmp_serde::from_slice as from_msgpack;
 use ::serde::de::DeserializeOwned;
@@ -28,24 +28,27 @@ impl<T> Sub<T>
 where
   T: DeserializeOwned + Clone + Send + Sync + 'static,
 {
-  pub fn new(sub: NatsPushSub) -> Self {
+  pub fn new(sub: NatsPullSub) -> Self {
     let state = Arc::new(Mutex::new(State {
       waker: None,
       cur: None,
     }));
     let threaded_ctx = state.clone();
     thread::spawn(move || loop {
-      let msg = sub
-        .next()
-        .map(|msg| {
+      let msgs = match sub.fetch(1) {
+        Ok(msgs) => msgs.filter_map(|msg| {
           let obj = from_msgpack::<T>(&msg.data).map(|obj| (obj, msg));
           if let Err(ref e) = obj {
             println!("Msg deserialization failure: {:?}", e);
           }
           return obj.ok();
-        })
-        .flatten();
-      if let Some(msg) = msg {
+        }),
+        Err(e) => {
+          println!("Fetch messages failure: {:?}", e);
+          continue;
+        }
+      };
+      for msg in msgs {
         let mut ctx = threaded_ctx.lock().unwrap();
         ctx.cur = Some(msg);
         if let Some(waker) = ctx.waker.take() {
