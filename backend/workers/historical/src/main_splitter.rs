@@ -1,3 +1,6 @@
+#[cfg(debug_assertions)]
+use ::std::collections::HashSet;
+
 use ::std::time::{Duration, UNIX_EPOCH};
 
 use ::clap::Parser;
@@ -87,13 +90,33 @@ async fn main() {
         ) {
           error!(logger, "Failed to set the number of objects to fetch: {:?}", e);
         }
+
+        #[cfg(debug_assertions)]
+        let mut dupe_list: HashSet<_> = HashSet::new();
+
         while let Some((start, end)) = splitter.next().await {
+
+          #[cfg(debug_assertions)]
+          {
+            if dupe_list.contains(&start) {
+              ::slog::warn!(
+                logger,
+                "Dupe detected: (start: {:?}, end: {:?}",
+                start, end
+              );
+            }
+          }
+
           if let Err(e) = resp_pubsub.publish(
             &req.clone().start(Some(start.into())).end(Some(end.into()))
           ) {
             error!(logger, "Error occured while sending splite date data: {:?}", e);
           }
         }
+
+        #[cfg(debug_assertions)]
+        dupe_list.insert(start);
+
       },
       _ = sig.recv() => {break;},
     }
