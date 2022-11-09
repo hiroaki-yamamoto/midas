@@ -1,4 +1,3 @@
-mod streams;
 mod traits;
 
 pub use self::traits::PubSub;
