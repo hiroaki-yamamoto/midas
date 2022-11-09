@@ -14,13 +14,15 @@ macro_rules! pubsub {
       fn add_stream(&self) -> std::io::Result<Option<::nats::jetstream::StreamInfo>> {
         let con = &self.js;
         let stream_name = $sub_name;
+        let mut stream_option: ::nats::jetstream::StreamConfig = stream_name.into();
+        stream_option.retention = ::nats::jetstream::RetentionPolicy::WorkQueue;
         if con
           .list_streams()
           .filter_map(|st_res| st_res.ok())
           .find(|st_info| st_info.config.name == stream_name)
           .is_none()
         {
-          return Ok(Some(con.add_stream(stream_name)?));
+          return Ok(Some(con.add_stream(stream_option)?));
         }
         return Ok(None);
       }
