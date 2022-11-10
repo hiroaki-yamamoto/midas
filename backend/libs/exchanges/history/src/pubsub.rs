@@ -7,23 +7,17 @@ pubsub!(
   pub,
   HistChartPubSub,
   HistoryFetchRequest,
-  "HistChartRequestStream",
-  "HistChartRequestConsumer",
   "HistChartRequest",
 );
 pubsub!(
   pub,
   HistChartDateSplitPubSub,
   HistoryFetchRequest,
-  "HistChartDateSplitStream",
-  "HistChartDateSplitConsumer",
   "HistChartDateSplit",
 );
 pubsub!(
   pub,
   FetchStatusEventPubSub,
   FetchStatusChanged,
-  "HistChartProgressChangedStream",
-  "HistChartProgressChangedConSumer",
   "HistChartProgressChanged",
 );
