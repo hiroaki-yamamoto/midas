@@ -46,14 +46,15 @@ async fn main() {
   reg.insert(Exchanges::Binance, Box::new(fetcher));
 
   #[cfg(debug_assertions)]
-  let mut dupe_map: HashMap<String, HashSet<(_, _)>> = HashMap::new();
+  let mut dupe_map: HashMap<(Exchanges, String), HashSet<(_, _)>> =
+    HashMap::new();
 
   loop {
     select! {
       Some((req, _)) = sub.next() => {
         #[cfg(debug_assertions)]
         {
-          if let Some(dupe_list) = dupe_map.get_mut(&req.symbol) {
+          if let Some(dupe_list) = dupe_map.get_mut(&(req.exchange, req.symbol.clone())) {
             if dupe_list.contains(&(req.start, req.end)) {
               warn!(
                 logger,
@@ -66,7 +67,7 @@ async fn main() {
           } else {
             let mut dupe_list = HashSet::new();
             dupe_list.insert((req.start, req.end));
-            dupe_map.insert(req.symbol.clone(), dupe_list);
+            dupe_map.insert((req.exchange, req.symbol.clone()), dupe_list);
           }
         }
         let klines = match reg.get(&req.exchange) {

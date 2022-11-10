@@ -40,6 +40,7 @@ where
     thread::spawn(move || loop {
       let msgs = match sub.fetch(1) {
         Ok(msgs) => msgs.filter_map(|msg| {
+          let _ = msg.ack();
           let obj = from_msgpack::<T>(&msg.data).map(|obj| (obj, msg));
           if let Err(ref e) = obj {
             println!("Msg deserialization failure: {:?}", e);

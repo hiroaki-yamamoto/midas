@@ -18,7 +18,7 @@ macro_rules! pubsub {
     impl $name {
       fn add_stream(&self){
         let mut option: ::nats::jetstream::StreamConfig = $id.into();
-        option.retention = ::nats::jetstream::RetentionPolicy::Limits;
+        option.retention = ::nats::jetstream::RetentionPolicy::WorkQueue;
         let _ = self.js.update_stream(&option);
         let _ = self.js.add_stream(option);
       }
@@ -33,7 +33,7 @@ macro_rules! pubsub {
       pub fn new(js: ::nats::jetstream::JetStream) -> Self {
         let me = Self { js };
         me.add_stream();
-        me.add_consumer();
+        // me.add_consumer();
         return me;
       }
     }
