@@ -2,4 +2,11 @@ use ::subscribe::pubsub;
 
 use super::entities::SymbolEvent;
 
-pubsub!(pub, SymbolEventPubSub, SymbolEvent, "BinanceSymbolEvents");
+pubsub!(
+  pub,
+  SymbolEventPubSub,
+  SymbolEvent,
+  "BinanceSymbolEventsStream",
+  "BinanceSymbolEventsConsumer",
+  "BinanceSymbolEvents",
+);

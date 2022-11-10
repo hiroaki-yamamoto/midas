@@ -6,13 +6,24 @@ pubsub!(
   pub,
   NotifyPubSub,
   CastedUserStreamEvents,
-  "BinanceUserStreamNotify"
+  "BinanceUserStreamNotifyStream",
+  "BinanceUserStreamNotifyConsumer",
+  "BinanceUserStreamNotify",
 );
 
-pubsub!(pub, ReauthPubSub, String, "BinanceUserStreamReAuth");
+pubsub!(
+  pub,
+  ReauthPubSub,
+  String,
+  "BinanceUserStreamReAuthStream",
+  "BinanceUserStreamReAuthConsumer",
+  "BinanceUserStreamReAuth",
+);
 pubsub!(
   pub,
   ListenKeyPubSub,
   ListenKeyPair,
-  "BinanceUserStreamListenKey"
+  "BinanceUserStreamListenStream",
+  "BinanceUserStreamListenConsumer",
+  "BinanceUserStreamListenKey",
 );
