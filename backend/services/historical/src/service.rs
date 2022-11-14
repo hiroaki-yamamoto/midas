@@ -83,7 +83,7 @@ impl Service {
         ws: Ws
       | {
         return ws.on_upgrade(|mut sock: WebSocket| async move {
-          let subsc = me.status.subscribe();
+          let subsc = me.status.queue_subscribe("histServiceFetchStatus");
           match subsc {
             Err(e) => {
               let msg = format!(

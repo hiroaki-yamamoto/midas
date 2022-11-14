@@ -1,4 +1,4 @@
-apiVersion: skaffold/v2beta27
+apiVersion: skaffold/v3alpha1
 kind: Config
 metadata:
   name: midas
@@ -73,10 +73,12 @@ build:
         dockerfile: devel.dockerfile
         buildArgs:
           SERVICE: bot_service
-deploy:
+manifests:
   kustomize:
     paths:
       - ./k8s
+deploy:
+  kubectl:
     hooks:
       before:
         - host:

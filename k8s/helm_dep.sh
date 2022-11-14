@@ -41,3 +41,7 @@ helmInstall broker nats/nats \
   -n $MIDAS_NAMESPACE --create-namespace \
   -f $WORKDIR/./broker/config.yml
 kubectl apply -f $WORKDIR/./broker/svc.yml -n midas
+
+# addRepo 'mongodb' 'https://mongodb.github.io/helm-charts'
+# helmInstall mongodb mongodb/mongodb \
+#   -n $MIDAS_NAMESPACE --create-namespace

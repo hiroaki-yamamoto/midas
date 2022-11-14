@@ -39,7 +39,7 @@ async fn main() {
   let db = cfg.db().await.unwrap();
 
   let req_pubsub = HistChartDateSplitPubSub::new(broker.clone());
-  let mut req_sub = req_pubsub.subscribe().unwrap();
+  let mut req_sub = req_pubsub.queue_subscribe("dateSplitSub").unwrap();
   let resp_pubsub = HistChartPubSub::new(broker.clone());
 
   info!(logger, "Ready...");

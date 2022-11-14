@@ -2,7 +2,7 @@ use ::std::io::Result as IOResult;
 use ::std::io::{Error as IOError, ErrorKind as IOErrKind};
 use ::std::thread;
 
-use ::nats::jetstream::PullSubscribeOptions;
+use ::nats::jetstream::SubscribeOptions;
 use ::nats::jetstream::{JetStream as NatsJS, PublishAck};
 use ::nats::Message;
 use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
@@ -31,29 +31,26 @@ where
     return res;
   }
 
-  fn subscribe(&self) -> IOResult<UnboundedReceiverStream<(T, Message)>> {
+  fn queue_subscribe(
+    &self,
+    queue_name: &str,
+  ) -> IOResult<UnboundedReceiverStream<(T, Message)>> {
     let con = self.get_natsjs();
-    let options =
-      PullSubscribeOptions::new().bind_stream(self.get_subject().into());
-    let sub = con.pull_subscribe_with_options(self.get_subject(), &options)?;
+    let options = SubscribeOptions::bind_stream(self.get_subject().into());
+    let sub = con.queue_subscribe_with_options(
+      self.get_subject(),
+      queue_name,
+      &options,
+    )?;
     let (sender, recv) = unbounded_channel();
-    thread::spawn(move || loop {
-      let msgs = match sub.fetch(1) {
-        Ok(msgs) => msgs.filter_map(|msg| {
-          let _ = msg.ack();
-          let obj = from_msgpack::<T>(&msg.data).map(|obj| (obj, msg));
-          if let Err(ref e) = obj {
-            println!("Msg deserialization failure: {:?}", e);
-          }
-          return obj.ok();
-        }),
-        Err(e) => {
-          println!("Fetch messages failure: {:?}", e);
-          continue;
+    thread::spawn(move || {
+      while let Some(msg) = sub.next() {
+        let _ = msg.ack();
+        let obj = from_msgpack::<T>(&msg.data).map(|obj| (obj, msg));
+        if let Err(ref e) = obj {
+          println!("Msg deserialization failure: {:?}", e);
         }
-      };
-      for msg in msgs {
-        let _ = sender.send(msg);
+        let _ = sender.send(obj.unwrap());
       }
     });
     return Ok(UnboundedReceiverStream::new(recv));
