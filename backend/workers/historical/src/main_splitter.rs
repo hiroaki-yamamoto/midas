@@ -70,7 +70,9 @@ async fn main() {
           start = fetcher.first_trade_date(&req.symbol).await.unwrap_or(start);
         }
         let splitter = match req.exchange {
-          Exchanges::Binance => DateSplitter::new(start, end, Duration::from_secs(60)),
+          Exchanges::Binance => DateSplitter::new(
+            start, end, Duration::from_secs(60000)
+          ),
         };
         let mut splitter = match splitter {
           Err(e) => {
