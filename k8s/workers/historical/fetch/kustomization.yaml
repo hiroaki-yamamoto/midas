@@ -22,7 +22,7 @@ patches:
         value: fetcher
       - op: replace
         path: /spec/replicas
-        value: 1
+        value: 6
 
 images:
   - name: template
