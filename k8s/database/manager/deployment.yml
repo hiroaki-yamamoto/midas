@@ -13,34 +13,34 @@ spec:
         app: manager
     spec:
       containers:
-      - name: manager
-        image: mongo-express
-        resources:
-          requests:
-            cpu: 2m
-            memory: 1Mi
-          limits:
-            cpu: 1000m
-            memory: 1Gi
-        volumeMounts:
-          - name: svc-cert
-            mountPath: "/etc/certs"
-            readOnly: true
-        env:
-          - name: ME_CONFIG_MONGODB_ADMINUSERNAME
-            value: admin
-          - name: ME_CONFIG_MONGODB_ADMINPASSWORD
-            value: admin
-          - name: ME_CONFIG_MONGODB_SERVER
-            value: database-svc
-          - name: ME_CONFIG_SITE_BASEURL
-            value: /admin/
-          - name: ME_CONFIG_SITE_SSL_ENABLED
-            value: 'true'
-          - name: ME_CONFIG_SITE_SSL_CRT_PATH
-            value: /etc/certs/tls.crt
-          - name: ME_CONFIG_SITE_SSL_KEY_PATH
-            value: /etc/certs/tls.key
+        - name: manager
+          image: mongo-express
+          resources:
+            requests:
+              cpu: 2m
+              memory: 1Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          volumeMounts:
+            - name: svc-cert
+              mountPath: "/etc/certs"
+              readOnly: true
+          env:
+            - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+              value: admin
+            - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+              value: admin
+            - name: ME_CONFIG_MONGODB_SERVER
+              value: host.minikube.internal
+            - name: ME_CONFIG_SITE_BASEURL
+              value: /admin/
+            - name: ME_CONFIG_SITE_SSL_ENABLED
+              value: "true"
+            - name: ME_CONFIG_SITE_SSL_CRT_PATH
+              value: /etc/certs/tls.crt
+            - name: ME_CONFIG_SITE_SSL_KEY_PATH
+              value: /etc/certs/tls.key
       volumes:
         - name: svc-cert
           secret:
