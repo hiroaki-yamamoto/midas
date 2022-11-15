@@ -86,6 +86,10 @@ deploy:
             os: [darwin, linux]
             dir: ./k8s/tls
         - host:
+            command: [./mongod.sh]
+            os: [darwin, linux]
+            dir: ./k8s/database
+        - host:
             command: [./helm_dep.sh]
             os: [darwin, linux]
             dir: ./k8s

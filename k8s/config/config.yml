@@ -1,5 +1,4 @@
-dbURL: |-
-  mongodb://testuser:testuser@host.minikube.internal/midas
+dbURL: mongodb://midas:midas@mongodb/midas?authMechanism=SCRAM-SHA-256
 brokerURL: nats://broker.midas.svc.cluster.local:4222
 redisURL: redis://kvs.midas.svc.cluster.local:6379/
 host: "[::]:50000"
