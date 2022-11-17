@@ -13,7 +13,7 @@ where
     E: AsRef<str> + Display,
     S: AsRef<str> + Display;
 
-  fn reset<E, S>(&mut self, exchange: E, symbol: S) -> RedisResult<()>
+  fn del<E, S>(&mut self, exchange: E, symbol: S) -> RedisResult<()>
   where
     E: AsRef<str> + Display,
     S: AsRef<str> + Display,
@@ -57,5 +57,14 @@ where
   {
     let channel_name = self.channel_name(exchange, symbol);
     return self.commands().incr(channel_name, delta);
+  }
+
+  fn reset<E, S>(&mut self, exchange: E, symbol: S) -> RedisResult<()>
+  where
+    E: AsRef<str> + Display,
+    S: AsRef<str> + Display,
+  {
+    let channel_name = self.channel_name(exchange, symbol);
+    return self.commands().set(channel_name, 0);
   }
 }
