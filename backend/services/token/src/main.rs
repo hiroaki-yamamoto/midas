@@ -3,7 +3,7 @@ use ::std::net::SocketAddr;
 use ::clap::Parser;
 use ::futures::FutureExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::slog::info;
+use ::log::{info, warn};
 use ::tokio::signal::unix as signal;
 use ::warp::reply;
 use ::warp::Filter;
@@ -19,7 +19,7 @@ async fn main() {
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
-  let logger = cfg.build_slog();
+  cfg.init_logger();
   let host: SocketAddr = cfg.host.parse().unwrap();
   let csrf = CSRF::new(CSRFOption::builder());
   let route = ::warp::get()
@@ -29,10 +29,10 @@ async fn main() {
     .map(|_| reply::reply());
   let route = csrf
     .generate_cookie(route)
-    .with(log(logger.clone()))
+    .with(log())
     .recover(handle_rejection);
 
-  info!(logger, "Opened REST server on {}", host);
+  info!("Opened REST server on {}", host);
   let (_, svr) = ::warp::serve(route)
     .tls()
     .cert_path(&cfg.tls.cert)
@@ -41,7 +41,7 @@ async fn main() {
       sig.recv().await;
     });
   let svr = svr.then(|_| async {
-    ::slog::warn!(logger, "REST Server is shutting down! Bye! Bye!");
+    warn!("REST Server is shutting down! Bye! Bye!");
   });
   svr.await;
 }

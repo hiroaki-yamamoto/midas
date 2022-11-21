@@ -5,7 +5,6 @@ use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 use ::nats::jetstream::JetStream as NatsJS;
-use ::slog::Logger;
 
 use ::errors::ExecutionFailed;
 use ::types::ThreadSafeResult;
@@ -31,14 +30,9 @@ pub struct Executor {
 }
 
 impl Executor {
-  pub async fn new(
-    logger: Logger,
-    broker: &NatsJS,
-    maker_fee: f64,
-    taker_fee: f64,
-  ) -> Self {
+  pub async fn new(broker: &NatsJS, maker_fee: f64, taker_fee: f64) -> Self {
     return Self {
-      observer: TradeObserver::new(None, broker, logger).await,
+      observer: TradeObserver::new(None, broker).await,
       orders: HashMap::new(),
       positions: HashMap::new(),
       cur_trade: None,

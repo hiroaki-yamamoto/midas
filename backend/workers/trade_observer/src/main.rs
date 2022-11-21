@@ -1,7 +1,6 @@
 use ::clap::Parser;
 use ::futures::future::{select, Either};
 use ::libc::{SIGINT, SIGTERM};
-use ::slog::o;
 use ::tokio::signal::unix as signal;
 
 use ::config::{Config, DEFAULT_CONFIG_PATH};
@@ -25,16 +24,11 @@ async fn main() {
 
   let broker = config.nats_cli().unwrap();
   let db = config.db().await.unwrap();
-  let logger = config.build_slog();
+  config.init_logger();
   let exchange: Box<dyn TradeObserverTrait> = match cmd_args.exchange {
-    Exchanges::Binance => Box::new(
-      binance::TradeObserver::new(
-        Some(db),
-        &broker,
-        logger.new(o!("scope" => "Trade Observer")),
-      )
-      .await,
-    ),
+    Exchanges::Binance => {
+      Box::new(binance::TradeObserver::new(Some(db), &broker).await)
+    }
   };
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();

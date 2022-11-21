@@ -10,8 +10,6 @@ use ::reqwest::{Certificate, Client};
 use ::serde::de::Error as SerdeError;
 use ::serde::{Deserialize, Deserializer};
 use ::serde_yaml::Result as YaMLResult;
-use ::slog::Logger;
-use ::slog_builder::{build_debug, build_json};
 
 use ::types::{GenericResult, ThreadSafeResult};
 
@@ -45,8 +43,6 @@ pub struct Config {
   pub broker_url: String,
   #[serde(rename = "redisURL", deserialize_with = "Config::redis_client")]
   pub redis: RedisClient,
-  #[serde(default)]
-  pub debug: bool,
   pub tls: TLS,
 }
 
@@ -59,7 +55,7 @@ impl Config {
     return ::redis::Client::open(url).map_err(|e| SerdeError::custom(e));
   }
 
-  pub fn redis(&self, logger: &Logger) -> ThreadSafeResult<Connection> {
+  pub fn redis(&self) -> ThreadSafeResult<Connection> {
     for _ in 0..10 {
       match self
         .redis
@@ -67,8 +63,7 @@ impl Config {
       {
         Ok(o) => return Ok(o),
         Err(e) => {
-          ::slog::warn!(
-            logger,
+          ::log::warn!(
             "Failed to estanblish the connection to redis. Retrying.\
             (Reason: {:?})",
             e
@@ -101,11 +96,8 @@ impl Config {
     return Ok(Self::from_stream(f)?);
   }
 
-  pub fn build_slog(&self) -> Logger {
-    return match self.debug {
-      true => build_debug(),
-      false => build_json(),
-    };
+  pub fn init_logger(&self) {
+    ::env_logger::init();
   }
 
   pub fn build_rest_client(&self) -> GenericResult<Client> {

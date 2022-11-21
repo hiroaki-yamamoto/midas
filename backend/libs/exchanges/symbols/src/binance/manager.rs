@@ -1,7 +1,7 @@
 use ::std::collections::HashSet;
 
+use ::log::{as_error, error};
 use ::nats::jetstream::JetStream as NatsJS;
-use ::slog::Logger;
 
 use super::entities::{Symbol, SymbolEvent};
 use super::pubsub::SymbolEventPubSub;
@@ -12,11 +12,10 @@ pub struct SymbolUpdateEventManager {
   pub to_add: Vec<Symbol>,
   pub to_remove: Vec<Symbol>,
   pub event: SymbolEventPubSub,
-  pub log: Logger,
 }
 
 impl SymbolUpdateEventManager {
-  pub fn new<S, T>(log: Logger, broker: &NatsJS, new: S, old: T) -> Self
+  pub fn new<S, T>(broker: &NatsJS, new: S, old: T) -> Self
   where
     S: IntoIterator<Item = Symbol> + Clone,
     T: IntoIterator<Item = Symbol> + Clone,
@@ -38,7 +37,6 @@ impl SymbolUpdateEventManager {
       .filter(move |item| to_remove.contains(&item.symbol))
       .collect();
     return Self {
-      log,
       to_add,
       to_remove,
       event: SymbolEventPubSub::new(broker.clone()),
@@ -48,22 +46,20 @@ impl SymbolUpdateEventManager {
   pub async fn publish_changes(&self) {
     for add_item in &self.to_add[..] {
       if let Err(e) = self.event.publish(&SymbolEvent::Add(add_item.clone())) {
-        ::slog::warn!(
-          self.log,
-          "Failed to publish the newly added symbol";
-          "symbol" => add_item.symbol.to_owned(),
-          "error" => e,
+        error!(
+          symbol = add_item.symbol.to_owned(),
+          error = as_error!(e);
+          "Failed to publish the newly added symbol",
         );
       };
     }
     for del_item in &self.to_remove[..] {
       if let Err(e) = self.event.publish(&SymbolEvent::Remove(del_item.clone()))
       {
-        ::slog::warn!(
-          self.log,
-          "Failed to publish the deleted symbol";
-          "symbol" => del_item.symbol.to_owned(),
-          "error" => e,
+        error!(
+          symbol = del_item.symbol.to_owned(),
+          error = as_error!(e);
+          "Failed to publish the deleted symbol",
         );
       }
     }

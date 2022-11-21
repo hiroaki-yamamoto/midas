@@ -11,11 +11,11 @@ use ::futures::future::join_all;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::futures::FutureExt;
+use ::log::{as_display, as_error, as_serde, debug, error, info, warn};
 use ::mongodb::bson::doc;
 use ::mongodb::Database;
 use ::nats::jetstream::JetStream as Broker;
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
-use ::slog::Logger;
 use ::subscribe::PubSub;
 use ::tokio::select;
 use ::tokio::time::{interval, sleep};
@@ -44,7 +44,6 @@ const EVENT_DELAY: Duration = Duration::from_secs(1);
 
 #[derive(Clone)]
 pub struct TradeObserver {
-  logger: Logger,
   recorder: Option<SymbolRecorder>,
   symbol_event: SymbolEventPubSub,
   bookticker_pubsub: BookTickerPubSub,
@@ -52,11 +51,7 @@ pub struct TradeObserver {
 }
 
 impl TradeObserver {
-  pub async fn new(
-    db: Option<Database>,
-    broker: &Broker,
-    logger: Logger,
-  ) -> Self {
+  pub async fn new(db: Option<Database>, broker: &Broker) -> Self {
     let recorder = match db {
       None => None,
       Some(db) => Some(SymbolRecorder::new(db).await),
@@ -65,7 +60,6 @@ impl TradeObserver {
       symbol_event: SymbolEventPubSub::new(broker.clone()),
       bookticker_pubsub: BookTickerPubSub::new(broker.clone()),
       add_symbol_count: 0,
-      logger,
       recorder,
     };
     return me;
@@ -96,10 +90,7 @@ impl TradeObserver {
     for _ in 0..20 {
       let socket = match self.init_socket().await {
         Err(e) => {
-          ::slog::error!(
-            self.logger,
-            "Failed to subscribe trade stream"; e,
-          );
+          error!(error = as_error!(e); "Failed to subscribe trade stream");
           interval.tick().await;
           continue;
         }
@@ -139,7 +130,7 @@ impl TradeObserver {
       let id = 0;
       let req = SubscribeRequestInner { id, params };
       let req = SubscribeRequest::Subscribe(req);
-      ::slog::debug!(self.logger, "Subscribe: {:?}", &req);
+      debug!(request = as_serde!(req); "Subscribe");
       let req = to_json(&req)?;
       let req = String::from_utf8(req)?;
       let _ = socket.send(wsocket::Message::Text(req)).await;
@@ -180,7 +171,7 @@ impl TradeObserver {
         .collect();
       let req = SubscribeRequestInner { id: 0, params };
       let req = SubscribeRequest::Unsubscribe(req);
-      ::slog::debug!(self.logger, "Unsubscribe: {:?}", &req);
+      debug!(request = as_serde!(req); "Unsubscribe");
       let req = to_json(&req)?;
       let req = String::from_utf8(req)?;
       let _ = socket.send(wsocket::Message::Text(req)).await;
@@ -192,22 +183,17 @@ impl TradeObserver {
   async fn handle_trade(&self, data: &[u8]) {
     let book: BookTicker<f64> = match from_json::<BookTicker<String>>(data) {
       Err(e) => {
-        ::slog::warn!(
-          self.logger,
-          "Failed to decode the payload: {}. Ignoring",
-          e
-        );
+        warn!(error = as_error!(e); "Failed to decode the payload. Ignoring");
         let data = String::from_utf8(Vec::from(data))
           .unwrap_or(String::from("[FAILED TO DECODE]"));
-        ::slog::debug!(self.logger, "Data: {}", data);
+        debug!(data = as_serde!(data); "Received");
         return;
       }
       Ok(v) => match BookTicker::<f64>::try_from(v) {
         Err(e) => {
-          ::slog::warn!(
-            self.logger,
-            "Failed to cast the trade data: {}. Ignoring",
-            e
+          warn!(
+            error = as_display!(e);
+            "Failed to cast the trade data. Ignoring",
           );
           return;
         }
@@ -235,14 +221,13 @@ impl TradeObserver {
       }
       wsocket::Message::Close(close_opt) => {
         if let Some(close) = close_opt {
-          ::slog::warn!(
-            self.logger,
-            "Closing connection for a reason.";
-            "code" => format!("{}", close.code),
-            "reason" => format!("{}", close.reason),
+          warn!(
+            code = as_display!(close.code),
+            reason = close.reason;
+            "Closing connection for a reason.",
           );
         } else {
-          ::slog::warn!(self.logger, "Closing connection...");
+          warn!("Closing connection...");
         }
         return Err(IOErr::new(
           IOErrKind::ConnectionAborted,
@@ -250,10 +235,7 @@ impl TradeObserver {
         ));
       }
       wsocket::Message::Pong(_) => {
-        ::slog::info!(
-          self.logger,
-          "Got Pong frame somehow... why?? Anyway, Ingoring."
-        );
+        info!("Got Pong frame somehow... why?? Anyway, Ingoring.");
       }
       _ => {}
     }
@@ -305,10 +287,9 @@ impl TradeObserver {
             if let Err(e) = self.unsubscribe(
               sockets, &mut symbol_indices, symbols
             ).await {
-              ::slog::warn!(
-                self.logger,
-                "Got an error while unsubscribing the symbol (init): {}",
-                e
+              warn!(
+                error = as_display!(e);
+                "Got an error while unsubscribing the symbol (init)",
               );
             } else {
               symbol_indices.clear();
@@ -318,19 +299,17 @@ impl TradeObserver {
           if let Err(e) = self.subscribe(
             sockets, &mut symbol_indices, add_buf.drain()
           ).await {
-            ::slog::warn!(
-              self.logger,
-              "Got an error while subscribing the symbol: {}",
-              e
+            warn!(
+              error = as_display!(e);
+              "Got an error while subscribing the symbol",
             );
           }
           if let Err(e) = self.unsubscribe(
             sockets, &mut symbol_indices, del_buf.drain()
           ).await {
-            ::slog::warn!(
-              self.logger,
-              "Got an error while unsubscribing the symbol: {}",
-              e
+            warn!(
+              error = as_display!(e);
+              "Got an error while unsubscribing the symbol",
             );
           }
         },
@@ -370,10 +349,9 @@ impl TradeObserverTrait for TradeObserver {
       socket_map.insert(index, socket?);
     }
     if let Err(e) = me.handle_event(&mut socket_map).await {
-      ::slog::error!(
-        self.logger,
-        "Failed to open the handler of the trade event: {}",
-        e,
+      error!(
+        error = as_display!(e);
+        "Failed to open the handler of the trade event",
       );
     };
     return Ok(());

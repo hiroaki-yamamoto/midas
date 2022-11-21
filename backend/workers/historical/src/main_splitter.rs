@@ -6,7 +6,7 @@ use ::std::time::{Duration, UNIX_EPOCH};
 use ::clap::Parser;
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::slog::{error, info};
+use ::log::{as_debug, as_error, error, info, warn};
 use ::tokio::select;
 use ::tokio::signal::unix as signal;
 
@@ -27,14 +27,12 @@ use ::subscribe::PubSub;
 async fn main() {
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
-  let logger = cfg.build_slog();
+  cfg.init_logger();
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
 
-  let mut cur_prog_kvs =
-    CurrentSyncProgressStore::new(cfg.redis(&logger).unwrap());
-  let mut num_prg_kvs =
-    NumObjectsToFetchStore::new(cfg.redis(&logger).unwrap());
+  let mut cur_prog_kvs = CurrentSyncProgressStore::new(cfg.redis().unwrap());
+  let mut num_prg_kvs = NumObjectsToFetchStore::new(cfg.redis().unwrap());
   let broker = cfg.nats_cli().unwrap();
   let db = cfg.db().await.unwrap();
 
@@ -42,27 +40,29 @@ async fn main() {
   let mut req_sub = req_pubsub.queue_subscribe("dateSplitSub").unwrap();
   let resp_pubsub = HistChartPubSub::new(broker.clone());
 
-  info!(logger, "Ready...");
+  info!("Ready.");
   loop {
     select! {
       Some((req, _)) = req_sub.next() => {
         let mut start = req.start.map(|start| start.into()).unwrap_or(UNIX_EPOCH);
         let end = req.end.map(|end| end.into()).unwrap_or(UNIX_EPOCH);
         info!(
-          logger,
-          "Start splitting currency {:?} from {:?} to {:?}",
-          req.symbol, start, end,
+          symbol = req.symbol,
+          start_at = as_debug!(start),
+          end_at = as_debug!(end);
+          "Start splitting currency",
         );
         let (fetcher, writer) = match req.exchange {
           Exchanges::Binance => (
-            BinanceHistFetcher::new(None, logger.clone()),
+            BinanceHistFetcher::new(None),
             BinanceHistoryWriter::new(&db).await,
           ),
         };
         if let Err(e) = writer.delete_by_symbol(&req.symbol).await {
           error!(
-            logger,
-            "Failed to clean historical data of {:?}: {:?}", req.symbol, e
+            symbol = req.symbol,
+            error = as_error!(e);
+            "Failed to clean historical data",
           );
           continue;
         };
@@ -76,13 +76,13 @@ async fn main() {
         };
         let mut splitter = match splitter {
           Err(e) => {
-            error!(logger, "Failed to initialize DateSplitter: {:?}", e);
+            error!(error = as_error!(e); "Failed to initialize DateSplitter");
             continue;
           },
           Ok(v) => v
         };
         if let Err(e) = cur_prog_kvs.reset(req.exchange.as_string(), &req.symbol) {
-          error!(logger, "Failed to reset the progress: {:?}", e);
+          error!(error = as_error!(e); "Failed to reset the progress");
           continue;
         }
         if let Err(e) = num_prg_kvs.set(
@@ -90,7 +90,7 @@ async fn main() {
           &req.symbol,
           splitter.len().unwrap_or(0) as i64
         ) {
-          error!(logger, "Failed to set the number of objects to fetch: {:?}", e);
+          error!(error = as_error!(e); "Failed to set the number of objects to fetch");
         }
 
         #[cfg(debug_assertions)]
@@ -101,10 +101,10 @@ async fn main() {
           #[cfg(debug_assertions)]
           {
             if dupe_list.contains(&start) {
-              ::slog::warn!(
-                logger,
-                "Dupe detected: (start: {:?}, end: {:?}",
-                start, end
+              warn!(
+                start = as_debug!(start),
+                end = as_debug!(end);
+                "Dupe detected",
               );
             }
           }
@@ -112,7 +112,7 @@ async fn main() {
           if let Err(e) = resp_pubsub.publish(
             &req.clone().start(Some(start.into())).end(Some(end.into()))
           ) {
-            error!(logger, "Error occured while sending splite date data: {:?}", e);
+            error!(error = as_error!(e); "Error occured while sending splite date data");
           }
         }
 

@@ -24,7 +24,7 @@ subscribe = { path = "../../libs/subscribe" }
 history = { path = "../../libs/exchanges/history" }
 date_splitter = { path = "../../libs/date_splitter" }
 
-slog = "2.7.0"
+log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
 tokio = { version = "1.21.2", features = ["rt", "rt-multi-thread", "macros", "signal"] }
 nats = "0.23.0"
 clap = { version = "4.0.15", features = ["derive"] }

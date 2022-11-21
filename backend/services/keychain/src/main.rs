@@ -6,8 +6,8 @@ use ::futures::FutureExt;
 use ::futures::StreamExt;
 use ::http::StatusCode;
 use ::libc::{SIGINT, SIGTERM};
+use ::log::{as_display, info, warn};
 use ::mongodb::bson::{doc, oid::ObjectId};
-use ::slog::Logger;
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
 
@@ -35,16 +35,15 @@ macro_rules! declare_reject_func {
 async fn main() {
   let opts: CmdArgs = CmdArgs::parse();
   let config = Config::from_fpath(Some(opts.config)).unwrap();
-  let logger = config.build_slog();
-  let logger_in_handler = logger.clone();
-  let log_access = log(logger.clone());
+  config.init_logger();
+  let log_access = log();
   let broker = config.nats_cli().unwrap();
   let db = config.db().await.unwrap();
   let keychain = KeyChain::new(broker, db).await;
 
   let path_param = ::warp::any()
     .map(move || {
-      return (keychain.clone(), logger_in_handler.clone());
+      return (keychain.clone(),);
     })
     .untuple_one();
 
@@ -57,10 +56,10 @@ async fn main() {
 
   let get_handler = ::warp::get()
     .and(path_param.clone())
-    .and_then(|keychain: KeyChain, logger: Logger| async move {
+    .and_then(|keychain: KeyChain| async move {
       match keychain.list(doc! {}).await {
         Err(e) => {
-          ::slog::warn!(logger, "An error was occured when querying: {}", e);
+          warn!(error = as_display!(e); "An error was occured when querying");
           return Err(::warp::reject());
         }
         Ok(cursor) => {
@@ -87,20 +86,18 @@ async fn main() {
   let post_handler = ::warp::post()
     .and(path_param.clone())
     .and(::warp::filters::body::json())
-    .and_then(
-      |keychain: KeyChain, _: Logger, api_key: RPCAPIKey| async move {
-        let api_key: APIKey =
-          APIKey::try_from(api_key).map_err(declare_reject_func!())?;
-        return keychain
-          .push(api_key)
-          .await
-          .map_err(declare_reject_func!())
-          .map(|res| {
-            let res: InsertOneResult = res.into();
-            return res;
-          });
-      },
-    )
+    .and_then(|keychain: KeyChain, api_key: RPCAPIKey| async move {
+      let api_key: APIKey =
+        APIKey::try_from(api_key).map_err(declare_reject_func!())?;
+      return keychain
+        .push(api_key)
+        .await
+        .map_err(declare_reject_func!())
+        .map(|res| {
+          let res: InsertOneResult = res.into();
+          return res;
+        });
+    })
     .map(|res: InsertOneResult| {
       return ::warp::reply::json(&res);
     });
@@ -109,10 +106,7 @@ async fn main() {
     .and(id_filter)
     .and(::warp::filters::body::json())
     .and_then(
-      |keychain: KeyChain,
-       _: Logger,
-       id: ObjectId,
-       rename: ApiRename| async move {
+      |keychain: KeyChain, id: ObjectId, rename: ApiRename| async move {
         if let Err(_) = keychain.rename_label(id, &rename.label).await {
           return Err(::warp::reject());
         };
@@ -124,7 +118,7 @@ async fn main() {
   let delete_handler = ::warp::delete()
     .and(path_param)
     .and(id_filter)
-    .and_then(|keychain: KeyChain, _: Logger, id: ObjectId| async move {
+    .and_then(|keychain: KeyChain, id: ObjectId| async move {
       let del_defer = keychain.delete(id);
       if let Err(_) = del_defer.await {
         return Err(::warp::reject());
@@ -144,7 +138,7 @@ async fn main() {
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let host: SocketAddr = config.host.parse().unwrap();
-  ::slog::info!(logger, "Opened REST server on {}", host);
+  info!("Opened REST server on {}", host);
   let (_, ws_svr) = ::warp::serve(route)
     .tls()
     .cert_path(&config.tls.cert)
@@ -153,7 +147,7 @@ async fn main() {
       sig.recv().await;
     });
   let svr = ws_svr.then(|_| async {
-    ::slog::warn!(logger, "REST Server is shutting down! Bye! Bye!");
+    warn!("REST Server is shutting down! Bye! Bye!");
   });
   svr.await;
 }

@@ -17,7 +17,7 @@ futures = "0.3.25"
 nats = "0.23.0"
 warp = { version = "0.3.3", features = ["tls"] }
 clap = { version = "4.0.15", features = ["derive"] }
-slog = "2.7.0"
+log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
 tokio = { version = "1.21.2", features = ["macros", "signal", "time", "rt", "rt-multi-thread"] }
 libc = "0.2.135"
 mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }

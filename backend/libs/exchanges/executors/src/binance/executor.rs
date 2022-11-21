@@ -12,7 +12,6 @@ use ::mongodb::{Collection, Database};
 use ::nats::jetstream::JetStream as NatsJS;
 use ::ring::hmac;
 use ::serde_qs::to_string as to_qs;
-use ::slog::Logger;
 
 use ::entities::{BookTicker, ExecutionResult, Order, OrderInner, OrderOption};
 use ::errors::{ObjectNotFound, StatusFailure};
@@ -39,19 +38,17 @@ pub struct Executor {
   keychain: KeyChain,
   broker: NatsJS,
   db: Database,
-  log: Logger,
   positions: Collection<OrderResponse<f64, DateTime>>,
 }
 
 impl Executor {
-  pub async fn new(broker: &NatsJS, db: Database, log: Logger) -> Self {
+  pub async fn new(broker: &NatsJS, db: Database) -> Self {
     let keychain = KeyChain::new(broker.clone(), db.clone()).await;
     let positions = db.collection("binance.positions");
     let me = Self {
       broker: broker.clone(),
       keychain,
       db,
-      log,
       positions,
     };
     me.update_indices(&[
@@ -84,7 +81,6 @@ impl ExecutorTrait for Executor {
       let observer = TradeObserver::new(
       Some(self.db.clone()),
       &self.broker,
-      self.log.clone(),
     )
     .await;
     let mut sub = observer.subscribe().await?;

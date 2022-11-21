@@ -11,9 +11,9 @@ use ::notification::traits::UserStream as UserStreamTrait;
 async fn main() {
   let args: CmdArgs = CmdArgs::parse();
   let config = Config::from_fpath(Some(args.config)).unwrap();
-  let logger = config.build_slog();
+  config.init_logger();
   let broker = config.nats_cli().unwrap();
-  let binance = binance::UserStream::new(broker, logger);
+  let binance = binance::UserStream::new(broker);
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let sig = Box::pin(sig.recv());

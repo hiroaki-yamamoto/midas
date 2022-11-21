@@ -24,7 +24,7 @@ mongodb = { version = "2.3.1", default-features = false, features = ["async-std-
 nats = "0.23.0"
 rmp-serde = "1.1.1"
 serde_json = "1.0.86"
-slog = "2.7.0"
+log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
 tokio = { version = "1.21.2", features = ["macros", "time"] }
 tokio-tungstenite = { version = "0.17.2", features = ["native-tls"] }
 serde = { version = "1.0.145", features = ["derive"] }

@@ -5,7 +5,7 @@ use ::std::net::SocketAddr;
 use ::clap::Parser;
 use ::futures::FutureExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::slog::info;
+use ::log::{info, warn};
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
 
@@ -22,8 +22,8 @@ async fn main() {
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
-  let logger = cfg.build_slog();
-  let access_logger = log(logger.clone());
+  cfg.init_logger();
+  let access_logger = log();
   let db = cfg.db().await.unwrap();
   let http_cli = cfg.build_rest_client().unwrap();
   let host: SocketAddr = cfg.host.parse().unwrap();
@@ -35,7 +35,7 @@ async fn main() {
     .with(access_logger)
     .recover(handle_rejection);
 
-  info!(logger, "Opened REST server on {}", host);
+  info!("Opened REST server on {}", host);
   let (_, svr) = ::warp::serve(route)
     .tls()
     .cert_path(&cfg.tls.cert)
@@ -44,7 +44,7 @@ async fn main() {
       sig.recv().await;
     });
   let svr = svr.then(|_| async {
-    ::slog::warn!(logger, "REST Server is shutting down! Bye! Bye!");
+    warn!("REST Server is shutting down! Bye! Bye!");
   });
   svr.await;
 }

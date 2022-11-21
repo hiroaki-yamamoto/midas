@@ -8,7 +8,6 @@ members = [
   "libs/errors",
   "libs/keychain",
   "libs/config",
-  "libs/slog_builder",
   "libs/rpc",
   "libs/types",
   "libs/subscribe",

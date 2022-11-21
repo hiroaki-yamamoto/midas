@@ -3,9 +3,9 @@ use ::std::time::Duration as StdDur;
 use std::time::SystemTime;
 
 use ::async_trait::async_trait;
+use ::log::warn;
 use ::rand::random;
 use ::serde_qs::to_string as to_qs;
-use ::slog::{warn, Logger};
 use ::tokio::time::sleep;
 use ::url::Url;
 use entities::TradeTimeTrait;
@@ -24,16 +24,14 @@ use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 #[derive(Debug, Clone)]
 pub struct HistoryFetcher {
   pub num_reconnect: i8,
-  logger: Logger,
   endpoint: Url,
 }
 
 impl HistoryFetcher {
-  pub fn new(num_reconnect: Option<i8>, logger: Logger) -> GenericResult<Self> {
+  pub fn new(num_reconnect: Option<i8>) -> GenericResult<Self> {
     return Ok(Self {
       num_reconnect: num_reconnect.unwrap_or(20),
       endpoint: (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()?,
-      logger,
     });
   }
 
@@ -81,9 +79,9 @@ impl HistoryFetcherTrait for HistoryFetcher {
             .filter_map(|item| match Kline::new(req.symbol.clone(), item) {
               Err(err) => {
                 warn!(
-                  self.logger,
-                  "Failed to fetch Kline data: {}",
-                  err; "symbol" => &req.symbol
+                  error = format!("{}", err),
+                  symbol = req.symbol;
+                  "Failed to fetch Kline data",
                 );
                 return None;
               }
@@ -105,7 +103,6 @@ impl HistoryFetcherTrait for HistoryFetcher {
         }
         let retry_secs = StdDur::from_secs(retry_secs.abs() as u64);
         warn!(
-          self.logger,
           "Got code {}. Waiting for {} seconds...",
           status.as_u16(),
           retry_secs.as_secs(),
@@ -114,8 +111,9 @@ impl HistoryFetcherTrait for HistoryFetcher {
       } else {
         let text = resp.text().await?;
         warn!(
-          self.logger, "Got code {}.",
-          status.as_u16(); "body" => text,
+          body = text,
+          code = status.as_u16();
+          "Unexpected Payload.",
         );
       }
       let wait_dur = StdDur::from_nanos((random::<u64>() + 1) % 1_000_000);

@@ -5,7 +5,7 @@ use ::std::net::SocketAddr;
 use ::clap::Parser;
 use ::futures::FutureExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::slog::{info, o};
+use ::log::{info, warn};
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
 
@@ -23,22 +23,19 @@ async fn main() {
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
-  let logger = cfg.build_slog();
-  let access_logger = log(logger.clone());
+  cfg.init_logger();
   let db = cfg.db().await.unwrap();
   let broker = cfg.nats_cli().unwrap();
   let host: SocketAddr = cfg.host.parse().unwrap();
-  let svc =
-    Service::new(&db, &broker, logger.new(o!("scope" => "SymbolService")))
-      .await;
+  let svc = Service::new(&db, &broker).await;
   let csrf = CSRF::new(CSRFOption::builder());
   let router = csrf
     .protect()
     .and(probe().or(svc.route()))
-    .with(access_logger)
+    .with(log())
     .recover(handle_rejection);
 
-  info!(logger, "Opened REST server on {}", host);
+  info!("Opened REST server on {}", host);
   let (_, svr) = ::warp::serve(router)
     .tls()
     .cert_path(&cfg.tls.cert)
@@ -47,7 +44,7 @@ async fn main() {
       sig.recv().await;
     });
   let svr = svr.then(|_| async {
-    ::slog::warn!(logger, "REST Server is shutting down! Bye! Bye!");
+    warn!("REST Server is shutting down! Bye! Bye!");
   });
   svr.await;
   return;

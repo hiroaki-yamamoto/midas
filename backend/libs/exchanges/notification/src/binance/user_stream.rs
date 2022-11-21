@@ -4,9 +4,9 @@ use ::std::time::Duration;
 use ::async_trait::async_trait;
 use ::futures::future::join_all;
 use ::futures::{SinkExt, StreamExt};
+use ::log::{as_display, error, info, warn};
 use ::nats::jetstream::JetStream as Broker;
 use ::serde_json::{from_slice as from_json_bin, from_str as from_json_str};
-use ::slog::Logger;
 use ::tokio::select;
 use ::tokio::time::{interval, sleep};
 use ::tokio_stream::StreamMap;
@@ -36,17 +36,15 @@ pub struct UserStream {
   notify_pubsub: NotifyPubSub,
   reauth_pubsub: ReauthPubSub,
   listen_key_pubsub: ListenKeyPubSub,
-  logger: Logger,
 }
 
 impl UserStream {
-  pub fn new(broker: Broker, logger: Logger) -> Self {
+  pub fn new(broker: Broker) -> Self {
     return Self {
       key_pubsub: APIKeyPubSub::new(broker.clone()),
       notify_pubsub: NotifyPubSub::new(broker.clone()),
       reauth_pubsub: ReauthPubSub::new(broker.clone()),
       listen_key_pubsub: ListenKeyPubSub::new(broker.clone()),
-      logger,
     };
   }
   async fn init_websocket<S>(
@@ -90,14 +88,14 @@ impl UserStream {
     if let Message::Close(reason) = &msg {
       match reason {
         Some(reason) => {
-          ::slog::warn!(
-            self.logger, "Closing connection...";
-            "code" => format!("{}", reason.code),
-            "reason" => reason.reason.to_string()
+          warn!(
+            code = as_display!(reason.code),
+            reason = reason.reason;
+            "Closing connection...",
           );
         }
         None => {
-          ::slog::warn!(self.logger, "Closing connection...");
+          warn!("Closing connection...");
         }
       };
       if let Some(mut socket) = sockets.remove(api_key) {
@@ -136,29 +134,21 @@ impl UserStream {
     pub_key: &String,
   ) -> Result<(), MaximumAttemptExceeded> {
     let retry_sec = Duration::from_secs(5);
-    ::slog::warn!(
-      self.logger,
-      "Session Disconnected. Reconnecting...";
-      "api_key" => &pub_key,
-    );
+    warn!(api_key = pub_key; "Session Disconnected. Reconnecting...",);
     let mut key = APIKeyInner::default();
     key.pub_key = pub_key.clone();
     for _ in 0..5 {
       match self.get_listen_key(&key).await {
         Err(e) => {
-          ::slog::warn!(
-            self.logger,
-            "Failed to reconnect trying in {} secs ({})",
+          warn!(
+            pub_key = key.pub_key,
+            error = as_display!(e);
+            "Failed to reconnect trying in {} secs",
             retry_sec.as_secs(),
-            e; "pub_key" => &key.pub_key
           );
         }
         Ok(_) => {
-          ::slog::info!(
-            self.logger,
-            "Reconnected.";
-            "pub_key" => &key.pub_key
-          );
+          info!("pub_key" = key.pub_key; "Reconnected.");
           return Ok(());
         }
       }
@@ -240,9 +230,7 @@ impl UserStreamTrait for UserStream {
             format!("{}/{}", WS_ENDPOINT, listen_key.listen_key)
           ).await {
             Err(e) => {
-              ::slog::warn!(
-                me.logger, "Switching Protocol Failed"; e
-              );
+              warn!(error = as_display!(e); "Switching Protocol Failed");
               continue;
             },
             Ok(v) => v,
@@ -271,9 +259,8 @@ impl UserStreamTrait for UserStream {
           match me.handle_disconnect(&pub_key).await {
             Ok(_) => {},
             Err(e) => {
-              ::slog::error!(
-                me.logger,
-                "Failed to authenticate listen key: {}", e
+              error!(
+                error = as_display!(e); "Failed to authenticate listen key",
               );
             },
           };
@@ -289,7 +276,7 @@ impl UserStreamTrait for UserStream {
                   listen_keys.remove(&api_key);
                   let _ = me.reauth_pubsub.publish(&api_key);
                 },
-                _ => ::slog::warn!(me.logger, "Failed to receive payload: {}", e),
+                _ => warn!(error = as_display!(e); "Failed to receive payload"),
               }
               continue;
             },

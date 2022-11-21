@@ -14,7 +14,7 @@ config = { path = "../../libs/config" }
 clap = { version = "4.0.15", features = ["derive"] }
 tokio = { version = "1.21.2", features = ["signal", "rt", "rt-multi-thread", "macros"] }
 nats = "0.23.0"
-slog = "2.7.0"
+log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
 futures = "0.3.25"
 libc = "0.2.135"
 mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }

@@ -3,7 +3,7 @@ use ::std::collections::{HashMap, HashSet};
 use ::clap::Parser;
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::slog::{error, info, warn};
+use ::log::{as_display, as_serde, error, info, warn};
 use ::subscribe::PubSub;
 use ::tokio::select;
 use ::tokio::signal::unix as signal;
@@ -25,11 +25,11 @@ use ::history::traits::{
 async fn main() {
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
-  let logger = cfg.build_slog();
-  info!(logger, "Kline fetch worker");
+  cfg.init_logger();
+  info!("Kline fetch worker");
   let broker = cfg.nats_cli().unwrap();
   let db = cfg.db().await.unwrap();
-  let redis = cfg.redis(&logger).unwrap();
+  let redis = cfg.redis().unwrap();
   let mut cur_prog_kvs = CurrentSyncProgressStore::new(redis);
 
   let pubsub = HistChartPubSub::new(broker.clone());
@@ -41,7 +41,7 @@ async fn main() {
   let mut reg: HashMap<Exchanges, Box<dyn HistoryFetcherTrait>> =
     HashMap::new();
 
-  let fetcher = HistoryFetcher::new(None, logger.clone()).unwrap();
+  let fetcher = HistoryFetcher::new(None).unwrap();
   let writer = HistoryWriter::new(&db).await;
   reg.insert(Exchanges::Binance, Box::new(fetcher));
 
@@ -57,9 +57,8 @@ async fn main() {
           if let Some(dupe_list) = dupe_map.get_mut(&(req.exchange, req.symbol.clone())) {
             if dupe_list.contains(&(req.start, req.end)) {
               warn!(
-                logger,
-                "Dupe detected: (Symbol: {:?}, Start: {:?}, End: {:?})",
-                req.symbol, req.start, req.end
+                request = as_serde!(req);
+                "Dupe detected.",
               );
             } else {
               dupe_list.insert((req.start, req.end));
@@ -74,32 +73,35 @@ async fn main() {
           Some(fetcher) => {
             match fetcher.fetch(&req).await {
               Err(e) => {
-                error!(logger, "Failed to fetch klines: {}", e);
+                error!(error = as_display!(e); "Failed to fetch klines");
                 continue;
               },
               Ok(k) => k
             }
           },
           None => {
-            error!(logger, "Unknown Exchange: {}", req.exchange.as_string());
+            error!("Unknown Exchange: {}", req.exchange.as_string());
             continue;
           }
         };
         if let Err(e) = writer.write(klines).await {
-          error!(logger, "Failed to write the klines: {}", e);
+          error!(error = as_display!(e); "Failed to write the klines");
           continue;
         }
         if let Err(e) = cur_prog_kvs.incr(
           req.exchange.as_string(),
           req.symbol.clone(), 1
         ) {
-          error!(logger, "Failed to report the progress: {}", e);
+          error!(error = as_display!(e); "Failed to report the progress");
         };
         if let Err(e) = change_event_pub.publish(&FetchStatusChanged{
           exchange: req.exchange,
           symbol: req.symbol,
         }) {
-          error!(logger, "Failed to broadcast progress changed event: {}", e);
+          error!(
+            error = as_display!(e);
+            "Failed to broadcast progress changed event"
+          );
         };
       },
       _ = sig.recv() => {

@@ -5,7 +5,7 @@ use ::std::net::SocketAddr;
 use ::clap::Parser;
 use ::futures::FutureExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::slog::{info, warn};
+use ::log::{info, warn};
 use ::tokio::signal::unix as signal;
 use ::warp::Filter;
 
@@ -20,14 +20,14 @@ use crate::service::Service;
 async fn main() {
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
-  let logger = cfg.build_slog();
-  info!(logger, "Historical Kline Service");
+  cfg.init_logger();
+  info!("Historical Kline Service");
   let broker = cfg.nats_cli().unwrap();
   let redis = cfg.redis;
   let host: SocketAddr = cfg.host.parse().unwrap();
   let svc = Service::new(&broker, &redis).await.unwrap();
   let csrf = CSRF::new(CSRFOption::builder());
-  let access_log = ::access_logger::log(logger.clone());
+  let access_log = ::access_logger::log();
   let route = csrf
     .protect()
     .and(svc.route())
@@ -38,7 +38,7 @@ async fn main() {
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let host = host.clone();
-  info!(logger, "Opened REST server on {}", host);
+  info!("Opened REST server on {}", host);
   let (_, ws_svr) = ::warp::serve(route)
     .tls()
     .cert_path(&cfg.tls.cert)
@@ -47,7 +47,7 @@ async fn main() {
       sig.recv().await;
     });
   let svr = ws_svr.then(|_| async {
-    warn!(logger, "REST Server is shutting down! Bye! Bye!");
+    warn!("REST Server is shutting down! Bye! Bye!");
   });
   svr.await;
 }
