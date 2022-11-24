@@ -3,9 +3,8 @@ use ::mongodb::error::Result as DBResult;
 use ::mongodb::options::UpdateOptions;
 use ::mongodb::{Collection, Database};
 
-use ::types::ThreadSafeResult;
-
 use super::entities::Bot;
+use super::errors::Result as BotInfoResult;
 
 #[derive(Debug, Clone)]
 pub struct BotInfoRecorder {
@@ -27,7 +26,7 @@ impl BotInfoRecorder {
     return Ok(doc);
   }
 
-  pub async fn write(&self, model: &Bot) -> ThreadSafeResult<Bot> {
+  pub async fn write(&self, model: &Bot) -> BotInfoResult<Bot> {
     let id = match &model.id {
       Some(id) => self
         .col

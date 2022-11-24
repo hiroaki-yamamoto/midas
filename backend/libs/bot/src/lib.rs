@@ -1,4 +1,5 @@
 pub mod entities;
+pub mod errors;
 mod info;
 mod transpiler;
 
