@@ -4,8 +4,7 @@ use ::rand::Rng;
 use ::reqwest::header;
 use ::reqwest::Client;
 
-use ::errors::StatusFailure;
-use ::types::ThreadSafeResult;
+use ::errors::{HTTPResult, StatusFailure};
 
 use super::entities::Bot;
 
@@ -19,7 +18,7 @@ impl Transpiler {
     return Self { cli };
   }
 
-  pub async fn transpile(&self, bot: &Bot) -> ThreadSafeResult<Bot> {
+  pub async fn transpile(&self, bot: &Bot) -> HTTPResult<Bot> {
     let token: String = thread_rng()
       .sample_iter(&Alphanumeric)
       .take(32)
@@ -37,11 +36,9 @@ impl Transpiler {
       let resp_url = resp.url().clone();
       let status = resp.status().as_u16();
       let text = resp.text().await.unwrap_or(String::default());
-      return Err(Box::new(StatusFailure::new(
-        Some(resp_url),
-        status,
-        String::from(text),
-      )));
+      return Err(
+        StatusFailure::new(Some(resp_url), status, String::from(text)).into(),
+      );
     }
     let mut bot_js = bot.clone();
     bot_js.cond_js = resp.text().await.ok();

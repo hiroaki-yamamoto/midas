@@ -1,4 +1,5 @@
 use ::err_derive::Error;
+use ::reqwest::Error as RequestError;
 use ::url::Url;
 use ::warp::reject::Reject;
 
@@ -22,3 +23,13 @@ impl StatusFailure {
 }
 
 impl Reject for StatusFailure {}
+
+#[derive(Debug, Error)]
+pub enum HTTPErrors {
+  #[error(display = "Failed to send a request: {}", _0)]
+  RequestFailure(#[source] RequestError),
+  #[error(display = "Response Status Expectation Failure: {}", _0)]
+  ResponseFailure(#[source] StatusFailure),
+}
+
+pub type HTTPResult<T> = Result<T, HTTPErrors>;

@@ -11,4 +11,4 @@ pub enum BotInfoError {
   DBError(#[source] DBError),
 }
 
-pub type Result<T> = StdResult<T, BotInfoError>;
+pub type BotInfoResult<T> = StdResult<T, BotInfoError>;

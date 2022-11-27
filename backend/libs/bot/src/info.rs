@@ -4,7 +4,7 @@ use ::mongodb::options::UpdateOptions;
 use ::mongodb::{Collection, Database};
 
 use super::entities::Bot;
-use super::errors::Result as BotInfoResult;
+use super::errors::BotInfoResult;
 
 #[derive(Debug, Clone)]
 pub struct BotInfoRecorder {

@@ -903,6 +903,7 @@ version = "0.1.0"
 dependencies = [
  "err-derive",
  "log",
+ "reqwest",
  "serde",
  "slog_derive",
  "url",

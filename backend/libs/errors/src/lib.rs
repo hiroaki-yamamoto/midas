@@ -15,7 +15,7 @@ pub use execution::ExecutionFailed;
 pub use initialize::InitError;
 pub use object::ObjectNotFound;
 pub use parse::ParseError;
-pub use status::StatusFailure;
+pub use status::{HTTPErrors, HTTPResult, StatusFailure};
 pub use unknown::UnknownExchangeError;
 pub use vec_elem::{RawVecElemErrs, VecElementErr, VecElementErrs};
 pub use websocket::WebsocketError;
