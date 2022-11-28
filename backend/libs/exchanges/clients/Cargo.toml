@@ -8,4 +8,5 @@ edition = "2021"
 
 [dependencies]
 types = { path = "../../types" }
+errors = { path = "../../errors" }
 reqwest = { version = "0.11.12", features = ["gzip", "brotli", "json"] }

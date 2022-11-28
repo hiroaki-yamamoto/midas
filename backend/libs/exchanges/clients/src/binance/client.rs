@@ -1,10 +1,9 @@
-pub use reqwest;
-use reqwest::{header, Client as Req};
+use ::reqwest::{header, Client as Req};
 
-use types::ThreadSafeResult;
+use ::errors::HTTPResult;
 
 pub trait PubClient {
-  fn get_client<T>(&self, pub_key: T) -> ThreadSafeResult<Req>
+  fn get_client<T>(&self, pub_key: T) -> HTTPResult<Req>
   where
     T: AsRef<str>,
   {

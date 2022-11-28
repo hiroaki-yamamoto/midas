@@ -1,4 +1,5 @@
 use ::err_derive::Error;
+use ::reqwest::header::InvalidHeaderValue;
 use ::reqwest::Error as RequestError;
 use ::url::Url;
 use ::warp::reject::Reject;
@@ -26,6 +27,8 @@ impl Reject for StatusFailure {}
 
 #[derive(Debug, Error)]
 pub enum HTTPErrors {
+  #[error(display = "Invalid Header Value: {}", _0)]
+  InvalidHeaderValue(#[source] InvalidHeaderValue),
   #[error(display = "Failed to send a request: {}", _0)]
   RequestFailure(#[source] RequestError),
   #[error(display = "Response Status Expectation Failure: {}", _0)]
