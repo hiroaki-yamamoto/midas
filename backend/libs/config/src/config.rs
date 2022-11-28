@@ -2,6 +2,7 @@ use ::std::fs::{read_to_string, File};
 use ::std::io::Read;
 use ::std::time::Duration;
 
+use ::log::{as_error, warn};
 use ::mongodb::error::Result as DBResult;
 use ::mongodb::{
   options::ClientOptions as DBCliOpt, Client as DBCli, Database as DB,
@@ -11,7 +12,7 @@ use ::serde::de::Error as SerdeError;
 use ::serde::{Deserialize, Deserializer};
 use ::serde_yaml::Result as YaMLResult;
 
-use ::types::{GenericResult, ThreadSafeResult};
+use ::types::GenericResult;
 
 use ::errors::MaximumAttemptExceeded;
 use ::nats::connect as nats_connect;
@@ -55,7 +56,7 @@ impl Config {
     return ::redis::Client::open(url).map_err(|e| SerdeError::custom(e));
   }
 
-  pub fn redis(&self) -> ThreadSafeResult<Connection> {
+  pub fn redis(&self) -> Result<Connection, MaximumAttemptExceeded> {
     for _ in 0..10 {
       match self
         .redis
@@ -63,16 +64,14 @@ impl Config {
       {
         Ok(o) => return Ok(o),
         Err(e) => {
-          ::log::warn!(
-            "Failed to estanblish the connection to redis. Retrying.\
-            (Reason: {:?})",
-            e
+          warn!(
+            error = as_error!(e);
+            "Failed to estanblish the connection to redis. Retrying.",
           );
-          continue;
         }
       }
     }
-    return Err(Box::new(MaximumAttemptExceeded::default()));
+    return Err(MaximumAttemptExceeded::default());
   }
 
   pub async fn db(&self) -> DBResult<DB> {
