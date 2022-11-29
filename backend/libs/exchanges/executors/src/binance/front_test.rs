@@ -9,6 +9,7 @@ use ::nats::jetstream::JetStream as NatsJS;
 use ::errors::ExecutionFailed;
 use ::types::ThreadSafeResult;
 
+use crate::errors::ExecutionResult;
 use crate::traits::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
 };
@@ -102,9 +103,10 @@ impl ExecutorTrait for Executor {
     &mut self,
     _: ObjectId,
     _: ObjectId,
-  ) -> ThreadSafeResult<ExecutionSummary> {
-    return Err(Box::new(ExecutionFailed::new(
-      "Call remove_position from TestExecutorTrait.",
-    )));
+  ) -> ExecutionResult<ExecutionSummary> {
+    return Err(
+      ExecutionFailed::new("Call remove_position from TestExecutorTrait.")
+        .into(),
+    );
   }
 }

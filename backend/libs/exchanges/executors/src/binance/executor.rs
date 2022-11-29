@@ -16,7 +16,7 @@ use ::serde_qs::to_string as to_qs;
 use ::entities::{
   BookTicker, ExecutionSummary, Order, OrderInner, OrderOption,
 };
-use ::errors::{ObjectNotFound, StatusFailure};
+use ::errors::{HTTPErrors, ObjectNotFound, StatusFailure};
 use ::keychain::KeyChain;
 use ::rpc::entities::Exchanges;
 use ::sign::Sign;
@@ -28,7 +28,7 @@ use ::clients::binance::{PubClient, REST_ENDPOINT};
 use ::observers::binance::TradeObserver;
 use ::observers::traits::TradeObserver as TradeObserverTrait;
 
-use crate::errors::ExecutionResult;
+use crate::errors::{ExecutionErrors, ExecutionResult};
 use crate::traits::Executor as ExecutorTrait;
 
 use super::entities::{
@@ -226,39 +226,44 @@ impl ExecutorTrait for Executor {
       let order_id = pos.order_id.clone();
       let cancel_cli = cli.clone();
       let reverse_cli = cli.clone();
-      order_cancel_vec.push(retry_async(5, move || {
-        let symbol = symbol.clone();
-        let order_id = order_id.clone();
-        let me = me.clone();
-        let cancel_cli = cancel_cli.clone();
-        async move {
-          let req =
-            CancelOrderRequest::<i64>::new(symbol).order_id(Some(order_id));
-          let qs = to_qs(&req)?;
-          let qs = format!(
-            "{}&signature={}",
-            qs.clone(),
-            me.sign(qs, api_key.prv_key.clone())
-          );
-          let resp = cancel_cli
-            .delete(format!("{}/api/v3/order?{}", REST_ENDPOINT, qs))
-            .send()
-            .await?;
-          let status = resp.status();
-          if !status.is_success() {
-            return Err(Box::new(StatusFailure {
-              url: Some(resp.url().clone()),
-              code: status.as_u16(),
-              text: resp
-                .text()
-                .await
-                .unwrap_or("Failed to get the text".to_string()),
-            })
-              as Box<dyn ::std::error::Error + Send + Sync>);
+      order_cancel_vec.push(retry_async::<_, _, _, ExecutionErrors>(
+        5,
+        move || {
+          let symbol = symbol.clone();
+          let order_id = order_id.clone();
+          let me = me.clone();
+          let cancel_cli = cancel_cli.clone();
+          async move {
+            let req =
+              CancelOrderRequest::<i64>::new(symbol).order_id(Some(order_id));
+            let qs = to_qs(&req)?;
+            let qs = format!(
+              "{}&signature={}",
+              qs.clone(),
+              me.sign(qs, api_key.prv_key.clone())
+            );
+            let resp = cancel_cli
+              .delete(format!("{}/api/v3/order?{}", REST_ENDPOINT, qs))
+              .send()
+              .await?;
+            let status = resp.status();
+            if !status.is_success() {
+              return Err(
+                StatusFailure {
+                  url: Some(resp.url().clone()),
+                  code: status.as_u16(),
+                  text: resp
+                    .text()
+                    .await
+                    .unwrap_or("Failed to get the text".to_string()),
+                }
+                .into(),
+              );
+            }
+            return Ok(resp);
           }
-          return Ok(resp);
-        }
-      }));
+        },
+      ));
       let symbol = pos.symbol.clone();
       if let Some(fills) = &pos.fills {
         // Sell the position
@@ -278,36 +283,43 @@ impl ExecutorTrait for Executor {
         );
         let pos: Order = pos.clone().into();
         let pos_pur_price: OrderInner = pos.clone().sum();
-        position_reverse_vec.push(retry_async(5, move || {
-          let qs = qs.clone();
-          let pos_pur_price = pos_pur_price.clone();
-          let reverse_cli = reverse_cli.clone();
-          async move {
-            let resp = reverse_cli
-              .post(format!("{}/api/v3/order?{}", REST_ENDPOINT, &qs))
-              .send()
-              .await?;
-            let status = resp.status();
-            if !status.is_success() {
-              return Err(Box::new(StatusFailure {
-                url: Some(resp.url().clone()),
-                code: status.as_u16(),
-                text: resp
-                  .text()
-                  .await
-                  .unwrap_or("Failed to get the text".to_string()),
-              })
-                as Box<dyn ::std::error::Error + Send + Sync>);
+        position_reverse_vec.push(retry_async::<_, _, _, ExecutionErrors>(
+          5,
+          move || {
+            let qs = qs.clone();
+            let pos_pur_price = pos_pur_price.clone();
+            let reverse_cli = reverse_cli.clone();
+            async move {
+              let resp = reverse_cli
+                .post(format!("{}/api/v3/order?{}", REST_ENDPOINT, &qs))
+                .send()
+                .await?;
+              let status = resp.status();
+              if !status.is_success() {
+                return Err(
+                  StatusFailure {
+                    url: Some(resp.url().clone()),
+                    code: status.as_u16(),
+                    text: resp
+                      .text()
+                      .await
+                      .unwrap_or("Failed to get the text".to_string()),
+                  }
+                  .into(),
+                );
+              }
+              let rev_order_resp: OrderResponse<String, i64> = resp
+                .json()
+                .await
+                .map_err(|e| HTTPErrors::RequestFailure(e))?;
+              let rev_order_resp =
+                OrderResponse::<f64, DateTime>::try_from(rev_order_resp)?;
+              let rev_order_resp: Order = rev_order_resp.into();
+              let rev_pos_price: OrderInner = rev_order_resp.sum();
+              return Ok((pos_pur_price, rev_pos_price));
             }
-            let rev_order_resp: OrderResponse<String, i64> =
-              resp.json().await?;
-            let rev_order_resp =
-              OrderResponse::<f64, DateTime>::try_from(rev_order_resp)?;
-            let rev_order_resp: Order = rev_order_resp.into();
-            let rev_pos_price: OrderInner = rev_order_resp.sum();
-            return Ok((pos_pur_price, rev_pos_price));
-          }
-        }));
+          },
+        ));
       };
     }
     let (order_res, position_res) =
