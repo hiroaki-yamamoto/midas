@@ -15,7 +15,7 @@ use crate::traits::{
 use ::observers::traits::TradeObserver as TradeObserverTrait;
 
 use ::entities::{
-  BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
+  BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
 };
 
 use ::observers::binance::TradeObserver;
@@ -102,7 +102,7 @@ impl ExecutorTrait for Executor {
     &mut self,
     _: ObjectId,
     _: ObjectId,
-  ) -> ThreadSafeResult<ExecutionResult> {
+  ) -> ThreadSafeResult<ExecutionSummary> {
     return Err(Box::new(ExecutionFailed::new(
       "Call remove_position from TestExecutorTrait.",
     )));

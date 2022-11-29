@@ -9,7 +9,7 @@ pub enum ExecutionType {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct ExecutionResult {
+pub struct ExecutionSummary {
   pub id: Option<ObjectId>,
   pub price: Option<f64>,
   pub qty: Option<f64>,
@@ -17,7 +17,7 @@ pub struct ExecutionResult {
   pub profit_ratio: Option<f64>,
 }
 
-impl ExecutionResult {
+impl ExecutionSummary {
   stateful_setter!(id, Option<ObjectId>);
   stateful_setter!(price, Option<f64>);
   stateful_setter!(qty, Option<f64>);

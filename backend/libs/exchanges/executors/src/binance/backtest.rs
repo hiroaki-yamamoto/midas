@@ -9,16 +9,18 @@ use ::mongodb::Database;
 use ::rpc::entities::{BackTestPriceBase, Exchanges};
 use ::types::{GenericResult, ThreadSafeResult};
 
-use crate::traits::{
-  Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
-};
 use ::entities::{
-  BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
+  BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
 };
 use ::errors::ExecutionFailed;
 use ::history::binance::entities::Kline;
 use ::history::binance::writer::HistoryWriter;
 use ::history::traits::HistoryWriter as HistoryWriterTrait;
+
+use crate::errors::ExecutionResult;
+use crate::traits::{
+  Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
+};
 
 pub struct Executor {
   spread: f64,
@@ -118,10 +120,11 @@ impl ExecutorTrait for Executor {
     &mut self,
     _: ObjectId,
     _: ObjectId,
-  ) -> ThreadSafeResult<ExecutionResult> {
-    return Err(Box::new(ExecutionFailed::new(
-      "Call remove_position from TestExecutorTrait.",
-    )));
+  ) -> ExecutionResult<ExecutionSummary> {
+    return Err(
+      ExecutionFailed::new("Call remove_position from TestExecutorTrait.")
+        .into(),
+    );
   }
 }
 

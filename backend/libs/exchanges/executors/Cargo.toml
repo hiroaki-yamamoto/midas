@@ -30,3 +30,4 @@ ring = "0.16.20"
 serde = { version = "1.0.145", features = ["derive"] }
 reqwest = { version = "0.11.12", features = ["gzip", "brotli", "json", "rustls-tls"]}
 serde_qs = "0.10.1"
+err-derive = "0.3.1"

@@ -330,7 +330,7 @@ impl TradeObserver {
     let recorder = self
       .recorder
       .clone()
-      .ok_or(InitError::new(Some("binance.observer")))?;
+      .ok_or(InitError::new::<String>("binance.observer".into()))?;
     return recorder.list(doc! {"status": "TRADING"}).await;
   }
 }

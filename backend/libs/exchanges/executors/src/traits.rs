@@ -5,10 +5,12 @@ use ::futures::stream::BoxStream;
 use ::mongodb::bson::oid::ObjectId;
 
 use ::entities::{
-  BookTicker, ExecutionResult, ExecutionType, Order, OrderInner, OrderOption,
+  BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
 };
 use ::errors::ExecutionFailed;
 use ::types::{GenericResult, ThreadSafeResult};
+
+use crate::errors::ExecutionResult;
 
 #[async_trait]
 pub trait Executor {
@@ -28,7 +30,7 @@ pub trait Executor {
     &mut self,
     api_key_id: ObjectId,
     id: ObjectId,
-  ) -> ThreadSafeResult<ExecutionResult>;
+  ) -> ExecutionResult<ExecutionSummary>;
 }
 
 pub trait TestExecutor {
@@ -128,7 +130,7 @@ pub trait TestExecutor {
     return Ok(id);
   }
 
-  fn remove_order(&mut self, id: ObjectId) -> GenericResult<ExecutionResult> {
+  fn remove_order(&mut self, id: ObjectId) -> GenericResult<ExecutionSummary> {
     let trade = self.get_current_trade();
     if trade.is_none() {
       return Err(Box::new(ExecutionFailed::new("Trade stream is closed.")));
@@ -139,11 +141,11 @@ pub trait TestExecutor {
     let mut positions = self.get_positions();
     let fee = self.taker_fee();
     let ret = match positions.get_mut(&id) {
-      None => ExecutionResult::default(),
+      None => ExecutionSummary::default(),
       Some(v) => {
         let qty = v.qty * (1.0 - fee);
         let sell_trade = OrderInner { price, qty };
-        ExecutionResult::calculate_profit(&sell_trade, v)
+        ExecutionSummary::calculate_profit(&sell_trade, v)
       }
     };
     orders.remove(&id);

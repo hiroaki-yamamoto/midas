@@ -13,7 +13,9 @@ use ::nats::jetstream::JetStream as NatsJS;
 use ::ring::hmac;
 use ::serde_qs::to_string as to_qs;
 
-use ::entities::{BookTicker, ExecutionResult, Order, OrderInner, OrderOption};
+use ::entities::{
+  BookTicker, ExecutionSummary, Order, OrderInner, OrderOption,
+};
 use ::errors::{ObjectNotFound, StatusFailure};
 use ::keychain::KeyChain;
 use ::rpc::entities::Exchanges;
@@ -26,6 +28,7 @@ use ::clients::binance::{PubClient, REST_ENDPOINT};
 use ::observers::binance::TradeObserver;
 use ::observers::traits::TradeObserver as TradeObserverTrait;
 
+use crate::errors::ExecutionResult;
 use crate::traits::Executor as ExecutorTrait;
 
 use super::entities::{
@@ -197,7 +200,7 @@ impl ExecutorTrait for Executor {
     &mut self,
     api_key_id: ObjectId,
     gid: ObjectId,
-  ) -> ThreadSafeResult<ExecutionResult> {
+  ) -> ExecutionResult<ExecutionSummary> {
     let api_key = self
       .keychain
       .get(Exchanges::Binance, api_key_id)
@@ -211,7 +214,7 @@ impl ExecutorTrait for Executor {
       .filter_map(|pos| async { pos.ok() })
       .boxed();
     let cli = match self.get_client(api_key.pub_key.clone()) {
-      Err(e) => return Err(e),
+      Err(e) => return Err(e.into()),
       Ok(o) => o,
     };
     let mut order_cancel_vec = vec![];
@@ -324,7 +327,7 @@ impl ExecutorTrait for Executor {
       pur_order += pur;
       sell_order += sell;
     }
-    return Ok(ExecutionResult::calculate_profit(&sell_order, &pur_order));
+    return Ok(ExecutionSummary::calculate_profit(&sell_order, &pur_order));
   }
 }
 

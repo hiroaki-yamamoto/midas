@@ -925,6 +925,7 @@ dependencies = [
  "async-trait",
  "clients",
  "entities",
+ "err-derive",
  "errors",
  "futures",
  "history",

@@ -4,18 +4,17 @@ use ::err_derive::Error;
 
 #[derive(Debug, Clone, Error)]
 #[error(display = "Initialization Failed: {:?}", message)]
-pub struct InitError<T>
-where
-  T: AsRef<str> + Clone + Debug,
-{
-  message: Option<T>,
+pub struct InitError {
+  message: Option<String>,
 }
 
-impl<T> InitError<T>
-where
-  T: AsRef<str> + Clone + Debug,
-{
-  pub fn new(msg: Option<T>) -> Self {
-    return Self { message: msg };
+impl InitError {
+  pub fn new<T>(message: T) -> Self
+  where
+    T: Into<Option<String>>,
+  {
+    return Self {
+      message: message.into(),
+    };
   }
 }
