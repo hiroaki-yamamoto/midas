@@ -18,12 +18,12 @@ probe = { path = "../../libs/probe" }
 
 mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }
 log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
-clap = { version = "4.0.15", features = ["derive"] }
-tokio = { version = "1.21.2", features = ["macros", "rt", "rt-multi-thread", "signal"] }
+clap = { version = "4.0.29", features = ["derive"] }
+tokio = { version = "1.22.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
 futures = "0.3.25"
-libc = "0.2.135"
-nats = "0.23.0"
+libc = "0.2.137"
+nats = "0.23.1"
 warp = { version = "0.3.3", features = ["tls"] }
 num-traits = "0.2.15"
-serde = { version = "1.0.145", features = ["derive"] }
-serde_json = "1.0.86"
+serde = { version = "1.0.148", features = ["derive"] }
+serde_json = "1.0.89"
