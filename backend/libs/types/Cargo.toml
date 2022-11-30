@@ -10,9 +10,9 @@ edition = "2021"
 errors = { path = "../errors" }
 
 url = "2.3.1"
-serde = { version = "1.0.145", features = ["derive"] }
-tokio = { version = "1.21.2", features = ["sync", "net"] }
+serde = { version = "1.0.148", features = ["derive"] }
+tokio = { version = "1.22.0", features = ["sync", "net"] }
 mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }
-tokio-tungstenite = { version = "0.17.2", features = ["native-tls"] }
-serde_json = "1.0.86"
+tokio-tungstenite = { version = "0.18.0", features = ["native-tls"] }
+serde_json = "1.0.89"
 futures = "0.3.25"
