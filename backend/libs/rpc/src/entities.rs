@@ -2,16 +2,16 @@
 #[serde(rename_all = "camelCase")]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Status {
-    #[prost(uint32, tag="1")]
+    #[prost(uint32, tag = "1")]
     pub code: u32,
-    #[prost(string, tag="2")]
+    #[prost(string, tag = "2")]
     pub message: ::prost::alloc::string::String,
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct InsertOneResult {
-    #[prost(string, tag="1")]
+    #[prost(string, tag = "1")]
     #[serde(skip_serializing_if = "String::is_empty")]
     pub id: ::prost::alloc::string::String,
 }
