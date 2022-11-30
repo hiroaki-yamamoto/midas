@@ -6,17 +6,15 @@ use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 use ::nats::jetstream::JetStream as NatsJS;
 
+use ::entities::{
+  BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
+};
 use ::errors::ExecutionFailed;
-use ::types::ThreadSafeResult;
+use ::observers::traits::TradeObserver as TradeObserverTrait;
 
 use crate::errors::ExecutionResult;
 use crate::traits::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
-};
-use ::observers::traits::TradeObserver as TradeObserverTrait;
-
-use ::entities::{
-  BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
 };
 
 use ::observers::binance::TradeObserver;
@@ -72,7 +70,7 @@ impl TestExecutorTrait for Executor {
 impl ExecutorTrait for Executor {
   async fn open(
     &mut self,
-  ) -> ThreadSafeResult<BoxStream<ThreadSafeResult<BookTicker>>> {
+  ) -> ExecutionResult<BoxStream<ExecutionResult<BookTicker>>> {
     let observer = self.observer.clone();
     let stream = try_stream! {
       let mut src_stream = observer.subscribe().await?;
@@ -93,10 +91,10 @@ impl ExecutorTrait for Executor {
     _: Option<f64>,
     _: f64,
     _: Option<OrderOption>,
-  ) -> ThreadSafeResult<ObjectId> {
-    return Err(Box::new(ExecutionFailed::new(
-      "Call create_order from TestExecutorTrait.",
-    )));
+  ) -> ExecutionResult<ObjectId> {
+    return Err(
+      ExecutionFailed::new("Call create_order from TestExecutorTrait.").into(),
+    );
   }
 
   async fn remove_order(

@@ -7,7 +7,6 @@ use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::Database;
 
 use ::rpc::entities::{BackTestPriceBase, Exchanges};
-use ::types::{GenericResult, ThreadSafeResult};
 
 use ::entities::{
   BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
@@ -40,8 +39,8 @@ impl Executor {
     maker_fee: f64,
     taker_fee: f64,
     price_base_policy: BackTestPriceBase,
-  ) -> GenericResult<Self> {
-    return Ok(Self {
+  ) -> Self {
+    return Self {
       spread,
       maker_fee,
       taker_fee,
@@ -50,7 +49,7 @@ impl Executor {
       positions: HashMap::new(),
       writer: HistoryWriter::new(db).await,
       price_base_policy,
-    });
+    };
   }
 }
 
@@ -58,7 +57,7 @@ impl Executor {
 impl ExecutorTrait for Executor {
   async fn open(
     &mut self,
-  ) -> ThreadSafeResult<BoxStream<ThreadSafeResult<BookTicker>>> {
+  ) -> ExecutionResult<BoxStream<ExecutionResult<BookTicker>>> {
     let half_spread = self.spread / 2.0;
     let price_base = self.price_base_policy.clone();
     let writer = self.writer.clone();
@@ -110,10 +109,10 @@ impl ExecutorTrait for Executor {
     _: Option<f64>,
     _: f64,
     _: Option<OrderOption>,
-  ) -> ThreadSafeResult<ObjectId> {
-    return Err(Box::new(ExecutionFailed::new(
-      "Call create_order from TestExecutorTrait.",
-    )));
+  ) -> ExecutionResult<ObjectId> {
+    return Err(
+      ExecutionFailed::new("Call create_order from TestExecutorTrait.").into(),
+    );
   }
 
   async fn remove_order(

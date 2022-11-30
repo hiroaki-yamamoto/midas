@@ -1,4 +1,3 @@
-use ::std::error::Error;
 use std::convert::TryFrom;
 
 use ::async_stream::try_stream;
@@ -21,7 +20,6 @@ use ::keychain::KeyChain;
 use ::rpc::entities::Exchanges;
 use ::sign::Sign;
 use ::types::retry::retry_async;
-use ::types::ThreadSafeResult;
 use ::writers::DatabaseWriter;
 
 use ::clients::binance::{PubClient, REST_ENDPOINT};
@@ -79,7 +77,7 @@ impl DatabaseWriter for Executor {
 impl ExecutorTrait for Executor {
   async fn open(
     &mut self,
-  ) -> ThreadSafeResult<BoxStream<'_, ThreadSafeResult<BookTicker>>> {
+  ) -> ExecutionResult<BoxStream<'_, ExecutionResult<BookTicker>>> {
     let stream = try_stream! {
       let observer = TradeObserver::new(
       Some(self.db.clone()),
@@ -100,7 +98,7 @@ impl ExecutorTrait for Executor {
     price: Option<f64>,
     budget: f64,
     order_option: Option<OrderOption>,
-  ) -> ThreadSafeResult<ObjectId> {
+  ) -> ExecutionResult<ObjectId> {
     let pos_gid = ObjectId::new();
     let key = self.keychain.get(Exchanges::Binance, api_key_id).await?;
     let key = key.ok_or(ObjectNotFound::new("API KeyPair".to_string()))?;
@@ -110,82 +108,80 @@ impl ExecutorTrait for Executor {
       .map(|_| price.map(|_| OrderType::Limit).unwrap_or(OrderType::Market))
       .unwrap_or(OrderType::Market);
     let cli = self.get_client(&key.pub_key)?;
-    let req_lst: Vec<BoxFuture<Result<(), Box<dyn Error + Send + Sync>>>> =
-      order_option
-        .map(|o| {
-          o.calc_trading_amounts(budget)
-            .into_iter()
-            .enumerate()
-            .map(|(index, tr_amount)| {
-              let mut order = OrderRequest::<i64>::new(
-                symbol.clone(),
-                Side::Buy,
-                order_type.clone(),
-              );
-              if o.iceberg {
-                order = order.iceberg_qty(Some(tr_amount));
-              } else {
-                order = order.quantity(Some(tr_amount));
-              }
-              if order_type == OrderType::Limit {
-                order =
-                  order.price(Some(o.calc_order_price(price.unwrap(), index)));
-              }
+    let req_lst: Vec<BoxFuture<ExecutionResult<()>>> = order_option
+      .map(|o| {
+        o.calc_trading_amounts(budget)
+          .into_iter()
+          .enumerate()
+          .map(|(index, tr_amount)| {
+            let mut order = OrderRequest::<i64>::new(
+              symbol.clone(),
+              Side::Buy,
+              order_type.clone(),
+            );
+            if o.iceberg {
+              order = order.iceberg_qty(Some(tr_amount));
+            } else {
+              order = order.quantity(Some(tr_amount));
+            }
+            if order_type == OrderType::Limit {
               order =
-                order.order_response_type(Some(OrderResponseType::RESULT));
-              return order;
-            })
-            .collect::<Vec<OrderRequest<i64>>>()
-        })
-        .unwrap_or_else(|| {
-          let mut order =
-            OrderRequest::<i64>::new(symbol, Side::Buy, order_type.clone())
-              .order_response_type(Some(OrderResponseType::RESULT));
-          if order_type == OrderType::Limit {
-            order = order.price(price);
-          }
-          return vec![order];
-        })
-        .into_iter()
-        .map(|order| {
-          let me = self.clone();
-          let cli = cli.clone();
-          let pos_gid = pos_gid.clone();
-          let key = key.clone();
-          async move {
-            let qs = to_qs(&order)?;
-            let signature = me.sign(qs.clone(), key.prv_key);
-            let qs = format!("{}&signature={}", qs, signature);
-            return retry_async(5, || async {
-              let resp = cli
-                .post(format!("{}/api/v3/order?{}", REST_ENDPOINT, qs))
-                .send()
-                .await;
-              let resp: ThreadSafeResult<()> = match resp {
-                Ok(resp) => {
-                  let payload: OrderResponse<String, i64> = resp.json().await?;
-                  let mut payload =
-                    OrderResponse::<f64, DateTime>::try_from(payload)?;
-                  payload.position_group_id = Some(pos_gid.clone());
-                  let _ = me
-                    .positions
-                    .update_one(
-                      doc! {"orderId": payload.order_id},
-                      UpdateModifications::Document(to_document(&payload)?),
-                      UpdateOptions::builder().upsert(true).build(),
-                    )
-                    .await;
-                  Ok(())
-                }
-                Err(e) => Err(Box::new(e)),
-              };
-              return resp;
-            })
-            .await;
-          }
-          .boxed()
-        })
-        .collect();
+                order.price(Some(o.calc_order_price(price.unwrap(), index)));
+            }
+            order = order.order_response_type(Some(OrderResponseType::RESULT));
+            return order;
+          })
+          .collect::<Vec<OrderRequest<i64>>>()
+      })
+      .unwrap_or_else(|| {
+        let mut order =
+          OrderRequest::<i64>::new(symbol, Side::Buy, order_type.clone())
+            .order_response_type(Some(OrderResponseType::RESULT));
+        if order_type == OrderType::Limit {
+          order = order.price(price);
+        }
+        return vec![order];
+      })
+      .into_iter()
+      .map(|order| {
+        let me = self.clone();
+        let cli = cli.clone();
+        let pos_gid = pos_gid.clone();
+        let key = key.clone();
+        async move {
+          let qs = to_qs(&order)?;
+          let signature = me.sign(qs.clone(), key.prv_key);
+          let qs = format!("{}&signature={}", qs, signature);
+          return retry_async(5, || async {
+            let resp = cli
+              .post(format!("{}/api/v3/order?{}", REST_ENDPOINT, qs))
+              .send()
+              .await;
+            let resp: ExecutionResult<()> = match resp {
+              Ok(resp) => {
+                let payload: OrderResponse<String, i64> = resp.json().await?;
+                let mut payload =
+                  OrderResponse::<f64, DateTime>::try_from(payload)?;
+                payload.position_group_id = Some(pos_gid.clone());
+                let _ = me
+                  .positions
+                  .update_one(
+                    doc! {"orderId": payload.order_id},
+                    UpdateModifications::Document(to_document(&payload)?),
+                    UpdateOptions::builder().upsert(true).build(),
+                  )
+                  .await;
+                Ok(())
+              }
+              Err(e) => Err(e.into()),
+            };
+            return resp;
+          })
+          .await;
+        }
+        .boxed()
+      })
+      .collect();
     let res_err = join_all(req_lst)
       .await
       .into_iter()

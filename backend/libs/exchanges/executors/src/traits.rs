@@ -100,7 +100,7 @@ pub trait TestExecutor {
   ) -> ExecutionResult<ObjectId> {
     let cur_trade = self.get_current_trade();
     if cur_trade.is_none() {
-      return Err(Box::new(ExecutionFailed::new("Trade Stream is closed.")));
+      return Err(ExecutionFailed::new("Trade Stream is closed.").into());
     }
     let id = ObjectId::new();
     let price = price.unwrap_or(cur_trade.as_ref().unwrap().ask_price);
@@ -130,10 +130,13 @@ pub trait TestExecutor {
     return Ok(id);
   }
 
-  fn remove_order(&mut self, id: ObjectId) -> GenericResult<ExecutionSummary> {
+  fn remove_order(
+    &mut self,
+    id: ObjectId,
+  ) -> ExecutionResult<ExecutionSummary> {
     let trade = self.get_current_trade();
     if trade.is_none() {
-      return Err(Box::new(ExecutionFailed::new("Trade stream is closed.")));
+      return Err(ExecutionFailed::new("Trade stream is closed.").into());
     }
     let cur_trade = trade.unwrap();
     let price = cur_trade.bid_price;

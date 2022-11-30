@@ -1,9 +1,11 @@
 use ::err_derive::Error;
+use ::mongodb::bson::ser::Error as BSONEncodeErr;
 use ::mongodb::error::Error as DBErr;
 use ::reqwest::header::InvalidHeaderValue;
 use ::reqwest::Error as ReqwestErr;
 use ::serde_qs::Error as QueryError;
 use ::std::convert::From;
+use ::std::io::Error as IOError;
 
 use ::errors::{
   ExecutionFailed, HTTPErrors, ObjectNotFound, ParseError, StatusFailure,
@@ -13,6 +15,8 @@ use ::errors::{
 pub enum ExecutionErrors {
   #[error(display = "Database Error: {}", _0)]
   EDBErr(#[source] DBErr),
+  #[error(display = "BSON Serialization Error: {}", _0)]
+  BSONEncodeErr(#[source] BSONEncodeErr),
   #[error(display = "HTTP Error: {}", _0)]
   HTTPError(#[source] HTTPErrors),
   #[error(display = "Query Encode Error: {}", _0)]
@@ -23,6 +27,8 @@ pub enum ExecutionErrors {
   ObjectNotFound(#[source] ObjectNotFound),
   #[error(display = "Cast Error: {}", _0)]
   ParseError(#[source] ParseError),
+  #[error(display = "I/O Error: {}", _0)]
+  IOError(#[source] IOError),
 }
 
 pub type ExecutionResult<T> = Result<T, ExecutionErrors>;
