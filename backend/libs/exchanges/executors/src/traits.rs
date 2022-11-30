@@ -8,7 +8,6 @@ use ::entities::{
   BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
 };
 use ::errors::ExecutionFailed;
-use ::types::{GenericResult, ThreadSafeResult};
 
 use crate::errors::ExecutionResult;
 
@@ -16,7 +15,8 @@ use crate::errors::ExecutionResult;
 pub trait Executor {
   async fn open(
     &mut self,
-  ) -> ThreadSafeResult<BoxStream<ThreadSafeResult<BookTicker>>>;
+  ) -> ExecutionResult<BoxStream<ExecutionResult<BookTicker>>>;
+
   async fn create_order(
     &mut self,
     api_key_id: ObjectId,
@@ -24,7 +24,7 @@ pub trait Executor {
     price: Option<f64>,
     budget: f64,
     order_option: Option<OrderOption>,
-  ) -> ThreadSafeResult<ObjectId>;
+  ) -> ExecutionResult<ObjectId>;
 
   async fn remove_order(
     &mut self,
@@ -97,7 +97,7 @@ pub trait TestExecutor {
     price: Option<f64>,
     budget: f64,
     order_option: Option<OrderOption>,
-  ) -> GenericResult<ObjectId> {
+  ) -> ExecutionResult<ObjectId> {
     let cur_trade = self.get_current_trade();
     if cur_trade.is_none() {
       return Err(Box::new(ExecutionFailed::new("Trade Stream is closed.")));
