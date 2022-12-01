@@ -46,7 +46,7 @@
                 "output": "assets/monaco-editor/min/vs"
               },
               {
-                "glob": "editor/editor.main.?(css|js|nls.js)",
+                "glob": "editor/editor.main.?(js|nls.js)",
                 "input": "node_modules/monaco-editor/min/vs",
                 "output": "assets/monaco-editor/min/vs"
               },
@@ -64,7 +64,16 @@
             "styles": [
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [
+              {
+                "bundleName": "monaco-editor",
+                "input": "node_modules/monaco-editor/esm/vs/editor/editor.worker.js"
+              },
+              {
+                "bundleName": "monaco-editor",
+                "input": "node_modules/monaco-editor/esm/vs/language/ts.worker.js"
+              }
+            ]
           },
           "configurations": {
             "production": {

@@ -1,7 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -31,8 +30,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatMenuModule } from '@angular/material/menu';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-
-import { MonacoEditorModule } from 'ngx-monaco-editor'
 
 import { BotPanelComponent } from './bot-panel/bot-panel.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -74,10 +71,7 @@ import { ProgressBarComponent } from './progress-bar/progress-bar.component';
     HttpClientXsrfModule,
     HttpClientModule,
 
-    MonacoEditorModule.forRoot(),
-
     ReactiveFormsModule,
-    FlexLayoutModule,
     MatCardModule,
     MatCheckboxModule,
     MatDialogModule,

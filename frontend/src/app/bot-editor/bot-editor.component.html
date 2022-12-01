@@ -10,10 +10,7 @@
     <div class="amounts">
       <mat-form-field fxFlex>
         <mat-label i18n>Exchange</mat-label>
-        <mat-select
-          (selectionChange)="exchangeChanged()"
-          formControlName="exchange"
-          required>
+        <mat-select (selectionChange)="exchangeChanged()" formControlName="exchange" required>
           <mat-option *ngFor="let exchange of exchanges" [value]="exchange">
             {{ exchange | exchangePipe | titlecase }}
           </mat-option>
@@ -21,12 +18,8 @@
       </mat-form-field>
       <mat-form-field fxFlex>
         <mat-label i18n>Base Currency</mat-label>
-        <mat-select
-          formControlName="baseCurrency"
-          required>
-          <mat-option
-            *ngFor="let currency of baseCurrencies.currencies"
-            [value]="currency">
+        <mat-select formControlName="baseCurrency" required>
+          <mat-option *ngFor="let currency of baseCurrencies.currencies" [value]="currency">
             {{ currency }}
           </mat-option>
         </mat-select>
@@ -41,12 +34,7 @@
       <mat-tab label="Trading Condition">
         <ng-template matTabContent>
           <div class="editor-container" fxLayout="row" fxLayoutAlign="center none">
-            <ngx-monaco-editor
-              [options]="editorOption"
-              formControlName="condition"
-              (onInit)="monacoLoaded()"
-              class="editor">
-            </ngx-monaco-editor>
+
           </div>
         </ng-template>
       </mat-tab>
