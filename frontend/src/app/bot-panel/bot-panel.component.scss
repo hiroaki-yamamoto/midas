@@ -2,3 +2,12 @@ div.graph {
   width: 100%;
   height: 25rem;
 }
+
+div.positions {
+  display: flex;
+  flex-direction: row;
+}
+
+table.position-table {
+  flex: content;
+}

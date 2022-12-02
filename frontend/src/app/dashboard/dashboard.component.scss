@@ -1,3 +1,15 @@
-section.dashboard > header {
+section.dashboard>header {
   margin: 1rem 0;
+}
+
+#bot-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  h1 {
+    margin: 0;
+  }
 }

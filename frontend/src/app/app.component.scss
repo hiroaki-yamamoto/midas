@@ -4,14 +4,25 @@ mat-toolbar {
     0px 6px 10px 0px rgba(0, 0, 0, 0.14),
     0px 1px 18px 0px rgba(0, 0, 0, 0.12)
 }
+
 mat-toolbar ul li {
   float: left;
   list-style-type: none;
+
   margin: {
     left: 0.25rem;
     right: 0.25rem;
-  };
+  }
+
 }
+
 div.router-body {
   margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+div.router-container {
+  min-width: 90vw;
+  max-width: 90vw;
 }

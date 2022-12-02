@@ -1,4 +1,13 @@
 .description-no-keys {
   height: 50vh;
   color: #7f8c8d;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.tool-buttons-container {
+  display: flex;
+  justify-content: right;
 }

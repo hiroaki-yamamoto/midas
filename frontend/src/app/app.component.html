@@ -5,21 +5,16 @@
     <li>
       <button mat-button i18n [matMenuTriggerFor]="syncMenu">Sync</button>
       <mat-menu #syncMenu>
-        <a mat-menu-item
-          mat-button
-          i18n
-          *ngFor="let exchange of exchanges"
-          routerLink="/sync/{{ exchange }}">{{ exchange | exchangePipe | titlecase }}</a>
+        <a mat-menu-item mat-button i18n *ngFor="let exchange of exchanges" routerLink="/sync/{{ exchange }}">{{
+          exchange | exchangePipe | titlecase }}</a>
       </mat-menu>
     </li>
     <li><a mat-button i18n routerLink="/info">Info</a></li>
     <li><a mat-button i18n routerLink="/api">API</a></li>
   </ul>
 </mat-toolbar>
-<div fxLayout="row" class="router-body">
-  <div fxFlex="5vw"></div>
-  <div fxFlex>
+<div class="router-body">
+  <div class="router-container">
     <router-outlet (activate)="preventCSRF()"></router-outlet>
   </div>
-  <div fxFlex="5vw"></div>
 </div>

@@ -33,7 +33,6 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { BotPanelComponent } from './bot-panel/bot-panel.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { IconSnackBarComponent } from './icon-snackbar/icon-snackbar.component';
 import { InfoComponent } from './info/info.component';
 import { TradeObserverService } from './resources/trade-observer.service';
 import { KeychainService } from './resources/keychain.service';
@@ -50,7 +49,6 @@ import { ProgressBarComponent } from './progress-bar/progress-bar.component';
 @NgModule({
   declarations: [
     AppComponent,
-    IconSnackBarComponent,
     InfoComponent,
     BookTickerComponent,
     KeychainComponent,

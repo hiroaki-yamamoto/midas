@@ -3,12 +3,12 @@
     <h1 mat-dialog-content *ngIf="isNew">Add New API Key</h1>
     <h1 mat-dialog-content *ngIf="!isNew">Edit API Key</h1>
   </header>
-  <form novalidate [formGroup]="form" fxLayout="column">
+  <form novalidate [formGroup]="form" id="add-api-form">
     <mat-form-field>
       <mat-label i18n>Exchange</mat-label>
       <mat-select formControlName="exchange" [required]="isNew">
         <mat-option *ngFor="let exc of exchanges | keyvalue" [value]="exc.value">
-          {{exc.key |  titlecase}}
+          {{exc.key | titlecase}}
         </mat-option>
       </mat-select>
       <mat-error *ngIf="form.get('exchange').hasError('required')" i18n>
@@ -36,19 +36,13 @@
         This field is required.
       </mat-error>
     </mat-form-field>
-    <mat-dialog-actions fxLayout="row">
-      <button mat-raised-button type="button"
-        color="accent"
-        (click)="close(RespType.DELETE)"
-        [disabled]="isNew">
+    <mat-dialog-actions>
+      <button mat-raised-button type="button" color="accent" (click)="close(RespType.DELETE)" [disabled]="isNew">
         <fa-icon [icon]="trash"></fa-icon>
         Delete
       </button>
-      <div fxFlex></div>
-      <button type="submit" autofocus
-        mat-button
-        [mat-dialog-close]="form" i18n
-        (click)="close(RespType.POST)"
+      <div class="seperator"></div>
+      <button type="submit" autofocus mat-button [mat-dialog-close]="form" i18n (click)="close(RespType.POST)"
         [disabled]="!(form.valid &amp;&amp; form.dirty)">
         <mat-icon>done</mat-icon>
         Save

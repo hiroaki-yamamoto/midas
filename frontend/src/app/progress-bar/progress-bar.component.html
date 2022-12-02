@@ -1,5 +1,5 @@
 <mat-progress-bar [mode]="mode" [value]="getPercentage() * 100">
 </mat-progress-bar>
-<div fxLayout="row" fxLayoutAlign="end none" *ngIf="!!progress">
+<div id="progress-detail" *ngIf="!!progress">
   In progress: {{ progress.cur }} / {{ progress.size }}
 </div>

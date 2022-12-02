@@ -2,7 +2,7 @@
   <header>
     <h1 i18n>API Keys Setting</h1>
   </header>
-  <div fxLayout="row" fxLayoutAlign="end center">
+  <div class="tool-buttons-container">
     <button mat-fab color="primary" (click)="openEditDialog()" matTooltip="Add an API key">
       <mat-icon>add</mat-icon>
     </button>
@@ -19,9 +19,7 @@
       </div>
     </mat-list-item>
   </mat-nav-list>
-  <section class="description-no-keys"
-    fxLayout="column" fxLayoutAlign="center center"
-    *ngIf="!keychain.keys || keychain.keys.length &lt;= 0">
+  <section class="description-no-keys" *ngIf="!keychain.keys || keychain.keys.length &lt;= 0">
     <header>
       <h1 i18n>There's no any api keys...</h1>
     </header>

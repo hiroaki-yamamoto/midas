@@ -15,9 +15,7 @@
       </p>
     </mat-card-content>
     <mat-card-actions>
-      <button i18n mat-raised-button color="primary"
-        [disabled]="!syncHandler.syncButtonEnabled"
-        (click)="syncSymbol()">
+      <button i18n mat-raised-button color="primary" [disabled]="!syncHandler.syncButtonEnabled" (click)="syncSymbol()">
         <fa-icon [icon]="rotateIcon"></fa-icon> Synchronize Symbol Information
       </button>
     </mat-card-actions>
@@ -26,10 +24,12 @@
     <header>
       <h2>Historical Data Update</h2>
     </header>
-    <div fxLayout="column">
+    <div id="historical-data-column">
       <mat-form-field>
         <mat-label>Find...</mat-label>
-        <span matPrefix><mat-icon>search</mat-icon> &nbsp;</span>
+        <span matPrefix>
+          <mat-icon>search</mat-icon> &nbsp;
+        </span>
         <input matInput (keyup)="find($event)" placeholder="Ex. BTC" #input>
       </mat-form-field>
       <mat-table matSort [dataSource]="syncHandler.symbols">
@@ -39,8 +39,7 @@
         </ng-container>
         <ng-container matColumnDef="syncBtns">
           <mat-header-cell *matHeaderCellDef mat-sort-header="sync">
-            <button i18n mat-raised-button color="accent"
-              [disabled]="isDisabledAll()" (click)="syncAll()">
+            <button i18n mat-raised-button color="accent" [disabled]="isDisabledAll()" (click)="syncAll()">
               Sync All Symbols
             </button>
           </mat-header-cell>>
@@ -50,9 +49,7 @@
                 Sync {{ symbol.symbol }}
               </button>
             </div>
-            <div id="syncProgressBar"
-              *ngIf="syncHandler.progSock.progress.has(symbol.symbol)"
-              fxLayout="column">
+            <div id="syncProgressBar" *ngIf="syncHandler.progSock.progress.has(symbol.symbol)">
               <app-progress-bar
                 [mode]="(syncHandler.progSock.progress.get(symbol.symbol) === null)?'indeterminate':'determinate'"
                 [progress]="syncHandler.progSock.progress.get(symbol.symbol)">
@@ -63,10 +60,8 @@
         <mat-header-row *matHeaderRowDef="dispCol"></mat-header-row>>
         <mat-row *matRowDef="let row; columns: dispCol;"></mat-row>>
       </mat-table>
-      <mat-paginator [pageSizeOptions]="[10, 25, 50, 100, 1000]"
-        showFirstLastButtons
-        aria-label="Select page of periodic elements"
-        #symbolPaginator>
+      <mat-paginator [pageSizeOptions]="[10, 25, 50, 100, 1000]" showFirstLastButtons
+        aria-label="Select page of periodic elements" #symbolPaginator>
       </mat-paginator>
     </div>
   </section>
