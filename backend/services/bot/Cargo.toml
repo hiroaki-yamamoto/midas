@@ -21,4 +21,4 @@ tokio = { version = "1.22.0", features = ["macros", "rt", "rt-multi-thread", "si
 futures = "0.3.25"
 log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
 clap = { version = "4.0.29", features = ["derive"] }
-libc = "0.2.137"
+libc = "0.2.138"
