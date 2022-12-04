@@ -10,8 +10,8 @@ tokio = { version = "1.22.0", features = ["macros", "rt", "rt-multi-thread", "si
 
 [[bin]]
 name = "bot_manager_worker"
-path = "./src/bin/bot_manager_worker.rs"
+path = "./src/bot_manager_worker.rs"
 
 [[bin]]
 name = "bot_worker"
-path = "./src/bin/bot_worker.rs"
+path = "./src/bot_worker.rs"
