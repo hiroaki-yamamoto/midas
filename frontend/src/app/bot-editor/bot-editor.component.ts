@@ -4,10 +4,12 @@ import {
 import { HttpClient } from '@angular/common/http';
 import { FormGroup, FormControl } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import * as monaco from 'monaco-editor';
 
 import { SymbolService, IBaseCurrencies } from '../resources/symbol.service';
 import { Exchanges } from '../rpc/entities_pb';
 import { Bot } from '../rpc/bot_pb';
+import { require } from '../js-declare';
 
 import { faSave } from '@fortawesome/free-solid-svg-icons'
 
@@ -100,7 +102,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     model.setTradingAmount(this.form.get('tradingAmount').value);
     model.setCondition(this.form.get('condition').value);
     this.http.post('/bot/', model.toObject()).subscribe(() => {
-      this.snackbar.open('Bot Saved', 'Dismiss', {duration: 3000});
+      this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });
     });
   }
 
