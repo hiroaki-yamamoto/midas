@@ -48,7 +48,7 @@
                 "output": "assets/monaco-editor/min/vs"
               },
               {
-                "glob": "editor/editor.main.?(js|nls.js)",
+                "glob": "editor/editor.main.?(js|nls.js|css)",
                 "input": "node_modules/monaco-editor/min/vs",
                 "output": "assets/monaco-editor/min/vs"
               },

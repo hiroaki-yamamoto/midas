@@ -1,15 +1,15 @@
 import {
-  Component, OnInit, OnDestroy
+  Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef,
+  NgZone,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormGroup, FormControl } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import * as monaco from 'monaco-editor';
+// import monaco from 'monaco-editor/monaco';
 
 import { SymbolService, IBaseCurrencies } from '../resources/symbol.service';
 import { Exchanges } from '../rpc/entities_pb';
 import { Bot } from '../rpc/bot_pb';
-import { require } from '../js-declare';
 
 import { faSave } from '@fortawesome/free-solid-svg-icons'
 
@@ -18,7 +18,7 @@ import { faSave } from '@fortawesome/free-solid-svg-icons'
   templateUrl: './bot-editor.component.html',
   styleUrls: ['./bot-editor.component.scss']
 })
-export class BotEditorComponent implements OnInit, OnDestroy {
+export class BotEditorComponent implements OnInit, OnDestroy, AfterViewInit {
 
   public form: FormGroup;
   public editorOption: monaco.editor.IStandaloneEditorConstructionOptions = {
@@ -33,11 +33,13 @@ export class BotEditorComponent implements OnInit, OnDestroy {
 
   private extraLib: monaco.IDisposable;
   private langModel: monaco.IDisposable
+  @ViewChild('botEditor') private botEditor: ElementRef;
 
   constructor(
     private http: HttpClient,
     private symbol: SymbolService,
-    private snackbar: MatSnackBar
+    private snackbar: MatSnackBar,
+    private zone: NgZone,
   ) {
   }
 
@@ -77,6 +79,16 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       .subscribe((code: string) => {
         condition.setValue(code);
       });
+  }
+
+  ngAfterViewInit(): void {
+    this.zone.runOutsideAngular(() => {
+      console.log(this.botEditor.nativeElement, window.require);
+
+      window.require(['vs/editor/editor.main'], () => {
+        monaco.editor.create(this.botEditor.nativeElement);
+      });
+    });
   }
 
   ngOnDestroy(): void {
