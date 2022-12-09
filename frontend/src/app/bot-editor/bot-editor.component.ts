@@ -5,13 +5,13 @@ import {
 import { HttpClient } from '@angular/common/http';
 import { FormGroup, FormControl } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
-// import monaco from 'monaco-editor/monaco';
 
 import { SymbolService, IBaseCurrencies } from '../resources/symbol.service';
 import { Exchanges } from '../rpc/entities_pb';
 import { Bot } from '../rpc/bot_pb';
 
-import { faSave } from '@fortawesome/free-solid-svg-icons'
+import { faSave } from '@fortawesome/free-solid-svg-icons';
+
 
 @Component({
   selector: 'app-bot-editor',
@@ -32,7 +32,7 @@ export class BotEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   public saveIcon = faSave;
 
   private extraLib: monaco.IDisposable;
-  private langModel: monaco.IDisposable
+  private langModel: monaco.IDisposable;
   @ViewChild('botEditor') private botEditor: ElementRef;
 
   constructor(
@@ -83,10 +83,11 @@ export class BotEditorComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.zone.runOutsideAngular(() => {
-      console.log(this.botEditor.nativeElement, window.require);
-
       window.require(['vs/editor/editor.main'], () => {
-        monaco.editor.create(this.botEditor.nativeElement);
+        monaco.editor.create(
+          this.botEditor.nativeElement,
+          { theme: 'vs-dark' }
+        );
       });
     });
   }
