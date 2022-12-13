@@ -2,6 +2,9 @@ import {
   Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef,
   NgZone,
 } from '@angular/core';
+import {
+  Observable,
+} from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { FormGroup, FormControl } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -43,7 +46,11 @@ export class BotEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   ) {
   }
 
-  monacoLoaded(): void {
+  getDefCode(): Observable<string> {
+    return this.http.get('/assets/bot-condition.d.ts', { responseType: 'text' });
+  }
+
+  createMonacoModel(code: string): monaco.editor.ITextModel {
     const ts = monaco.languages.typescript;
     // validation settings
     ts.javascriptDefaults.setDiagnosticsOptions({
@@ -56,14 +63,11 @@ export class BotEditorComponent implements OnInit, OnDestroy, AfterViewInit {
       target: ts.ScriptTarget.ES2015,
       allowNonTsExtensions: true
     });
-    this.http.get('/assets/bot-condition.d.ts', { responseType: 'text' })
-      .subscribe((code: string) => {
-        const uri = 'ts:bot-condition.d.ts';
-        this.extraLib = ts.javascriptDefaults.addExtraLib(code, uri);
-        this.langModel = monaco.editor.createModel(
-          code, 'typescript', monaco.Uri.parse(uri),
-        );
-      });
+    const uri = 'ts:bot-condition.d.ts';
+    this.extraLib = ts.javascriptDefaults.addExtraLib(code, uri);
+    return monaco.editor.createModel(
+      code, 'typescript', monaco.Uri.parse(uri),
+    );
   }
 
   ngOnInit(): void {
@@ -82,14 +86,21 @@ export class BotEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.zone.runOutsideAngular(() => {
-      window.require(['vs/editor/editor.main'], () => {
-        monaco.editor.create(
-          this.botEditor.nativeElement,
-          { theme: 'vs-dark' }
-        );
+    this.getDefCode().subscribe((code: string) => {
+      this.zone.runOutsideAngular(() => {
+        window.require(['vs/editor/editor.main'], () => {
+          this.createMonacoModel(code);
+          const editor = monaco.editor.create(
+            this.botEditor.nativeElement,
+            {
+              theme: 'vs-dark',
+              language: 'typescript',
+              value: this.form.get('condition').value
+            }
+          );
+        });
       });
-    });
+    })
   }
 
   ngOnDestroy(): void {

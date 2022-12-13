@@ -16,8 +16,8 @@
       "dom"
     ],
     "types": [
-      "@angular/localize"
-    ],
+      "@angular/localize",
+    ]
   },
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,
