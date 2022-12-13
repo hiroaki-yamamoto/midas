@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef,
+  Component, OnInit, OnDestroy, ViewChild, ElementRef,
   NgZone,
 } from '@angular/core';
 import {
@@ -21,7 +21,7 @@ import { faSave } from '@fortawesome/free-solid-svg-icons';
   templateUrl: './bot-editor.component.html',
   styleUrls: ['./bot-editor.component.scss']
 })
-export class BotEditorComponent implements OnInit, OnDestroy, AfterViewInit {
+export class BotEditorComponent implements OnInit, OnDestroy {
 
   public form: FormGroup;
   public editorOption: monaco.editor.IStandaloneEditorConstructionOptions = {
@@ -36,6 +36,7 @@ export class BotEditorComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private extraLib: monaco.IDisposable;
   private langModel: monaco.IDisposable;
+  private editor: any;
   @ViewChild('botEditor') private botEditor: ElementRef;
 
   constructor(
@@ -79,28 +80,39 @@ export class BotEditorComponent implements OnInit, OnDestroy, AfterViewInit {
       tradingAmount: new FormControl(),
       condition,
     });
+    this.getDefCode().subscribe((code) => {
+      this.zone.runOutsideAngular(() => {
+        window.require(['vs/editor/editor.main'], () => {
+          this.createMonacoModel(code);
+        });
+      });
+    });
     this.http.get('/assets/bot-condition.ts', { responseType: 'text' })
       .subscribe((code: string) => {
         condition.setValue(code);
       });
   }
 
-  ngAfterViewInit(): void {
-    this.getDefCode().subscribe((code: string) => {
-      this.zone.runOutsideAngular(() => {
-        window.require(['vs/editor/editor.main'], () => {
-          this.createMonacoModel(code);
-          const editor = monaco.editor.create(
-            this.botEditor.nativeElement,
-            {
-              theme: 'vs-dark',
-              language: 'typescript',
-              value: this.form.get('condition').value
-            }
-          );
-        });
+  restoreIDE(): void {
+    if (!this.botEditor) {
+      this.editor.dispose();
+      return;
+    }
+    if (this.editor) {
+      this.form.get('condition').setValue(this.editor.getValue());
+    }
+    this.zone.runOutsideAngular(() => {
+      window.require(['vs/editor/editor.main'], () => {
+        this.editor = monaco.editor.create(
+          this.botEditor.nativeElement,
+          {
+            theme: 'vs-dark',
+            language: 'typescript',
+            value: this.form.get('condition').value
+          }
+        );
       });
-    })
+    });
   }
 
   ngOnDestroy(): void {
