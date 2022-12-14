@@ -30,11 +30,11 @@
       </mat-form-field>
       <div fxFlex></div>
     </div>
-    <mat-tab-group dynamicHeight (animationDone)="restoreIDE()">
+    <mat-tab-group dynamicHeight>
       <mat-tab label="Trading Condition">
         <ng-template matTabContent>
           <div class="editor-container" fxLayout="row" fxLayoutAlign="center none">
-            <div class="editor" #botEditor></div>
+            <app-monaco-editor></app-monaco-editor>
           </div>
         </ng-template>
       </mat-tab>

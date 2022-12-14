@@ -45,6 +45,7 @@ import { BotEditorComponent } from './bot-editor/bot-editor.component';
 import { DateGraphComponent } from './date-graph/date-graph.component';
 import { SyncComponent } from './sync/sync.component';
 import { ProgressBarComponent } from './progress-bar/progress-bar.component';
+import { MonacoEditorComponent } from './monaco-editor/monaco-editor.component';
 
 @NgModule({
   declarations: [
@@ -61,6 +62,7 @@ import { ProgressBarComponent } from './progress-bar/progress-bar.component';
     DateGraphComponent,
     SyncComponent,
     ProgressBarComponent,
+    MonacoEditorComponent,
   ],
   imports: [
     BrowserModule,

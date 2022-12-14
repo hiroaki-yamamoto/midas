@@ -1,6 +1,5 @@
 import {
-  Component, OnInit, OnDestroy, ViewChild, ElementRef,
-  NgZone,
+  Component, OnInit, OnDestroy, NgZone,
 } from '@angular/core';
 import {
   Observable,
@@ -37,7 +36,6 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   private extraLib: monaco.IDisposable;
   private langModel: monaco.IDisposable;
   private editor: any;
-  @ViewChild('botEditor') private botEditor: ElementRef;
 
   constructor(
     private http: HttpClient,
@@ -91,28 +89,6 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       .subscribe((code: string) => {
         condition.setValue(code);
       });
-  }
-
-  restoreIDE(): void {
-    if (!this.botEditor) {
-      this.editor.dispose();
-      return;
-    }
-    if (this.editor) {
-      this.form.get('condition').setValue(this.editor.getValue());
-    }
-    this.zone.runOutsideAngular(() => {
-      window.require(['vs/editor/editor.main'], () => {
-        this.editor = monaco.editor.create(
-          this.botEditor.nativeElement,
-          {
-            theme: 'vs-dark',
-            language: 'typescript',
-            value: this.form.get('condition').value
-          }
-        );
-      });
-    });
   }
 
   ngOnDestroy(): void {
