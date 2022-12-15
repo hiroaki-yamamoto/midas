@@ -35,7 +35,6 @@ export class BotEditorComponent implements OnInit, OnDestroy {
 
   private extraLib: monaco.IDisposable;
   private langModel: monaco.IDisposable;
-  private editor: any;
 
   constructor(
     private http: HttpClient,
