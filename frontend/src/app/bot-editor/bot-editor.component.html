@@ -1,14 +1,14 @@
-<section>
+<section id="page-root">
   <header>
     <h1 i18n>Add/Edit Bot</h1>
   </header>
-  <form [formGroup]="form" fxLayout="column">
+  <form [formGroup]="form" id="bot-edit-form">
     <mat-form-field>
       <mat-label i18n>Bot Name</mat-label>
       <input matInput formControlName="name" required>
     </mat-form-field>
     <div class="amounts">
-      <mat-form-field fxFlex>
+      <mat-form-field>
         <mat-label i18n>Exchange</mat-label>
         <mat-select (selectionChange)="exchangeChanged()" formControlName="exchange" required>
           <mat-option *ngFor="let exchange of exchanges" [value]="exchange">
@@ -16,7 +16,7 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
-      <mat-form-field fxFlex>
+      <mat-form-field>
         <mat-label i18n>Base Currency</mat-label>
         <mat-select formControlName="baseCurrency" required>
           <mat-option *ngFor="let currency of baseCurrencies.currencies" [value]="currency">
@@ -24,29 +24,20 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
-      <mat-form-field fxFlex>
+      <mat-form-field>
         <mat-label i18n>Trading Amount</mat-label>
         <input matInput type="number" formControlName="tradingAmount" required>
       </mat-form-field>
-      <div fxFlex></div>
     </div>
     <mat-tab-group dynamicHeight>
       <mat-tab label="Trading Condition">
         <ng-template matTabContent>
-          <div class="editor-container" fxLayout="row" fxLayoutAlign="center none">
+          <div class="editor-container">
             <app-monaco-editor language="typescript" formControlName="condition"></app-monaco-editor>
           </div>
         </ng-template>
       </mat-tab>
       <mat-tab label="Back Test"></mat-tab>
     </mat-tab-group>
-    <div fxLayout="row" fxLayoutAlign="center center">
-      <button mat-raised-button color="primary" type="submit" (click)="submit()">
-        <div fxLayout="column" fxLayoutAlign="center center" class="button-container">
-          <fa-icon [icon]="saveIcon" size="2x"></fa-icon>
-          Save
-        </div>
-      </button>
-    </div>
   </form>
 </section>

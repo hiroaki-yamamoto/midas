@@ -5,6 +5,13 @@
   height: 100%;
   width: 95%;
 }
+#bot-edit-form {
+  display: flex;
+  flex-direction: column;
+}
+#page-root {
+  margin-bottom: 2rem;
+}
 
 div.amounts > mat-form-field {
   margin: {
