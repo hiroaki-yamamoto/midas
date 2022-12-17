@@ -42,6 +42,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     private snackbar: MatSnackBar,
     private zone: NgZone,
   ) {
+    document.onkeydown = this.submit(this.form);
   }
 
   getDefCode(): Observable<string> {
@@ -93,6 +94,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.extraLib) { this.extraLib.dispose(); }
     if (this.langModel) { this.langModel.dispose(); }
+    if (document.onkeydown) { document.onkeydown = undefined; }
   }
 
   exchangeChanged(): void {
@@ -105,16 +107,23 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     this.baseCurrencyEnabled = true;
   }
 
-  submit(): void {
-    const model = new Bot();
-    model.setName(this.form.get('name').value);
-    model.setExchange(this.form.get('exchange').value);
-    model.setBaseCurrency(this.form.get('baseCurrency').value);
-    model.setTradingAmount(this.form.get('tradingAmount').value);
-    model.setCondition(this.form.get('condition').value);
-    this.http.post('/bot/', model.toObject()).subscribe(() => {
-      this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });
-    });
+  submit(form: FormGroup): (KeyboardEvent) => void {
+    return (e: KeyboardEvent) => {
+      if (!(e.ctrlKey && e.key.toLowerCase() === 's')) {
+        return;
+      }
+      e.preventDefault();
+      const model = new Bot();
+      model.setName(this.form.get('name').value);
+      model.setExchange(this.form.get('exchange').value);
+      model.setBaseCurrency(this.form.get('baseCurrency').value);
+      model.setTradingAmount(this.form.get('tradingAmount').value);
+      model.setCondition(this.form.get('condition').value);
+
+      this.http.post('/bot/', model.toObject()).subscribe(() => {
+        this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });
+      });
+    }
   }
 
 }
