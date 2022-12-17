@@ -28,7 +28,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     language: 'typescript',
     tabSize: 2,
   };
-  public baseCurrencies: IBaseCurrencies = { currencies: [] };
+  public baseCurrencies: IBaseCurrencies = { symbols: [] };
   public baseCurrencyEnabled = false;
   public exchanges = Object.values(Exchanges);
   public saveIcon = faSave;
@@ -42,7 +42,6 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     private snackbar: MatSnackBar,
     private zone: NgZone,
   ) {
-    document.onkeydown = this.submit(this.form);
   }
 
   getDefCode(): Observable<string> {
@@ -78,6 +77,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       tradingAmount: new FormControl(),
       condition,
     });
+    document.onkeydown = this.submit(this.form);
     this.getDefCode().subscribe((code) => {
       this.zone.runOutsideAngular(() => {
         window.require(['vs/editor/editor.main'], () => {
@@ -113,6 +113,9 @@ export class BotEditorComponent implements OnInit, OnDestroy {
         return;
       }
       e.preventDefault();
+      if (form.status === 'INVALID') {
+        return;
+      }
       const model = new Bot();
       model.setName(this.form.get('name').value);
       model.setExchange(this.form.get('exchange').value);
@@ -120,9 +123,11 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       model.setTradingAmount(this.form.get('tradingAmount').value);
       model.setCondition(this.form.get('condition').value);
 
-      this.http.post('/bot/', model.toObject()).subscribe(() => {
-        this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });
-      });
+      console.log(model.toObject());
+
+      // this.http.post('/bot/', model.toObject()).subscribe(() => {
+      //   this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });
+      // });
     }
   }
 

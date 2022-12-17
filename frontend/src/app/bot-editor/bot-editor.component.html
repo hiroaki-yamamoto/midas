@@ -18,8 +18,8 @@
       </mat-form-field>
       <mat-form-field>
         <mat-label i18n>Base Currency</mat-label>
-        <mat-select formControlName="baseCurrency" required>
-          <mat-option *ngFor="let currency of baseCurrencies.currencies" [value]="currency">
+        <mat-select formControlName="baseCurrency" [disabled]="!baseCurrencyEnabled" required>
+          <mat-option *ngFor="let currency of baseCurrencies.symbols" [value]="currency">
             {{ currency }}
           </mat-option>
         </mat-select>
