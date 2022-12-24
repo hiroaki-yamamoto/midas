@@ -16,7 +16,7 @@ specifiers:
   '@angular/compiler-cli': ~15.0.2
   '@angular/core': ~15.0.2
   '@angular/forms': ~15.0.2
-  '@angular/localize': 15.0.2
+  '@angular/localize': 15.0.4
   '@angular/material': 15.0.1
   '@angular/platform-browser': ~15.0.2
   '@angular/platform-browser-dynamic': ~15.0.2
@@ -79,7 +79,7 @@ dependencies:
   zone.js: 0.12.0
 
 devDependencies:
-  '@angular-devkit/build-angular': 15.0.2_agcpinm7ymckn34o3bhnnkklzq
+  '@angular-devkit/build-angular': 15.0.2_3zd3cbhw53yij4rf3ykba2s5hi
   '@angular-eslint/builder': 15.1.0_ypn2ylkkyfa5i233caldtndbqa
   '@angular-eslint/eslint-plugin': 15.1.0_ypn2ylkkyfa5i233caldtndbqa
   '@angular-eslint/eslint-plugin-template': 15.1.0_ypn2ylkkyfa5i233caldtndbqa
@@ -87,7 +87,7 @@ devDependencies:
   '@angular-eslint/template-parser': 15.1.0_ypn2ylkkyfa5i233caldtndbqa
   '@angular/cli': 15.0.2
   '@angular/compiler-cli': 15.0.2_nfmjq542a7cmaxn34ttkyemdb4
-  '@angular/localize': 15.0.2_mu4dirsoef4hytuf4zz2alzhtu
+  '@angular/localize': 15.0.4_mu4dirsoef4hytuf4zz2alzhtu
   '@cypress/schematic': 2.4.0_fr7qf7feongc423euuqxzwq6he
   '@types/google-protobuf': 3.15.6
   '@types/jasmine': 4.3.0
@@ -176,7 +176,7 @@ packages:
       - chokidar
     dev: true
 
-  /@angular-devkit/build-angular/15.0.2_agcpinm7ymckn34o3bhnnkklzq:
+  /@angular-devkit/build-angular/15.0.2_3zd3cbhw53yij4rf3ykba2s5hi:
     resolution: {integrity: sha512-jB3iU8qbQkqDGXr/DLPuU3jB7eAyiTDyk7f7c5hS+E9j2FSrWIZPOucTJXWfukA+yFs1nIBRVxSNYp3yqwAXiA==}
     engines: {node: ^14.20.0 || ^16.13.0 || >=18.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
     peerDependencies:
@@ -210,7 +210,7 @@ packages:
       '@angular-devkit/build-webpack': 0.1500.2_oc46zsvsns3nh7f43oasdmifbu
       '@angular-devkit/core': 15.0.2_chokidar@3.5.3
       '@angular/compiler-cli': 15.0.2_nfmjq542a7cmaxn34ttkyemdb4
-      '@angular/localize': 15.0.2_mu4dirsoef4hytuf4zz2alzhtu
+      '@angular/localize': 15.0.4_mu4dirsoef4hytuf4zz2alzhtu
       '@babel/core': 7.20.2
       '@babel/generator': 7.20.4
       '@babel/helper-annotate-as-pure': 7.18.6
@@ -593,13 +593,13 @@ packages:
       tslib: 2.4.1
     dev: false
 
-  /@angular/localize/15.0.2_mu4dirsoef4hytuf4zz2alzhtu:
-    resolution: {integrity: sha512-7qZcEl9ZscCwGzmCviUQvkeGyaH58xSrW7eZ2nQPVKCwU9DGLtSXd0xTqTe6nmjigO7BG0u4D2yt1c6/Q+X8yQ==}
+  /@angular/localize/15.0.4_mu4dirsoef4hytuf4zz2alzhtu:
+    resolution: {integrity: sha512-IuvsPT5fUyf5yn58yzXbD/Mxk3MAbVbI78CRKN2CWew6jTXuiVmaxu4cbL/a2PHhq1led318PAdCMk//Dz4Ddg==}
     engines: {node: ^14.20.0 || ^16.13.0 || >=18.10.0}
     hasBin: true
     peerDependencies:
-      '@angular/compiler': 15.0.2
-      '@angular/compiler-cli': 15.0.2
+      '@angular/compiler': 15.0.4
+      '@angular/compiler-cli': 15.0.4
     dependencies:
       '@angular/compiler': 15.0.2_@angular+core@15.0.2
       '@angular/compiler-cli': 15.0.2_nfmjq542a7cmaxn34ttkyemdb4
