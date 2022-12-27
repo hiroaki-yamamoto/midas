@@ -42,6 +42,8 @@ pub struct Config {
   pub db_url: String,
   #[serde(rename = "brokerURL")]
   pub broker_url: String,
+  #[serde(rename = "transpilerURL")]
+  pub transpiler_url: String,
   #[serde(rename = "redisURL", deserialize_with = "Config::redis_client")]
   pub redis: RedisClient,
   pub tls: TLS,

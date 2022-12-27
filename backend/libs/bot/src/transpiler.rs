@@ -10,12 +10,12 @@ use super::entities::Bot;
 
 pub struct Transpiler {
   cli: Client,
+  location: String,
 }
 
 impl Transpiler {
-  const LOCATION: &'static str = "https://transpiler_service:50000";
-  pub fn new(cli: Client) -> Self {
-    return Self { cli };
+  pub fn new(cli: Client, location: String) -> Self {
+    return Self { cli, location };
   }
 
   pub async fn transpile(&self, bot: &Bot) -> HTTPResult<Bot> {
@@ -26,7 +26,7 @@ impl Transpiler {
       .collect();
     let resp = self
       .cli
-      .post(Self::LOCATION)
+      .post(self.location.to_owned())
       .header("X-XSRF-TOKEN", &token)
       .header(header::COOKIE, &format!("XSRF-TOKEN={}", token))
       .body(bot.cond_ts.clone())

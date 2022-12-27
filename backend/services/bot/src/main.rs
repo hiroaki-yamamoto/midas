@@ -28,7 +28,7 @@ async fn main() {
   let http_cli = cfg.build_rest_client().unwrap();
   let host: SocketAddr = cfg.host.parse().unwrap();
   let csrf = CSRF::new(CSRFOption::builder());
-  let route = construct(&db, http_cli);
+  let route = construct(&db, http_cli, &cfg.transpiler_url);
   let route = csrf
     .protect()
     .and(route)
