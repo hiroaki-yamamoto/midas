@@ -1,5 +1,6 @@
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Progress {
     #[prost(enumeration = "super::entities::Exchanges", tag = "1")]
@@ -13,6 +14,7 @@ pub struct Progress {
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct HistoryFetchRequest {
     #[prost(enumeration = "super::entities::Exchanges", tag = "1")]
@@ -26,6 +28,7 @@ pub struct HistoryFetchRequest {
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct StatusCheckRequest {
     #[prost(enumeration = "super::entities::Exchanges", tag = "1")]

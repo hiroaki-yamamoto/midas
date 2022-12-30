@@ -11,6 +11,7 @@ use ::rpc::google::protobuf::Timestamp;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bot {
+  #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
   pub id: Option<bson::oid::ObjectId>,
   pub name: String,
   pub base_currency: String,

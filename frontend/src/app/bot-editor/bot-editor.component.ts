@@ -125,9 +125,9 @@ export class BotEditorComponent implements OnInit, OnDestroy {
 
       console.log(model.toObject());
 
-      // this.http.post('/bot/', model.toObject()).subscribe(() => {
-      //   this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });
-      // });
+      this.http.post('/bot/', model.toObject()).subscribe(() => {
+        this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });
+      });
     }
   }
 

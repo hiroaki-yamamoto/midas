@@ -7,5 +7,5 @@ BASEDIR=`dirname $0`
 WORKDIR=`realpath $BASEDIR`
 
 openssl() {
-  $WORKDIR/../../deps/openssl/bin/openssl $@
+  $WORKDIR/../../deps/openssl/bin/openssl "$@"
 }

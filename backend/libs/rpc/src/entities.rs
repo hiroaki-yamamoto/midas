@@ -1,5 +1,6 @@
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Status {
     #[prost(uint32, tag = "1")]
@@ -9,6 +10,7 @@ pub struct Status {
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct InsertOneResult {
     #[prost(string, tag = "1")]
@@ -32,6 +34,13 @@ impl Exchanges {
     pub fn as_str_name(&self) -> &'static str {
         match self {
             Exchanges::Binance => "Binance",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "Binance" => Some(Self::Binance),
+            _ => None,
         }
     }
 }
@@ -61,6 +70,18 @@ impl BackTestPriceBase {
             BackTestPriceBase::Low => "Low",
             BackTestPriceBase::OpenCloseMid => "OpenCloseMid",
             BackTestPriceBase::HighLowMid => "HighLowMid",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "Close" => Some(Self::Close),
+            "Open" => Some(Self::Open),
+            "High" => Some(Self::High),
+            "Low" => Some(Self::Low),
+            "OpenCloseMid" => Some(Self::OpenCloseMid),
+            "HighLowMid" => Some(Self::HighLowMid),
+            _ => None,
         }
     }
 }

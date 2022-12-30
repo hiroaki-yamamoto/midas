@@ -1,5 +1,6 @@
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SymbolInfo {
     #[prost(string, tag = "1")]
@@ -13,6 +14,7 @@ pub struct SymbolInfo {
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SymbolList {
     #[prost(message, repeated, tag = "1")]
@@ -20,6 +22,7 @@ pub struct SymbolList {
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct BaseSymbols {
     #[prost(string, repeated, tag = "1")]

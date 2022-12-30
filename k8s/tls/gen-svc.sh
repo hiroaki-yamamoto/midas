@@ -11,7 +11,7 @@ genSvcKeys() {
 
   openssl req \
     -new \
-    -nodes \
+    -noenc \
     -key $DEST/tls.key \
     -subj '/C=JP/ST=Tokyo/L=Tokyo/O=AAAA Midas Signning Service/OU=IT/CN=localhost' \
     -out $DEST/tls.csr

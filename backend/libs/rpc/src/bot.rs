@@ -1,5 +1,6 @@
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Bot {
     #[prost(string, tag = "1")]
@@ -19,6 +20,7 @@ pub struct Bot {
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Position {
     #[prost(string, tag = "1")]
@@ -51,6 +53,13 @@ impl TriggerType {
             TriggerType::Manual => "MANUAL",
         }
     }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "MANUAL" => Some(Self::Manual),
+            _ => None,
+        }
+    }
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -69,6 +78,14 @@ impl PositionStatus {
         match self {
             PositionStatus::Closed => "closed",
             PositionStatus::Opened => "opened",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "closed" => Some(Self::Closed),
+            "opened" => Some(Self::Opened),
+            _ => None,
         }
     }
 }

@@ -1,7 +1,7 @@
 dbURL: mongodb://midas:midas@mongodb/midas?authMechanism=SCRAM-SHA-256
 brokerURL: nats://broker.midas.svc.cluster.local:4222
 redisURL: redis://kvs.midas.svc.cluster.local:6379/
-transpilerURL: https://transpiler:50000/
+transpilerURL: https://transpiler.midas-svcs.svc.cluster.local:50000/
 host: "[::]:50000"
 debug: true
 tls:
