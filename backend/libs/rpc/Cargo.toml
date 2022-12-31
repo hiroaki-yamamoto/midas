@@ -11,7 +11,7 @@ errors = {path = "../errors"}
 csrf = {path = "../csrf"}
 
 prost = "0.11.5"
-serde = { version = "1.0.151", features=["derive"] }
+serde = { version = "1.0.152", features=["derive"] }
 num-traits = "0.2.15"
 num-derive = "0.3.3"
 clap = { version = "4.0.32", features = ["derive"] }

@@ -19,7 +19,7 @@ probe = { path = "../../libs/probe" }
 history = { path = "../../libs/exchanges/history" }
 entities = { path = "../../libs/entities" }
 
-serde = { version = "1.0.151", features = ["derive"] }
+serde = { version = "1.0.152", features = ["derive"] }
 rmp-serde = "1.1.1"
 nats = "0.23.1"
 mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }
