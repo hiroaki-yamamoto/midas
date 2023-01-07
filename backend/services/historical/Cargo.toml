@@ -25,7 +25,7 @@ nats = "0.23.1"
 mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }
 clap = { version = "4.0.32", features = ["derive"] }
 serde_yaml = "0.9.16"
-tokio = { version = "1.23.0", features = ["macros", "rt", "rt-multi-thread", "signal", "sync"] }
+tokio = { version = "1.23.1", features = ["macros", "rt", "rt-multi-thread", "signal", "sync"] }
 log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
 futures = "0.3.25"
 num-traits = "0.2.15"
