@@ -7,5 +7,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-trait = "0.1.60"
+async-trait = "0.1.61"
 mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }
