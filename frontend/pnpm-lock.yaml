@@ -17,7 +17,7 @@ specifiers:
   '@angular/core': ~15.0.2
   '@angular/forms': ~15.0.2
   '@angular/localize': 15.0.4
-  '@angular/material': 15.0.3
+  '@angular/material': 15.0.4
   '@angular/platform-browser': ~15.0.2
   '@angular/platform-browser-dynamic': ~15.0.2
   '@angular/router': ~15.0.2
@@ -62,7 +62,7 @@ dependencies:
   '@angular/compiler': 15.0.4_@angular+core@15.0.4
   '@angular/core': 15.0.4_rxjs@7.8.0+zone.js@0.12.0
   '@angular/forms': 15.0.4_xkplghntscucsztvq3p7ejhl3e
-  '@angular/material': 15.0.3_ganrzarlsrocqqyksgil7wut3u
+  '@angular/material': 15.0.4_ganrzarlsrocqqyksgil7wut3u
   '@angular/platform-browser': 15.0.4_bwwplqn6fknm3semymfqlvw5bm
   '@angular/platform-browser-dynamic': 15.0.4_hnn6v3m7xpfwy5wugozvutqsyi
   '@angular/router': 15.0.4_xkplghntscucsztvq3p7ejhl3e
@@ -95,7 +95,7 @@ devDependencies:
   '@types/node': 18.11.18
   '@typescript-eslint/eslint-plugin': 5.47.1_axni7f4fgvh6tlufnh6hwgsifq
   '@typescript-eslint/parser': 5.47.1_iukboom6ndih5an6iafl45j2fe
-  cypress: 12.2.0
+  cypress: 12.3.0
   d3-path: 3.1.0
   d3-shape: 3.2.0
   eslint: 8.31.0
@@ -610,11 +610,11 @@ packages:
       - supports-color
     dev: true
 
-  /@angular/material/15.0.3_ganrzarlsrocqqyksgil7wut3u:
-    resolution: {integrity: sha512-x7c6Uc9SnQW0AGTFJZFMQHP80YzmrExtrNn5vYUyWB9QFiNM+jcsqAsSEoGhABU/G5xs8fd40Fj7o2HBixQ0fw==}
+  /@angular/material/15.0.4_ganrzarlsrocqqyksgil7wut3u:
+    resolution: {integrity: sha512-hvGQYzfttb78WZdNrYjA3dwKNtCiJ3NXLzTUbEGppDG5/9awCphDyN/5Lj3tNLsU8lus8l/UAIn6CCXCw2p3Vw==}
     peerDependencies:
       '@angular/animations': ^15.0.0 || ^16.0.0
-      '@angular/cdk': 15.0.3
+      '@angular/cdk': 15.0.4
       '@angular/common': ^15.0.0 || ^16.0.0
       '@angular/core': ^15.0.0 || ^16.0.0
       '@angular/forms': ^15.0.0 || ^16.0.0
@@ -4867,8 +4867,8 @@ packages:
     resolution: {integrity: sha512-GAj5FOq0Hd+RsCGVJxZuKaIDXDf3h6GQoNEjFgbLLI/trgtavwUbSnZ5pVfg27DVCaWjIohryS0JFwIJyT2cMg==}
     dev: true
 
-  /cypress/12.2.0:
-    resolution: {integrity: sha512-kvl95ri95KK8mAy++tEU/wUgzAOMiIciZSL97LQvnOinb532m7dGvwN0mDSIGbOd71RREtmT9o4h088RjK5pKw==}
+  /cypress/12.3.0:
+    resolution: {integrity: sha512-ZQNebibi6NBt51TRxRMYKeFvIiQZ01t50HSy7z/JMgRVqBUey3cdjog5MYEbzG6Ktti5ckDt1tfcC47lmFwXkw==}
     engines: {node: ^14.0.0 || ^16.0.0 || >=18.0.0}
     hasBin: true
     requiresBuild: true
