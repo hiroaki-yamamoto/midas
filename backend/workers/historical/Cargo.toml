@@ -25,7 +25,7 @@ history = { path = "../../libs/exchanges/history" }
 date_splitter = { path = "../../libs/date_splitter" }
 
 log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
-tokio = { version = "1.23.1", features = ["rt", "rt-multi-thread", "macros", "signal"] }
+tokio = { version = "1.24.1", features = ["rt", "rt-multi-thread", "macros", "signal"] }
 nats = "0.23.1"
 clap = { version = "4.0.32", features = ["derive"] }
 mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }
