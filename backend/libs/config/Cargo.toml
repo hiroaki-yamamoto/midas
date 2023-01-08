@@ -17,5 +17,5 @@ serde = { version = "1.0.152", features = ["derive"] }
 serde_yaml = "0.9.16"
 clap = { version = "4.0.32", features = ["derive"] }
 reqwest = { version = "0.11.13", features = ["gzip", "brotli", "json", "rustls-tls"] }
-redis = { version = "0.22.1", features = ["connection-manager", "tokio-comp"] }
+redis = { version = "0.22.2", features = ["connection-manager", "tokio-comp"] }
 nats = "0.23.1"
