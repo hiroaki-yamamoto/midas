@@ -18,7 +18,7 @@ writers = { path = "../../writers" }
 
 clients = { path = "../clients" }
 
-async-trait = "0.1.61"
+async-trait = "0.1.62"
 futures = "0.3.25"
 nats = "0.23.1"
 rand = "0.8.5"
@@ -27,9 +27,9 @@ rmp-serde = "1.1.1"
 serde_qs = "0.11.0"
 url = "2.3.1"
 log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
-tokio = { version = "1.24.1", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
+tokio = { version = "1.24.2", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"
 num_cpus = "1.15.0"
-reqwest = { version = "0.11.13", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
+reqwest = { version = "0.11.14", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
 redis = { version = "0.22.2", features = ["connection-manager", "tokio-comp"] }
