@@ -7362,7 +7362,7 @@ packages:
       socket.io: 4.5.4
       source-map: 0.6.1
       tmp: 0.2.1
-      ua-parser-js: 0.7.32
+      ua-parser-js: 0.7.33
       yargs: 16.2.0
     transitivePeerDependencies:
       - bufferutil
@@ -9699,8 +9699,8 @@ packages:
     hasBin: true
     dev: true
 
-  /ua-parser-js/0.7.32:
-    resolution: {integrity: sha512-f9BESNVhzlhEFf2CHMSj40NWOjYPl1YKYbrvIr/hFTDEmLq7SRbWvm7FcdcpCYT95zrOhC7gZSxjdnnTpBcwVw==}
+  /ua-parser-js/0.7.33:
+    resolution: {integrity: sha512-s8ax/CeZdK9R/56Sui0WM6y9OFREJarMRHqLB2EwkovemBxNQ+Bqu8GAsUnVcXKgphb++ghr/B2BZx4mahujPw==}
     dev: true
 
   /unicode-canonical-property-names-ecmascript/2.0.0:
