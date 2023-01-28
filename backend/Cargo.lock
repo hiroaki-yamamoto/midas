@@ -484,9 +484,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.1.1"
+version = "4.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ec7a4128863c188deefe750ac1d1dfe66c236909f845af04beed823638dc1b2"
+checksum = "f13b9c79b5d1dd500d20ef541215a6423c75829ef43117e1b4d17fd8af0b5d76"
 dependencies = [
  "bitflags",
  "clap_derive",
@@ -596,12 +596,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "cookie"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7efb37c3e1ccb1ff97164ad95ac1606e8ccd35b3fa0a7d99a304c7f4a428cc24"
+dependencies = [
+ "time 0.3.17",
+ "version_check",
+]
+
+[[package]]
 name = "cookie_store"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e4b6aa369f41f5faa04bb80c9b1f4216ea81646ed6124d76ba5c49a7aafd9cd"
 dependencies = [
- "cookie",
+ "cookie 0.16.2",
  "idna 0.2.3",
  "log",
  "publicsuffix",
@@ -678,7 +688,7 @@ dependencies = [
 name = "csrf"
 version = "0.1.0"
 dependencies = [
- "cookie",
+ "cookie 0.17.0",
  "hyper",
  "rand",
  "serde",
@@ -2419,9 +2429,9 @@ dependencies = [
 
 [[package]]
 name = "redis"
-version = "0.22.2"
+version = "0.22.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c1aada340fba5deba625c84d109d0a83cc3565452d38083417992a702c2428d"
+checksum = "aa8455fa3621f6b41c514946de66ea0531f57ca017b2e6c7cc368035ea5b46df"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -2483,7 +2493,7 @@ dependencies = [
  "async-compression",
  "base64 0.21.0",
  "bytes",
- "cookie",
+ "cookie 0.16.2",
  "cookie_store",
  "encoding_rs",
  "futures-core",

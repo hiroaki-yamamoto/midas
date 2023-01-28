@@ -11,7 +11,7 @@ config = { path = "../../libs/config" }
 
 notification = { path = "../../libs/exchanges/notification" }
 
-clap = { version = "4.1.1", features = ["derive"] }
+clap = { version = "4.1.4", features = ["derive"] }
 tokio = { version = "1.24.2", features = [
   "rt",
   "rt-multi-thread",
