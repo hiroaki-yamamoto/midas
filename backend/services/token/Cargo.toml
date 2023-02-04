@@ -15,6 +15,6 @@ rpc = { path = "../../libs/rpc" }
 log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
 clap = { version = "4.1.4", features = ["derive"] }
 tokio = { version = "1.25.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
-futures = "0.3.25"
+futures = "0.3.26"
 libc = "0.2.139"
 warp = { version = "0.3.3", features = ["tls"] }
