@@ -16,7 +16,7 @@ specifiers:
   '@angular/compiler-cli': ~15.1.0
   '@angular/core': ~15.1.0
   '@angular/forms': ~15.1.0
-  '@angular/localize': 15.1.2
+  '@angular/localize': 15.1.3
   '@angular/material': 15.1.2
   '@angular/platform-browser': ~15.1.0
   '@angular/platform-browser-dynamic': ~15.1.0
@@ -79,7 +79,7 @@ dependencies:
   zone.js: 0.12.0
 
 devDependencies:
-  '@angular-devkit/build-angular': 15.1.3_njnstpfeala7bmktu7rzl3or7a
+  '@angular-devkit/build-angular': 15.1.3_5mw3nhbk7gsvu5f45tvdfwpiza
   '@angular-eslint/builder': 15.2.0_zkdaqh7it7uc4cvz2haft7rc6u
   '@angular-eslint/eslint-plugin': 15.2.0_zkdaqh7it7uc4cvz2haft7rc6u
   '@angular-eslint/eslint-plugin-template': 15.2.0_zkdaqh7it7uc4cvz2haft7rc6u
@@ -87,7 +87,7 @@ devDependencies:
   '@angular-eslint/template-parser': 15.2.0_zkdaqh7it7uc4cvz2haft7rc6u
   '@angular/cli': 15.1.3
   '@angular/compiler-cli': 15.1.2_cywxlx5iht33t5xeib7j5n7lry
-  '@angular/localize': 15.1.2_2sfmecw4imag6mwmtiixonrddq
+  '@angular/localize': 15.1.3_2sfmecw4imag6mwmtiixonrddq
   '@cypress/schematic': 2.5.0_kghuflfoikxo5chedwjdspsqa4
   '@types/google-protobuf': 3.15.6
   '@types/jasmine': 4.3.1
@@ -95,7 +95,7 @@ devDependencies:
   '@types/node': 18.11.18
   '@typescript-eslint/eslint-plugin': 5.49.0_rsaczafy73x3xqauzesvzbsgzy
   '@typescript-eslint/parser': 5.49.0_zkdaqh7it7uc4cvz2haft7rc6u
-  cypress: 12.4.1
+  cypress: 12.5.1
   d3-path: 3.1.0
   d3-shape: 3.2.0
   eslint: 8.33.0
@@ -166,7 +166,7 @@ packages:
       - chokidar
     dev: true
 
-  /@angular-devkit/build-angular/15.1.3_njnstpfeala7bmktu7rzl3or7a:
+  /@angular-devkit/build-angular/15.1.3_5mw3nhbk7gsvu5f45tvdfwpiza:
     resolution: {integrity: sha512-QQfvpccShQldpMmuwgpZfbE6cNiNwff2aAY1YGswU9DBpeoz4YWeW4e8ss2j/Mxn5RXo7cbzWkhbm1xXTFY1FA==}
     engines: {node: ^14.20.0 || ^16.13.0 || >=18.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
     peerDependencies:
@@ -200,7 +200,7 @@ packages:
       '@angular-devkit/build-webpack': 0.1501.3_oc46zsvsns3nh7f43oasdmifbu
       '@angular-devkit/core': 15.1.3_chokidar@3.5.3
       '@angular/compiler-cli': 15.1.2_cywxlx5iht33t5xeib7j5n7lry
-      '@angular/localize': 15.1.2_2sfmecw4imag6mwmtiixonrddq
+      '@angular/localize': 15.1.3_2sfmecw4imag6mwmtiixonrddq
       '@babel/core': 7.20.12
       '@babel/generator': 7.20.7
       '@babel/helper-annotate-as-pure': 7.18.6
@@ -554,13 +554,13 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@angular/localize/15.1.2_2sfmecw4imag6mwmtiixonrddq:
-    resolution: {integrity: sha512-wnNgq8tn5W1u2B/G2Q08XiHKucJidNE+U5OuYk+qjf2M5M5DVwBhF/mxJxWoDKSuLg/JIJ8FUiKjEhJ5iUJ4lg==}
+  /@angular/localize/15.1.3_2sfmecw4imag6mwmtiixonrddq:
+    resolution: {integrity: sha512-d1K3peTNV9RfNb5Zt58OTX31TGRtq8iIqX7TTN52l7214ky4MEX1F+eDvqdRKSAaev+aNEwz6RX9LW2k1XAhPQ==}
     engines: {node: ^14.20.0 || ^16.13.0 || >=18.10.0}
     hasBin: true
     peerDependencies:
-      '@angular/compiler': 15.1.2
-      '@angular/compiler-cli': 15.1.2
+      '@angular/compiler': 15.1.3
+      '@angular/compiler-cli': 15.1.3
     dependencies:
       '@angular/compiler': 15.1.2_@angular+core@15.1.2
       '@angular/compiler-cli': 15.1.2_cywxlx5iht33t5xeib7j5n7lry
@@ -733,7 +733,7 @@ packages:
     dependencies:
       '@ampproject/remapping': 2.2.0
       '@babel/code-frame': 7.18.6
-      '@babel/generator': 7.20.7
+      '@babel/generator': 7.20.14
       '@babel/helper-compilation-targets': 7.20.7_@babel+core@7.20.12
       '@babel/helper-module-transforms': 7.20.11
       '@babel/helpers': 7.20.13
@@ -1874,7 +1874,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/code-frame': 7.18.6
-      '@babel/generator': 7.20.7
+      '@babel/generator': 7.20.14
       '@babel/helper-environment-visitor': 7.18.9
       '@babel/helper-function-name': 7.19.0
       '@babel/helper-hoist-variables': 7.18.6
@@ -4457,7 +4457,7 @@ packages:
     dependencies:
       '@npmcli/fs': 3.1.0
       fs-minipass: 3.0.0
-      glob: 8.0.3
+      glob: 8.1.0
       lru-cache: 7.14.1
       minipass: 4.0.0
       minipass-collect: 1.0.2
@@ -4919,8 +4919,8 @@ packages:
     resolution: {integrity: sha512-GAj5FOq0Hd+RsCGVJxZuKaIDXDf3h6GQoNEjFgbLLI/trgtavwUbSnZ5pVfg27DVCaWjIohryS0JFwIJyT2cMg==}
     dev: true
 
-  /cypress/12.4.1:
-    resolution: {integrity: sha512-IFMPzc1RJ22Fac+YbdqywtpcuqZXqQJh+JqZDXn+A15zG/dw99njfv8f0bTvD+WAHhP118+xWG/VwilkFg1rnA==}
+  /cypress/12.5.1:
+    resolution: {integrity: sha512-ZmCmJ3lsyeOpBfh410m5+AO2CO1AxAzFBt7k6/uVbNcrNZje1vdiwYTpj2ksPKg9mjr9lR6V8tmlDNMvr4H/YQ==}
     engines: {node: ^14.0.0 || ^16.0.0 || >=18.0.0}
     hasBin: true
     requiresBuild: true
