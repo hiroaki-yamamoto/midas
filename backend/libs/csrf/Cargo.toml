@@ -11,6 +11,6 @@ cookie = "0.17.0"
 hyper = "0.14.24"
 rand = "0.8.5"
 serde = {version = "1.0.152", features=["derive"]}
-serde_json = "1.0.91"
+serde_json = "1.0.92"
 
 warp = "0.3.3"
