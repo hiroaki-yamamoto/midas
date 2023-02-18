@@ -20,5 +20,5 @@ reqwest = { version = "0.11.14", features = ["gzip", "brotli", "json", "rustls-t
 tokio = { version = "1.25.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
 futures = "0.3.26"
 log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
-clap = { version = "4.1.4", features = ["derive"] }
+clap = { version = "4.1.6", features = ["derive"] }
 libc = "0.2.139"

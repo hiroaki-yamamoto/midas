@@ -21,9 +21,9 @@ entities = { path = "../../libs/entities" }
 
 serde = { version = "1.0.152", features = ["derive"] }
 rmp-serde = "1.1.1"
-nats = "0.23.1"
+nats = "0.24.0"
 mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }
-clap = { version = "4.1.4", features = ["derive"] }
+clap = { version = "4.1.6", features = ["derive"] }
 serde_yaml = "0.9.17"
 tokio = { version = "1.25.0", features = ["macros", "rt", "rt-multi-thread", "signal", "sync"] }
 log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
@@ -32,4 +32,4 @@ num-traits = "0.2.15"
 libc = "0.2.139"
 warp = { version = "0.3.3", features = ["tls"] }
 serde_json = "1.0.93"
-http = "0.2.8"
+http = "0.2.9"

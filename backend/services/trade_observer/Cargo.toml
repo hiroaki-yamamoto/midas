@@ -14,9 +14,9 @@ csrf = { path = "../../libs/csrf" }
 access_logger = { path = "../../libs/access_logger" }
 
 futures = "0.3.26"
-nats = "0.23.1"
+nats = "0.24.0"
 warp = { version = "0.3.3", features = ["tls"] }
-clap = { version = "4.1.4", features = ["derive"] }
+clap = { version = "4.1.6", features = ["derive"] }
 log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
 tokio = { version = "1.25.0", features = ["macros", "signal", "time", "rt", "rt-multi-thread"] }
 libc = "0.2.139"

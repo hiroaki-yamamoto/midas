@@ -13,7 +13,7 @@ config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 access_logger = { path = "../../libs/access_logger" }
 
-clap = { version = "4.1.4", features = ["derive"] }
+clap = { version = "4.1.6", features = ["derive"] }
 mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }
 tokio = { version = "1.25.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
 warp = { version = "0.3.3", features = ["tls"] }
@@ -22,5 +22,5 @@ futures = "0.3.26"
 serde = { version = "1.0.152", features=["derive"] }
 libc = "0.2.139"
 num-traits = "0.2.15"
-http = "0.2.8"
-nats = "0.23.1"
+http = "0.2.9"
+nats = "0.24.0"
