@@ -17,7 +17,7 @@ specifiers:
   '@angular/core': ~15.1.0
   '@angular/forms': ~15.1.0
   '@angular/localize': 15.1.5
-  '@angular/material': 15.1.4
+  '@angular/material': 15.1.5
   '@angular/platform-browser': ~15.1.0
   '@angular/platform-browser-dynamic': ~15.1.0
   '@angular/router': ~15.1.0
@@ -62,7 +62,7 @@ dependencies:
   '@angular/compiler': 15.1.4_@angular+core@15.1.4
   '@angular/core': 15.1.4_rxjs@7.8.0+zone.js@0.12.0
   '@angular/forms': 15.1.4_g7mjdvsmeszabti4mywkhjexwi
-  '@angular/material': 15.1.4_isjki5jxkx7qtx4nb6paon7zxy
+  '@angular/material': 15.1.5_isjki5jxkx7qtx4nb6paon7zxy
   '@angular/platform-browser': 15.1.4_vztyff4teqf7syhiw43dlsmbye
   '@angular/platform-browser-dynamic': 15.1.4_ohokuiwz5epmc3j7lxm4wjl25a
   '@angular/router': 15.1.4_g7mjdvsmeszabti4mywkhjexwi
@@ -572,11 +572,11 @@ packages:
       - supports-color
     dev: true
 
-  /@angular/material/15.1.4_isjki5jxkx7qtx4nb6paon7zxy:
-    resolution: {integrity: sha512-mepKRVzO3v4BxGkzkwO1PZjWTdLDbqkydmmiEYkzPOUk9I3tElzjYlybB0xuY6A5CIdXU9Mdc+AaUZWng2yN/g==}
+  /@angular/material/15.1.5_isjki5jxkx7qtx4nb6paon7zxy:
+    resolution: {integrity: sha512-1N+pylZ7aoyh8/+kbiE/ks2IFUqzCtEyZTohTCm+MEXISUr2fU5c3k7uW5jRF3mjkmBeKycGe5haaOA8N2VZkw==}
     peerDependencies:
       '@angular/animations': ^15.0.0 || ^16.0.0
-      '@angular/cdk': 15.1.4
+      '@angular/cdk': 15.1.5
       '@angular/common': ^15.0.0 || ^16.0.0
       '@angular/core': ^15.0.0 || ^16.0.0
       '@angular/forms': ^15.0.0 || ^16.0.0
