@@ -20,7 +20,7 @@ clients = { path = "../clients" }
 
 async-trait = "0.1.64"
 futures = "0.3.26"
-nats = "0.23.1"
+nats = "0.24.0"
 rand = "0.8.5"
 mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }
 rmp-serde = "1.1.1"
