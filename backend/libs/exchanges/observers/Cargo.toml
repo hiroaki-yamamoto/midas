@@ -28,4 +28,4 @@ log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
 tokio = { version = "1.25.0", features = ["macros", "time"] }
 tokio-tungstenite = { version = "0.18.0", features = ["native-tls"] }
 serde = { version = "1.0.152", features = ["derive"] }
-tokio-stream = "0.1.11"
+tokio-stream = "0.1.12"
