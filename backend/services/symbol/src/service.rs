@@ -19,12 +19,15 @@ pub struct Service {
 }
 
 impl Service {
-  pub async fn new(db: &Database, broker: &NatsJS) -> Self {
-    return Self {
+  pub async fn new(
+    db: &Database,
+    broker: &NatsJS,
+  ) -> binance_fetcher::ReqRes<Self> {
+    return Ok(Self {
       binance_fetcher: binance_fetcher::SymbolFetcher::new(broker, db.clone())
-        .await,
+        .await?,
       binance_recorder: binance_recorder::SymbolRecorder::new(db.clone()).await,
-    };
+    });
   }
 
   fn get_fetcher(
@@ -133,7 +136,7 @@ async fn handle_base_currencies(
 }
 
 async fn handle_fetcher(
-  fetcher: impl SymbolFetcher + Send + Sync,
+  mut fetcher: impl SymbolFetcher + Send + Sync,
 ) -> Result<Vec<SymbolInfo>, Rejection> {
   return fetcher
     .refresh()

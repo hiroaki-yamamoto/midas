@@ -1,11 +1,16 @@
+use ::std::time::Duration as StdDur;
+
 use ::async_trait::async_trait;
 use ::futures::future::join;
 use ::futures::stream::StreamExt;
 use ::mongodb::bson::{doc, Document};
 use ::mongodb::Database;
 use ::nats::jetstream::JetStream as NatsJS;
+pub use ::reqwest::Result as ReqRes;
+use ::url::Url;
 
-use ::clients::binance::REST_ENDPOINT;
+use ::clients::binance::REST_ENDPOINTS;
+use ::round::RestClient;
 use ::rpc::symbols::SymbolInfo;
 use ::types::ThreadSafeResult;
 
@@ -21,16 +26,24 @@ use ::errors::StatusFailure;
 pub struct SymbolFetcher {
   broker: NatsJS,
   recorder: SymbolRecorder,
+  cli: RestClient,
 }
 
 impl SymbolFetcher {
-  pub async fn new(broker: &NatsJS, db: Database) -> Self {
+  pub async fn new(broker: &NatsJS, db: Database) -> ReqRes<Self> {
     let recorder = SymbolRecorder::new(db).await;
+    let urls: Vec<Url> = REST_ENDPOINTS
+      .into_iter()
+      .filter_map(|&url| {
+        (String::from(url) + "/api/v3/exchangeInfo").parse().ok()
+      })
+      .collect();
     let ret = Self {
       broker: broker.clone(),
+      cli: RestClient::new(urls, StdDur::from_secs(5), StdDur::from_secs(5))?,
       recorder,
     };
-    return ret;
+    return Ok(ret);
   }
 
   pub async fn get(
@@ -46,10 +59,8 @@ impl SymbolFetcher {
 #[async_trait]
 impl SymbolFetcherTrait for SymbolFetcher {
   type SymbolType = Symbol;
-  async fn refresh(&self) -> ThreadSafeResult<Vec<Self::SymbolType>> {
-    let mut url: url::Url = REST_ENDPOINT.parse()?;
-    url = url.join("/api/v3/exchangeInfo")?;
-    let resp = ::reqwest::get(url.clone()).await?;
+  async fn refresh(&mut self) -> ThreadSafeResult<Vec<Self::SymbolType>> {
+    let resp = self.cli.get::<()>(None, None).await?;
     let old_symbols = self.recorder.list(doc! {}).await?;
     let old_symbols: Vec<Symbol> = old_symbols.collect().await;
     let resp_status = resp.status();
@@ -70,7 +81,7 @@ impl SymbolFetcherTrait for SymbolFetcher {
       return Ok(self.recorder.list(None).await?.collect().await);
     } else {
       return Err(Box::new(StatusFailure {
-        url: Some(url.clone()),
+        url: Some(self.cli.get_current_url()).cloned(),
         code: resp_status.as_u16(),
         text: resp.text().await?,
       }));

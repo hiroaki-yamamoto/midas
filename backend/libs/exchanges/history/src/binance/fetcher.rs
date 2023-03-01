@@ -1,19 +1,16 @@
 use ::std::fmt::Debug;
-use ::std::time::Duration as StdDur;
-use std::time::SystemTime;
+use ::std::time::{Duration as StdDur, SystemTime};
 
 use ::async_trait::async_trait;
 use ::log::warn;
 use ::rand::random;
-use ::serde_qs::to_string as to_qs;
 use ::tokio::time::sleep;
-use ::url::Url;
-use entities::TradeTimeTrait;
 
-use ::clients::binance::REST_ENDPOINT;
+use ::clients::binance::REST_ENDPOINTS;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
-use ::entities::HistoryFetchRequest;
+use ::entities::{HistoryFetchRequest, TradeTimeTrait};
 use ::errors::{ExecutionFailed, MaximumAttemptExceeded};
+use ::round::RestClient;
 use ::rpc::entities::Exchanges;
 use ::types::{GenericResult, ThreadSafeResult};
 
@@ -24,14 +21,23 @@ use crate::traits::HistoryFetcher as HistoryFetcherTrait;
 #[derive(Debug, Clone)]
 pub struct HistoryFetcher {
   pub num_reconnect: i8,
-  endpoint: Url,
+  client: RestClient,
 }
 
 impl HistoryFetcher {
   pub fn new(num_reconnect: Option<i8>) -> GenericResult<Self> {
     return Ok(Self {
       num_reconnect: num_reconnect.unwrap_or(20),
-      endpoint: (String::from(REST_ENDPOINT) + "/api/v3/klines").parse()?,
+      client: RestClient::new(
+        REST_ENDPOINTS
+          .into_iter()
+          .filter_map(|&endpoint| {
+            return (String::from(endpoint) + "/api/v3/klines").parse().ok();
+          })
+          .collect(),
+        StdDur::from_secs(5),
+        StdDur::from_secs(5),
+      )?,
     });
   }
 
@@ -54,7 +60,7 @@ impl HistoryFetcher {
 impl HistoryFetcherTrait for HistoryFetcher {
   // type Kline = Kline;
   async fn fetch(
-    &self,
+    &mut self,
     req: &HistoryFetchRequest,
   ) -> ThreadSafeResult<KlinesByExchange> {
     if let Err(e) = self.validate_request(req) {
@@ -64,12 +70,9 @@ impl HistoryFetcherTrait for HistoryFetcher {
       ::reqwest::StatusCode::IM_A_TEAPOT,
       ::reqwest::StatusCode::TOO_MANY_REQUESTS,
     ];
-    let mut url = self.endpoint.clone();
     let query: Query = req.into();
-    let query = to_qs(&query)?;
-    url.set_query(Some(&query));
     for _ in 0..self.num_reconnect {
-      let resp = ::reqwest::get(url.clone()).await?;
+      let resp = self.client.get(None, Some(&query)).await?;
       let status = resp.status();
       if status.is_success() {
         let payload = resp.json::<BinancePayload>().await?;
@@ -123,7 +126,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
   }
 
   async fn first_trade_date(
-    &self,
+    &mut self,
     symbol: &str,
   ) -> ThreadSafeResult<SystemTime> {
     let req = HistoryFetchRequest::new(

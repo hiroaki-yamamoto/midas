@@ -27,7 +27,7 @@ async fn main() {
   let db = cfg.db().await.unwrap();
   let broker = cfg.nats_cli().unwrap();
   let host: SocketAddr = cfg.host.parse().unwrap();
-  let svc = Service::new(&db, &broker).await;
+  let svc = Service::new(&db, &broker).await.unwrap();
   let csrf = CSRF::new(CSRFOption::builder());
   let router = csrf
     .protect()

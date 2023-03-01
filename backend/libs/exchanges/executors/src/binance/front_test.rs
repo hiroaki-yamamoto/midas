@@ -12,10 +12,10 @@ use ::entities::{
 use ::errors::ExecutionFailed;
 use ::observers::traits::TradeObserver as TradeObserverTrait;
 
-use crate::errors::ExecutionResult;
 use crate::traits::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
 };
+use ::errors::ExecutionResult;
 
 use ::observers::binance::TradeObserver;
 

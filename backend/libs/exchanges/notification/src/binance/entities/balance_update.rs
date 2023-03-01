@@ -1,5 +1,4 @@
-use std::num::ParseFloatError;
-
+use ::errors::NotificationResult;
 use ::mongodb::bson::DateTime;
 use ::serde::{Deserialize, Serialize};
 
@@ -16,7 +15,7 @@ pub struct BalanceUpdate<DT, FT> {
 }
 
 impl From<BalanceUpdate<i64, String>>
-  for Result<BalanceUpdate<DateTime, f64>, ParseFloatError>
+  for NotificationResult<BalanceUpdate<DateTime, f64>>
 {
   fn from(v: BalanceUpdate<i64, String>) -> Self {
     return Ok(BalanceUpdate::<DateTime, f64> {

@@ -1,6 +1,8 @@
 use ::std::num::ParseFloatError;
 
-use ::errors::{RawVecElemErrs, VecElementErr, VecElementErrs};
+use ::errors::{
+  NotificationResult, RawVecElemErrs, VecElementErr, VecElementErrs,
+};
 use ::mongodb::bson::DateTime;
 use ::serde::{Deserialize, Serialize};
 
@@ -37,7 +39,7 @@ pub struct AccountUpdate<DT, FT> {
 }
 
 impl From<AccountUpdate<i64, String>>
-  for Result<AccountUpdate<DateTime, f64>, VecElementErrs<ParseFloatError>>
+  for NotificationResult<AccountUpdate<DateTime, f64>>
 {
   fn from(v: AccountUpdate<i64, String>) -> Self {
     let (updated_balance, errors): (Vec<_>, Vec<_>) = v
@@ -59,7 +61,7 @@ impl From<AccountUpdate<i64, String>>
       .collect::<RawVecElemErrs<ParseFloatError>>()
       .into();
     if !errors.errors.len() < 1 {
-      return Err(errors);
+      return Err(errors.into());
     }
     let updated_balance = updated_balance
       .into_iter()

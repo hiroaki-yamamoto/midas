@@ -1,5 +1,5 @@
-mod client;
+mod api_header;
 mod constants;
 
-pub use self::client::PubClient;
-pub use self::constants::{REST_ENDPOINT, WS_ENDPOINT};
+pub use self::api_header::{APIHeader, FindKey};
+pub use self::constants::{REST_ENDPOINTS, WS_ENDPOINT};

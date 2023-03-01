@@ -1,10 +1,8 @@
-use std::num::ParseFloatError;
-
+use ::std::num::ParseFloatError;
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
-use ::errors::VecElementErrs;
-use types::GenericResult;
+use ::errors::NotificationResult;
 
 use super::account_update::AccountUpdate;
 use super::balance_update::BalanceUpdate;
@@ -21,18 +19,16 @@ pub enum UserStreamEvents<DT, FT> {
 pub type RawUserStreamEvents = UserStreamEvents<i64, String>;
 pub type CastedUserStreamEvents = UserStreamEvents<DateTime, f64>;
 
-impl From<RawUserStreamEvents> for GenericResult<CastedUserStreamEvents> {
+impl From<RawUserStreamEvents> for NotificationResult<CastedUserStreamEvents> {
   fn from(v: RawUserStreamEvents) -> Self {
     return Ok(match v {
       RawUserStreamEvents::OutboundAccountPosition(data) => {
-        let data: Result<
-          AccountUpdate<DateTime, f64>,
-          VecElementErrs<ParseFloatError>,
-        > = data.into();
+        let data: NotificationResult<AccountUpdate<DateTime, f64>> =
+          data.into();
         CastedUserStreamEvents::OutboundAccountPosition(data?)
       }
       RawUserStreamEvents::BalanceUpdate(data) => {
-        let data: Result<BalanceUpdate<DateTime, f64>, ParseFloatError> =
+        let data: NotificationResult<BalanceUpdate<DateTime, f64>> =
           data.into();
         CastedUserStreamEvents::BalanceUpdate(data?)
       }

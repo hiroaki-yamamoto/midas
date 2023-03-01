@@ -1,7 +1,9 @@
+mod api;
 mod attempt;
 mod empty;
 mod execution;
 mod initialize;
+mod notification;
 mod object;
 mod parse;
 mod status;
@@ -9,10 +11,12 @@ mod unknown;
 mod vec_elem;
 mod websocket;
 
+pub use api::{APIHeaderErrors, APIHeaderResult};
 pub use attempt::MaximumAttemptExceeded;
 pub use empty::EmptyError;
-pub use execution::ExecutionFailed;
+pub use execution::{ExecutionErrors, ExecutionFailed, ExecutionResult};
 pub use initialize::InitError;
+pub use notification::{NotificationError, NotificationResult};
 pub use object::ObjectNotFound;
 pub use parse::ParseError;
 pub use status::{HTTPErrors, HTTPResult, StatusFailure};

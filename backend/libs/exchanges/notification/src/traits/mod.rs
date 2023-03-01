@@ -1,16 +1,18 @@
 use ::async_trait::async_trait;
 
 use ::entities::APIKeyInner;
-use ::types::{GenericResult, ThreadSafeResult};
+use ::errors::NotificationResult;
 
 #[async_trait]
 pub trait UserStream {
-  async fn get_listen_key(&self, api_key: &APIKeyInner)
-    -> ThreadSafeResult<()>;
+  async fn get_listen_key(
+    &mut self,
+    api_key: &APIKeyInner,
+  ) -> NotificationResult<()>;
   async fn close_listen_key(
-    &self,
+    &mut self,
     api_key: &APIKeyInner,
     listen_key: &String,
-  ) -> ThreadSafeResult<()>;
-  async fn start(&self) -> GenericResult<()>;
+  ) -> NotificationResult<()>;
+  async fn start(&mut self) -> NotificationResult<()>;
 }

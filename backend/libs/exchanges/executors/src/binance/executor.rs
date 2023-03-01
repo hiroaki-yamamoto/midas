@@ -1,4 +1,5 @@
-use std::convert::TryFrom;
+use ::std::sync::Arc;
+use ::std::time::Duration as StdDur;
 
 use ::async_stream::try_stream;
 use ::async_trait::async_trait;
@@ -9,24 +10,22 @@ use ::mongodb::bson::{doc, oid::ObjectId, to_document, DateTime};
 use ::mongodb::options::{UpdateModifications, UpdateOptions};
 use ::mongodb::{Collection, Database};
 use ::nats::jetstream::JetStream as NatsJS;
-use ::ring::hmac;
+use ::reqwest::Result as ReqResult;
 use ::serde_qs::to_string as to_qs;
+use ::tokio::sync::Mutex;
 
 use ::entities::{
   BookTicker, ExecutionSummary, Order, OrderInner, OrderOption,
 };
-use ::errors::{HTTPErrors, ObjectNotFound, StatusFailure};
+use ::errors::{ExecutionResult, HTTPErrors, StatusFailure};
 use ::keychain::KeyChain;
-use ::rpc::entities::Exchanges;
-use ::sign::Sign;
-use ::types::retry::retry_async;
+use ::round::RestClient;
 use ::writers::DatabaseWriter;
 
-use ::clients::binance::{PubClient, REST_ENDPOINT};
+use ::clients::binance::{APIHeader, FindKey, REST_ENDPOINTS};
 use ::observers::binance::TradeObserver;
 use ::observers::traits::TradeObserver as TradeObserverTrait;
 
-use crate::errors::{ExecutionErrors, ExecutionResult};
 use crate::traits::Executor as ExecutorTrait;
 
 use super::entities::{
@@ -40,10 +39,11 @@ pub struct Executor {
   broker: NatsJS,
   db: Database,
   positions: Collection<OrderResponse<f64, DateTime>>,
+  cli: Arc<Mutex<RestClient>>,
 }
 
 impl Executor {
-  pub async fn new(broker: &NatsJS, db: Database) -> Self {
+  pub async fn new(broker: &NatsJS, db: Database) -> ReqResult<Self> {
     let keychain = KeyChain::new(broker.clone(), db.clone()).await;
     let positions = db.collection("binance.positions");
     let me = Self {
@@ -51,6 +51,14 @@ impl Executor {
       keychain,
       db,
       positions,
+      cli: Arc::new(Mutex::new(RestClient::new(
+        REST_ENDPOINTS
+          .into_iter()
+          .filter_map(|&url| format!("{}/api/v3/order", url).parse().ok())
+          .collect(),
+        StdDur::from_secs(5),
+        StdDur::from_secs(5),
+      )?)),
     };
     me.update_indices(&[
       "orderId",
@@ -59,11 +67,17 @@ impl Executor {
       "positionGroupId",
     ])
     .await;
-    return me;
+    return Ok(me);
   }
 }
 
-impl PubClient for Executor {}
+impl APIHeader for Executor {}
+impl FindKey for Executor {
+  fn get_keychain(&self) -> &KeyChain {
+    return &self.keychain;
+  }
+}
+
 impl DatabaseWriter for Executor {
   fn get_database(&self) -> &Database {
     return &self.db;
@@ -100,15 +114,13 @@ impl ExecutorTrait for Executor {
     order_option: Option<OrderOption>,
   ) -> ExecutionResult<ObjectId> {
     let pos_gid = ObjectId::new();
-    let key = self.keychain.get(Exchanges::Binance, api_key_id).await?;
-    let key = key.ok_or(ObjectNotFound::new("API KeyPair".to_string()))?;
-    let key = key.inner();
+    let api_key = self.get_api_key(api_key_id).await?;
+    let header = self.get_pub_header(&api_key)?;
     let order_type = order_option
       .clone()
       .map(|_| price.map(|_| OrderType::Limit).unwrap_or(OrderType::Market))
       .unwrap_or(OrderType::Market);
-    let cli = self.get_client(&key.pub_key)?;
-    let req_lst: Vec<BoxFuture<ExecutionResult<()>>> = order_option
+    let resp_defers: Vec<BoxFuture<ExecutionResult<()>>> = order_option
       .map(|o| {
         o.calc_trading_amounts(budget)
           .into_iter()
@@ -144,45 +156,40 @@ impl ExecutorTrait for Executor {
       })
       .into_iter()
       .map(|order| {
-        let me = self.clone();
-        let cli = cli.clone();
-        let pos_gid = pos_gid.clone();
-        let key = key.clone();
-        async move {
-          let qs = to_qs(&order)?;
-          let signature = me.sign(qs.clone(), key.prv_key);
-          let qs = format!("{}&signature={}", qs, signature);
-          return retry_async(5, || async {
-            let resp = cli
-              .post(format!("{}/api/v3/order?{}", REST_ENDPOINT, qs))
-              .send()
+        let qs = to_qs(&order).unwrap();
+        let signature = api_key.sign(qs.clone());
+        return format!("{}&signature={}", qs, signature);
+      })
+      .map(|qs| {
+        let header = header.clone();
+        let cli = Arc::clone(&self.cli);
+        return async move {
+          let mut cli = cli.lock_owned().await;
+          (*cli).post(Some(header.clone()), Some(qs)).await
+        };
+      })
+      .map(|fut| {
+        let pos = self.positions.clone();
+        return fut
+          .then(|resp| async move {
+            let resp = resp?;
+            let payload: OrderResponse<String, i64> = resp.json().await?;
+            let mut payload =
+              OrderResponse::<f64, DateTime>::try_from(payload)?;
+            payload.position_group_id = Some(pos_gid.clone());
+            let _ = pos
+              .update_one(
+                doc! {"orderId": payload.order_id},
+                UpdateModifications::Document(to_document(&payload)?),
+                UpdateOptions::builder().upsert(true).build(),
+              )
               .await;
-            let resp: ExecutionResult<()> = match resp {
-              Ok(resp) => {
-                let payload: OrderResponse<String, i64> = resp.json().await?;
-                let mut payload =
-                  OrderResponse::<f64, DateTime>::try_from(payload)?;
-                payload.position_group_id = Some(pos_gid.clone());
-                let _ = me
-                  .positions
-                  .update_one(
-                    doc! {"orderId": payload.order_id},
-                    UpdateModifications::Document(to_document(&payload)?),
-                    UpdateOptions::builder().upsert(true).build(),
-                  )
-                  .await;
-                Ok(())
-              }
-              Err(e) => Err(e.into()),
-            };
-            return resp;
+            return Ok(());
           })
-          .await;
-        }
-        .boxed()
+          .boxed();
       })
       .collect();
-    let res_err = join_all(req_lst)
+    let res_err = join_all(resp_defers)
       .await
       .into_iter()
       .find(|item| item.is_err());
@@ -197,69 +204,48 @@ impl ExecutorTrait for Executor {
     api_key_id: ObjectId,
     gid: ObjectId,
   ) -> ExecutionResult<ExecutionSummary> {
-    let api_key = self
-      .keychain
-      .get(Exchanges::Binance, api_key_id)
-      .await?
-      .ok_or(ObjectNotFound::new("API key".to_string()))?;
-    let api_key = api_key.inner();
+    let api_key = self.get_api_key(api_key_id).await?;
     let mut positions = self
       .positions
       .find(doc! {"positionGroupId": gid}, None)
       .await?
       .filter_map(|pos| async { pos.ok() })
       .boxed();
-    let cli = match self.get_client(api_key.pub_key.clone()) {
-      Err(e) => return Err(e.into()),
-      Ok(o) => o,
-    };
     let mut order_cancel_vec = vec![];
     let mut position_reverse_vec = vec![];
     while let Some(pos) = positions.next().await {
       // Cancel Order
-      let me = self.clone();
       let symbol = pos.symbol.clone();
       let order_id = pos.order_id.clone();
-      let cancel_cli = cli.clone();
-      let reverse_cli = cli.clone();
-      order_cancel_vec.push(retry_async::<_, _, _, ExecutionErrors>(
-        5,
-        move || {
-          let symbol = symbol.clone();
-          let order_id = order_id.clone();
-          let me = me.clone();
-          let cancel_cli = cancel_cli.clone();
-          async move {
-            let req =
-              CancelOrderRequest::<i64>::new(symbol).order_id(Some(order_id));
-            let qs = to_qs(&req)?;
-            let qs = format!(
-              "{}&signature={}",
-              qs.clone(),
-              me.sign(qs, api_key.prv_key.clone())
+      let reverse_cli = Arc::clone(&self.cli);
+      order_cancel_vec.push({
+        let cli = Arc::clone(&self.cli);
+        let api_key = api_key.clone();
+        async move {
+          let req =
+            CancelOrderRequest::<i64>::new(symbol).order_id(Some(order_id));
+          let qs = to_qs(&req)?;
+          let qs = format!("{}&signature={}", qs.clone(), api_key.sign(qs));
+          let mut cli = cli.lock().await;
+          let resp = (*cli).delete(None, Some(qs)).await?;
+          drop(cli);
+          let status = resp.status();
+          if !status.is_success() {
+            return Err(
+              StatusFailure {
+                url: Some(resp.url().clone()),
+                code: status.as_u16(),
+                text: resp
+                  .text()
+                  .await
+                  .unwrap_or("Failed to get the text".to_string()),
+              }
+              .into(),
             );
-            let resp = cancel_cli
-              .delete(format!("{}/api/v3/order?{}", REST_ENDPOINT, qs))
-              .send()
-              .await?;
-            let status = resp.status();
-            if !status.is_success() {
-              return Err(
-                StatusFailure {
-                  url: Some(resp.url().clone()),
-                  code: status.as_u16(),
-                  text: resp
-                    .text()
-                    .await
-                    .unwrap_or("Failed to get the text".to_string()),
-                }
-                .into(),
-              );
-            }
-            return Ok(resp);
           }
-        },
-      ));
+          return Ok(resp);
+        }
+      });
       let symbol = pos.symbol.clone();
       if let Some(fills) = &pos.fills {
         // Sell the position
@@ -272,50 +258,37 @@ impl ExecutorTrait for Executor {
         )
         .quantity(Some(qty_to_reverse));
         let qs = to_qs(&req)?;
-        let qs = format!(
-          "{}&signature={}",
-          qs.clone(),
-          self.sign(qs, api_key.prv_key.clone())
-        );
+        let qs = format!("{}&signature={}", qs.clone(), api_key.sign(qs));
         let pos: Order = pos.clone().into();
         let pos_pur_price: OrderInner = pos.clone().sum();
-        position_reverse_vec.push(retry_async::<_, _, _, ExecutionErrors>(
-          5,
-          move || {
-            let qs = qs.clone();
-            let pos_pur_price = pos_pur_price.clone();
-            let reverse_cli = reverse_cli.clone();
-            async move {
-              let resp = reverse_cli
-                .post(format!("{}/api/v3/order?{}", REST_ENDPOINT, &qs))
-                .send()
-                .await?;
-              let status = resp.status();
-              if !status.is_success() {
-                return Err(
-                  StatusFailure {
-                    url: Some(resp.url().clone()),
-                    code: status.as_u16(),
-                    text: resp
-                      .text()
-                      .await
-                      .unwrap_or("Failed to get the text".to_string()),
-                  }
-                  .into(),
-                );
+        position_reverse_vec.push(async move {
+          let mut reverse_cli = reverse_cli.lock().await;
+          let resp = (*reverse_cli).post(None, Some(&qs)).await?;
+          drop(reverse_cli);
+          let status = resp.status();
+          if !status.is_success() {
+            return Err(
+              StatusFailure {
+                url: Some(resp.url().clone()),
+                code: status.as_u16(),
+                text: resp
+                  .text()
+                  .await
+                  .unwrap_or("Failed to get the text".to_string()),
               }
-              let rev_order_resp: OrderResponse<String, i64> = resp
-                .json()
-                .await
-                .map_err(|e| HTTPErrors::RequestFailure(e))?;
-              let rev_order_resp =
-                OrderResponse::<f64, DateTime>::try_from(rev_order_resp)?;
-              let rev_order_resp: Order = rev_order_resp.into();
-              let rev_pos_price: OrderInner = rev_order_resp.sum();
-              return Ok((pos_pur_price, rev_pos_price));
-            }
-          },
-        ));
+              .into(),
+            );
+          }
+          let rev_order_resp: OrderResponse<String, i64> = resp
+            .json()
+            .await
+            .map_err(|e| HTTPErrors::RequestFailure(e))?;
+          let rev_order_resp =
+            OrderResponse::<f64, DateTime>::try_from(rev_order_resp)?;
+          let rev_order_resp: Order = rev_order_resp.into();
+          let rev_pos_price: OrderInner = rev_order_resp.sum();
+          return Ok((pos_pur_price, rev_pos_price));
+        });
       };
     }
     let (order_res, position_res) =
@@ -336,11 +309,5 @@ impl ExecutorTrait for Executor {
       sell_order += sell;
     }
     return Ok(ExecutionSummary::calculate_profit(&sell_order, &pur_order));
-  }
-}
-
-impl Sign for Executor {
-  fn get_secret_key(&self, prv_key: String) -> hmac::Key {
-    return hmac::Key::new(hmac::HMAC_SHA256, prv_key.as_bytes());
   }
 }

@@ -7,5 +7,5 @@ use super::entities::Symbol;
 #[async_trait]
 pub trait SymbolFetcher {
   type SymbolType: Symbol;
-  async fn refresh(&self) -> ThreadSafeResult<Vec<Self::SymbolType>>;
+  async fn refresh(&mut self) -> ThreadSafeResult<Vec<Self::SymbolType>>;
 }

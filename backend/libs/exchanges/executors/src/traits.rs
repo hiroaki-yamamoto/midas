@@ -9,7 +9,7 @@ use ::entities::{
 };
 use ::errors::ExecutionFailed;
 
-use crate::errors::ExecutionResult;
+use ::errors::ExecutionResult;
 
 #[async_trait]
 pub trait Executor {

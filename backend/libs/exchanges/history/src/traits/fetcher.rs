@@ -11,11 +11,11 @@ use crate::entities::KlinesByExchange;
 pub trait HistoryFetcher {
   // type Kline: Kline;
   async fn fetch(
-    &self,
+    &mut self,
     req: &HistoryFetchRequest,
   ) -> ThreadSafeResult<KlinesByExchange>;
   async fn first_trade_date(
-    &self,
+    &mut self,
     symbol: &str,
   ) -> ThreadSafeResult<SystemTime>;
 }

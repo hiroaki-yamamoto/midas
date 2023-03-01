@@ -13,7 +13,7 @@ async fn main() {
   let config = Config::from_fpath(Some(args.config)).unwrap();
   config.init_logger();
   let broker = config.nats_cli().unwrap();
-  let binance = binance::UserStream::new(broker);
+  let mut binance = binance::UserStream::new(broker).unwrap();
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let sig = Box::pin(sig.recv());

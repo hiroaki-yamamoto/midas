@@ -15,8 +15,8 @@ members = [
   "libs/bot",
   "libs/probe",
   "libs/access_logger",
+  "libs/round",
 
-  "libs/exchanges/sign",
   "libs/exchanges/executors",
   "libs/exchanges/history",
   "libs/exchanges/observers",

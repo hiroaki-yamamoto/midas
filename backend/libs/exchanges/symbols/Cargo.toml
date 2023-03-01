@@ -11,6 +11,7 @@ errors = { path = "../../errors" }
 rpc = { path = "../../rpc" }
 types = { path = "../../types" }
 subscribe = { path = "../../subscribe" }
+round = { path = "../../round" }
 
 clients = { path = "../clients" }
 writers = { path = "../../writers" }

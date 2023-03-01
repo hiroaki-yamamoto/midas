@@ -17,6 +17,7 @@ entities = { path = "../../entities" }
 writers = { path = "../../writers" }
 
 clients = { path = "../clients" }
+round = { path = "../../round" }
 
 async-trait = "0.1.60"
 futures = "0.3.25"

@@ -69,7 +69,7 @@ async fn main() {
             dupe_map.insert((req.exchange, req.symbol.clone()), dupe_list);
           }
         }
-        let klines = match reg.get(&req.exchange) {
+        let klines = match reg.get_mut(&req.exchange) {
           Some(fetcher) => {
             match fetcher.fetch(&req).await {
               Err(e) => {

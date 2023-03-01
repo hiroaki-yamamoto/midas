@@ -11,12 +11,11 @@ use ::rpc::entities::{BackTestPriceBase, Exchanges};
 use ::entities::{
   BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
 };
-use ::errors::ExecutionFailed;
+use ::errors::{ExecutionFailed, ExecutionResult};
 use ::history::binance::entities::Kline;
 use ::history::binance::writer::HistoryWriter;
 use ::history::traits::HistoryWriter as HistoryWriterTrait;
 
-use crate::errors::ExecutionResult;
 use crate::traits::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
 };

@@ -66,7 +66,7 @@ async fn main() {
           );
           continue;
         };
-        if let Ok(fetcher) = fetcher {
+        if let Ok(mut fetcher) = fetcher {
           start = fetcher.first_trade_date(&req.symbol).await.unwrap_or(start);
         }
         let splitter = match req.exchange {
