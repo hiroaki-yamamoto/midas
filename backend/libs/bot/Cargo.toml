@@ -8,7 +8,6 @@ edition = "2021"
 
 [dependencies]
 rpc = { path = "../rpc" }
-types = { path = "../types" }
 errors = { path = "../errors" }
 
 serde = { version = "1.0.152", features = ["derive"] }

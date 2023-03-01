@@ -10,10 +10,9 @@ edition = "2021"
 err-derive = "0.3.1"
 serde = { version = "1.0.152", features = ["derive"] }
 log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
-slog_derive = "0.2.0"
 url = "2.3.1"
 warp = { version = "0.3.3", features = ["tls"] }
 reqwest = { version = "0.11.14", features = ["gzip", "brotli", "json", "rustls-tls"] }
 mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime", "bson-chrono-0_4"] }
-serde_qs = "0.10.1"
+serde_qs = "0.11.0"
 serde_json = "1.0.93"
