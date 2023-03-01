@@ -6,7 +6,11 @@ use ::std::time::{Duration, UNIX_EPOCH};
 use ::clap::Parser;
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::log::{as_debug, as_error, error, info, warn};
+use ::log::{as_debug, as_error, error, info};
+
+#[cfg(debug_assertions)]
+use ::log::warn;
+
 use ::tokio::select;
 use ::tokio::signal::unix as signal;
 

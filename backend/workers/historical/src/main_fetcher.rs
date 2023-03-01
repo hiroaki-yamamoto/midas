@@ -1,9 +1,16 @@
-use ::std::collections::{HashMap, HashSet};
+#[cfg(debug_assertions)]
+use ::std::collections::HashSet;
+
+use ::std::collections::HashMap;
 
 use ::clap::Parser;
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::log::{as_display, as_serde, error, info, warn};
+use ::log::{as_display, error, info};
+
+#[cfg(debug_assertions)]
+use ::log::{as_serde, warn};
+
 use ::subscribe::PubSub;
 use ::tokio::select;
 use ::tokio::signal::unix as signal;
