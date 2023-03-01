@@ -19,18 +19,18 @@ writers = { path = "../../writers" }
 clients = { path = "../clients" }
 round = { path = "../../round" }
 
-async-trait = "0.1.60"
-futures = "0.3.25"
-nats = "0.23.1"
+async-trait = "0.1.64"
+futures = "0.3.26"
+nats = "0.24.0"
 rand = "0.8.5"
 mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }
 rmp-serde = "1.1.1"
-serde_qs = "0.10.1"
+serde_qs = "0.11.0"
 url = "2.3.1"
 log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
-tokio = { version = "1.23.0", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
-serde = { version = "1.0.151", features = ["derive"] }
-serde_json = "1.0.91"
+tokio = { version = "1.25.0", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = "1.0.93"
 num_cpus = "1.15.0"
-reqwest = { version = "0.11.13", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
-redis = { version = "0.22.1", features = ["connection-manager", "tokio-comp"] }
+reqwest = { version = "0.11.14", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
+redis = { version = "0.22.3", features = ["connection-manager", "tokio-comp"] }
