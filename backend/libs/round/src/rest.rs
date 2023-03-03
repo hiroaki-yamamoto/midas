@@ -23,11 +23,21 @@ macro_rules! method {
   };
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct RestClient {
-  urls: Vec<Url>,
   state: usize,
+  urls: Vec<Url>,
   cli: Client,
+}
+
+impl Clone for RestClient {
+  fn clone(&self) -> Self {
+    return Self {
+      urls: self.urls.clone(),
+      state: (self.state + 1) % self.urls.len(),
+      cli: self.cli.clone(),
+    };
+  }
 }
 
 impl RestClient {
@@ -73,7 +83,7 @@ impl RestClient {
         }
       }
       self.state = index;
-      return Ok(resp?);
+      return Ok(resp?.error_for_status()?);
     }
     return Err(MaximumAttemptExceeded {}.into());
   }
@@ -85,5 +95,13 @@ impl RestClient {
 
   pub fn get_current_url(&self) -> &Url {
     return &self.urls[self.state];
+  }
+
+  pub fn get_state(&self) -> usize {
+    return self.state;
+  }
+
+  pub fn set_state(&mut self, state: usize) {
+    self.state = state % self.urls.len();
   }
 }
