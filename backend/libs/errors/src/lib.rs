@@ -1,5 +1,6 @@
 mod api;
 mod attempt;
+mod config;
 mod empty;
 mod execution;
 mod initialize;
@@ -13,6 +14,7 @@ mod websocket;
 
 pub use api::{APIHeaderErrors, APIHeaderResult};
 pub use attempt::MaximumAttemptExceeded;
+pub use config::{ConfigError, ConfigResult};
 pub use empty::EmptyError;
 pub use execution::{ExecutionErrors, ExecutionFailed, ExecutionResult};
 pub use initialize::InitError;

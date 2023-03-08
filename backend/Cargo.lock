@@ -580,7 +580,6 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_yaml",
- "types",
 ]
 
 [[package]]
@@ -989,6 +988,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_qs",
+ "serde_yaml",
  "url",
  "warp",
 ]

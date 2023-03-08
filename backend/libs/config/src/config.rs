@@ -12,9 +12,7 @@ use ::serde::de::Error as SerdeError;
 use ::serde::{Deserialize, Deserializer};
 use ::serde_yaml::Result as YaMLResult;
 
-use ::types::GenericResult;
-
-use ::errors::MaximumAttemptExceeded;
+use ::errors::{ConfigResult, MaximumAttemptExceeded};
 use ::nats::connect as nats_connect;
 use ::nats::jetstream::{new as nats_js_new, JetStream as NatsJS};
 use ::redis::{Client as RedisClient, Connection};
@@ -58,7 +56,7 @@ impl Config {
     return ::redis::Client::open(url).map_err(|e| SerdeError::custom(e));
   }
 
-  pub fn redis(&self) -> Result<Connection, MaximumAttemptExceeded> {
+  pub fn redis(&self) -> ConfigResult<Connection> {
     for _ in 0..10 {
       match self
         .redis
@@ -73,7 +71,7 @@ impl Config {
         }
       }
     }
-    return Err(MaximumAttemptExceeded::default());
+    return Err(MaximumAttemptExceeded::default().into());
   }
 
   pub async fn db(&self) -> DBResult<DB> {
@@ -88,7 +86,7 @@ impl Config {
     return ::serde_yaml::from_reader::<_, Self>(st);
   }
 
-  pub fn from_fpath(path: Option<String>) -> GenericResult<Self> {
+  pub fn from_fpath(path: Option<String>) -> ConfigResult<Self> {
     let path = match path {
       None => String::from(super::constants::DEFAULT_CONFIG_PATH),
       Some(p) => p,
@@ -101,12 +99,12 @@ impl Config {
     ::env_logger::init();
   }
 
-  pub fn build_rest_client(&self) -> GenericResult<Client> {
+  pub fn build_rest_client(&self) -> ConfigResult<Client> {
     let ca = Certificate::from_pem(read_to_string(&self.tls.ca)?.as_bytes())?;
     return Ok(Client::builder().add_root_certificate(ca).build()?);
   }
 
-  pub fn nats_cli(&self) -> GenericResult<NatsJS> {
+  pub fn nats_cli(&self) -> ConfigResult<NatsJS> {
     let broker = nats_connect(&self.broker_url)?;
     let js = nats_js_new(broker);
     return Ok(js);
