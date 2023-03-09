@@ -9,10 +9,9 @@ use ::tokio::time::sleep;
 use ::clients::binance::REST_ENDPOINTS;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::entities::{HistoryFetchRequest, TradeTimeTrait};
-use ::errors::{ExecutionFailed, MaximumAttemptExceeded};
+use ::errors::{FetchResult, MaximumAttemptExceeded, ValidationErr};
 use ::round::RestClient;
 use ::rpc::entities::Exchanges;
-use ::types::{GenericResult, ThreadSafeResult};
 
 use super::entities::{BinancePayload, Kline, Query};
 use crate::entities::KlinesByExchange;
@@ -25,7 +24,7 @@ pub struct HistoryFetcher {
 }
 
 impl HistoryFetcher {
-  pub fn new(num_reconnect: Option<i8>) -> GenericResult<Self> {
+  pub fn new(num_reconnect: Option<i8>) -> FetchResult<Self> {
     return Ok(Self {
       num_reconnect: num_reconnect.unwrap_or(20),
       client: RestClient::new(
@@ -41,15 +40,16 @@ impl HistoryFetcher {
     });
   }
 
-  fn validate_request(
-    &self,
-    req: &HistoryFetchRequest,
-  ) -> ThreadSafeResult<()> {
+  fn validate_request(&self, req: &HistoryFetchRequest) -> FetchResult<()> {
     if let Some(duration) = req.duration() {
       if duration > StdDur::from_secs(60000) {
-        return Err(Box::new(ExecutionFailed::new(
-          "The duration must be less than or qeual to 1000 munites.",
-        )));
+        return Err(
+          ValidationErr::new(
+            "request validation",
+            "The duration must be less than or qeual to 1000 munites.",
+          )
+          .into(),
+        );
       }
     }
     return Ok(());
@@ -62,7 +62,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
   async fn fetch(
     &mut self,
     req: &HistoryFetchRequest,
-  ) -> ThreadSafeResult<KlinesByExchange> {
+  ) -> FetchResult<KlinesByExchange> {
     if let Err(e) = self.validate_request(req) {
       return Err(e);
     }
@@ -122,13 +122,13 @@ impl HistoryFetcherTrait for HistoryFetcher {
       let wait_dur = StdDur::from_nanos((random::<u64>() + 1) % 1_000_000);
       sleep(wait_dur).await;
     }
-    return Err(Box::new(MaximumAttemptExceeded::default()));
+    return Err(MaximumAttemptExceeded::default().into());
   }
 
   async fn first_trade_date(
     &mut self,
     symbol: &str,
-  ) -> ThreadSafeResult<SystemTime> {
+  ) -> FetchResult<SystemTime> {
     let req = HistoryFetchRequest::new(
       Exchanges::Binance,
       symbol,

@@ -3,7 +3,7 @@ use ::std::time::SystemTime;
 use ::async_trait::async_trait;
 use ::entities::HistoryFetchRequest;
 
-use ::types::ThreadSafeResult;
+use ::errors::FetchResult;
 
 use crate::entities::KlinesByExchange;
 
@@ -13,9 +13,7 @@ pub trait HistoryFetcher {
   async fn fetch(
     &mut self,
     req: &HistoryFetchRequest,
-  ) -> ThreadSafeResult<KlinesByExchange>;
-  async fn first_trade_date(
-    &mut self,
-    symbol: &str,
-  ) -> ThreadSafeResult<SystemTime>;
+  ) -> FetchResult<KlinesByExchange>;
+  async fn first_trade_date(&mut self, symbol: &str)
+    -> FetchResult<SystemTime>;
 }
