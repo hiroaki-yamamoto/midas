@@ -1,10 +1,9 @@
 use ::async_trait::async_trait;
 use ::futures::stream::StreamExt;
 use ::mongodb::bson;
+use ::mongodb::error::Result as DBResult;
 use ::mongodb::results::InsertManyResult;
 use ::mongodb::{Collection, Database};
-
-use ::types::ThreadSafeResult;
 
 use super::entities::{ListSymbolStream, Symbol};
 use crate::traits::SymbolRecorder as SymbolRecorderTrait;
@@ -43,7 +42,7 @@ impl SymbolRecorderTrait for SymbolRecorder {
   async fn list(
     &self,
     query: impl Into<Option<bson::Document>> + Send + 'async_trait,
-  ) -> ThreadSafeResult<Self::ListStream> {
+  ) -> DBResult<Self::ListStream> {
     let cur = self.col.find(query, None).await?;
     let cur = cur.filter_map(|doc| async { doc.ok() }).boxed();
     return Ok(cur as Self::ListStream);
@@ -51,11 +50,11 @@ impl SymbolRecorderTrait for SymbolRecorder {
   async fn update_symbols(
     &self,
     value: Vec<Self::Type>,
-  ) -> ThreadSafeResult<InsertManyResult> {
+  ) -> DBResult<InsertManyResult> {
     let _ = self.col.delete_many(bson::doc! {}, None).await?;
     return Ok(self.col.insert_many(value.into_iter(), None).await?);
   }
-  async fn list_base_currencies(&self) -> ThreadSafeResult<Vec<String>> {
+  async fn list_base_currencies(&self) -> DBResult<Vec<String>> {
     return Ok(
       self
         .col

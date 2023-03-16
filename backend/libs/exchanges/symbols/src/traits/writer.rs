@@ -1,11 +1,11 @@
 use ::async_trait::async_trait;
 use ::futures::Stream;
 use ::mongodb::bson::Document;
+use ::mongodb::error::Result as DBResult;
 use ::mongodb::results::InsertManyResult;
 use ::serde::Serialize;
 
 use super::entities::Symbol as SymbolTrait;
-use ::types::ThreadSafeResult;
 
 #[async_trait]
 pub trait SymbolRecorder {
@@ -14,10 +14,10 @@ pub trait SymbolRecorder {
   async fn list(
     &self,
     query: impl Into<Option<Document>> + Send + 'async_trait,
-  ) -> ThreadSafeResult<Self::ListStream>;
+  ) -> DBResult<Self::ListStream>;
   async fn update_symbols(
     &self,
     value: Vec<Self::Type>,
-  ) -> ThreadSafeResult<InsertManyResult>;
-  async fn list_base_currencies(&self) -> ThreadSafeResult<Vec<String>>;
+  ) -> DBResult<InsertManyResult>;
+  async fn list_base_currencies(&self) -> DBResult<Vec<String>>;
 }

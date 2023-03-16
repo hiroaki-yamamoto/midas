@@ -23,11 +23,11 @@ use ::tokio_stream::StreamMap;
 use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
 use ::config::DEFAULT_RECONNECT_INTERVAL;
-use ::errors::EmptyError;
+use ::errors::{EmptyError, ObserverResult};
 use ::symbols::binance::entities::{ListSymbolStream, Symbol, SymbolEvent};
 use ::symbols::binance::pubsub::SymbolEventPubSub;
 use ::symbols::binance::recorder::SymbolRecorder;
-use ::types::{GenericResult, TLSWebSocket, ThreadSafeResult};
+use ::types::TLSWebSocket;
 
 use ::clients::binance::WS_ENDPOINT;
 
@@ -106,7 +106,7 @@ impl TradeObserver {
     sockets: &mut StreamMap<usize, TLSWebSocket>,
     symbol_indices: &mut HashMap<String, (usize, usize)>,
     symbols: T,
-  ) -> ThreadSafeResult<()>
+  ) -> ObserverResult<()>
   where
     T: Iterator<Item = String>,
   {
@@ -144,7 +144,7 @@ impl TradeObserver {
     socket: &mut StreamMap<usize, TLSWebSocket>,
     symbol_indicies: &mut HashMap<String, (usize, usize)>,
     symbols: T,
-  ) -> ThreadSafeResult<()>
+  ) -> ObserverResult<()>
   where
     T: Iterator<Item = String>,
   {
@@ -254,7 +254,7 @@ impl TradeObserver {
   async fn handle_event(
     &mut self,
     sockets: &mut StreamMap<usize, TLSWebSocket>,
-  ) -> ThreadSafeResult<()> {
+  ) -> ObserverResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
     let nats_symbol = self.symbol_event.clone();
     let mut symbol_event =
@@ -326,18 +326,18 @@ impl TradeObserver {
     return Ok(());
   }
 
-  async fn init(&self) -> ThreadSafeResult<ListSymbolStream<'static>> {
+  async fn init(&self) -> ObserverResult<ListSymbolStream<'static>> {
     let recorder = self
       .recorder
       .clone()
       .ok_or(InitError::new::<String>("binance.observer".into()))?;
-    return recorder.list(doc! {"status": "TRADING"}).await;
+    return Ok(recorder.list(doc! {"status": "TRADING"}).await?);
   }
 }
 
 #[async_trait]
 impl TradeObserverTrait for TradeObserver {
-  async fn start(&self) -> GenericResult<()> {
+  async fn start(&self) -> ObserverResult<()> {
     let mut me = self.clone();
     let mut sockets = vec![];
     for _ in 0..NUM_SOCKET {
