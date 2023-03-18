@@ -11,7 +11,7 @@ env_logger = "0.10"
 log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
 errors = { path = "../errors" }
 
-mongodb = { version = "2.3.1", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.4.0", default-features = false, features = ["async-std-runtime"] }
 serde = { version = "1.0.152", features = ["derive"] }
 serde_yaml = "0.9.17"
 clap = { version = "4.1.6", features = ["derive"] }
