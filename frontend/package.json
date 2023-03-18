@@ -35,7 +35,7 @@
     "monaco-editor": "^0.36.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.1",
-    "zone.js": "~0.12.0"
+    "zone.js": "~0.13.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~15.2.0",
@@ -46,7 +46,7 @@
     "@angular-eslint/template-parser": "15.2.1",
     "@angular/cli": "~15.2.0",
     "@angular/compiler-cli": "~15.2.0",
-    "@angular/localize": "15.2.0",
+    "@angular/localize": "15.2.3",
     "@cypress/schematic": "2.5.0",
     "@types/google-protobuf": "^3.15.5",
     "@types/jasmine": "~4.3.0",
