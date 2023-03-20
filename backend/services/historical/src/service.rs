@@ -19,7 +19,6 @@ use ::rpc::entities::Status;
 use ::rpc::historical::{
   HistoryFetchRequest as RPCHistFetchReq, Progress, StatusCheckRequest,
 };
-use ::types::GenericResult;
 
 #[derive(Debug, Clone)]
 pub struct Service {
@@ -29,16 +28,13 @@ pub struct Service {
 }
 
 impl Service {
-  pub async fn new(
-    nats: &NatsJS,
-    redis_cli: &redis::Client,
-  ) -> GenericResult<Self> {
+  pub async fn new(nats: &NatsJS, redis_cli: &redis::Client) -> Self {
     let ret = Self {
       status: FetchStatusEventPubSub::new(nats.clone()),
       splitter: HistChartDateSplitPubSub::new(nats.clone()),
       redis_cli: redis_cli.clone(),
     };
-    return Ok(ret);
+    return ret;
   }
 
   pub fn route(&self) -> BoxedFilter<(impl Reply,)> {

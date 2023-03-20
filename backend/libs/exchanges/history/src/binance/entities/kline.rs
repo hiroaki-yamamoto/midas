@@ -5,8 +5,8 @@ use ::serde::{Deserialize, Serialize};
 use ::serde_json::Value;
 
 use ::entities::{TradeTime, TradeTimeTrait};
+use ::errors::ParseResult;
 use ::types::casting::{cast_datetime, cast_f64, cast_i64};
-use ::types::ThreadSafeResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Kline {
@@ -25,7 +25,7 @@ pub struct Kline {
 }
 
 impl Kline {
-  pub fn new(symbol: String, payload: &Vec<Value>) -> ThreadSafeResult<Self> {
+  pub fn new(symbol: String, payload: &Vec<Value>) -> ParseResult<Self> {
     return Ok(Kline {
       symbol,
       open_time: cast_datetime("open_time", &payload[0])?,

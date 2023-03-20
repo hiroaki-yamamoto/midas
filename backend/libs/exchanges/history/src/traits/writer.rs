@@ -1,9 +1,9 @@
 use ::async_trait::async_trait;
+use ::errors::WriterResult;
 use ::futures::stream::BoxStream;
 use ::mongodb::bson::Document;
 use ::mongodb::error::Result as MongoResult;
 use ::mongodb::results::{DeleteResult, InsertManyResult};
-use ::types::ThreadSafeResult;
 
 use crate::entities::KlinesByExchange;
 
@@ -13,7 +13,7 @@ pub trait HistoryWriter {
   async fn write(
     &self,
     klines: KlinesByExchange,
-  ) -> ThreadSafeResult<InsertManyResult>;
+  ) -> WriterResult<InsertManyResult>;
   async fn list(
     self,
     query: impl Into<Option<Document>> + Send + 'async_trait,

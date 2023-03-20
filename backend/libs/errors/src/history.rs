@@ -1,8 +1,10 @@
 use ::err_derive::Error;
+use ::mongodb::error::Error as DBErr;
 use ::reqwest::Error as ReqErr;
 
 use crate::HTTPErrors;
 use crate::MaximumAttemptExceeded;
+use crate::UnknownExchangeError;
 use crate::ValidationErr;
 
 #[derive(Debug, Error)]
@@ -18,4 +20,13 @@ pub enum FetchErr {
   MaximumAttemptExceeded(#[source] MaximumAttemptExceeded),
 }
 
+#[derive(Debug, Error)]
+pub enum WriterErr {
+  #[error(display = "Unknown Exchange: {}", _0)]
+  UnknownExchange(#[source] UnknownExchangeError),
+  #[error(display = "Database Error: {}", _0)]
+  DBErr(#[source] DBErr),
+}
+
 pub type FetchResult<T> = Result<T, FetchErr>;
+pub type WriterResult<T> = Result<T, WriterErr>;

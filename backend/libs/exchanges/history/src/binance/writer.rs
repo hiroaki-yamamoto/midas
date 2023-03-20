@@ -8,8 +8,8 @@ use ::mongodb::bson::{doc, Document};
 use ::mongodb::error::Result as MongoResult;
 use ::mongodb::results::{DeleteResult, InsertManyResult};
 use ::mongodb::{Collection, Database};
-use ::types::ThreadSafeResult;
 
+use ::errors::WriterResult;
 use ::writers::DatabaseWriter;
 
 use super::entities::Kline;
@@ -52,7 +52,7 @@ impl HistoryWriterTrait for HistoryWriter {
   async fn write(
     &self,
     klines: KlinesByExchange,
-  ) -> ThreadSafeResult<InsertManyResult> {
+  ) -> WriterResult<InsertManyResult> {
     let klines = Vec::<Kline>::try_from(klines)?;
     return Ok(self.col.insert_many(klines, None).await?);
   }
