@@ -10,8 +10,8 @@ use ::mongodb::{Collection, Database};
 use ::nats::jetstream::JetStream as NatsJS;
 use ::subscribe::PubSub;
 
+use ::errors::KeyChainResult;
 use ::rpc::entities::Exchanges;
-use ::types::{GenericResult, ThreadSafeResult};
 
 pub use ::entities::APIKey;
 use ::entities::APIKeyEvent;
@@ -38,7 +38,10 @@ impl KeyChain {
     return ret;
   }
 
-  pub async fn push(&self, api_key: APIKey) -> GenericResult<Option<ObjectId>> {
+  pub async fn push(
+    &self,
+    api_key: APIKey,
+  ) -> KeyChainResult<Option<ObjectId>> {
     let result = self.col.insert_one(&api_key, None).await?;
     let id = result.inserted_id.as_object_id();
     let mut api_key = api_key.clone();
@@ -52,7 +55,7 @@ impl KeyChain {
     &self,
     id: ObjectId,
     label: &str,
-  ) -> GenericResult<()> {
+  ) -> KeyChainResult<()> {
     let _ = self
       .col
       .update_one(
@@ -69,7 +72,7 @@ impl KeyChain {
   pub async fn list(
     &self,
     filter: Document,
-  ) -> ThreadSafeResult<BoxStream<'_, APIKey>> {
+  ) -> KeyChainResult<BoxStream<'_, APIKey>> {
     let stream = self
       .col
       .find(filter, None)
@@ -97,7 +100,7 @@ impl KeyChain {
     return Ok(key);
   }
 
-  pub async fn delete(&self, id: ObjectId) -> GenericResult<()> {
+  pub async fn delete(&self, id: ObjectId) -> KeyChainResult<()> {
     if let Some(doc) =
       self.col.find_one_and_delete(doc! {"_id": id}, None).await?
     {

@@ -1675,6 +1675,7 @@ name = "keychain"
 version = "0.1.0"
 dependencies = [
  "entities",
+ "errors",
  "futures",
  "mongodb",
  "nats",
