@@ -30,6 +30,7 @@ pub use object::ObjectNotFound;
 pub use observers::{ObserverError, ObserverResult};
 pub use parse::{ParseError, ParseResult};
 pub use status::{HTTPErrors, HTTPResult, StatusFailure};
+pub use symbols::{SymbolFetchError, SymbolFetchResult};
 pub use unknown::UnknownExchangeError;
 pub use validation::ValidationErr;
 pub use vec_elem::{RawVecElemErrs, VecElementErr, VecElementErrs};

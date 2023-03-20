@@ -4,15 +4,16 @@ use ::async_trait::async_trait;
 use ::futures::future::join;
 use ::futures::stream::StreamExt;
 use ::mongodb::bson::{doc, Document};
+use ::mongodb::error::Result as DBResult;
 use ::mongodb::Database;
 use ::nats::jetstream::JetStream as NatsJS;
 pub use ::reqwest::Result as ReqRes;
 use ::url::Url;
 
 use ::clients::binance::REST_ENDPOINTS;
+use ::errors::{SymbolFetchError, SymbolFetchResult};
 use ::round::RestClient;
 use ::rpc::symbols::SymbolInfo;
-use ::types::ThreadSafeResult;
 
 use super::entities::{ExchangeInfo, Symbol};
 use super::manager::SymbolUpdateEventManager;
@@ -49,7 +50,7 @@ impl SymbolFetcher {
   pub async fn get(
     &self,
     filter: impl Into<Option<Document>> + Send,
-  ) -> ThreadSafeResult<Vec<SymbolInfo>> {
+  ) -> DBResult<Vec<SymbolInfo>> {
     let docs = self.recorder.list(filter).await?;
     let docs: Vec<SymbolInfo> = docs.map(|doc| doc.into()).collect().await;
     return Ok(docs);
@@ -59,7 +60,7 @@ impl SymbolFetcher {
 #[async_trait]
 impl SymbolFetcherTrait for SymbolFetcher {
   type SymbolType = Symbol;
-  async fn refresh(&mut self) -> ThreadSafeResult<Vec<Self::SymbolType>> {
+  async fn refresh(&mut self) -> SymbolFetchResult<Vec<Self::SymbolType>> {
     let resp = self.cli.get::<()>(None, None).await?;
     let old_symbols = self.recorder.list(doc! {}).await?;
     let old_symbols: Vec<Symbol> = old_symbols.collect().await;
@@ -80,11 +81,14 @@ impl SymbolFetcherTrait for SymbolFetcher {
       update?;
       return Ok(self.recorder.list(None).await?.collect().await);
     } else {
-      return Err(Box::new(StatusFailure {
-        url: Some(self.cli.get_current_url()).cloned(),
-        code: resp_status.as_u16(),
-        text: resp.text().await?,
-      }));
+      return Err(SymbolFetchError::HTTPErr(
+        StatusFailure {
+          url: Some(self.cli.get_current_url()).cloned(),
+          code: resp_status.as_u16(),
+          text: resp.text().await?,
+        }
+        .into(),
+      ));
     }
   }
 }

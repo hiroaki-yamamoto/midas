@@ -25,7 +25,7 @@ async fn main() {
   let broker = cfg.nats_cli().unwrap();
   let redis = cfg.redis;
   let host: SocketAddr = cfg.host.parse().unwrap();
-  let svc = Service::new(&broker, &redis).await.unwrap();
+  let svc = Service::new(&broker, &redis).await;
   let csrf = CSRF::new(CSRFOption::builder());
   let access_log = ::access_logger::log();
   let route = csrf
