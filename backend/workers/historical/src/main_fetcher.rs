@@ -6,7 +6,7 @@ use ::std::collections::HashMap;
 use ::clap::Parser;
 use ::futures::StreamExt;
 use ::libc::{SIGINT, SIGTERM};
-use ::log::{as_display, error, info};
+use ::log::{as_error, error, info};
 
 #[cfg(debug_assertions)]
 use ::log::{as_serde, warn};
@@ -80,7 +80,7 @@ async fn main() {
           Some(fetcher) => {
             match fetcher.fetch(&req).await {
               Err(e) => {
-                error!(error = as_display!(e); "Failed to fetch klines");
+                error!(error = as_error!(e); "Failed to fetch klines");
                 continue;
               },
               Ok(k) => k
@@ -92,21 +92,21 @@ async fn main() {
           }
         };
         if let Err(e) = writer.write(klines).await {
-          error!(error = as_display!(e); "Failed to write the klines");
+          error!(error = as_error!(e); "Failed to write the klines");
           continue;
         }
         if let Err(e) = cur_prog_kvs.incr(
           req.exchange.as_string(),
           req.symbol.clone(), 1
         ) {
-          error!(error = as_display!(e); "Failed to report the progress");
+          error!(error = as_error!(e); "Failed to report the progress");
         };
         if let Err(e) = change_event_pub.publish(&FetchStatusChanged{
           exchange: req.exchange,
           symbol: req.symbol,
         }) {
           error!(
-            error = as_display!(e);
+            error = as_error!(e);
             "Failed to broadcast progress changed event"
           );
         };
