@@ -96,7 +96,7 @@ impl Config {
   }
 
   pub fn init_logger(&self) {
-    ::env_logger::init();
+    ::json_env_logger2::init();
   }
 
   pub fn build_rest_client(&self) -> ConfigResult<Client> {

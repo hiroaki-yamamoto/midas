@@ -83,7 +83,7 @@ impl RestClient {
         }
       }
       self.state = index;
-      return Ok(resp?.error_for_status()?);
+      return Ok(resp?);
     }
     return Err(MaximumAttemptExceeded {}.into());
   }
