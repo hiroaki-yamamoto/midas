@@ -58,7 +58,7 @@ async fn main() {
 
   loop {
     select! {
-      Some((req, _)) = sub.next() => {
+      Some((req, msg)) = sub.next() => {
         #[cfg(debug_assertions)]
         {
           if let Some(dupe_list) = dupe_map.get_mut(&(req.exchange, req.symbol.clone())) {
@@ -95,6 +95,7 @@ async fn main() {
           error!(error = as_error!(e); "Failed to write the klines");
           continue;
         }
+        let _ = msg.ack();
         if let Err(e) = cur_prog_kvs.incr(
           req.exchange.as_string(),
           req.symbol.clone(), 1

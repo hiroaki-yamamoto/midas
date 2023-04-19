@@ -268,7 +268,7 @@ impl TradeObserver {
         Some(symbol) = initial_symbols_stream.next() => {
           add_buf.insert(symbol.symbol);
         },
-        Some((event, _)) = symbol_event.next() => {
+        Some((event, msg)) = symbol_event.next() => {
           match event {
             SymbolEvent::Add(symbol) => {
               if self.is_symbol_fit(&symbol_indices, &symbol) {
@@ -278,7 +278,8 @@ impl TradeObserver {
             SymbolEvent::Remove(symbol) => {
               del_buf.insert(symbol.symbol);
             }
-          }
+          };
+          let _ = msg.ack();
         },
         _ = event_delay => {
           if clear_sym_map_flag {
@@ -362,8 +363,9 @@ impl TradeObserverTrait for TradeObserver {
     let st = self
       .bookticker_pubsub
       .queue_subscribe("observerBookTicker")?;
-    let st = st.map(|(item, _)| {
+    let st = st.map(|(item, msg)| {
       let ret: CommonBookTicker = item.into();
+      let _ = msg.ack();
       return ret;
     });
     return Ok(st.boxed());

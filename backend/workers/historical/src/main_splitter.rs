@@ -47,7 +47,7 @@ async fn main() {
   info!("Ready.");
   loop {
     select! {
-      Some((req, _)) = req_sub.next() => {
+      Some((req, msg)) = req_sub.next() => {
         let mut start = req.start.map(|start| start.into()).unwrap_or(UNIX_EPOCH);
         let end = req.end.map(|end| end.into()).unwrap_or(UNIX_EPOCH);
         info!(
@@ -122,7 +122,7 @@ async fn main() {
 
         #[cfg(debug_assertions)]
         dupe_list.insert(start);
-
+        let _ = msg.ack();
       },
       _ = sig.recv() => {break;},
     }

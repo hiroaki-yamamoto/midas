@@ -223,7 +223,7 @@ impl UserStreamTrait for UserStream {
     loop {
       let me = Arc::clone(&me);
       select! {
-        Some((event, _)) = keychain_sub.next() => {
+        Some((event, msg)) = keychain_sub.next() => {
           let mut me = me.lock().await;
           match event {
             APIKeyEvent::Add(APIKey::Binance(api_key)) => {
@@ -236,9 +236,10 @@ impl UserStreamTrait for UserStream {
               }
             },
           }
-          drop(me)
+          drop(me);
+          let _ = msg.ack();
         },
-        Some((listen_key, _)) = listen_key_sub.next() => {
+        Some((listen_key, msg)) = listen_key_sub.next() => {
           let me = me.lock().await;
           let socket = match me.init_websocket(
             format!("{}/{}", WS_ENDPOINT, listen_key.listen_key)
@@ -252,6 +253,7 @@ impl UserStreamTrait for UserStream {
           drop(me);
           sockets.insert(listen_key.pub_key.clone(), socket);
           listen_keys.insert(listen_key.pub_key, listen_key.listen_key);
+          let _ = msg.ack();
         },
         _ = listen_key_refresh.tick() => {
           let this = me.lock().await;
@@ -274,7 +276,7 @@ impl UserStreamTrait for UserStream {
           join_all(result_defer).await;
           drop(this);
         },
-        Some((pub_key, _)) = reauth_sub.next() => {
+        Some((pub_key, msg)) = reauth_sub.next() => {
           let mut me = me.lock().await;
           match me.handle_disconnect(&pub_key).await {
             Ok(_) => {},
@@ -284,6 +286,7 @@ impl UserStreamTrait for UserStream {
               );
             },
           };
+          let _ = msg.ack();
         },
         Some((api_key, msg)) = sockets.next() => {
           // I have no idea to handle the dirty close...
