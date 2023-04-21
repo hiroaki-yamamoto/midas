@@ -91,7 +91,7 @@ impl Service {
             }
             Ok(mut resp) => loop {
               select! {
-                Some((item, msg)) = resp.next() => {
+                Some((item, _)) = resp.next() => {
                   let size = size.get(
                     item.exchange.as_string(),
                     &item.symbol
@@ -111,7 +111,6 @@ impl Service {
                   let payload = Message::text(payload);
                   let _ = sock.send(payload).await;
                   let _ = sock.flush().await;
-                  let _ = msg.ack();
                 },
                 Some(Ok(msg)) = sock.next() => {
                   if msg.is_close() {

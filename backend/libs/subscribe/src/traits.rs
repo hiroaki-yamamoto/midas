@@ -45,6 +45,7 @@ where
     let (sender, recv) = unbounded_channel();
     thread::spawn(move || {
       while let Some(msg) = sub.next() {
+        let _ = msg.ack();
         let obj = from_msgpack::<T>(&msg.data).map(|obj| (obj, msg));
         if let Err(ref e) = obj {
           println!("Msg deserialization failure: {:?}", e);

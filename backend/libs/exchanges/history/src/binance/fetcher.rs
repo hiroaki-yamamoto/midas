@@ -119,6 +119,8 @@ impl HistoryFetcherTrait for HistoryFetcher {
           "Unexpected Payload.",
         );
       }
+      let wait_dur = StdDur::from_nanos((random::<u64>() + 1) % 1_000_000);
+      sleep(wait_dur).await;
     }
     return Err(MaximumAttemptExceeded::default().into());
   }
