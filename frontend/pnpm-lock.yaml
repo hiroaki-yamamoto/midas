@@ -71,7 +71,7 @@ dependencies:
 devDependencies:
   '@angular-devkit/build-angular':
     specifier: ~15.2.0
-    version: 15.2.0(@angular/compiler-cli@15.2.0)(@angular/localize@15.2.8)(karma@6.4.0)(typescript@4.5.5)
+    version: 15.2.0(@angular/compiler-cli@15.2.0)(@angular/localize@15.2.9)(karma@6.4.0)(typescript@4.5.5)
   '@angular-eslint/builder':
     specifier: 15.2.1
     version: 15.2.1(eslint@8.13.0)(typescript@4.5.5)
@@ -94,8 +94,8 @@ devDependencies:
     specifier: ~15.2.0
     version: 15.2.0(@angular/compiler@15.2.0)(typescript@4.5.5)
   '@angular/localize':
-    specifier: 15.2.8
-    version: 15.2.8(@angular/compiler-cli@15.2.0)(@angular/compiler@15.2.0)
+    specifier: 15.2.9
+    version: 15.2.9(@angular/compiler-cli@15.2.0)(@angular/compiler@15.2.0)
   '@cypress/schematic':
     specifier: 2.5.0
     version: 2.5.0(@angular/cli@15.2.0)(@angular/core@15.2.0)
@@ -212,7 +212,7 @@ packages:
       - chokidar
     dev: true
 
-  /@angular-devkit/build-angular@15.2.0(@angular/compiler-cli@15.2.0)(@angular/localize@15.2.8)(karma@6.4.0)(typescript@4.5.5):
+  /@angular-devkit/build-angular@15.2.0(@angular/compiler-cli@15.2.0)(@angular/localize@15.2.9)(karma@6.4.0)(typescript@4.5.5):
     resolution: {integrity: sha512-scEZSBlVPWk7cFEoIVjW3T84it6ZPB4AU/U+dLuIvBT1P0V7R4Kctp8J219eAKsxrjTdD6hvYKXSP2uBFoqgng==}
     engines: {node: ^14.20.0 || ^16.13.0 || >=18.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
     peerDependencies:
@@ -246,7 +246,7 @@ packages:
       '@angular-devkit/build-webpack': 0.1502.0(chokidar@3.5.3)(webpack-dev-server@4.11.1)(webpack@5.75.0)
       '@angular-devkit/core': 15.2.0(chokidar@3.5.3)
       '@angular/compiler-cli': 15.2.0(@angular/compiler@15.2.0)(typescript@4.5.5)
-      '@angular/localize': 15.2.8(@angular/compiler-cli@15.2.0)(@angular/compiler@15.2.0)
+      '@angular/localize': 15.2.9(@angular/compiler-cli@15.2.0)(@angular/compiler@15.2.0)
       '@babel/core': 7.20.12
       '@babel/generator': 7.20.14
       '@babel/helper-annotate-as-pure': 7.18.6
@@ -635,13 +635,13 @@ packages:
       tslib: 2.3.1
     dev: false
 
-  /@angular/localize@15.2.8(@angular/compiler-cli@15.2.0)(@angular/compiler@15.2.0):
-    resolution: {integrity: sha512-wJLBp0MUnET9kHzBtqIlZ3RQ56JFItXSgmBXagQq+MU+uJZmGvuw6fez0i5wkgv9Rgnr25oCULVtpTF+T5RGYA==}
+  /@angular/localize@15.2.9(@angular/compiler-cli@15.2.0)(@angular/compiler@15.2.0):
+    resolution: {integrity: sha512-7ZGK3BWwIukSK5ORWjM3y/FYj7/ZJFl1RO1GCeL/tHD4nq0kd3q3pYvcpnoi9HGl+q8AkL24xdsfzgCFo8SB0g==}
     engines: {node: ^14.20.0 || ^16.13.0 || >=18.10.0}
     hasBin: true
     peerDependencies:
-      '@angular/compiler': 15.2.8
-      '@angular/compiler-cli': 15.2.8
+      '@angular/compiler': 15.2.9
+      '@angular/compiler-cli': 15.2.9
     dependencies:
       '@angular/compiler': 15.2.0(@angular/core@15.2.0)
       '@angular/compiler-cli': 15.2.0(@angular/compiler@15.2.0)(typescript@4.5.5)
@@ -812,9 +812,9 @@ packages:
     resolution: {integrity: sha512-XsMfHovsUYHFMdrIHkZphTN/2Hzzi78R08NuHfDBehym2VsPDL6Zn/JAD/JQdnRvbSsbQc4mVaU1m6JgtTEElg==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@ampproject/remapping': 2.2.0
+      '@ampproject/remapping': 2.2.1
       '@babel/code-frame': 7.21.4
-      '@babel/generator': 7.20.14
+      '@babel/generator': 7.21.5
       '@babel/helper-compilation-targets': 7.21.5(@babel/core@7.20.12)
       '@babel/helper-module-transforms': 7.21.5
       '@babel/helpers': 7.21.5
@@ -3143,14 +3143,14 @@ packages:
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
     dependencies:
       '@gar/promisify': 1.1.3
-      semver: 7.3.8
+      semver: 7.5.0
     dev: true
 
   /@npmcli/fs@3.1.0:
     resolution: {integrity: sha512-7kZUAaLscfgbwBQRbvdMYaZOWyMEcPTH/tJjnyAWJ/dvvs9Ef+CERx/qJb9GExJpl1qipaDGn7KqHnFGGixd0w==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
-      semver: 7.3.8
+      semver: 7.5.0
     dev: true
 
   /@npmcli/git@4.0.4:
@@ -3163,7 +3163,7 @@ packages:
       proc-log: 3.0.0
       promise-inflight: 1.0.1
       promise-retry: 2.0.1
-      semver: 7.3.8
+      semver: 7.5.0
       which: 3.0.0
     transitivePeerDependencies:
       - bluebird
@@ -4677,7 +4677,7 @@ packages:
   /builtins@5.0.1:
     resolution: {integrity: sha512-qwVpFEHNfhYJIzNRBvd2C1kyo6jz3ZSMPyyuR47OPdiKWlbYnZNyDWuyR175qDnAJLiCo5fBBqPb3RiXgWlkOQ==}
     dependencies:
-      semver: 7.3.8
+      semver: 7.5.0
     dev: true
 
   /bytes@3.0.0:
@@ -5181,7 +5181,7 @@ packages:
       postcss-modules-scope: 3.0.0(postcss@8.4.21)
       postcss-modules-values: 4.0.0(postcss@8.4.21)
       postcss-value-parser: 4.2.0
-      semver: 7.3.8
+      semver: 7.5.0
       webpack: 5.75.0(esbuild@0.17.8)
     dev: true
 
@@ -8198,7 +8198,7 @@ packages:
       nopt: 6.0.0
       npmlog: 6.0.2
       rimraf: 3.0.2
-      semver: 7.3.8
+      semver: 7.5.0
       tar: 6.1.13
       which: 2.0.2
     transitivePeerDependencies:
@@ -8224,7 +8224,7 @@ packages:
     dependencies:
       hosted-git-info: 6.1.1
       is-core-module: 2.12.0
-      semver: 7.3.8
+      semver: 7.5.0
       validate-npm-package-license: 3.0.4
     dev: true
 
@@ -8249,7 +8249,7 @@ packages:
     resolution: {integrity: sha512-dH3GmQL4vsPtld59cOn8uY0iOqRmqKvV+DLGwNXV/Q7MDgD2QfOADWd/mFXcIE5LVhYYGjA3baz6W9JneqnuCw==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
-      semver: 7.3.8
+      semver: 7.5.0
     dev: true
 
   /npm-normalize-package-bin@3.0.0:
@@ -8263,7 +8263,7 @@ packages:
     dependencies:
       hosted-git-info: 6.1.1
       proc-log: 3.0.0
-      semver: 7.3.8
+      semver: 7.5.0
       validate-npm-package-name: 5.0.0
     dev: true
 
@@ -8281,7 +8281,7 @@ packages:
       npm-install-checks: 6.1.1
       npm-normalize-package-bin: 3.0.0
       npm-package-arg: 10.1.0
-      semver: 7.3.8
+      semver: 7.5.0
     dev: true
 
   /npm-registry-fetch@14.0.5:
@@ -8689,7 +8689,7 @@ packages:
       cosmiconfig: 7.1.0
       klona: 2.0.6
       postcss: 8.4.21
-      semver: 7.3.8
+      semver: 7.5.0
       webpack: 5.75.0(esbuild@0.17.8)
     dev: true
 
