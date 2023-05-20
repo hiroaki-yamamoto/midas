@@ -14,7 +14,7 @@ prost = "0.11.8"
 serde = { version = "1.0.152", features=["derive"] }
 num-traits = "0.2.15"
 num-derive = "0.3.3"
-clap = { version = "4.2.1", features = ["derive"] }
+clap = { version = "4.3.0", features = ["derive"] }
 http = "0.2.9"
 bson = "2.5.0"
 warp = "0.3.3"

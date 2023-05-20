@@ -18,7 +18,7 @@ probe = { path = "../../libs/probe" }
 
 mongodb = { version = "2.4.0", default-features = false, features = ["async-std-runtime"] }
 log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
-clap = { version = "4.2.1", features = ["derive"] }
+clap = { version = "4.3.0", features = ["derive"] }
 tokio = { version = "1.25.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
 futures = "0.3.26"
 libc = "0.2.139"
