@@ -2,6 +2,7 @@
 use ::std::collections::HashSet;
 
 use ::std::collections::HashMap;
+use ::std::time::Duration;
 
 use ::clap::Parser;
 use ::futures::StreamExt;
@@ -25,7 +26,7 @@ use ::history::kvs::CurrentSyncProgressStore;
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartPubSub};
 use ::history::traits::{
   HistoryFetcher as HistoryFetcherTrait, HistoryWriter as HistoryWriterTrait,
-  IncrementalStore,
+  IncrementalStore, WriteOption,
 };
 
 #[tokio::main]
@@ -97,7 +98,8 @@ async fn main() {
         }
         if let Err(e) = cur_prog_kvs.incr(
           req.exchange.as_string(),
-          req.symbol.clone(), 1
+          req.symbol.clone(), 1,
+          WriteOption::default().duration(Duration::from_secs(180).into()).into()
         ) {
           error!(error = as_error!(e); "Failed to report the progress");
         };

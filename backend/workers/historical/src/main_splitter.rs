@@ -19,10 +19,11 @@ use ::date_splitter::DateSplitter;
 use ::history::binance::fetcher::HistoryFetcher as BinanceHistFetcher;
 use ::history::binance::writer::HistoryWriter as BinanceHistoryWriter;
 use ::history::kvs::{CurrentSyncProgressStore, NumObjectsToFetchStore};
+
 use ::history::pubsub::{HistChartDateSplitPubSub, HistChartPubSub};
 use ::history::traits::{
   HistoryFetcher as HistFetchTrait, HistoryWriter as HistoryWriterTrait,
-  IncrementalStore as IncrStoreTrait, Store as StoreTrait,
+  IncrementalStore as IncrStoreTrait, Store as StoreTrait, WriteOption,
 };
 use ::rpc::entities::Exchanges;
 use ::subscribe::PubSub;
@@ -92,7 +93,8 @@ async fn main() {
         if let Err(e) = num_prg_kvs.set(
           req.exchange.as_string(),
           &req.symbol,
-          splitter.len().unwrap_or(0) as i64
+          splitter.len().unwrap_or(0) as i64,
+          WriteOption::default().duration(Duration::from_secs(180).into()).into(),
         ) {
           error!(error = as_error!(e); "Failed to set the number of objects to fetch");
         }
