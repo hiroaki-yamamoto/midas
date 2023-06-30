@@ -16,4 +16,4 @@ docker run -d \
   -h mongodb \
   -v $SCRIPT_DIR/../../db:/data/db \
   -v $SCRIPT_DIR/scripts:/docker-entrypoint-initdb.d:ro \
-  -- mongo:6.0.2
+  -- mongo:latest

@@ -7,7 +7,7 @@ source ./curl.sh
 export CC="musl-gcc -fPIE -pie -O2"
 
 BASEDIR=`dirname $0`
-DOWNLOAD_URL='https://www.mpfr.org/mpfr-current/mpfr-4.1.0.tar.xz'
+DOWNLOAD_URL='https://www.mpfr.org/mpfr-current/mpfr-4.2.0.tar.xz'
 FILENAME=`basename $DOWNLOAD_URL`
 EXTRACTED_NAME=`basename ${FILENAME} .tar.xz`
 WORK_DIR=`realpath $BASEDIR`
