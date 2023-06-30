@@ -10,12 +10,12 @@ use ::rpc::symbols::{BaseSymbols, SymbolInfo, SymbolList};
 use ::symbols::binance::{
   fetcher as binance_fetcher, recorder as binance_recorder,
 };
-use ::symbols::traits::{SymbolFetcher, SymbolRecorder};
+use ::symbols::traits::{SymbolFetcher, SymbolWriter};
 
 #[derive(Clone)]
 pub struct Service {
   binance_fetcher: binance_fetcher::SymbolFetcher,
-  binance_recorder: binance_recorder::SymbolRecorder,
+  binance_recorder: binance_recorder::SymbolWriter,
 }
 
 impl Service {
@@ -26,7 +26,7 @@ impl Service {
     return Ok(Self {
       binance_fetcher: binance_fetcher::SymbolFetcher::new(broker, db.clone())
         .await?,
-      binance_recorder: binance_recorder::SymbolRecorder::new(db.clone()).await,
+      binance_recorder: binance_recorder::SymbolWriter::new(db.clone()).await,
     });
   }
 
@@ -42,7 +42,7 @@ impl Service {
   fn get_recorder(
     &self,
     exchange: Exchanges,
-  ) -> impl SymbolRecorder + Send + Sync {
+  ) -> impl SymbolWriter + Send + Sync {
     return match exchange {
       Exchanges::Binance => self.binance_recorder.clone(),
     };
@@ -112,7 +112,7 @@ impl Service {
 }
 
 async fn handle_supported_currencies(
-  recorder: impl SymbolRecorder + Send + Sync,
+  recorder: impl SymbolWriter + Send + Sync,
 ) -> Result<Vec<SymbolInfo>, Rejection> {
   let symbols = recorder.list(None).await.map_err(|err| {
     reject::custom(Status::new(
@@ -125,7 +125,7 @@ async fn handle_supported_currencies(
 }
 
 async fn handle_base_currencies(
-  recorder: impl SymbolRecorder + Send + Sync,
+  recorder: impl SymbolWriter + Send + Sync,
 ) -> Result<Vec<String>, Rejection> {
   return recorder.list_base_currencies().await.map_err(|err| {
     reject::custom(Status::new(

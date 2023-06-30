@@ -7,11 +7,11 @@ use super::entities::Bot;
 use super::errors::BotInfoResult;
 
 #[derive(Debug, Clone)]
-pub struct BotInfoRecorder {
+pub struct BotInfoWriter {
   col: Collection<Bot>,
 }
 
-impl BotInfoRecorder {
+impl BotInfoWriter {
   pub fn new(db: &Database) -> Self {
     return Self {
       col: db.collection("bot"),

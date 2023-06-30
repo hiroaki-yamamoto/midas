@@ -17,22 +17,22 @@ use ::rpc::symbols::SymbolInfo;
 
 use super::entities::{ExchangeInfo, Symbol};
 use super::manager::SymbolUpdateEventManager;
-use super::recorder::SymbolRecorder;
+use super::recorder::SymbolWriter;
 
 use crate::traits::SymbolFetcher as SymbolFetcherTrait;
-use crate::traits::SymbolRecorder as SymbolRecorderTrait;
+use crate::traits::SymbolWriter as SymbolWriterTrait;
 use ::errors::StatusFailure;
 
 #[derive(Debug, Clone)]
 pub struct SymbolFetcher {
   broker: NatsJS,
-  recorder: SymbolRecorder,
+  recorder: SymbolWriter,
   cli: RestClient,
 }
 
 impl SymbolFetcher {
   pub async fn new(broker: &NatsJS, db: Database) -> ReqRes<Self> {
-    let recorder = SymbolRecorder::new(db).await;
+    let recorder = SymbolWriter::new(db).await;
     let urls: Vec<Url> = REST_ENDPOINTS
       .into_iter()
       .filter_map(|&url| {

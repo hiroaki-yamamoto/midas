@@ -4,4 +4,4 @@ mod writer;
 
 pub use self::entities::Symbol;
 pub use self::fetcher::SymbolFetcher;
-pub use self::writer::SymbolRecorder;
+pub use self::writer::SymbolWriter;

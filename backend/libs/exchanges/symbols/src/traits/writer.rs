@@ -8,7 +8,7 @@ use ::serde::Serialize;
 use super::entities::Symbol as SymbolTrait;
 
 #[async_trait]
-pub trait SymbolRecorder {
+pub trait SymbolWriter {
   type Type: SymbolTrait + Serialize + Send + 'static;
   type ListStream: Stream<Item = Self::Type> + Send + 'static;
   async fn list(

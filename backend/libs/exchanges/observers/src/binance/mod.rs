@@ -26,7 +26,7 @@ use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::errors::{EmptyError, ObserverResult};
 use ::symbols::binance::entities::{ListSymbolStream, Symbol, SymbolEvent};
 use ::symbols::binance::pubsub::SymbolEventPubSub;
-use ::symbols::binance::recorder::SymbolRecorder;
+use ::symbols::binance::recorder::SymbolWriter;
 use ::types::TLSWebSocket;
 
 use ::clients::binance::WS_ENDPOINT;
@@ -37,14 +37,14 @@ use self::pubsub::BookTickerPubSub;
 use crate::traits::TradeObserver as TradeObserverTrait;
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{InitError, MaximumAttemptExceeded, WebsocketError};
-use ::symbols::traits::SymbolRecorder as SymbolRecorderTrait;
+use ::symbols::traits::SymbolWriter as SymbolWriterTrait;
 
 const NUM_SOCKET: usize = 10;
 const EVENT_DELAY: Duration = Duration::from_secs(1);
 
 #[derive(Clone)]
 pub struct TradeObserver {
-  recorder: Option<SymbolRecorder>,
+  recorder: Option<SymbolWriter>,
   symbol_event: SymbolEventPubSub,
   bookticker_pubsub: BookTickerPubSub,
   add_symbol_count: usize,
@@ -54,7 +54,7 @@ impl TradeObserver {
   pub async fn new(db: Option<Database>, broker: &Broker) -> Self {
     let recorder = match db {
       None => None,
-      Some(db) => Some(SymbolRecorder::new(db).await),
+      Some(db) => Some(SymbolWriter::new(db).await),
     };
     let me = Self {
       symbol_event: SymbolEventPubSub::new(broker.clone()),

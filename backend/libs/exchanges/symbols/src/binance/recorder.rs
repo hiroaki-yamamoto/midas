@@ -6,16 +6,16 @@ use ::mongodb::results::InsertManyResult;
 use ::mongodb::{Collection, Database};
 
 use super::entities::{ListSymbolStream, Symbol};
-use crate::traits::SymbolRecorder as SymbolRecorderTrait;
+use crate::traits::SymbolWriter as SymbolWriterTrait;
 use ::writers::DatabaseWriter as DBWriterTrait;
 
 #[derive(Debug, Clone)]
-pub struct SymbolRecorder {
+pub struct SymbolWriter {
   col: Collection<Symbol>,
   db: Database,
 }
 
-impl SymbolRecorder {
+impl SymbolWriter {
   pub async fn new(db: Database) -> Self {
     let ret = Self {
       col: (&db).collection("binance.symbol"),
@@ -26,7 +26,7 @@ impl SymbolRecorder {
   }
 }
 
-impl DBWriterTrait for SymbolRecorder {
+impl DBWriterTrait for SymbolWriter {
   fn get_database(&self) -> &Database {
     return &self.db;
   }
@@ -36,7 +36,7 @@ impl DBWriterTrait for SymbolRecorder {
 }
 
 #[async_trait]
-impl SymbolRecorderTrait for SymbolRecorder {
+impl SymbolWriterTrait for SymbolWriter {
   type ListStream = ListSymbolStream<'static>;
   type Type = Symbol;
   async fn list(

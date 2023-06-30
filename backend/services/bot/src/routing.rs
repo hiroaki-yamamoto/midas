@@ -6,7 +6,7 @@ use ::warp::http::StatusCode;
 use ::warp::{Filter, Reply};
 
 use ::bot::entities::Bot;
-use ::bot::{BotInfoRecorder, Transpiler};
+use ::bot::{BotInfoWriter, Transpiler};
 use ::reqwest::Client;
 use ::rpc::bot::Bot as RPCBot;
 use ::rpc::entities::Status;
@@ -16,7 +16,7 @@ pub fn construct(
   cli: Client,
   transpiler_location: &str,
 ) -> BoxedFilter<(impl Reply,)> {
-  let writer = BotInfoRecorder::new(db);
+  let writer = BotInfoWriter::new(db);
   let t_loc: String = transpiler_location.into();
   let register = ::warp::post()
     .and(::warp::filters::body::json())
@@ -25,7 +25,7 @@ pub fn construct(
     .and_then(
       |bot: RPCBot,
        cli: Client,
-       writer: BotInfoRecorder,
+       writer: BotInfoWriter,
        transpiler_location: String| async move {
         let bot = Bot::try_from(bot);
         if let Err(e) = bot {
