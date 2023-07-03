@@ -658,6 +658,7 @@ dependencies = [
  "env_logger 0.10.0",
  "errors",
  "json_env_logger2",
+ "libc",
  "log",
  "mongodb",
  "nats",
@@ -665,6 +666,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_yaml",
+ "tokio",
 ]
 
 [[package]]

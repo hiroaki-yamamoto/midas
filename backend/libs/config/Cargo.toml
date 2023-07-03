@@ -19,3 +19,5 @@ reqwest = { version = "0.11.14", features = ["gzip", "brotli", "json", "rustls-t
 redis = { version = "0.23.0", features = ["connection-manager", "tokio-comp"] }
 nats = "0.24.0"
 json_env_logger2 = {version = "0.2.1", features = ["iso-timestamps", "backtrace"]}
+tokio = { version = "1.25.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
+libc = "0.2.139"
