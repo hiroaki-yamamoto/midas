@@ -22,7 +22,7 @@ use ::tokio::signal::unix as signal;
 
 pub async fn init<S, T>(func: T)
 where
-  T: Fn(Config, signal::Signal, Database, Broker, SocketAddr) -> S,
+  T: FnOnce(Config, signal::Signal, Database, Broker, SocketAddr) -> S,
   S: Future<Output = ()>,
 {
   let sig =
