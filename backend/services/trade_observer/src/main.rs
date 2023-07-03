@@ -1,22 +1,18 @@
 use ::std::collections::HashMap;
-use ::std::net::SocketAddr;
 use ::std::time::Duration;
 
-use ::clap::Parser;
 use ::futures::{FutureExt, SinkExt, StreamExt};
-use ::libc::{SIGINT, SIGTERM};
 use ::log::{info, warn};
 use ::nats::jetstream::JetStream as NatsJS;
 use ::rpc::entities::Status;
 use ::serde_json::to_string;
 use ::tokio::select;
-use ::tokio::signal::unix as signal;
 use ::tokio::time::interval;
 use ::warp::ws::Message;
 use ::warp::{Filter, Reply};
 
 use ::access_logger::log;
-use ::config::{CmdArgs, Config};
+use ::config::init;
 use ::csrf::{CSRFOption, CSRF};
 use ::observers::binance;
 use ::observers::traits::TradeObserver as TradeObserverTrait;
@@ -89,48 +85,44 @@ fn handle_websocket(
 
 #[::tokio::main]
 async fn main() {
-  let cmd: CmdArgs = CmdArgs::parse();
-  let cfg = Config::from_fpath(Some(cmd.config)).unwrap();
-  let broker = cfg.nats_cli().unwrap();
-  cfg.init_logger();
-  let csrf = CSRF::new(CSRFOption::builder());
-  let route = csrf
-    .protect()
-    .and(warp::path::param())
-    .map(move |exchange: String| {
-      return (exchange, broker.clone());
-    })
-    .untuple_one()
-    .and_then(|exchange: String, broker: NatsJS| async move {
-      let exchange: Exchanges =
-        exchange.parse().map_err(|_| ::warp::reject::not_found())?;
-      let observer = match exchange {
-        Exchanges::Binance => get_exchange(exchange, &broker).await,
-      };
-      return match observer {
-        None => Err(::warp::reject::not_found()),
-        Some(o) => Ok(o),
-      };
-    })
-    .and(::warp::ws())
-    .map(handle_websocket)
-    .with(log());
-  let mut sig =
-    signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
-  let host: SocketAddr = cfg.host.parse().unwrap();
-  let (_, ws_svr) = ::warp::serve(route)
-    .tls()
-    .cert_path(&cfg.tls.cert)
-    .key_path(&cfg.tls.prv_key)
-    .bind_with_graceful_shutdown(host, async move {
-      sig.recv().await;
+  init(|cfg, mut sig, _, broker, host| async move {
+    let csrf = CSRF::new(CSRFOption::builder());
+    let route = csrf
+      .protect()
+      .and(warp::path::param())
+      .map(move |exchange: String| {
+        return (exchange, broker.clone());
+      })
+      .untuple_one()
+      .and_then(|exchange: String, broker: NatsJS| async move {
+        let exchange: Exchanges =
+          exchange.parse().map_err(|_| ::warp::reject::not_found())?;
+        let observer = match exchange {
+          Exchanges::Binance => get_exchange(exchange, &broker).await,
+        };
+        return match observer {
+          None => Err(::warp::reject::not_found()),
+          Some(o) => Ok(o),
+        };
+      })
+      .and(::warp::ws())
+      .map(handle_websocket)
+      .with(log());
+    let (_, ws_svr) = ::warp::serve(route)
+      .tls()
+      .cert_path(&cfg.tls.cert)
+      .key_path(&cfg.tls.prv_key)
+      .bind_with_graceful_shutdown(host, async move {
+        sig.recv().await;
+      });
+    info!(
+      addr = host.to_string();
+      "Starting Trade Observer Websocket Server",
+    );
+    let ws_svr = ws_svr.then(|_| async {
+      warn!("Trade Observer Websocket Server is shutting down! Bye! Bye!");
     });
-  info!(
-    addr = host.to_string();
-    "Starting Trade Observer Websocket Server",
-  );
-  let ws_svr = ws_svr.then(|_| async {
-    warn!("Trade Observer Websocket Server is shutting down! Bye! Bye!");
-  });
-  ws_svr.await;
+    ws_svr.await;
+  })
+  .await;
 }
