@@ -3130,6 +3130,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "sign"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "ring",
+]
+
+[[package]]
 name = "signal-hook"
 version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
