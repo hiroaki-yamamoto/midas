@@ -40,4 +40,5 @@ members = [
   "workers/trade_observer",
   "workers/notify",
   "workers/bot",
+  "workers/symbol",
 ]
