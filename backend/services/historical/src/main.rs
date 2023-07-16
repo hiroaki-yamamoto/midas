@@ -13,9 +13,9 @@ use crate::service::Service;
 
 #[tokio::main]
 async fn main() {
-  init(|cfg, mut sig, _, broker, host| async move {
+  init(|cfg, mut sig, db, broker, host| async move {
     info!("Historical Kline Service");
-    let svc = Service::new(&broker, &cfg.redis).await;
+    let svc = Service::new(&broker, &cfg.redis, &db).await;
     let csrf = CSRF::new(CSRFOption::builder());
     let access_log = ::access_logger::log();
     let route = csrf

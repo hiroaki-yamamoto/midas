@@ -2,6 +2,8 @@ use ::std::fmt::Debug;
 
 use ::futures::{SinkExt, StreamExt};
 use ::http::StatusCode;
+use ::mongodb::bson::doc;
+use ::mongodb::Database;
 use ::nats::jetstream::JetStream as NatsJS;
 use ::serde_json::{from_slice as parse_json, to_string as jsonify};
 use ::subscribe::PubSub;
@@ -19,20 +21,28 @@ use ::rpc::entities::Status;
 use ::rpc::historical::{
   HistoryFetchRequest as RPCHistFetchReq, Progress, StatusCheckRequest,
 };
+use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
+use ::symbols::traits::SymbolWriter as SymbolWriterTrait;
 
 #[derive(Debug, Clone)]
 pub struct Service {
   redis_cli: redis::Client,
   status: FetchStatusEventPubSub,
   splitter: HistChartDateSplitPubSub,
+  db: Database,
 }
 
 impl Service {
-  pub async fn new(nats: &NatsJS, redis_cli: &redis::Client) -> Self {
+  pub async fn new(
+    nats: &NatsJS,
+    redis_cli: &redis::Client,
+    db: &Database,
+  ) -> Self {
     let ret = Self {
       status: FetchStatusEventPubSub::new(nats.clone()),
       splitter: HistChartDateSplitPubSub::new(nats.clone()),
       redis_cli: redis_cli.clone(),
+      db: db.clone(),
     };
     return ret;
   }
@@ -48,7 +58,11 @@ impl Service {
         return me.clone();
       })
       .and_then(|me: Self| async move {
-        let size = me.redis_cli.clone()
+        let writer = BinanceSymbolWriter::new(&me.db).await;
+        let symbols = writer.list(Some(doc! {
+          "status": "TRADING",
+        })).await;
+        let size = me.redis_cli
           .get_connection()
           .map(|con| NumObjectsToFetchStore::new(con))
           .map_err(|err| {

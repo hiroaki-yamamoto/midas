@@ -31,8 +31,8 @@ pub struct SymbolFetcher {
 }
 
 impl SymbolFetcher {
-  pub async fn new(broker: &NatsJS, db: Database) -> ReqRes<Self> {
-    let recorder = SymbolWriter::new(db).await;
+  pub async fn new(broker: &NatsJS, db: &Database) -> ReqRes<Self> {
+    let recorder = SymbolWriter::new(&db).await;
     let urls: Vec<Url> = REST_ENDPOINTS
       .into_iter()
       .filter_map(|&url| {

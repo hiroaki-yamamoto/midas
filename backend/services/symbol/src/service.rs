@@ -24,9 +24,8 @@ impl Service {
     broker: &NatsJS,
   ) -> binance_fetcher::ReqRes<Self> {
     return Ok(Self {
-      binance_fetcher: binance_fetcher::SymbolFetcher::new(broker, db.clone())
-        .await?,
-      binance_recorder: binance_recorder::SymbolWriter::new(db.clone()).await,
+      binance_fetcher: binance_fetcher::SymbolFetcher::new(broker, db).await?,
+      binance_recorder: binance_recorder::SymbolWriter::new(db).await,
     });
   }
 

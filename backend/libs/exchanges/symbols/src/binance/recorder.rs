@@ -16,10 +16,10 @@ pub struct SymbolWriter {
 }
 
 impl SymbolWriter {
-  pub async fn new(db: Database) -> Self {
+  pub async fn new(db: &Database) -> Self {
     let ret = Self {
       col: (&db).collection("binance.symbol"),
-      db,
+      db: db.clone(),
     };
     ret.update_indices(&["symbol"]).await;
     return ret;

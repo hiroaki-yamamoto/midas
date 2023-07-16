@@ -54,7 +54,7 @@ impl TradeObserver {
   pub async fn new(db: Option<Database>, broker: &Broker) -> Self {
     let recorder = match db {
       None => None,
-      Some(db) => Some(SymbolWriter::new(db).await),
+      Some(db) => Some(SymbolWriter::new(&db).await),
     };
     let me = Self {
       symbol_event: SymbolEventPubSub::new(broker.clone()),
