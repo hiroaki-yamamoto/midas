@@ -1,5 +1,6 @@
 use ::std::fmt::Debug;
 
+use ::futures::stream::BoxStream;
 use ::futures::{SinkExt, StreamExt};
 use ::http::StatusCode;
 use ::mongodb::bson::doc;
@@ -9,7 +10,7 @@ use ::serde_json::{from_slice as parse_json, to_string as jsonify};
 use ::subscribe::PubSub;
 use ::tokio::select;
 use ::warp::filters::BoxedFilter;
-use ::warp::reject::custom as reject_custom;
+use ::warp::reject::{custom as cus_rej, Rejection};
 use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
 
@@ -21,6 +22,7 @@ use ::rpc::entities::Status;
 use ::rpc::historical::{
   HistoryFetchRequest as RPCHistFetchReq, Progress, StatusCheckRequest,
 };
+use ::symbols::binance::entities::Symbol as BinanceSymbol;
 use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
 use ::symbols::traits::SymbolWriter as SymbolWriterTrait;
 
@@ -61,28 +63,31 @@ impl Service {
         let writer = BinanceSymbolWriter::new(&me.db).await;
         let symbols = writer.list(Some(doc! {
           "status": "TRADING",
-        })).await;
+        })).await.map_err(|err| {
+          return cus_rej(Status::new(
+            StatusCode::SERVICE_UNAVAILABLE,
+            format!("(DB, Symbol): {}", err)
+          ));
+        })?;
         let size = me.redis_cli
           .get_connection()
           .map(|con| NumObjectsToFetchStore::new(con))
           .map_err(|err| {
-            Status::new(StatusCode::SERVICE_UNAVAILABLE, format!("(Size) {}", err))
-          });
-        let size = match size {
-          Err(e) => return Err(reject_custom(e)),
-          Ok(v) => v
-        };
+            return cus_rej(Status::new(
+              StatusCode::SERVICE_UNAVAILABLE,
+              format!("(Redis, Size) {}", err)
+            ));
+          })?;
         let cur = me.redis_cli
           .get_connection()
           .map(|con| CurrentSyncProgressStore::new(con))
           .map_err(|err| {
-            Status::new(StatusCode::SERVICE_UNAVAILABLE, format!("(Current) {}", err))
-          });
-        let cur = match cur {
-          Err(e) => return Err(reject_custom(e)),
-          Ok(v) => v
-        };
-        return Ok((me, size, cur))
+            return cus_rej(Status::new(
+              StatusCode::SERVICE_UNAVAILABLE,
+              format!("(Redis, Current) {}", err)
+            ));
+          })?;
+        return Ok::<_, Rejection>((me, size, cur, symbols))
       })
       .untuple_one()
       .and(::warp::ws())
@@ -90,6 +95,7 @@ impl Service {
         me: Self,
         mut size: NumObjectsToFetchStore<redis::Connection>,
         mut cur: CurrentSyncProgressStore<redis::Connection>,
+        mut symbol: BoxStream<BinanceSymbol>,
         ws: Ws
       | {
         return ws.on_upgrade(|mut sock: WebSocket| async move {
