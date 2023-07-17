@@ -1,4 +1,5 @@
 use ::std::fmt::Debug;
+use ::std::sync::{Arc, Mutex};
 
 use ::futures::stream::BoxStream;
 use ::futures::{SinkExt, StreamExt};
@@ -18,11 +19,11 @@ use ::entities::HistoryFetchRequest as HistFetchReq;
 use ::history::kvs::{redis, CurrentSyncProgressStore, NumObjectsToFetchStore};
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartDateSplitPubSub};
 use ::history::traits::Store;
-use ::rpc::entities::Status;
+use ::rpc::entities::{Exchanges, Status};
 use ::rpc::historical::{
   HistoryFetchRequest as RPCHistFetchReq, Progress, StatusCheckRequest,
 };
-use ::symbols::binance::entities::Symbol as BinanceSymbol;
+use ::symbols::binance::entities::ListSymbolStream as BinanceListSymbolStream;
 use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
 use ::symbols::traits::SymbolWriter as SymbolWriterTrait;
 
@@ -33,6 +34,11 @@ pub struct Service {
   splitter: HistChartDateSplitPubSub,
   db: Database,
 }
+
+type TSNumObjectsToFetchStore =
+  Arc<Mutex<NumObjectsToFetchStore<redis::Connection>>>;
+type TSCurrentSyncProgressStore =
+  Arc<Mutex<CurrentSyncProgressStore<redis::Connection>>>;
 
 impl Service {
   pub async fn new(
@@ -71,7 +77,9 @@ impl Service {
         })?;
         let size = me.redis_cli
           .get_connection()
-          .map(|con| NumObjectsToFetchStore::new(con))
+          .map(|con| {
+            return Arc::new(Mutex::new(NumObjectsToFetchStore::new(con)));
+          })
           .map_err(|err| {
             return cus_rej(Status::new(
               StatusCode::SERVICE_UNAVAILABLE,
@@ -80,25 +88,74 @@ impl Service {
           })?;
         let cur = me.redis_cli
           .get_connection()
-          .map(|con| CurrentSyncProgressStore::new(con))
+          .map(|con| {
+            return Arc::new(Mutex::new(CurrentSyncProgressStore::new(con)));
+          })
           .map_err(|err| {
             return cus_rej(Status::new(
               StatusCode::SERVICE_UNAVAILABLE,
               format!("(Redis, Current) {}", err)
             ));
           })?;
-        return Ok::<_, Rejection>((me, size, cur, symbols))
+        return Ok::<_, Rejection>((me, size, cur, symbols));
+      })
+      .and_then(|(me, size, cur, symbol): (
+        Self,
+        TSNumObjectsToFetchStore,
+        TSCurrentSyncProgressStore,
+        BinanceListSymbolStream<'static>,
+      )| async move {
+        let size_ref = size.clone();
+        let cur_ref = cur.clone();
+        let prog = symbol.map(move |symbol| {
+          let mut size = size_ref.lock().unwrap();
+          let mut cur = cur_ref.lock().unwrap();
+          return (
+            size.get(Exchanges::Binance.as_string(), &symbol.symbol),
+            cur.get(Exchanges::Binance.as_string(), &symbol.symbol),
+            symbol.symbol
+          );
+        }).filter_map(|
+          (size, cur, sym): (
+            redis::RedisResult<i64>,
+            redis::RedisResult<i64>,
+            String
+          )
+        | async {
+          if let Some(size) = size.ok() {
+            if let Some(cur) = cur.ok() {
+              return Some((size, cur, sym));
+            }
+          }
+          return None;
+        }).map(|(size, cur, symbol): (i64, i64, String)| {
+          return Progress {
+            exchange: Exchanges::Binance as i32,
+            symbol,
+            size,
+            cur
+          };
+        }).filter_map(|prog: Progress| async move {
+          return jsonify(&prog).ok();
+        }).map(|payload: String| {
+          return Message::text(payload);
+        }).boxed();
+        return Ok::<_, Rejection>((me, size, cur, prog));
       })
       .untuple_one()
       .and(::warp::ws())
-      .map(move |
+      .map(|
         me: Self,
-        mut size: NumObjectsToFetchStore<redis::Connection>,
-        mut cur: CurrentSyncProgressStore<redis::Connection>,
-        mut symbol: BoxStream<BinanceSymbol>,
+        size: TSNumObjectsToFetchStore,
+        cur: TSCurrentSyncProgressStore,
+        mut start_prog: BoxStream<'static, Message>,
         ws: Ws
       | {
         return ws.on_upgrade(|mut sock: WebSocket| async move {
+          while let Some(payload) = start_prog.next().await {
+            let _ = sock.feed(payload).await;
+          }
+          let _ = sock.flush();
           let subsc = me.status.queue_subscribe("histServiceFetchStatus");
           match subsc {
             Err(e) => {
@@ -112,13 +169,19 @@ impl Service {
             Ok(mut resp) => loop {
               select! {
                 Some((item, _)) = resp.next() => {
-                  let size = size.get(
-                    item.exchange.as_string(),
-                    &item.symbol
-                  ).unwrap_or(0);
-                  let cur = cur.get(
-                    item.exchange.as_string(), &item.symbol
-                  ).unwrap_or(0);
+                  let size = {
+                    let mut size = (*size).lock().unwrap();
+                    size.get(
+                      item.exchange.as_string(),
+                      &item.symbol
+                    ).unwrap_or(0)
+                  };
+                  let cur = {
+                    let mut cur = (*cur).lock().unwrap();
+                    cur.get(
+                      item.exchange.as_string(), &item.symbol
+                    ).unwrap_or(0)
+                  };
                   let prog = Progress {
                     exchange: item.exchange as i32,
                     symbol: item.symbol.clone(),
@@ -144,8 +207,14 @@ impl Service {
                     }
                   } else if let Ok(req) = parse_json::<StatusCheckRequest>(msg.as_bytes()) {
                     let exchange = req.exchange().as_string();
-                    let size = size.get(&exchange, &req.symbol).unwrap_or(0);
-                    let cur = cur.get(&exchange, &req.symbol).unwrap_or(0);
+                    let size = {
+                      let mut size = (*size).lock().unwrap();
+                      size.get(&exchange, &req.symbol).unwrap_or(0)
+                    };
+                    let cur = {
+                      let mut cur = (*cur).lock().unwrap();
+                      cur.get(&exchange, &req.symbol).unwrap_or(0)
+                    };
                     let prog = Progress {
                       exchange: req.exchange,
                       symbol: req.symbol,
