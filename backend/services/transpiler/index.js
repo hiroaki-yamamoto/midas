@@ -22,6 +22,7 @@ const listener = (req, res) => {
   if (req.method.toLowerCase() !== 'post') {
     res.writeHead(405);
     res.end('Method not allowed');
+    return;
   }
   let buf = [];
   req.on('data', (chunk) => {
