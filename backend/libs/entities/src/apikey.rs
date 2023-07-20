@@ -82,11 +82,13 @@ impl TryFrom<RPCAPIKey> for APIKey {
   fn try_from(value: RPCAPIKey) -> Result<Self, Self::Error> {
     let exchange: Exchanges =
       FromPrimitive::from_i32(value.exchange).ok_or(ParseError::new::<
+        &str,
         String,
-        String,
+        &str,
       >(
         None,
         Some(value.exchange.to_string()),
+        None,
       ))?;
     let exchange: APIKey = match exchange {
       Exchanges::Binance => APIKey::Binance(APIKeyInner {

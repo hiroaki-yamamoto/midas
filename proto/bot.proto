@@ -15,7 +15,7 @@ message Bot {
   string name = 3;
   entities.Exchanges exchange = 4;
   string base_currency = 5;
-  double trading_amount = 6;
+  string trading_amount = 6;
   string condition = 7;
 }
 
@@ -29,6 +29,6 @@ message Position {
   string botId = 2;
   string symbol = 3;
   PositionStatus status = 4;
-  double trading_amount = 5;
-  double valuation = 6;
+  string trading_amount = 5;
+  string valuation = 6;
 }

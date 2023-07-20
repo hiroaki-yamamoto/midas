@@ -41,7 +41,7 @@ impl FromStr for OrderStatus {
         return Ok(Self::Expired);
       }
       _ => {
-        return Err(ParseError::new::<&str, String>(Some(s), None));
+        return Err(ParseError::new(Some(s), None::<&str>, None::<&str>));
       }
     }
   }

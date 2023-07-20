@@ -32,18 +32,15 @@ impl TryFrom<Fill<String>> for Fill<f64> {
   type Error = ParseError;
   fn try_from(v: Fill<String>) -> Result<Fill<f64>, Self::Error> {
     return Ok(Fill::<f64> {
-      price: v
-        .price
-        .parse()
-        .map_err(|_| ParseError::new(Some("price"), Some(&v.price)))?,
-      qty: v
-        .qty
-        .parse()
-        .map_err(|_| ParseError::new(Some("qty"), Some(&v.qty)))?,
-      commission: v
-        .commission
-        .parse()
-        .map_err(|_| ParseError::new(Some("commission"), Some(&v.qty)))?,
+      price: v.price.parse().map_err(|_| {
+        ParseError::new(Some("price"), Some(&v.price), None::<&str>)
+      })?,
+      qty: v.qty.parse().map_err(|_| {
+        ParseError::new(Some("qty"), Some(&v.qty), None::<&str>)
+      })?,
+      commission: v.commission.parse().map_err(|_| {
+        ParseError::new(Some("commission"), Some(&v.qty), None::<&str>)
+      })?,
       commission_asset: v.commission_asset,
     });
   }

@@ -2,6 +2,7 @@ use ::std::convert::TryFrom;
 use ::std::str::FromStr;
 
 use ::mongodb::bson;
+use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
 
 use ::errors::ParseError;
@@ -17,7 +18,7 @@ pub struct Bot {
   pub base_currency: String,
   pub exchange: Exchanges,
   pub created_at: Option<bson::DateTime>,
-  pub trading_amount: f64,
+  pub trading_amount: Float,
   pub cond_ts: String,
   pub cond_js: Option<String>,
 }
@@ -28,7 +29,7 @@ impl Bot {
     name: String,
     base_currency: String,
     exchange: Exchanges,
-    trading_amount: f64,
+    trading_amount: Float,
     cond: String,
   ) -> Self {
     return Self {
@@ -52,15 +53,24 @@ impl TryFrom<RPCBot> for Bot {
       err.field = Some(String::from("exchange"));
       return err;
     });
+    let trading_amount = value.trading_amount;
+    let trading_amount = Float::parse(&trading_amount).map_err(move |_| {
+      return Self::Error::new(
+        Some("trading_amount"),
+        Some(trading_amount),
+        None::<&str>,
+      );
+    });
+    let trading_amount = Float::with_val(32, trading_amount?);
     return Ok(Self {
       id: bson::oid::ObjectId::from_str(value.id.as_str()).ok(),
       name: value.name,
       base_currency: value.base_currency,
       exchange: exchange?,
-      trading_amount: value.trading_amount,
       created_at: None,
       cond_ts: value.condition,
       cond_js: None,
+      trading_amount,
     });
   }
 }
@@ -76,7 +86,7 @@ impl From<Bot> for RPCBot {
         .created_at
         .map(|time| Timestamp::try_from(time.to_system_time()).ok())
         .flatten(),
-      trading_amount: value.trading_amount,
+      trading_amount: value.trading_amount.to_string(),
       condition: value.cond_ts,
     };
   }
