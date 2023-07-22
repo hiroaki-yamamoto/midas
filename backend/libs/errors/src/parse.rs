@@ -1,8 +1,9 @@
+use ::std::error::Error;
 use ::std::fmt::Debug;
 
-use ::err_derive::Error;
+use ::err_derive::Error as ErrorDerive;
 
-#[derive(Debug, Default, Clone, Error)]
+#[derive(Debug, Default, Clone, ErrorDerive)]
 #[error(
   display = "Failed to parse: (field: {:?}, input: {:?}, desc: {:?})",
   field,
@@ -30,6 +31,23 @@ impl ParseError {
       field: field.map(|s| s.as_ref().to_string()),
       input: input.map(|s| s.as_ref().to_string()),
       desc: desc.map(|s| s.as_ref().into()),
+    };
+  }
+  pub fn raise_parse_err<S, T, U>(
+    field: S,
+    input: T,
+  ) -> impl Fn(U) -> ParseError
+  where
+    S: AsRef<str>,
+    T: AsRef<str>,
+    U: Error,
+  {
+    return move |err: U| {
+      return ParseError::new(
+        (&field).as_ref().into(),
+        (&input).as_ref().into(),
+        err.to_string().into(),
+      );
     };
   }
 }

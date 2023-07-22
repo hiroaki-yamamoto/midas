@@ -5,6 +5,7 @@ use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::Database;
+use ::rug::Float;
 
 use ::rpc::entities::{BackTestPriceBase, Exchanges};
 
@@ -82,10 +83,10 @@ impl ExecutorTrait for Executor {
             exchange: Exchanges::Binance,
             symbol: kline.symbol.clone(),
             id: ObjectId::new().to_string(),
-            bid_price: price - half_spread,
-            ask_price: price + half_spread,
-            ask_qty: kline.volume,
-            bid_qty: kline.volume,
+            bid_price: Float::with_val(32, price - half_spread),
+            ask_price: Float::with_val(32, price + half_spread),
+            ask_qty: Float::with_val(32, kline.volume),
+            bid_qty: Float::with_val(32, kline.volume),
           };
           return ticker;
         });
