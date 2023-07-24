@@ -22,9 +22,9 @@ use crate::traits::{
 };
 
 pub struct Executor {
-  spread: f64,
-  maker_fee: f64,
-  taker_fee: f64,
+  spread: Float,
+  maker_fee: Float,
+  taker_fee: Float,
   cur_trade: Option<BookTicker>,
   orders: HashMap<ObjectId, Order>,
   positions: HashMap<ObjectId, OrderInner>,
@@ -35,9 +35,9 @@ pub struct Executor {
 impl Executor {
   pub async fn new(
     db: &Database,
-    spread: f64,
-    maker_fee: f64,
-    taker_fee: f64,
+    spread: Float,
+    maker_fee: Float,
+    taker_fee: Float,
     price_base_policy: BackTestPriceBase,
   ) -> Self {
     return Self {
@@ -106,8 +106,8 @@ impl ExecutorTrait for Executor {
     &mut self,
     _: ObjectId,
     _: String,
-    _: Option<f64>,
-    _: f64,
+    _: Option<Float>,
+    _: Float,
     _: Option<OrderOption>,
   ) -> ExecutionResult<ObjectId> {
     return Err(
@@ -131,10 +131,10 @@ impl TestExecutorTrait for Executor {
   fn get_current_trade(&self) -> Option<BookTicker> {
     return self.cur_trade.clone();
   }
-  fn maker_fee(&self) -> f64 {
+  fn maker_fee(&self) -> Float {
     return self.maker_fee;
   }
-  fn taker_fee(&self) -> f64 {
+  fn taker_fee(&self) -> Float {
     return self.taker_fee;
   }
   fn get_orders(&self) -> HashMap<ObjectId, Order> {

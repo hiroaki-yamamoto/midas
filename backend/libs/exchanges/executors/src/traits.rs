@@ -3,6 +3,7 @@ use ::std::collections::HashMap;
 use ::async_trait::async_trait;
 use ::futures::stream::BoxStream;
 use ::mongodb::bson::oid::ObjectId;
+use ::rug::Float;
 
 use ::entities::{
   BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
@@ -21,8 +22,8 @@ pub trait Executor {
     &mut self,
     api_key_id: ObjectId,
     symbol: String,
-    price: Option<f64>,
-    budget: f64,
+    price: Option<Float>,
+    budget: Float,
     order_option: Option<OrderOption>,
   ) -> ExecutionResult<ObjectId>;
 
@@ -35,8 +36,8 @@ pub trait Executor {
 
 pub trait TestExecutor {
   fn get_current_trade(&self) -> Option<BookTicker>;
-  fn maker_fee(&self) -> f64;
-  fn taker_fee(&self) -> f64;
+  fn maker_fee(&self) -> Float;
+  fn taker_fee(&self) -> Float;
   fn get_orders(&self) -> HashMap<ObjectId, Order>;
   fn get_positions(&self) -> HashMap<ObjectId, OrderInner>;
   fn set_orders(&mut self, orders: HashMap<ObjectId, Order>);
@@ -94,8 +95,8 @@ pub trait TestExecutor {
   fn create_order(
     &mut self,
     symbol: String,
-    price: Option<f64>,
-    budget: f64,
+    price: Option<Float>,
+    budget: Float,
     order_option: Option<OrderOption>,
   ) -> ExecutionResult<ObjectId> {
     let cur_trade = self.get_current_trade();

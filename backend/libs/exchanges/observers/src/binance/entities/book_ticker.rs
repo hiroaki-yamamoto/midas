@@ -3,7 +3,6 @@ use ::std::convert::TryFrom;
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::ParseError;
 use ::rpc::entities::Exchanges;
-use ::rug::float::ParseFloatError;
 use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
 

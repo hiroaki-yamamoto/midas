@@ -1,4 +1,5 @@
-use ::num_traits::pow::pow;
+use ::rug::ops::Pow;
+use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
 use ::types::stateful_setter;
 
@@ -6,9 +7,9 @@ use ::types::stateful_setter;
 pub struct OrderOption {
   pub iceberg: bool,
   pub num_ladder: u8,
-  pub price_ratio: f64,
+  pub price_ratio: Float,
   // Note: base_asset_amount[n] = base_asset_amount[n-1] * amount_multiplyer
-  pub amount_multiplyer: f64,
+  pub amount_multiplyer: Float,
 }
 
 impl Default for OrderOption {
@@ -16,8 +17,8 @@ impl Default for OrderOption {
     return Self {
       iceberg: false,
       num_ladder: 1,
-      price_ratio: 0.0,
-      amount_multiplyer: 1.0,
+      price_ratio: Float::with_val(32, 0.0),
+      amount_multiplyer: Float::with_val(32, 1.0),
     };
   }
 }
@@ -28,19 +29,21 @@ impl OrderOption {
   }
   stateful_setter!(iceberg, bool);
   stateful_setter!(num_ladder, u8);
-  stateful_setter!(price_ratio, f64);
-  stateful_setter!(amount_multiplyer, f64);
+  stateful_setter!(price_ratio, Float);
+  stateful_setter!(amount_multiplyer, Float);
 
-  pub fn calc_order_price(&self, price: f64, num: usize) -> f64 {
-    return price * pow(self.price_ratio, num);
+  pub fn calc_order_price(&self, price: Float, num: usize) -> Float {
+    return price * Float::with_val(32, &self.price_ratio).pow(num);
   }
 
-  pub fn calc_trading_amounts(&self, budget: f64) -> Vec<f64> {
+  pub fn calc_trading_amounts(&self, budget: Float) -> Vec<Float> {
     let init_amount =
-      budget / pow(self.amount_multiplyer, self.num_ladder as usize);
+      budget / self.amount_multiplyer.clone().pow(self.num_ladder as usize);
     let mut ret = vec![];
     for i in 0..self.num_ladder {
-      ret.push(init_amount * pow(self.amount_multiplyer, i as usize));
+      ret.push(
+        init_amount.clone() * self.amount_multiplyer.clone().pow(i as usize),
+      );
     }
     return ret;
   }

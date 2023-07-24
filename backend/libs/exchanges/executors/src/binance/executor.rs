@@ -10,6 +10,7 @@ use ::mongodb::options::{UpdateModifications, UpdateOptions};
 use ::mongodb::{Collection, Database};
 use ::nats::jetstream::JetStream as NatsJS;
 use ::reqwest::Result as ReqResult;
+use ::rug::Float;
 use ::serde_qs::to_string as to_qs;
 
 use ::entities::{
@@ -36,7 +37,7 @@ pub struct Executor {
   keychain: KeyChain,
   broker: NatsJS,
   db: Database,
-  positions: Collection<OrderResponse<f64, DateTime>>,
+  positions: Collection<OrderResponse<Float, DateTime>>,
   cli: RestClient,
 }
 
@@ -107,8 +108,8 @@ impl ExecutorTrait for Executor {
     &mut self,
     api_key_id: ObjectId,
     symbol: String,
-    price: Option<f64>,
-    budget: f64,
+    price: Option<Float>,
+    budget: Float,
     order_option: Option<OrderOption>,
   ) -> ExecutionResult<ObjectId> {
     let pos_gid = ObjectId::new();
@@ -131,13 +132,14 @@ impl ExecutorTrait for Executor {
                 order_type.clone(),
               );
               if o.iceberg {
-                order = order.iceberg_qty(Some(tr_amount));
+                order = order.iceberg_qty(Some(tr_amount.to_string()));
               } else {
-                order = order.quantity(Some(tr_amount));
+                order = order.quantity(Some(tr_amount.to_string()));
               }
               if order_type == OrderType::Limit {
-                order =
-                  order.price(Some(o.calc_order_price(price.unwrap(), index)));
+                order = order.price(Some(
+                  o.calc_order_price(price.unwrap(), index).to_string(),
+                ));
               }
               order =
                 order.order_response_type(Some(OrderResponseType::RESULT));
@@ -174,7 +176,7 @@ impl ExecutorTrait for Executor {
               let resp = resp?;
               let payload: OrderResponse<String, i64> = resp.json().await?;
               let mut payload =
-                OrderResponse::<f64, DateTime>::try_from(payload)?;
+                OrderResponse::<Float, DateTime>::try_from(payload)?;
               payload.position_group_id = Some(pos_gid.clone());
               let _ = pos
                 .update_one(
@@ -247,14 +249,16 @@ impl ExecutorTrait for Executor {
       let symbol = pos.symbol.clone();
       if let Some(fills) = &pos.fills {
         // Sell the position
-        let qty_to_reverse =
-          fills.into_iter().map(|item| item.qty).sum::<f64>();
+        let qty_to_reverse = fills
+          .into_iter()
+          .map(|item| item.qty)
+          .fold(Float::with_val(32, 0.0), |acc, v| acc + v);
         let req = OrderRequest::<i64>::new(
           symbol.clone(),
           Side::Sell,
           OrderType::Market,
         )
-        .quantity(Some(qty_to_reverse));
+        .quantity(Some(qty_to_reverse.to_string()));
         let qs = to_qs(&req)?;
         let qs = format!("{}&signature={}", qs.clone(), api_key.sign(qs));
         let pos: Order = pos.clone().into();
@@ -282,7 +286,7 @@ impl ExecutorTrait for Executor {
               .await
               .map_err(|e| HTTPErrors::RequestFailure(e))?;
             let rev_order_resp =
-              OrderResponse::<f64, DateTime>::try_from(rev_order_resp)?;
+              OrderResponse::<Float, DateTime>::try_from(rev_order_resp)?;
             let rev_order_resp: Order = rev_order_resp.into();
             let rev_pos_price: OrderInner = rev_order_resp.sum();
             return Ok((pos_pur_price, rev_pos_price, cli.get_state()));
