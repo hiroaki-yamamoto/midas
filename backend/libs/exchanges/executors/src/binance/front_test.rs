@@ -52,10 +52,10 @@ impl TestExecutorTrait for Executor {
   }
 
   fn maker_fee(&self) -> Float {
-    return self.maker_fee;
+    return self.maker_fee.clone();
   }
   fn taker_fee(&self) -> Float {
-    return self.taker_fee;
+    return self.taker_fee.clone();
   }
   fn get_orders(&self) -> HashMap<ObjectId, Order> {
     return self.orders.clone();

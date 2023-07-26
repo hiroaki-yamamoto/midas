@@ -117,7 +117,12 @@ impl ExecutorTrait for Executor {
     let header = self.get_pub_header(&api_key)?;
     let order_type = order_option
       .clone()
-      .map(|_| price.map(|_| OrderType::Limit).unwrap_or(OrderType::Market))
+      .map(|_| {
+        price
+          .as_ref()
+          .map(|_| OrderType::Limit)
+          .unwrap_or(OrderType::Market)
+      })
       .unwrap_or(OrderType::Market);
     let resp_defers: Vec<BoxFuture<ExecutionResult<usize>>> =
       order_option
@@ -138,7 +143,8 @@ impl ExecutorTrait for Executor {
               }
               if order_type == OrderType::Limit {
                 order = order.price(Some(
-                  o.calc_order_price(price.unwrap(), index).to_string(),
+                  o.calc_order_price(price.clone().unwrap(), index)
+                    .to_string(),
                 ));
               }
               order =
@@ -251,7 +257,7 @@ impl ExecutorTrait for Executor {
         // Sell the position
         let qty_to_reverse = fills
           .into_iter()
-          .map(|item| item.qty)
+          .map(|item| &item.qty)
           .fold(Float::with_val(32, 0.0), |acc, v| acc + v);
         let req = OrderRequest::<i64>::new(
           symbol.clone(),
