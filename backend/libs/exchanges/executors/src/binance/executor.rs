@@ -152,7 +152,7 @@ impl ExecutorTrait for Executor {
             OrderRequest::<i64>::new(symbol, Side::Buy, order_type.clone())
               .order_response_type(Some(OrderResponseType::RESULT));
           if order_type == OrderType::Limit {
-            order = order.price(price);
+            order = order.price(price.map(|p| p.to_string()));
           }
           return vec![order];
         })
