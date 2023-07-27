@@ -1466,6 +1466,7 @@ dependencies = [
  "entities",
  "errors",
  "futures",
+ "gmp-mpfr-sys",
  "log",
  "mongodb",
  "nats",
@@ -1476,6 +1477,7 @@ dependencies = [
  "rmp-serde",
  "round",
  "rpc",
+ "rug",
  "serde",
  "serde_json",
  "serde_qs",
@@ -3875,7 +3877,9 @@ name = "types"
 version = "0.1.0"
 dependencies = [
  "errors",
+ "gmp-mpfr-sys",
  "mongodb",
+ "rug",
  "serde",
  "serde_json",
  "tokio",

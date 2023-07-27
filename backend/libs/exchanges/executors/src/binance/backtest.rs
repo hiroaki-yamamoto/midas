@@ -58,7 +58,7 @@ impl ExecutorTrait for Executor {
   async fn open(
     &mut self,
   ) -> ExecutionResult<BoxStream<ExecutionResult<BookTicker>>> {
-    let half_spread = self.spread / 2.0;
+    let half_spread = self.spread.clone() / 2.0;
     let price_base = self.price_base_policy.clone();
     let writer = self.writer.clone();
     let db_stream = writer
@@ -83,8 +83,8 @@ impl ExecutorTrait for Executor {
             exchange: Exchanges::Binance,
             symbol: kline.symbol.clone(),
             id: ObjectId::new().to_string(),
-            bid_price: Float::with_val(32, price - half_spread),
-            ask_price: Float::with_val(32, price + half_spread),
+            bid_price: Float::with_val(32, price - &half_spread),
+            ask_price: Float::with_val(32, price + &half_spread),
             ask_qty: Float::with_val(32, kline.volume),
             bid_qty: Float::with_val(32, kline.volume),
           };
