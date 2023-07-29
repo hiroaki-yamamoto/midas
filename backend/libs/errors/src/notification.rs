@@ -8,6 +8,7 @@ use ::serde_json::Error as JSONErr;
 use crate::APIHeaderErrors;
 use crate::HTTPErrors;
 use crate::MaximumAttemptExceeded;
+use crate::ParseError;
 use crate::VecElementErrs;
 use crate::WebsocketError;
 
@@ -17,6 +18,8 @@ pub enum NotificationError {
   MultipleFloatParseErrors(#[source] VecElementErrs<ParseFloatError>),
   #[error(display = "Single float parsing error: {}", _0)]
   SingleFloatParseError(#[source] ParseFloatError),
+  #[error(display = "Parsing Error: {}", _0)]
+  ParseError(#[source] ParseError),
   #[error(display = "IOError: {}", _0)]
   IOError(#[source] IOErr),
   #[error(display = "APIHeaderError: {}", _0)]

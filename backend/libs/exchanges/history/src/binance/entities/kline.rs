@@ -6,7 +6,7 @@ use ::serde_json::Value;
 
 use ::entities::{TradeTime, TradeTimeTrait};
 use ::errors::ParseResult;
-use ::rug::{Float, Integer};
+use ::rug::Float;
 use ::types::casting::{cast_datetime, cast_f, cast_i64};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

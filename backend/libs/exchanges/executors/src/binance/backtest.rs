@@ -83,10 +83,10 @@ impl ExecutorTrait for Executor {
             exchange: Exchanges::Binance,
             symbol: kline.symbol.clone(),
             id: ObjectId::new().to_string(),
-            bid_price: Float::with_val(32, price - &half_spread),
-            ask_price: Float::with_val(32, price + &half_spread),
-            ask_qty: Float::with_val(32, kline.volume),
-            bid_qty: Float::with_val(32, kline.volume),
+            bid_price: Float::with_val(32, &price - &half_spread),
+            ask_price: Float::with_val(32, &price + &half_spread),
+            ask_qty: Float::with_val(32, &kline.volume),
+            bid_qty: Float::with_val(32, &kline.volume),
           };
           return ticker;
         });
@@ -132,10 +132,10 @@ impl TestExecutorTrait for Executor {
     return self.cur_trade.clone();
   }
   fn maker_fee(&self) -> Float {
-    return self.maker_fee;
+    return self.maker_fee.clone();
   }
   fn taker_fee(&self) -> Float {
-    return self.taker_fee;
+    return self.taker_fee.clone();
   }
   fn get_orders(&self) -> HashMap<ObjectId, Order> {
     return self.orders.clone();

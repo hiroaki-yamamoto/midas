@@ -1,6 +1,6 @@
-use ::std::num::ParseFloatError;
-use mongodb::bson::DateTime;
-use serde::{Deserialize, Serialize};
+use ::mongodb::bson::DateTime;
+use ::rug::Float;
+use ::serde::{Deserialize, Serialize};
 
 use ::errors::NotificationResult;
 
@@ -17,24 +17,24 @@ pub enum UserStreamEvents<DT, FT> {
 }
 
 pub type RawUserStreamEvents = UserStreamEvents<i64, String>;
-pub type CastedUserStreamEvents = UserStreamEvents<DateTime, f64>;
+pub type CastedUserStreamEvents = UserStreamEvents<DateTime, Float>;
 
 impl From<RawUserStreamEvents> for NotificationResult<CastedUserStreamEvents> {
   fn from(v: RawUserStreamEvents) -> Self {
     return Ok(match v {
       RawUserStreamEvents::OutboundAccountPosition(data) => {
-        let data: NotificationResult<AccountUpdate<DateTime, f64>> =
+        let data: NotificationResult<AccountUpdate<DateTime, Float>> =
           data.into();
         CastedUserStreamEvents::OutboundAccountPosition(data?)
       }
       RawUserStreamEvents::BalanceUpdate(data) => {
-        let data: NotificationResult<BalanceUpdate<DateTime, f64>> =
+        let data: NotificationResult<BalanceUpdate<DateTime, Float>> =
           data.into();
         CastedUserStreamEvents::BalanceUpdate(data?)
       }
       RawUserStreamEvents::ExecutionReport(data) => {
-        let data: Result<ExecutionReport<DateTime, f64>, ParseFloatError> =
-          data.into();
+        let data: NotificationResult<ExecutionReport<DateTime, Float>> =
+          data.try_into();
         CastedUserStreamEvents::ExecutionReport(data?)
       }
     });

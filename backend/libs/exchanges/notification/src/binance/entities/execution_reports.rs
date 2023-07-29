@@ -1,14 +1,15 @@
+use ::std::convert::TryFrom;
 use ::std::str::FromStr;
-use std::num::ParseFloatError;
 
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::bson::DateTime;
+use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
 
 use ::entities::{Order as CommonOrder, OrderInner as CommonOrderInner};
 use ::executors::binance::entities::{OrderStatus, Side};
 
-use ::errors::ParseError;
+use ::errors::{NotificationError, ParseError};
 use ::types::casting::cast_datetime_from_i64;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -83,8 +84,8 @@ pub struct ExecutionReport<DateTimeType, FloatType> {
   trade_id: i64,
 }
 
-impl From<ExecutionReport<DateTime, f64>> for CommonOrderInner {
-  fn from(value: ExecutionReport<DateTime, f64>) -> Self {
+impl From<ExecutionReport<DateTime, Float>> for CommonOrderInner {
+  fn from(value: ExecutionReport<DateTime, Float>) -> Self {
     return Self {
       price: value.price,
       qty: value.executed_qty,
@@ -92,11 +93,29 @@ impl From<ExecutionReport<DateTime, f64>> for CommonOrderInner {
   }
 }
 
-impl From<ExecutionReport<i64, String>>
-  for Result<ExecutionReport<DateTime, f64>, ParseFloatError>
+impl TryFrom<ExecutionReport<i64, String>>
+  for ExecutionReport<DateTime, Float>
 {
-  fn from(v: ExecutionReport<i64, String>) -> Self {
-    return Ok(ExecutionReport::<DateTime, f64> {
+  type Error = NotificationError;
+  fn try_from(v: ExecutionReport<i64, String>) -> Result<Self, Self::Error> {
+    let (executed_qty, acc_qty, price, commission_amount) = (
+      Float::parse(v.executed_qty)
+        .map_err(ParseError::raise_parse_err("executed_qty", v.executed_qty))?,
+      Float::parse(v.acc_qty)
+        .map_err(ParseError::raise_parse_err("acc_qty", v.acc_qty))?,
+      Float::parse(v.price)
+        .map_err(ParseError::raise_parse_err("price", v.price))?,
+      Float::parse(v.commission_amount).map_err(
+        ParseError::raise_parse_err("commission_amount", v.commission_amount),
+      )?,
+    );
+    let (executed_qty, acc_qty, price, commission_amount) = (
+      Float::with_val(32, executed_qty),
+      Float::with_val(32, acc_qty),
+      Float::with_val(32, price),
+      Float::with_val(32, commission_amount),
+    );
+    return Ok(ExecutionReport::<DateTime, Float> {
       symbol: v.symbol,
       order_id: v.order_id,
       client_order_id: v.client_order_id,
@@ -104,10 +123,10 @@ impl From<ExecutionReport<i64, String>>
       exec_type: v.exec_type,
       order_status: v.order_status,
       reject_reason: v.reject_reason,
-      executed_qty: v.executed_qty.parse()?,
-      acc_qty: v.acc_qty.parse()?,
-      price: v.price.parse()?,
-      commission_amount: v.commission_amount.parse()?,
+      executed_qty,
+      acc_qty,
+      price,
+      commission_amount,
       commission_asset: v.commission_asset,
       trade_time: cast_datetime_from_i64(v.trade_time).into(),
       trade_id: v.trade_id,
@@ -121,7 +140,7 @@ pub struct ExecutionReports {
   #[serde(rename = "_id")]
   id: ObjectId,
   symbol: String,
-  reports: Vec<ExecutionReport<DateTime, f64>>,
+  reports: Vec<ExecutionReport<DateTime, Float>>,
 }
 
 impl From<ExecutionReports> for CommonOrder {

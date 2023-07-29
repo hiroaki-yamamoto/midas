@@ -67,7 +67,7 @@ pub trait TestExecutor {
         .filter(|&order| order.price >= cur_trade.ask_price)
         .fold(OrderInner::default(), |mut acc, order| {
           let mut order = order.clone();
-          order.qty = order.qty * (1.0 - fee);
+          order.qty = order.qty * (1.0 - fee.clone());
           acc += order;
           return acc;
         });
@@ -104,18 +104,18 @@ pub trait TestExecutor {
       return Err(ExecutionFailed::new("Trade Stream is closed.").into());
     }
     let id = ObjectId::new();
-    let price = price.unwrap_or(cur_trade.as_ref().unwrap().ask_price);
+    let price = price.unwrap_or(cur_trade.unwrap().ask_price);
     let orders = match order_option {
       None => vec![OrderInner {
-        price,
-        qty: budget / price,
+        price: price.clone(),
+        qty: budget / price.clone(),
       }],
       Some(v) => v
         .calc_trading_amounts(budget)
         .into_iter()
         .enumerate()
         .map(|(index, amount)| {
-          let order_price = v.calc_order_price(price, index);
+          let order_price = v.calc_order_price(price.clone(), index);
           OrderInner {
             price: order_price.clone(),
             qty: amount / order_price,
@@ -147,7 +147,7 @@ pub trait TestExecutor {
     let ret = match positions.get_mut(&id) {
       None => ExecutionSummary::default(),
       Some(v) => {
-        let qty = v.qty * (1.0 - fee);
+        let qty = v.qty.clone() * (1.0 - fee);
         let sell_trade = OrderInner { price, qty };
         ExecutionSummary::calculate_profit(&sell_trade, v)
       }

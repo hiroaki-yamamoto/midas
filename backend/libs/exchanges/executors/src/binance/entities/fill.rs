@@ -20,11 +20,13 @@ pub struct Fill<FT> {
 impl Fill<Float> {
   pub fn as_order_inner(&self, side: Side) -> OrderInner {
     let qty = match side {
-      Side::Sell => ((self.price * self.qty) - self.commission) / self.price,
-      Side::Buy => self.qty - self.commission,
+      Side::Sell => {
+        ((self.price.clone() * &self.qty) - &self.commission) / &self.price
+      }
+      Side::Buy => self.qty.clone() - &self.commission,
     };
     return OrderInner {
-      price: self.price,
+      price: self.price.clone(),
       qty,
     };
   }
@@ -33,11 +35,11 @@ impl Fill<Float> {
 impl TryFrom<Fill<String>> for Fill<Float> {
   type Error = ParseError;
   fn try_from(v: Fill<String>) -> Result<Fill<Float>, Self::Error> {
-    let price = Float::parse(v.price)
+    let price = Float::parse(&v.price)
       .map_err(Self::Error::raise_parse_err("price", v.price))?;
-    let qty = Float::parse(v.qty)
+    let qty = Float::parse(&v.qty)
       .map_err(Self::Error::raise_parse_err("price", v.qty))?;
-    let commission = Float::parse(v.commission)
+    let commission = Float::parse(&v.commission)
       .map_err(Self::Error::raise_parse_err("commission", v.commission))?;
 
     let price = Float::with_val(32, price);

@@ -1,5 +1,6 @@
 use ::errors::NotificationResult;
 use ::mongodb::bson::DateTime;
+use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
 
 use ::types::casting::cast_datetime_from_i64;
@@ -15,10 +16,10 @@ pub struct BalanceUpdate<DT, FT> {
 }
 
 impl From<BalanceUpdate<i64, String>>
-  for NotificationResult<BalanceUpdate<DateTime, f64>>
+  for NotificationResult<BalanceUpdate<DateTime, Float>>
 {
   fn from(v: BalanceUpdate<i64, String>) -> Self {
-    return Ok(BalanceUpdate::<DateTime, f64> {
+    return Ok(BalanceUpdate::<DateTime, Float> {
       asset: v.asset,
       balance_delta: v.balance_delta.parse()?,
       clear_time: cast_datetime_from_i64(v.clear_time).into(),
