@@ -1,8 +1,10 @@
 use std::convert::TryFrom;
 
+use ::rug::Float;
+use ::serde::{Deserialize, Serialize};
+
 use ::entities::OrderInner;
 use ::errors::ParseError;
-use ::serde::{Deserialize, Serialize};
 
 use super::side::Side;
 
@@ -15,35 +17,38 @@ pub struct Fill<FT> {
   pub commission_asset: String,
 }
 
-impl Fill<f64> {
+impl Fill<Float> {
   pub fn as_order_inner(&self, side: Side) -> OrderInner {
     let qty = match side {
-      Side::Sell => ((self.price * self.qty) - self.commission) / self.price,
-      Side::Buy => self.qty - self.commission,
+      Side::Sell => {
+        ((self.price.clone() * &self.qty) - &self.commission) / &self.price
+      }
+      Side::Buy => self.qty.clone() - &self.commission,
     };
     return OrderInner {
-      price: self.price,
+      price: self.price.clone(),
       qty,
     };
   }
 }
 
-impl TryFrom<Fill<String>> for Fill<f64> {
+impl TryFrom<Fill<String>> for Fill<Float> {
   type Error = ParseError;
-  fn try_from(v: Fill<String>) -> Result<Fill<f64>, Self::Error> {
-    return Ok(Fill::<f64> {
-      price: v
-        .price
-        .parse()
-        .map_err(|_| ParseError::new(Some("price"), Some(&v.price)))?,
-      qty: v
-        .qty
-        .parse()
-        .map_err(|_| ParseError::new(Some("qty"), Some(&v.qty)))?,
-      commission: v
-        .commission
-        .parse()
-        .map_err(|_| ParseError::new(Some("commission"), Some(&v.qty)))?,
+  fn try_from(v: Fill<String>) -> Result<Fill<Float>, Self::Error> {
+    let price = Float::parse(&v.price)
+      .map_err(Self::Error::raise_parse_err("price", v.price))?;
+    let qty = Float::parse(&v.qty)
+      .map_err(Self::Error::raise_parse_err("price", v.qty))?;
+    let commission = Float::parse(&v.commission)
+      .map_err(Self::Error::raise_parse_err("commission", v.commission))?;
+
+    let price = Float::with_val(32, price);
+    let qty = Float::with_val(32, qty);
+    let commission = Float::with_val(32, commission);
+    return Ok(Fill::<Float> {
+      price,
+      qty,
+      commission,
       commission_asset: v.commission_asset,
     });
   }

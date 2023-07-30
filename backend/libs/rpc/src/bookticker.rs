@@ -7,12 +7,12 @@ pub struct BookTicker {
     pub id: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
     pub symbol: ::prost::alloc::string::String,
-    #[prost(double, tag = "3")]
-    pub bid_price: f64,
-    #[prost(double, tag = "4")]
-    pub bid_qty: f64,
-    #[prost(double, tag = "5")]
-    pub ask_price: f64,
-    #[prost(double, tag = "6")]
-    pub ask_qty: f64,
+    #[prost(string, tag = "3")]
+    pub bid_price: ::prost::alloc::string::String,
+    #[prost(string, tag = "4")]
+    pub bid_qty: ::prost::alloc::string::String,
+    #[prost(string, tag = "5")]
+    pub ask_price: ::prost::alloc::string::String,
+    #[prost(string, tag = "6")]
+    pub ask_qty: ::prost::alloc::string::String,
 }

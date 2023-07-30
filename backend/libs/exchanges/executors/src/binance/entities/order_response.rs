@@ -1,7 +1,9 @@
 use std::convert::TryFrom;
 
+use log::error;
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
+use rug::Float;
 use serde::{Deserialize, Serialize};
 
 use ::entities::Order;
@@ -42,10 +44,25 @@ pub struct OrderResponse<FT, DT> {
   pub fills: Option<Vec<Fill<FT>>>,
 }
 
-impl TryFrom<OrderResponse<String, i64>> for OrderResponse<f64, DateTime> {
+fn opt_string_to_float(v: Option<String>) -> Option<Float> {
+  return v
+    .map(|v| {
+      Float::parse(v)
+        .map_err(|e| {
+          error!("Failed to cast string to Float: {:?}", e);
+          return e;
+        })
+        .ok()
+    })
+    .flatten()
+    .map(|v| Float::with_val(32, v));
+}
+
+impl TryFrom<OrderResponse<String, i64>> for OrderResponse<Float, DateTime> {
   type Error = ParseError;
+
   fn try_from(from: OrderResponse<String, i64>) -> Result<Self, Self::Error> {
-    return Ok(OrderResponse::<f64, DateTime> {
+    return Ok(OrderResponse::<Float, DateTime> {
       id: from.id,
       position_group_id: from.position_group_id,
       settlement_gid: from.settlement_gid,
@@ -55,26 +72,23 @@ impl TryFrom<OrderResponse<String, i64>> for OrderResponse<f64, DateTime> {
       order_list_id: from.order_list_id,
       client_order_id: from.client_order_id,
       transact_time: cast_datetime_from_i64(from.transact_time).into(),
-      price: from.price.map(|v| v.parse::<f64>().ok()).flatten(),
-      orig_qty: from.orig_qty.map(|v| v.parse::<f64>().ok()).flatten(),
-      executed_qty: from.executed_qty.map(|v| v.parse::<f64>().ok()).flatten(),
-      cummulative_quote_qty: from
-        .cummulative_quote_qty
-        .map(|v| v.parse::<f64>().ok())
-        .flatten(),
+      price: opt_string_to_float(from.price),
+      orig_qty: opt_string_to_float(from.orig_qty),
+      executed_qty: opt_string_to_float(from.executed_qty),
+      cummulative_quote_qty: opt_string_to_float(from.cummulative_quote_qty),
       order_type: from.order_type,
       side: from.side,
       fills: from.fills.map(|v| {
         v.into_iter()
-          .filter_map(|item| Fill::<f64>::try_from(item).ok())
+          .filter_map(|item| Fill::<Float>::try_from(item).ok())
           .collect()
       }),
     });
   }
 }
 
-impl<DT> From<OrderResponse<f64, DT>> for Order {
-  fn from(from: OrderResponse<f64, DT>) -> Self {
+impl<DT> From<OrderResponse<Float, DT>> for Order {
+  fn from(from: OrderResponse<Float, DT>) -> Self {
     let side = from.side;
     let inner = from
       .fills

@@ -5,6 +5,7 @@ use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::Database;
+use ::rug::Float;
 
 use ::rpc::entities::{BackTestPriceBase, Exchanges};
 
@@ -21,9 +22,9 @@ use crate::traits::{
 };
 
 pub struct Executor {
-  spread: f64,
-  maker_fee: f64,
-  taker_fee: f64,
+  spread: Float,
+  maker_fee: Float,
+  taker_fee: Float,
   cur_trade: Option<BookTicker>,
   orders: HashMap<ObjectId, Order>,
   positions: HashMap<ObjectId, OrderInner>,
@@ -34,9 +35,9 @@ pub struct Executor {
 impl Executor {
   pub async fn new(
     db: &Database,
-    spread: f64,
-    maker_fee: f64,
-    taker_fee: f64,
+    spread: Float,
+    maker_fee: Float,
+    taker_fee: Float,
     price_base_policy: BackTestPriceBase,
   ) -> Self {
     return Self {
@@ -57,7 +58,7 @@ impl ExecutorTrait for Executor {
   async fn open(
     &mut self,
   ) -> ExecutionResult<BoxStream<ExecutionResult<BookTicker>>> {
-    let half_spread = self.spread / 2.0;
+    let half_spread = self.spread.clone() / 2.0;
     let price_base = self.price_base_policy.clone();
     let writer = self.writer.clone();
     let db_stream = writer
@@ -82,10 +83,10 @@ impl ExecutorTrait for Executor {
             exchange: Exchanges::Binance,
             symbol: kline.symbol.clone(),
             id: ObjectId::new().to_string(),
-            bid_price: price - half_spread,
-            ask_price: price + half_spread,
-            ask_qty: kline.volume,
-            bid_qty: kline.volume,
+            bid_price: Float::with_val(32, &price - &half_spread),
+            ask_price: Float::with_val(32, &price + &half_spread),
+            ask_qty: Float::with_val(32, &kline.volume),
+            bid_qty: Float::with_val(32, &kline.volume),
           };
           return ticker;
         });
@@ -105,8 +106,8 @@ impl ExecutorTrait for Executor {
     &mut self,
     _: ObjectId,
     _: String,
-    _: Option<f64>,
-    _: f64,
+    _: Option<Float>,
+    _: Float,
     _: Option<OrderOption>,
   ) -> ExecutionResult<ObjectId> {
     return Err(
@@ -130,11 +131,11 @@ impl TestExecutorTrait for Executor {
   fn get_current_trade(&self) -> Option<BookTicker> {
     return self.cur_trade.clone();
   }
-  fn maker_fee(&self) -> f64 {
-    return self.maker_fee;
+  fn maker_fee(&self) -> Float {
+    return self.maker_fee.clone();
   }
-  fn taker_fee(&self) -> f64 {
-    return self.taker_fee;
+  fn taker_fee(&self) -> Float {
+    return self.taker_fee.clone();
   }
   fn get_orders(&self) -> HashMap<ObjectId, Order> {
     return self.orders.clone();

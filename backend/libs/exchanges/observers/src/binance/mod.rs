@@ -15,6 +15,7 @@ use ::log::{as_display, as_error, as_serde, debug, error, info, warn};
 use ::mongodb::bson::doc;
 use ::mongodb::Database;
 use ::nats::jetstream::JetStream as Broker;
+use ::rug::Float;
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::subscribe::PubSub;
 use ::tokio::select;
@@ -181,7 +182,7 @@ impl TradeObserver {
   }
 
   async fn handle_trade(&self, data: &[u8]) {
-    let book: BookTicker<f64> = match from_json::<BookTicker<String>>(data) {
+    let book: BookTicker<Float> = match from_json::<BookTicker<String>>(data) {
       Err(e) => {
         warn!(error = as_error!(e); "Failed to decode the payload. Ignoring");
         let data = String::from_utf8(Vec::from(data))
@@ -189,7 +190,7 @@ impl TradeObserver {
         debug!(data = as_serde!(data); "Received");
         return;
       }
-      Ok(v) => match BookTicker::<f64>::try_from(v) {
+      Ok(v) => match BookTicker::<Float>::try_from(v) {
         Err(e) => {
           warn!(
             error = as_display!(e);

@@ -37,7 +37,7 @@ impl ::std::str::FromStr for Exchanges {
   fn from_str(s: &str) -> Result<Self, Self::Err> {
     let ret: Self = match s.to_lowercase().as_str() {
       "binance" => Exchanges::Binance,
-      _ => return Err(ParseError::new(None::<&str>, Some(s))),
+      _ => return Err(ParseError::new(None::<&str>, Some(s), None::<&str>)),
     };
     return Ok(ret);
   }
@@ -52,8 +52,11 @@ impl From<Exchanges> for String {
 impl TryFrom<i32> for Exchanges {
   type Error = ParseError;
   fn try_from(value: i32) -> Result<Self, Self::Error> {
-    return FromPrimitive::from_i32(value)
-      .ok_or(ParseError::new(None::<&str>, Some(value.to_string())));
+    return FromPrimitive::from_i32(value).ok_or(ParseError::new(
+      None::<&str>,
+      Some(value.to_string()),
+      None::<&str>,
+    ));
   }
 }
 

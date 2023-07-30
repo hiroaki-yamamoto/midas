@@ -32,3 +32,5 @@ reqwest = { version = "0.11.14", features = ["gzip", "brotli", "json", "rustls-t
 serde_qs = "0.12.0"
 err-derive = "0.3.1"
 tokio = { version = "1.25.0", features = ["sync"] }
+rug = { version = "1.19.2", features = ["serde"] }
+gmp-mpfr-sys = { version = "1.5.3", features = ["force-cross"] }

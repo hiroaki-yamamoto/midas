@@ -3,6 +3,7 @@ incremental = false
 
 [env]
 PKG_CONFIG_ALLOW_CROSS = "1"
+CC="musl-gcc -fPIE -pie -O2"
 OPENSSL_STATIC = "true"
 OPENSSL_DIR = { value = "../deps/openssl", relative = true}
 OPENSSL_LIB_DIR = { value = "../deps/openssl/lib64", relative = true}

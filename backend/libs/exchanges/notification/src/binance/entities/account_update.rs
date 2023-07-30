@@ -1,14 +1,16 @@
-use ::std::num::ParseFloatError;
+use ::std::convert::TryFrom;
 
-use ::errors::{
-  NotificationResult, RawVecElemErrs, VecElementErr, VecElementErrs,
-};
 use ::mongodb::bson::DateTime;
+use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
 
+use ::errors::{
+  NotificationError, NotificationResult, ParseError, RawVecElemErrs,
+  VecElementErr, VecElementErrs,
+};
 use ::types::casting::cast_datetime_from_i64;
 
-type ChangeAssetResult = Result<ChangedAsset<f64>, ParseFloatError>;
+type ChangeAssetResult<F> = Result<ChangedAsset<F>, ParseError>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChangedAsset<FloatType> {
@@ -20,12 +22,20 @@ pub struct ChangedAsset<FloatType> {
   pub locked_amount: FloatType,
 }
 
-impl From<ChangedAsset<String>> for ChangeAssetResult {
-  fn from(v: ChangedAsset<String>) -> Self {
-    return Ok(ChangedAsset::<f64> {
+impl TryFrom<ChangedAsset<String>> for ChangedAsset<Float> {
+  type Error = ParseError;
+  fn try_from(v: ChangedAsset<String>) -> ChangeAssetResult<Float> {
+    let free_amount = Float::parse(&v.free_amount)
+      .map_err(Self::Error::raise_parse_err("free_amount", v.free_amount))?;
+    let locked_amount = Float::parse(&v.locked_amount).map_err(
+      Self::Error::raise_parse_err("locked_amount", v.locked_amount),
+    )?;
+    let free_amount = Float::with_val(32, free_amount);
+    let locked_amount = Float::with_val(32, locked_amount);
+    return Ok(ChangedAsset::<Float> {
       asset: v.asset,
-      free_amount: v.free_amount.parse()?,
-      locked_amount: v.locked_amount.parse()?,
+      free_amount,
+      locked_amount,
     });
   }
 }
@@ -38,14 +48,13 @@ pub struct AccountUpdate<DT, FT> {
   pub updated_balances: Vec<ChangedAsset<FT>>,
 }
 
-impl From<AccountUpdate<i64, String>>
-  for NotificationResult<AccountUpdate<DateTime, f64>>
-{
-  fn from(v: AccountUpdate<i64, String>) -> Self {
+impl TryFrom<AccountUpdate<i64, String>> for AccountUpdate<DateTime, Float> {
+  type Error = NotificationError;
+  fn try_from(v: AccountUpdate<i64, String>) -> NotificationResult<Self> {
     let (updated_balance, errors): (Vec<_>, Vec<_>) = v
       .updated_balances
       .into_iter()
-      .map(|item| -> ChangeAssetResult { item.into() })
+      .map(|item| -> ChangeAssetResult<Float> { item.try_into() })
       .enumerate()
       .map(|(index, item)| {
         let mut err = None;
@@ -55,10 +64,10 @@ impl From<AccountUpdate<i64, String>>
         return (item.ok(), err);
       })
       .unzip();
-    let errors: VecElementErrs<ParseFloatError> = errors
+    let errors: VecElementErrs<ParseError> = errors
       .into_iter()
       .filter_map(|item| item)
-      .collect::<RawVecElemErrs<ParseFloatError>>()
+      .collect::<RawVecElemErrs<ParseError>>()
       .into();
     if !errors.errors.len() < 1 {
       return Err(errors.into());
@@ -67,7 +76,7 @@ impl From<AccountUpdate<i64, String>>
       .into_iter()
       .filter_map(|item| item)
       .collect();
-    return Ok(AccountUpdate::<DateTime, f64> {
+    return Ok(AccountUpdate::<DateTime, Float> {
       account_update_time: cast_datetime_from_i64(v.account_update_time).into(),
       updated_balances: updated_balance,
     });

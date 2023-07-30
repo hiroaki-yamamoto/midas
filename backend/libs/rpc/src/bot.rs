@@ -13,8 +13,8 @@ pub struct Bot {
     pub exchange: i32,
     #[prost(string, tag = "5")]
     pub base_currency: ::prost::alloc::string::String,
-    #[prost(double, tag = "6")]
-    pub trading_amount: f64,
+    #[prost(string, tag = "6")]
+    pub trading_amount: ::prost::alloc::string::String,
     #[prost(string, tag = "7")]
     pub condition: ::prost::alloc::string::String,
 }
@@ -31,10 +31,10 @@ pub struct Position {
     pub symbol: ::prost::alloc::string::String,
     #[prost(enumeration = "PositionStatus", tag = "4")]
     pub status: i32,
-    #[prost(double, tag = "5")]
-    pub trading_amount: f64,
-    #[prost(double, tag = "6")]
-    pub valuation: f64,
+    #[prost(string, tag = "5")]
+    pub trading_amount: ::prost::alloc::string::String,
+    #[prost(string, tag = "6")]
+    pub valuation: ::prost::alloc::string::String,
 }
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

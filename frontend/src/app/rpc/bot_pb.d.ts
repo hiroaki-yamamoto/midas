@@ -22,8 +22,8 @@ export class Bot extends jspb.Message {
   getBaseCurrency(): string;
   setBaseCurrency(value: string): Bot;
 
-  getTradingAmount(): number;
-  setTradingAmount(value: number): Bot;
+  getTradingAmount(): string;
+  setTradingAmount(value: string): Bot;
 
   getCondition(): string;
   setCondition(value: string): Bot;
@@ -43,7 +43,7 @@ export namespace Bot {
     name: string,
     exchange: entities_pb.Exchanges,
     baseCurrency: string,
-    tradingAmount: number,
+    tradingAmount: string,
     condition: string,
   }
 }
@@ -61,11 +61,11 @@ export class Position extends jspb.Message {
   getStatus(): PositionStatus;
   setStatus(value: PositionStatus): Position;
 
-  getTradingAmount(): number;
-  setTradingAmount(value: number): Position;
+  getTradingAmount(): string;
+  setTradingAmount(value: string): Position;
 
-  getValuation(): number;
-  setValuation(value: number): Position;
+  getValuation(): string;
+  setValuation(value: string): Position;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Position.AsObject;
@@ -81,8 +81,8 @@ export namespace Position {
     botid: string,
     symbol: string,
     status: PositionStatus,
-    tradingAmount: number,
-    valuation: number,
+    tradingAmount: string,
+    valuation: string,
   }
 }
 

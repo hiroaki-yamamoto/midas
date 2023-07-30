@@ -1,6 +1,8 @@
-use ::errors::NotificationResult;
+use ::errors::{NotificationError, NotificationResult, ParseError};
 use ::mongodb::bson::DateTime;
+use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
+use ::std::convert::TryFrom;
 
 use ::types::casting::cast_datetime_from_i64;
 
@@ -14,13 +16,16 @@ pub struct BalanceUpdate<DT, FT> {
   pub clear_time: DT,
 }
 
-impl From<BalanceUpdate<i64, String>>
-  for NotificationResult<BalanceUpdate<DateTime, f64>>
-{
-  fn from(v: BalanceUpdate<i64, String>) -> Self {
-    return Ok(BalanceUpdate::<DateTime, f64> {
+impl TryFrom<BalanceUpdate<i64, String>> for BalanceUpdate<DateTime, Float> {
+  type Error = NotificationError;
+  fn try_from(v: BalanceUpdate<i64, String>) -> NotificationResult<Self> {
+    let balance_delta = Float::parse(&v.balance_delta).map_err(
+      ParseError::raise_parse_err("balance_delta", v.balance_delta),
+    )?;
+    let balance_delta = Float::with_val(32, balance_delta);
+    return Ok(BalanceUpdate::<DateTime, Float> {
       asset: v.asset,
-      balance_delta: v.balance_delta.parse()?,
+      balance_delta,
       clear_time: cast_datetime_from_i64(v.clear_time).into(),
     });
   }

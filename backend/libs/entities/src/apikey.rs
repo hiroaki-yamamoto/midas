@@ -2,7 +2,6 @@ use ::std::convert::TryFrom;
 
 use ::bson::oid::ObjectId;
 use ::bytes::Bytes;
-use ::num_traits::FromPrimitive;
 use ::ring::hmac;
 use ::serde::{Deserialize, Serialize};
 
@@ -80,14 +79,7 @@ impl From<APIKey> for Result<RPCAPIKey, String> {
 impl TryFrom<RPCAPIKey> for APIKey {
   type Error = ParseError;
   fn try_from(value: RPCAPIKey) -> Result<Self, Self::Error> {
-    let exchange: Exchanges =
-      FromPrimitive::from_i32(value.exchange).ok_or(ParseError::new::<
-        String,
-        String,
-      >(
-        None,
-        Some(value.exchange.to_string()),
-      ))?;
+    let exchange: Exchanges = value.exchange();
     let exchange: APIKey = match exchange {
       Exchanges::Binance => APIKey::Binance(APIKeyInner {
         id: ObjectId::parse_str(&value.id).ok(),

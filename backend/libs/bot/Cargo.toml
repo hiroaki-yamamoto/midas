@@ -15,3 +15,5 @@ mongodb = { version = "2.4.0", default-features = false, features = ["async-std-
 reqwest = { version = "0.11.14", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
 rand = "0.8.5"
 err-derive = "0.3.1"
+rug = { version = "1.19.2", features = ["serde"] }
+gmp-mpfr-sys = { version = "1.5.3", features = ["force-cross"] }

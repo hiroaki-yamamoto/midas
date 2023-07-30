@@ -102,7 +102,7 @@ proto.bot.Bot.toObject = function(includeInstance, msg) {
     name: jspb.Message.getFieldWithDefault(msg, 3, ""),
     exchange: jspb.Message.getFieldWithDefault(msg, 4, 0),
     baseCurrency: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    tradingAmount: jspb.Message.getFloatingPointFieldWithDefault(msg, 6, 0.0),
+    tradingAmount: jspb.Message.getFieldWithDefault(msg, 6, ""),
     condition: jspb.Message.getFieldWithDefault(msg, 7, "")
   };
 
@@ -162,7 +162,7 @@ proto.bot.Bot.deserializeBinaryFromReader = function(msg, reader) {
       msg.setBaseCurrency(value);
       break;
     case 6:
-      var value = /** @type {number} */ (reader.readDouble());
+      var value = /** @type {string} */ (reader.readString());
       msg.setTradingAmount(value);
       break;
     case 7:
@@ -235,8 +235,8 @@ proto.bot.Bot.serializeBinaryToWriter = function(message, writer) {
     );
   }
   f = message.getTradingAmount();
-  if (f !== 0.0) {
-    writer.writeDouble(
+  if (f.length > 0) {
+    writer.writeString(
       6,
       f
     );
@@ -361,20 +361,20 @@ proto.bot.Bot.prototype.setBaseCurrency = function(value) {
 
 
 /**
- * optional double trading_amount = 6;
- * @return {number}
+ * optional string trading_amount = 6;
+ * @return {string}
  */
 proto.bot.Bot.prototype.getTradingAmount = function() {
-  return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 6, 0.0));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
 };
 
 
 /**
- * @param {number} value
+ * @param {string} value
  * @return {!proto.bot.Bot} returns this
  */
 proto.bot.Bot.prototype.setTradingAmount = function(value) {
-  return jspb.Message.setProto3FloatField(this, 6, value);
+  return jspb.Message.setProto3StringField(this, 6, value);
 };
 
 
@@ -432,8 +432,8 @@ proto.bot.Position.toObject = function(includeInstance, msg) {
     botid: jspb.Message.getFieldWithDefault(msg, 2, ""),
     symbol: jspb.Message.getFieldWithDefault(msg, 3, ""),
     status: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    tradingAmount: jspb.Message.getFloatingPointFieldWithDefault(msg, 5, 0.0),
-    valuation: jspb.Message.getFloatingPointFieldWithDefault(msg, 6, 0.0)
+    tradingAmount: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    valuation: jspb.Message.getFieldWithDefault(msg, 6, "")
   };
 
   if (includeInstance) {
@@ -487,11 +487,11 @@ proto.bot.Position.deserializeBinaryFromReader = function(msg, reader) {
       msg.setStatus(value);
       break;
     case 5:
-      var value = /** @type {number} */ (reader.readDouble());
+      var value = /** @type {string} */ (reader.readString());
       msg.setTradingAmount(value);
       break;
     case 6:
-      var value = /** @type {number} */ (reader.readDouble());
+      var value = /** @type {string} */ (reader.readString());
       msg.setValuation(value);
       break;
     default:
@@ -552,15 +552,15 @@ proto.bot.Position.serializeBinaryToWriter = function(message, writer) {
     );
   }
   f = message.getTradingAmount();
-  if (f !== 0.0) {
-    writer.writeDouble(
+  if (f.length > 0) {
+    writer.writeString(
       5,
       f
     );
   }
   f = message.getValuation();
-  if (f !== 0.0) {
-    writer.writeDouble(
+  if (f.length > 0) {
+    writer.writeString(
       6,
       f
     );
@@ -641,38 +641,38 @@ proto.bot.Position.prototype.setStatus = function(value) {
 
 
 /**
- * optional double trading_amount = 5;
- * @return {number}
+ * optional string trading_amount = 5;
+ * @return {string}
  */
 proto.bot.Position.prototype.getTradingAmount = function() {
-  return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 5, 0.0));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
 
 /**
- * @param {number} value
+ * @param {string} value
  * @return {!proto.bot.Position} returns this
  */
 proto.bot.Position.prototype.setTradingAmount = function(value) {
-  return jspb.Message.setProto3FloatField(this, 5, value);
+  return jspb.Message.setProto3StringField(this, 5, value);
 };
 
 
 /**
- * optional double valuation = 6;
- * @return {number}
+ * optional string valuation = 6;
+ * @return {string}
  */
 proto.bot.Position.prototype.getValuation = function() {
-  return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 6, 0.0));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
 };
 
 
 /**
- * @param {number} value
+ * @param {string} value
  * @return {!proto.bot.Position} returns this
  */
 proto.bot.Position.prototype.setValuation = function(value) {
-  return jspb.Message.setProto3FloatField(this, 6, value);
+  return jspb.Message.setProto3StringField(this, 6, value);
 };
 
 

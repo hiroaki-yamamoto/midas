@@ -18,20 +18,20 @@ pub struct OrderRequest<DT> {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub time_in_force: Option<TimeInForce>,
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub quantity: Option<f64>,
+  pub quantity: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub quote_order_qty: Option<f64>,
+  pub quote_order_qty: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub price: Option<f64>,
+  pub price: Option<String>,
   #[serde(
     rename(serialize = "newClientOrderId", deserialize = "clientOrderId"),
     skip_serializing_if = "Option::is_none"
   )]
   pub client_order_id: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub stop_price: Option<f64>,
+  pub stop_price: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub iceberg_qty: Option<f64>,
+  pub iceberg_qty: Option<String>,
   #[serde(
     rename(serialize = "newOrderRespType", deserialize = "orderRespType"),
     skip_serializing_if = "Option::is_none"
@@ -44,12 +44,12 @@ pub struct OrderRequest<DT> {
 
 impl<DT> OrderRequest<DT> {
   stateful_setter!(time_in_force, Option<TimeInForce>);
-  stateful_setter!(quantity, Option<f64>);
-  stateful_setter!(quote_order_qty, Option<f64>);
-  stateful_setter!(price, Option<f64>);
+  stateful_setter!(quantity, Option<String>);
+  stateful_setter!(quote_order_qty, Option<String>);
+  stateful_setter!(price, Option<String>);
   stateful_setter!(client_order_id, Option<String>);
-  stateful_setter!(stop_price, Option<f64>);
-  stateful_setter!(iceberg_qty, Option<f64>);
+  stateful_setter!(stop_price, Option<String>);
+  stateful_setter!(iceberg_qty, Option<String>);
   stateful_setter!(order_response_type, Option<OrderResponseType>);
   stateful_setter!(recv_window, Option<i64>);
   stateful_setter!(timestamp, DT);

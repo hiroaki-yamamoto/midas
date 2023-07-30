@@ -5,8 +5,8 @@ package bookticker;
 message BookTicker {
   string id = 1;
   string symbol = 2;
-  double bid_price = 3;
-  double bid_qty = 4;
-  double ask_price = 5;
-  double ask_qty = 6;
+  string bid_price = 3;
+  string bid_qty = 4;
+  string ask_price = 5;
+  string ask_qty = 6;
 }

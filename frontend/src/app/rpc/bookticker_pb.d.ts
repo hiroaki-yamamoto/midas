@@ -9,17 +9,17 @@ export class BookTicker extends jspb.Message {
   getSymbol(): string;
   setSymbol(value: string): BookTicker;
 
-  getBidPrice(): number;
-  setBidPrice(value: number): BookTicker;
+  getBidPrice(): string;
+  setBidPrice(value: string): BookTicker;
 
-  getBidQty(): number;
-  setBidQty(value: number): BookTicker;
+  getBidQty(): string;
+  setBidQty(value: string): BookTicker;
 
-  getAskPrice(): number;
-  setAskPrice(value: number): BookTicker;
+  getAskPrice(): string;
+  setAskPrice(value: string): BookTicker;
 
-  getAskQty(): number;
-  setAskQty(value: number): BookTicker;
+  getAskQty(): string;
+  setAskQty(value: string): BookTicker;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): BookTicker.AsObject;
@@ -33,10 +33,10 @@ export namespace BookTicker {
   export type AsObject = {
     id: string,
     symbol: string,
-    bidPrice: number,
-    bidQty: number,
-    askPrice: number,
-    askQty: number,
+    bidPrice: string,
+    bidQty: string,
+    askPrice: string,
+    askQty: string,
   }
 }
 
