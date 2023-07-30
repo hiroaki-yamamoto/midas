@@ -29,7 +29,7 @@ impl From<RawUserStreamEvents> for NotificationResult<CastedUserStreamEvents> {
       }
       RawUserStreamEvents::BalanceUpdate(data) => {
         let data: NotificationResult<BalanceUpdate<DateTime, Float>> =
-          data.into();
+          data.try_into();
         CastedUserStreamEvents::BalanceUpdate(data?)
       }
       RawUserStreamEvents::ExecutionReport(data) => {
