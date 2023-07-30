@@ -15,7 +15,7 @@ tokio = { version = "1.25.0", features = ["sync", "net"] }
 mongodb = { version = "2.4.0", default-features = false, features = [
   "async-std-runtime",
 ] }
-tokio-tungstenite = { version = "0.19.0", features = ["native-tls"] }
+tokio-tungstenite = { version = "0.20.0", features = ["native-tls"] }
 serde_json = "1.0.93"
 rug = { version = "1.19.2", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.5.3", features = ["force-cross"] }
