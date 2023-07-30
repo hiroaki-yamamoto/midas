@@ -461,6 +461,7 @@ dependencies = [
  "rpc",
  "rug",
  "serde",
+ "types",
 ]
 
 [[package]]

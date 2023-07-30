@@ -4,6 +4,7 @@ use ::std::str::FromStr;
 use ::mongodb::bson;
 use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
+use ::types::casting::cast_f_from_txt;
 
 use ::errors::ParseError;
 use ::rpc::bot::Bot as RPCBot;
@@ -54,14 +55,7 @@ impl TryFrom<RPCBot> for Bot {
       return err;
     });
     let trading_amount = value.trading_amount;
-    let trading_amount = Float::parse(&trading_amount).map_err(move |_| {
-      return Self::Error::new(
-        Some("trading_amount"),
-        Some(trading_amount),
-        None::<&str>,
-      );
-    });
-    let trading_amount = Float::with_val(32, trading_amount?);
+    let trading_amount = cast_f_from_txt("trading_amount", trading_amount)?;
     return Ok(Self {
       id: bson::oid::ObjectId::from_str(value.id.as_str()).ok(),
       name: value.name,

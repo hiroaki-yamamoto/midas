@@ -33,7 +33,7 @@ impl OrderOption {
   stateful_setter!(amount_multiplyer, Float);
 
   pub fn calc_order_price(&self, price: Float, num: usize) -> Float {
-    return price * Float::with_val(32, &self.price_ratio).pow(num);
+    return price * self.price_ratio.clone().pow(num);
   }
 
   pub fn calc_trading_amounts(&self, budget: Float) -> Vec<Float> {

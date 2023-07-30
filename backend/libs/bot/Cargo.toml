@@ -9,10 +9,19 @@ edition = "2021"
 [dependencies]
 rpc = { path = "../rpc" }
 errors = { path = "../errors" }
+types = { path = "../types" }
 
 serde = { version = "1.0.152", features = ["derive"] }
-mongodb = { version = "2.4.0", default-features = false, features = ["async-std-runtime"] }
-reqwest = { version = "0.11.14", features = ["gzip", "brotli", "json", "rustls-tls", "cookies"] }
+mongodb = { version = "2.4.0", default-features = false, features = [
+  "async-std-runtime",
+] }
+reqwest = { version = "0.11.14", features = [
+  "gzip",
+  "brotli",
+  "json",
+  "rustls-tls",
+  "cookies",
+] }
 rand = "0.8.5"
 err-derive = "0.3.1"
 rug = { version = "1.19.2", features = ["serde"] }

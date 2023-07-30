@@ -19,6 +19,16 @@ pub fn cast_datetime_from_i64(value: i64) -> DateTime {
   return DateTime::from_millis(value);
 }
 
+pub fn cast_f_from_txt<T>(fld_name: &str, value: T) -> ParseResult<Float>
+where
+  T: AsRef<str>,
+{
+  let parsed = Float::parse(value.as_ref()).map_err(|e| {
+    return ParseError::new(Some(fld_name), Some(value), e.to_string().into());
+  })?;
+  return Ok(Float::with_val(32, parsed));
+}
+
 pub fn cast_f(fld_name: &str, value: &Value) -> ParseResult<Float> {
   return value
     .as_str()
@@ -28,14 +38,7 @@ pub fn cast_f(fld_name: &str, value: &Value) -> ParseResult<Float> {
       None::<&str>,
     ))
     .and_then(|txt| {
-      let parsed = Float::parse(txt).map_err(|e| {
-        return ParseError::new(
-          Some(fld_name),
-          Some(value.to_string()),
-          e.to_string().into(),
-        );
-      })?;
-      return Ok(Float::with_val(32, parsed));
+      return cast_f_from_txt(fld_name, txt);
     });
 }
 

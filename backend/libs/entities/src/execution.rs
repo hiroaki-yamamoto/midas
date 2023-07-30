@@ -26,10 +26,9 @@ impl ExecutionSummary {
   stateful_setter!(profit_ratio, Option<Float>);
 
   pub fn calculate_profit(op_a: &OrderInner, op_b: &OrderInner) -> Self {
-    let profit = Float::with_val(32, &op_a.price - &op_b.price);
-    let profit_ratio = Float::with_val(32, &op_a.qty * &op_a.price)
-      / Float::with_val(32, &op_b.qty * &op_b.price)
-      - 1.0;
+    let profit = op_a.price.clone() - &op_b.price;
+    let profit_ratio =
+      op_a.qty.clone() * &op_a.price / op_b.qty.clone() * &op_b.price - 1.0;
     return Self::default()
       .price(Some(op_a.price.clone()))
       .qty(Some(op_a.qty.clone()))
