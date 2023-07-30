@@ -99,13 +99,13 @@ impl TryFrom<ExecutionReport<i64, String>>
   type Error = NotificationError;
   fn try_from(v: ExecutionReport<i64, String>) -> Result<Self, Self::Error> {
     let (executed_qty, acc_qty, price, commission_amount) = (
-      Float::parse(v.executed_qty)
+      Float::parse(&v.executed_qty)
         .map_err(ParseError::raise_parse_err("executed_qty", v.executed_qty))?,
-      Float::parse(v.acc_qty)
+      Float::parse(&v.acc_qty)
         .map_err(ParseError::raise_parse_err("acc_qty", v.acc_qty))?,
-      Float::parse(v.price)
+      Float::parse(&v.price)
         .map_err(ParseError::raise_parse_err("price", v.price))?,
-      Float::parse(v.commission_amount).map_err(
+      Float::parse(&v.commission_amount).map_err(
         ParseError::raise_parse_err("commission_amount", v.commission_amount),
       )?,
     );

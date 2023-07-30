@@ -19,7 +19,7 @@ pub struct BalanceUpdate<DT, FT> {
 impl TryFrom<BalanceUpdate<i64, String>> for BalanceUpdate<DateTime, Float> {
   type Error = NotificationError;
   fn try_from(v: BalanceUpdate<i64, String>) -> NotificationResult<Self> {
-    let balance_delta = Float::parse(v.balance_delta).map_err(
+    let balance_delta = Float::parse(&v.balance_delta).map_err(
       ParseError::raise_parse_err("balance_delta", v.balance_delta),
     )?;
     let balance_delta = Float::with_val(32, balance_delta);

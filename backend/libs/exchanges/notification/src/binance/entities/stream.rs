@@ -24,7 +24,7 @@ impl From<RawUserStreamEvents> for NotificationResult<CastedUserStreamEvents> {
     return Ok(match v {
       RawUserStreamEvents::OutboundAccountPosition(data) => {
         let data: NotificationResult<AccountUpdate<DateTime, Float>> =
-          data.into();
+          data.try_into();
         CastedUserStreamEvents::OutboundAccountPosition(data?)
       }
       RawUserStreamEvents::BalanceUpdate(data) => {

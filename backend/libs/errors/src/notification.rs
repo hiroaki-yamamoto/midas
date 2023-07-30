@@ -1,5 +1,4 @@
 use ::std::io::Error as IOErr;
-use ::std::num::ParseFloatError;
 
 use ::err_derive::Error;
 use ::reqwest::Error as ReqErr;
@@ -15,9 +14,7 @@ use crate::WebsocketError;
 #[derive(Debug, Error)]
 pub enum NotificationError {
   #[error(display = "Multiple Float Parsing Errors: {}", _0)]
-  MultipleFloatParseErrors(#[source] VecElementErrs<ParseFloatError>),
-  #[error(display = "Single float parsing error: {}", _0)]
-  SingleFloatParseError(#[source] ParseFloatError),
+  MultipleParseErrors(#[source] VecElementErrs<ParseError>),
   #[error(display = "Parsing Error: {}", _0)]
   ParseError(#[source] ParseError),
   #[error(display = "IOError: {}", _0)]
