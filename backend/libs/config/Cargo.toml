@@ -1,7 +1,7 @@
 [package]
 name = "config"
 version = "0.1.0"
-authors = ["Hiroaki Yamamoto <hiroaki@hysoftware.net>"]
+authors = ["Hiroaki Yamamoto <svc+midas@hysoftware.net>"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

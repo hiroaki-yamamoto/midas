@@ -23,12 +23,19 @@ writers = { path = "../../writers" }
 async-stream = "0.3.4"
 async-trait = "0.1.64"
 futures = "0.3.26"
-mongodb = { version = "2.4.0", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.4.0", default-features = false, features = [
+  "async-std-runtime",
+] }
 nats = "0.24.0"
-log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
+log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 ring = "0.16.20"
 serde = { version = "1.0.152", features = ["derive"] }
-reqwest = { version = "0.11.14", features = ["gzip", "brotli", "json", "rustls-tls"]}
+reqwest = { version = "0.11.14", features = [
+  "gzip",
+  "brotli",
+  "json",
+  "rustls-tls",
+] }
 serde_qs = "0.12.0"
 err-derive = "0.3.1"
 tokio = { version = "1.25.0", features = ["sync"] }
