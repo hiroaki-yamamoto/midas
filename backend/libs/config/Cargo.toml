@@ -7,17 +7,31 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-env_logger = "0.10"
-log = { version = "0.4", features = [ "kv_unstable", "kv_unstable_serde" ] }
+log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 errors = { path = "../errors" }
 
-mongodb = { version = "2.4.0", default-features = false, features = ["async-std-runtime"] }
+mongodb = { version = "2.4.0", default-features = false, features = [
+  "async-std-runtime",
+] }
 serde = { version = "1.0.152", features = ["derive"] }
 serde_yaml = "0.9.17"
 clap = { version = "4.3.0", features = ["derive"] }
-reqwest = { version = "0.11.14", features = ["gzip", "brotli", "json", "rustls-tls"] }
+reqwest = { version = "0.11.14", features = [
+  "gzip",
+  "brotli",
+  "json",
+  "rustls-tls",
+] }
 redis = { version = "0.23.0", features = ["connection-manager", "tokio-comp"] }
 nats = "0.24.0"
-json_env_logger2 = {version = "0.2.1", features = ["iso-timestamps", "backtrace"]}
-tokio = { version = "1.25.0", features = ["macros", "rt", "rt-multi-thread", "signal"] }
+json_env_logger2 = { version = "0.2.1", features = [
+  "iso-timestamps",
+  "backtrace",
+] }
+tokio = { version = "1.25.0", features = [
+  "macros",
+  "rt",
+  "rt-multi-thread",
+  "signal",
+] }
 libc = "0.2.139"

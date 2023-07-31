@@ -116,7 +116,7 @@ impl CSRF {
       + 'static,
     Resp: Reply,
   {
-    let cookie_name = self.opt.cookie_name.clone();
+    let cookie_name = self.opt.cookie_name;
     return filter.and(::warp::cookie::optional(&cookie_name)).map(
       move |resp: Resp, req_cookie: Option<String>| {
         let value: Vec<u8> =
