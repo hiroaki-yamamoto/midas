@@ -20,4 +20,4 @@ ring = "0.16.20"
 mongodb = { version = "2.4.0", default-features = false, features = ["async-std-runtime", "bson-chrono-0_4"] }
 chrono = { version = "0.4.23", features = ["serde"] }
 rug = { version = "1.19.2", features = ["serde"] }
-gmp-mpfr-sys = { version = "1.5.3", features = ["force-cross"] }
+gmp-mpfr-sys = { version = "1.6.0", features = ["force-cross"] }
