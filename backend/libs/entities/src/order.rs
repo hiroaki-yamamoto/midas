@@ -29,10 +29,10 @@ where
   fn add(self, rhs: T) -> Self::Output {
     let rhs = rhs.as_ref();
     return Self {
-      qty: Float::with_val(32, &self.qty + &rhs.qty),
-      price: (Float::with_val(32, &self.qty * &self.price)
-        + Float::with_val(32, &rhs.qty * &rhs.price))
-        / Float::with_val(32, &self.qty + &rhs.qty),
+      qty: self.qty.clone() + &rhs.qty,
+      price: ((self.qty.clone() * &self.price)
+        + (rhs.qty.clone() * &rhs.price))
+        / (self.qty.clone() + &rhs.qty),
     };
   }
 }
@@ -43,10 +43,10 @@ where
 {
   fn add_assign(&mut self, rhs: T) {
     let rhs = rhs.as_ref();
-    self.price = Float::with_val(32, &self.qty * &self.price)
-      + Float::with_val(32, &rhs.qty * &rhs.price);
-    self.price = &self.price / Float::with_val(32, &self.qty + &rhs.qty);
-    self.qty = Float::with_val(32, &self.qty + &rhs.qty);
+    self.price =
+      (self.qty.clone() * &self.price) + (rhs.qty.clone() * &rhs.price);
+    self.price = &self.price / (self.qty.clone() + &rhs.qty);
+    self.qty = self.qty.clone() + &rhs.qty;
   }
 }
 

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use ::entities::Order;
 use ::errors::ParseError;
-use ::types::casting::cast_datetime_from_i64;
+use ::types::casting::{cast_datetime_from_i64, cast_f_from_txt};
 
 use super::{Fill, OrderType, Side};
 
@@ -44,18 +44,10 @@ pub struct OrderResponse<FT, DT> {
   pub fills: Option<Vec<Fill<FT>>>,
 }
 
-fn opt_string_to_float(v: Option<String>) -> Option<Float> {
+fn opt_string_to_float(field: &str, v: Option<String>) -> Option<Float> {
   return v
-    .map(|v| {
-      Float::parse(v)
-        .map_err(|e| {
-          error!("Failed to cast string to Float: {:?}", e);
-          return e;
-        })
-        .ok()
-    })
-    .flatten()
-    .map(|v| Float::with_val(32, v));
+    .map(|v| cast_f_from_txt(field, v).map_err(|e| error!("{}", e)).ok())
+    .flatten();
 }
 
 impl TryFrom<OrderResponse<String, i64>> for OrderResponse<Float, DateTime> {
@@ -72,10 +64,13 @@ impl TryFrom<OrderResponse<String, i64>> for OrderResponse<Float, DateTime> {
       order_list_id: from.order_list_id,
       client_order_id: from.client_order_id,
       transact_time: cast_datetime_from_i64(from.transact_time).into(),
-      price: opt_string_to_float(from.price),
-      orig_qty: opt_string_to_float(from.orig_qty),
-      executed_qty: opt_string_to_float(from.executed_qty),
-      cummulative_quote_qty: opt_string_to_float(from.cummulative_quote_qty),
+      price: opt_string_to_float("price", from.price),
+      orig_qty: opt_string_to_float("orig_qty", from.orig_qty),
+      executed_qty: opt_string_to_float("executed_qty", from.executed_qty),
+      cummulative_quote_qty: opt_string_to_float(
+        "cummulative_quote_qty",
+        from.cummulative_quote_qty,
+      ),
       order_type: from.order_type,
       side: from.side,
       fills: from.fills.map(|v| {

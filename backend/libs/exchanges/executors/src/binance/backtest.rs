@@ -83,10 +83,10 @@ impl ExecutorTrait for Executor {
             exchange: Exchanges::Binance,
             symbol: kline.symbol.clone(),
             id: ObjectId::new().to_string(),
-            bid_price: Float::with_val(32, &price - &half_spread),
-            ask_price: Float::with_val(32, &price + &half_spread),
-            ask_qty: Float::with_val(32, &kline.volume),
-            bid_qty: Float::with_val(32, &kline.volume),
+            bid_price: price.clone() - &half_spread,
+            ask_price: price.clone() + &half_spread,
+            ask_qty: kline.volume.clone(),
+            bid_qty: kline.volume.clone(),
           };
           return ticker;
         });

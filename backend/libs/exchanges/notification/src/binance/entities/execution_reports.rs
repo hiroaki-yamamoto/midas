@@ -10,7 +10,7 @@ use ::entities::{Order as CommonOrder, OrderInner as CommonOrderInner};
 use ::executors::binance::entities::{OrderStatus, Side};
 
 use ::errors::{NotificationError, ParseError};
-use ::types::casting::cast_datetime_from_i64;
+use ::types::casting::{cast_datetime_from_i64, cast_f_from_txt};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -99,21 +99,10 @@ impl TryFrom<ExecutionReport<i64, String>>
   type Error = NotificationError;
   fn try_from(v: ExecutionReport<i64, String>) -> Result<Self, Self::Error> {
     let (executed_qty, acc_qty, price, commission_amount) = (
-      Float::parse(&v.executed_qty)
-        .map_err(ParseError::raise_parse_err("executed_qty", v.executed_qty))?,
-      Float::parse(&v.acc_qty)
-        .map_err(ParseError::raise_parse_err("acc_qty", v.acc_qty))?,
-      Float::parse(&v.price)
-        .map_err(ParseError::raise_parse_err("price", v.price))?,
-      Float::parse(&v.commission_amount).map_err(
-        ParseError::raise_parse_err("commission_amount", v.commission_amount),
-      )?,
-    );
-    let (executed_qty, acc_qty, price, commission_amount) = (
-      Float::with_val(32, executed_qty),
-      Float::with_val(32, acc_qty),
-      Float::with_val(32, price),
-      Float::with_val(32, commission_amount),
+      cast_f_from_txt("executed_qty", v.executed_qty)?,
+      cast_f_from_txt("acc_qty", v.acc_qty)?,
+      cast_f_from_txt("price", v.price)?,
+      cast_f_from_txt("commission_amount", v.commission_amount)?,
     );
     return Ok(ExecutionReport::<DateTime, Float> {
       symbol: v.symbol,

@@ -8,7 +8,7 @@ use ::errors::{
   NotificationError, NotificationResult, ParseError, RawVecElemErrs,
   VecElementErr, VecElementErrs,
 };
-use ::types::casting::cast_datetime_from_i64;
+use ::types::casting::{cast_datetime_from_i64, cast_f_from_txt};
 
 type ChangeAssetResult<F> = Result<ChangedAsset<F>, ParseError>;
 
@@ -25,13 +25,8 @@ pub struct ChangedAsset<FloatType> {
 impl TryFrom<ChangedAsset<String>> for ChangedAsset<Float> {
   type Error = ParseError;
   fn try_from(v: ChangedAsset<String>) -> ChangeAssetResult<Float> {
-    let free_amount = Float::parse(&v.free_amount)
-      .map_err(Self::Error::raise_parse_err("free_amount", v.free_amount))?;
-    let locked_amount = Float::parse(&v.locked_amount).map_err(
-      Self::Error::raise_parse_err("locked_amount", v.locked_amount),
-    )?;
-    let free_amount = Float::with_val(32, free_amount);
-    let locked_amount = Float::with_val(32, locked_amount);
+    let free_amount = cast_f_from_txt("free_amount", &v.free_amount)?;
+    let locked_amount = cast_f_from_txt("locked_amount", &v.locked_amount)?;
     return Ok(ChangedAsset::<Float> {
       asset: v.asset,
       free_amount,

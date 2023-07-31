@@ -5,6 +5,7 @@ use ::serde::{Deserialize, Serialize};
 
 use ::entities::OrderInner;
 use ::errors::ParseError;
+use ::types::casting::cast_f_from_txt;
 
 use super::side::Side;
 
@@ -35,16 +36,10 @@ impl Fill<Float> {
 impl TryFrom<Fill<String>> for Fill<Float> {
   type Error = ParseError;
   fn try_from(v: Fill<String>) -> Result<Fill<Float>, Self::Error> {
-    let price = Float::parse(&v.price)
-      .map_err(Self::Error::raise_parse_err("price", v.price))?;
-    let qty = Float::parse(&v.qty)
-      .map_err(Self::Error::raise_parse_err("price", v.qty))?;
-    let commission = Float::parse(&v.commission)
-      .map_err(Self::Error::raise_parse_err("commission", v.commission))?;
+    let price = cast_f_from_txt("price", &v.price)?;
+    let qty = cast_f_from_txt("qty", &v.qty)?;
+    let commission = cast_f_from_txt("commission", &v.commission)?;
 
-    let price = Float::with_val(32, price);
-    let qty = Float::with_val(32, qty);
-    let commission = Float::with_val(32, commission);
     return Ok(Fill::<Float> {
       price,
       qty,
