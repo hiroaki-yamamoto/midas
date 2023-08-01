@@ -3732,6 +3732,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "trade_observer_control"
+version = "0.1.0"
+dependencies = [
+ "tokio",
+]
+
+[[package]]
 name = "trade_observer_service"
 version = "0.1.0"
 dependencies = [

@@ -38,6 +38,7 @@ members = [
 
   "workers/historical",
   "workers/trade_observer",
+  "workers/trade_observer_control",
   "workers/notify",
   "workers/bot",
 ]
