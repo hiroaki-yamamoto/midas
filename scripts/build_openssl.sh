@@ -7,7 +7,8 @@ source ./curl.sh
 export CC="musl-gcc -fPIE -pie -O2"
 
 BASEDIR=`dirname $0`
-DOWNLOAD_URL='https://github.com/openssl/openssl/releases/download/openssl-3.1.1/openssl-3.1.1.tar.gz'
+VERSION='3.1.2'
+DOWNLOAD_URL="https://github.com/openssl/openssl/releases/download/openssl-${VERSION}/openssl-${VERSION}.tar.gz"
 FILENAME=`basename $DOWNLOAD_URL`
 EXTRACTED_NAME=`basename ${FILENAME} .tar.gz`
 WORK_DIR=`realpath $BASEDIR`
