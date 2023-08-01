@@ -6,7 +6,7 @@
     <header>
       <h2 i18n>Book Ticker Data</h2>
     </header>
-    <mat-tab-group>
+    <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start">
       <mat-tab *ngFor="let item of exchanges" label="{{item}}">
         <app-book-ticker [exchange]="item.toLowerCase()"></app-book-ticker>
       </mat-tab>

@@ -21,7 +21,7 @@ import { ISeries } from '../date-graph/date-graph.component';
 export class BotPanelComponent implements OnInit {
 
   @Input() bot: Bot;
-  @ViewChild('curPosPaginator', {static: true}) curPosPaginator: MatPaginator;
+  @ViewChild('curPosPaginator', { static: true }) curPosPaginator: MatPaginator;
   @ViewChild('arcPosPaginator', { static: true }) arcPosPaginator: MatPaginator;
 
   public currentPositions: MatTableDataSource<Position>;
@@ -75,12 +75,12 @@ export class BotPanelComponent implements OnInit {
       pos.setId(id);
       pos.setBotid(this.bot.getId());
       pos.setSymbol('TESTUSDT');
-      pos.setTradingAmount(Math.random());
+      pos.setTradingAmount(Math.random().toString());
       pos.setValuation(
-        pos.getTradingAmount() + (
+        (parseFloat(pos.getTradingAmount()) + (
           ((Math.round(Math.random() * 10) & 0x01) ? 1 : - 1) *
           Math.random()
-        )
+        )).toString()
       );
       this.currentPositions.data = this.currentPositions.data.concat(pos);
     }
@@ -91,12 +91,12 @@ export class BotPanelComponent implements OnInit {
       pos.setId(id);
       pos.setBotid(this.bot.getId());
       pos.setSymbol('TESTUSDT');
-      pos.setTradingAmount(Math.random());
+      pos.setTradingAmount(Math.random().toString());
       pos.setValuation(
-        pos.getTradingAmount() + (
+        (parseFloat(pos.getTradingAmount()) + (
           ((Math.round(Math.random() * 10) & 0x01) ? 1 : - 1) *
           Math.random()
-        )
+        )).toString()
       );
       this.archivedPositions.data = this.archivedPositions.data.concat(pos);
     }

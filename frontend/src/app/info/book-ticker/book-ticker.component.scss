@@ -1,7 +1,12 @@
 div {
   display: flex;
+  flex-direction: column;
 }
 
 table {
+  flex: content;
+}
+
+mat-paginator {
   flex: content;
 }
