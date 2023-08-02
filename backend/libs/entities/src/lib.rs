@@ -16,7 +16,9 @@ pub use self::execution::{ExecutionSummary, ExecutionType};
 pub use self::history_fetch_request::HistoryFetchRequest;
 pub use self::order::{Order, OrderInner};
 pub use self::order_option::OrderOption;
-pub use self::trade_observer_control_events::TradeObserverControlEvent;
+pub use self::trade_observer_control_events::{
+  TradeObserverControlEvent, TradeObserverNodeEvent,
+};
 pub use self::trade_time::{TradeTime, TradeTimeTrait};
 
 use ::futures_core::stream::BoxStream;
