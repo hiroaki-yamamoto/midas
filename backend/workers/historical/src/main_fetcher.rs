@@ -26,8 +26,8 @@ use ::history::kvs::CurrentSyncProgressStore;
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartPubSub};
 use ::history::traits::{
   HistoryFetcher as HistoryFetcherTrait, HistoryWriter as HistoryWriterTrait,
-  IncrementalStore, WriteOption,
 };
+use ::kvs::{IncrementalStore, WriteOption};
 
 #[tokio::main]
 async fn main() {

@@ -23,8 +23,8 @@ use ::history::kvs::{CurrentSyncProgressStore, NumObjectsToFetchStore};
 use ::history::pubsub::{HistChartDateSplitPubSub, HistChartPubSub};
 use ::history::traits::{
   HistoryFetcher as HistFetchTrait, HistoryWriter as HistoryWriterTrait,
-  IncrementalStore as IncrStoreTrait, Store as StoreTrait, WriteOption,
 };
+use ::kvs::{IncrementalStore, Store, WriteOption};
 use ::rpc::entities::Exchanges;
 use ::subscribe::PubSub;
 

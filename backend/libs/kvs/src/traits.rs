@@ -1,39 +1,8 @@
 use ::std::fmt::Display;
-use ::std::time::Duration;
 
 use ::redis::{Commands, FromRedisValue, RedisResult, ToRedisArgs};
 
-#[derive(Default, Clone)]
-pub struct WriteOption {
-  pub dur: Option<Duration>,
-}
-
-impl WriteOption {
-  pub fn duration(&self, dur: Option<Duration>) -> Self {
-    let mut me = self.clone();
-    me.dur = dur;
-    return me;
-  }
-}
-
-fn execute_set_option<T, S>(
-  cmds: &mut T,
-  key: S,
-  opt: Option<WriteOption>,
-) -> RedisResult<()>
-where
-  T: Commands,
-  S: AsRef<str> + Display,
-{
-  let key = key.as_ref();
-  let mut res: RedisResult<()> = Ok(());
-  if let Some(opt) = opt {
-    if let Some(dur) = opt.dur {
-      res = res.and(cmds.pexpire(key, dur.as_millis() as usize));
-    }
-  }
-  return res;
-}
+use super::options::{WriteOption, WriteOptionTrait};
 
 pub trait Store<T, V>
 where
@@ -79,7 +48,7 @@ where
     let cmds = self.commands();
     let result = cmds
       .set(&channel_name, value)
-      .and_then(|_: ()| execute_set_option(cmds, channel_name, opt));
+      .and_then(|_: ()| opt.execute(cmds, &channel_name));
     return result;
   }
 }
@@ -103,7 +72,7 @@ where
     let cmds = self.commands();
     return cmds
       .incr(&channel_name, delta)
-      .and_then(|_: ()| execute_set_option(cmds, &channel_name, opt));
+      .and_then(|_: ()| opt.execute(cmds, &channel_name));
   }
 
   fn reset<E, S>(&mut self, exchange: E, symbol: S) -> RedisResult<()>

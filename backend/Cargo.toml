@@ -4,42 +4,5 @@ lto = true
 strip = true
 
 [workspace]
-members = [
-  "libs/errors",
-  "libs/writers",
-
-  "libs/entities",
-  "libs/csrf",
-  "libs/errors",
-  "libs/keychain",
-  "libs/config",
-  "libs/rpc",
-  "libs/types",
-  "libs/subscribe",
-  "libs/date_splitter",
-  "libs/bot",
-  "libs/probe",
-  "libs/access_logger",
-  "libs/round",
-
-  "libs/exchanges/executors",
-  "libs/exchanges/history",
-  "libs/exchanges/observers",
-  "libs/exchanges/symbols",
-  "libs/exchanges/notification",
-  "libs/exchanges/clients",
-  "libs/exchanges/sign",
-
-  "services/historical",
-  "services/symbol",
-  "services/trade_observer",
-  "services/token",
-  "services/keychain",
-  "services/bot",
-
-  "workers/historical",
-  "workers/trade_observer",
-  "workers/trade_observer_control",
-  "workers/notify",
-  "workers/bot",
-]
+members = ["libs/*", "libs/exchanges/*", "services/*", "workers/*"]
+exclude = ["libs/exchanges", "services/transpiler"]

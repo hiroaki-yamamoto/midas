@@ -19,6 +19,7 @@ config = { path = "../../libs/config" }
 types = { path = "../../libs/types" }
 rpc = { path = "../../libs/rpc" }
 
+kvs = { path = "../../libs/kvs" }
 subscribe = { path = "../../libs/subscribe" }
 
 history = { path = "../../libs/exchanges/history" }

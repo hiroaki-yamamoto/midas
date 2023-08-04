@@ -18,7 +18,7 @@ use ::warp::{Filter, Reply};
 use ::entities::HistoryFetchRequest as HistFetchReq;
 use ::history::kvs::{redis, CurrentSyncProgressStore, NumObjectsToFetchStore};
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartDateSplitPubSub};
-use ::history::traits::Store;
+use ::kvs::Store;
 use ::rpc::entities::{Exchanges, Status};
 use ::rpc::historical::{
   HistoryFetchRequest as RPCHistFetchReq, Progress, StatusCheckRequest,
