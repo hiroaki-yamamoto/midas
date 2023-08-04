@@ -3736,7 +3736,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "trade_observer_control"
+name = "trade_observer_control_worker"
 version = "0.1.0"
 dependencies = [
  "config",

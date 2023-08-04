@@ -49,6 +49,12 @@ build:
         dockerfile: devel.dockerfile
         buildArgs:
           SERVICE: trade_observer_service
+    - image: trade-observer-control-worker
+      context: backend
+      docker:
+        dockerfile: devel.dockerfile
+        buildArgs:
+          SERVICE: trade_observer_control_worker
     - image: token-service
       context: backend
       docker:
