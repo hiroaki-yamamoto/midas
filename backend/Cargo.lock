@@ -3739,6 +3739,7 @@ dependencies = [
 name = "trade_observer_control"
 version = "0.1.0"
 dependencies = [
+ "config",
  "entities",
  "observers",
  "tokio",
