@@ -33,5 +33,5 @@ mongodb = { version = "2.4.0", default-features = false, features = [
   "async-std-runtime",
 ] }
 serde = { version = "1.0.152", features = ["derive"] }
-rug = { version = "1.19.2", features = ["serde"] }
-gmp-mpfr-sys = { version = "1.5.3", features = ["force-cross"] }
+rug = { version = "1.20.1", features = ["serde"] }
+gmp-mpfr-sys = { version = "1.6.0", features = ["force-cross"] }
