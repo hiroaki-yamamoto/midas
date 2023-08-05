@@ -24,7 +24,7 @@ use ::history::pubsub::{HistChartDateSplitPubSub, HistChartPubSub};
 use ::history::traits::{
   HistoryFetcher as HistFetchTrait, HistoryWriter as HistoryWriterTrait,
 };
-use ::kvs::{IncrementalStore, Store, WriteOption};
+use ::kvs::{IncrementalStore, SymbolKeyStore, WriteOption};
 use ::rpc::entities::Exchanges;
 use ::subscribe::PubSub;
 
