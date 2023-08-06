@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 tokio = { version = "1.29.1", features = ["macros", "rt-multi-thread"] }
 
+kvs = { path = "../../libs/kvs" }
 entities = { path = "../../libs/entities" }
 observers = { path = "../../libs/exchanges/observers" }
 config = { path = "../../libs/config" }

@@ -1478,7 +1478,6 @@ dependencies = [
  "nats",
  "num_cpus",
  "rand",
- "redis",
  "reqwest",
  "rmp-serde",
  "round",
@@ -3741,6 +3740,7 @@ version = "0.1.0"
 dependencies = [
  "config",
  "entities",
+ "kvs",
  "observers",
  "tokio",
 ]

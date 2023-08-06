@@ -1,8 +1,6 @@
 use std::fmt::Display;
 
 use ::kvs::kvs_incr;
-pub use ::redis;
-use ::redis::Commands;
 
 kvs_incr!(
   pub,

@@ -1,3 +1,5 @@
+mod dlock;
+
 use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 use ::observers::pubsub::{NodeControlEventPubSub, NodeEventPubSub};
 

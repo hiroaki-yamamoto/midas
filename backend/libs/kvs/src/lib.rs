@@ -3,6 +3,7 @@ mod traits;
 
 pub use crate::options::WriteOption;
 pub use crate::traits::{IncrementalStore, Store, SymbolKeyStore};
+pub use ::redis;
 
 #[macro_export]
 macro_rules! kvs {
@@ -10,14 +11,14 @@ macro_rules! kvs {
         #[derive(Debug)]
         $acc struct $name<T>
         where
-          T: ::redis::Commands,
+          T: ::kvs::redis::Commands,
         {
           con: T,
         }
 
         impl<T> $name<T>
         where
-          T: ::redis::Commands,
+          T: ::kvs::redis::Commands,
         {
           pub fn new(con: T) -> Self {
             return Self { con: con };
@@ -26,10 +27,10 @@ macro_rules! kvs {
 
         impl<T> ::kvs::Store<T, $vtype> for $name<T>
         where
-          T: ::redis::Commands,
+          T: ::kvs::redis::Commands,
         {
           fn channel_name< S>(&self, key: S) -> String where
-            S: AsRef<str> + Display,
+            S: AsRef<str> + ::std::fmt::Display,
           {
             return format!($ch_name, key);
           }
@@ -46,14 +47,14 @@ macro_rules! symbol_kvs {
     #[derive(Debug)]
     $acc struct $name<T>
     where
-      T: ::redis::Commands,
+      T: ::kvs::redis::Commands,
     {
       con: T,
     }
 
     impl<T> $name<T>
     where
-      T: ::redis::Commands,
+      T: ::kvs::redis::Commands,
     {
       pub fn new(con: T) -> Self {
         return Self { con: con };
@@ -62,7 +63,7 @@ macro_rules! symbol_kvs {
 
     impl<T> ::kvs::SymbolKeyStore<T, $vtype> for $name<T>
     where
-      T: ::redis::Commands,
+      T: ::kvs::redis::Commands,
     {
       fn commands(&mut self) -> &mut T {
         return &mut self.con;
@@ -82,6 +83,9 @@ macro_rules! symbol_kvs {
 macro_rules! kvs_incr {
   ($acc: vis, $name: ident, $vtype: ty, $ch_name: expr) => {
     ::kvs::symbol_kvs!($acc, $name, $vtype, $ch_name);
-    impl<T> ::kvs::IncrementalStore<T> for $name<T> where T: Commands {}
+    impl<T> ::kvs::IncrementalStore<T> for $name<T> where
+      T: ::kvs::redis::Commands
+    {
+    }
   };
 }

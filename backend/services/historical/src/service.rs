@@ -16,8 +16,9 @@ use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
 
 use ::entities::HistoryFetchRequest as HistFetchReq;
-use ::history::kvs::{redis, CurrentSyncProgressStore, NumObjectsToFetchStore};
+use ::history::kvs::{CurrentSyncProgressStore, NumObjectsToFetchStore};
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartDateSplitPubSub};
+use ::kvs::redis;
 use ::kvs::SymbolKeyStore;
 use ::rpc::entities::{Exchanges, Status};
 use ::rpc::historical::{
