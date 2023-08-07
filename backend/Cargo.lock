@@ -1067,6 +1067,7 @@ dependencies = [
  "err-derive",
  "log",
  "mongodb",
+ "redis",
  "reqwest",
  "serde",
  "serde_json",
@@ -3744,10 +3745,15 @@ version = "0.1.0"
 dependencies = [
  "config",
  "entities",
+ "errors",
+ "futures",
  "kvs",
  "log",
  "observers",
+ "rand",
+ "subscribe",
  "tokio",
+ "uuid",
 ]
 
 [[package]]

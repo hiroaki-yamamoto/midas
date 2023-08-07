@@ -78,7 +78,7 @@ async fn main() {
             error!(error = as_error!(e); "Failed to reset the progress");
             continue;
           }
-          if let Err(e) = num_prg_kvs.set(
+          if let Err(e) = num_prg_kvs.set::<_, (), _>(
             req.exchange.as_string(),
             &req.symbol,
             splitter.len().unwrap_or(0) as i64,

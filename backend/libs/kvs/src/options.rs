@@ -1,13 +1,15 @@
+use ::std::convert::From;
 use ::std::fmt::Display;
 use ::std::time::Duration;
 
-use ::redis::{Commands, RedisResult};
+use ::redis::{Commands, ExistenceCheck, RedisResult, SetExpiry, SetOptions};
 
 use ::types::stateful_setter;
 
 #[derive(Default, Clone)]
 pub struct WriteOption {
-  pub duration: Option<Duration>,
+  duration: Option<Duration>,
+  non_existent_only: bool,
 }
 
 pub trait WriteOptionTrait {
@@ -26,8 +28,22 @@ pub trait WriteOptionTrait {
   }
 }
 
+impl From<WriteOption> for SetOptions {
+  fn from(value: WriteOption) -> Self {
+    let mut opt = SetOptions::default();
+    if let Some(duration) = value.duration {
+      opt = opt.with_expiration(SetExpiry::PX(duration.as_millis() as usize));
+    }
+    if value.non_existent_only {
+      opt = opt.conditional_set(ExistenceCheck::NX);
+    }
+    return opt;
+  }
+}
+
 impl WriteOption {
   stateful_setter!(duration, Option<Duration>);
+  stateful_setter!(non_existent_only, bool);
 }
 
 impl WriteOptionTrait for WriteOption {

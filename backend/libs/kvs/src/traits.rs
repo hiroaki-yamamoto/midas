@@ -1,6 +1,6 @@
 use ::std::fmt::Display;
 
-use ::redis::{Commands, FromRedisValue, RedisResult, ToRedisArgs};
+use ::redis::{Commands, FromRedisValue, RedisResult, SetOptions, ToRedisArgs};
 
 use super::options::{WriteOption, WriteOptionTrait};
 
@@ -29,20 +29,24 @@ where
     return self.commands().get(channel_name);
   }
 
-  fn set<E, S>(
+  fn set<R, S>(
     &mut self,
     key: S,
     value: V,
     opt: Option<WriteOption>,
-  ) -> RedisResult<()>
+  ) -> RedisResult<R>
   where
     S: AsRef<str> + Display,
+    R: FromRedisValue,
   {
     let channel_name = self.channel_name(key);
     let cmds = self.commands();
-    let result = cmds
-      .set(&channel_name, value)
-      .and_then(|_: ()| opt.execute(cmds, &channel_name));
+    let result = if let Some(opt) = opt {
+      let opt: SetOptions = opt.into();
+      cmds.set_options(&channel_name, value, opt)
+    } else {
+      cmds.set(&channel_name, value)
+    };
     return result;
   }
 }
@@ -76,22 +80,26 @@ where
     return self.commands().get(channel_name);
   }
 
-  fn set<E, S>(
+  fn set<E, R, S>(
     &mut self,
     exchange: E,
     symbol: S,
     value: V,
     opt: Option<WriteOption>,
-  ) -> RedisResult<()>
+  ) -> RedisResult<R>
   where
     E: AsRef<str> + Display,
+    R: FromRedisValue,
     S: AsRef<str> + Display,
   {
     let channel_name = SymbolKeyStore::channel_name(self, exchange, symbol);
     let cmds = self.commands();
-    let result = cmds
-      .set(&channel_name, value)
-      .and_then(|_: ()| opt.execute(cmds, &channel_name));
+    let result = if let Some(opt) = opt {
+      let opt: SetOptions = opt.into();
+      cmds.set_options(&channel_name, value, opt)
+    } else {
+      cmds.set(&channel_name, value)
+    };
     return result;
   }
 }
@@ -114,9 +122,9 @@ where
     let channel_name =
       SymbolKeyStore::<T, i64>::channel_name(self, exchange, symbol);
     let cmds = self.commands();
-    return cmds
-      .incr(&channel_name, delta)
-      .and_then(|_: ()| opt.execute(cmds, &channel_name));
+    return cmds.incr(&channel_name, delta).and_then(|_: ()| {
+      return opt.execute(cmds, &channel_name);
+    });
   }
 
   fn reset<E, S>(&mut self, exchange: E, symbol: S) -> RedisResult<()>

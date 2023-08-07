@@ -1,6 +1,7 @@
 mod api;
 mod attempt;
 mod config;
+mod dlock;
 mod empty;
 mod execution;
 mod history;
@@ -20,6 +21,7 @@ mod websocket;
 pub use api::{APIHeaderErrors, APIHeaderResult};
 pub use attempt::MaximumAttemptExceeded;
 pub use config::{ConfigError, ConfigResult};
+pub use dlock::{DLockError, DLockResult};
 pub use empty::EmptyError;
 pub use execution::{ExecutionErrors, ExecutionFailed, ExecutionResult};
 pub use history::{FetchErr, FetchResult, WriterErr, WriterResult};
