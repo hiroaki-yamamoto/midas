@@ -15,7 +15,7 @@ use self::service::Service;
 #[tokio::main]
 async fn main() {
   init(|cfg, mut sig, db, broker, host| async move {
-    let svc = Service::new(&db, &broker).await.unwrap();
+    let svc = Service::new(&db, broker).await.unwrap();
     let csrf = CSRF::new(CSRFOption::builder());
     let router = csrf
       .protect()

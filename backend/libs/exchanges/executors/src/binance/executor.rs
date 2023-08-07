@@ -1,3 +1,4 @@
+use ::std::sync::Arc;
 use ::std::time::Duration as StdDur;
 
 use ::async_stream::try_stream;
@@ -35,14 +36,14 @@ use super::entities::{
 #[derive(Debug, Clone)]
 pub struct Executor {
   keychain: KeyChain,
-  broker: NatsJS,
+  broker: Arc<NatsJS>,
   db: Database,
   positions: Collection<OrderResponse<Float, DateTime>>,
   cli: RestClient,
 }
 
 impl Executor {
-  pub async fn new(broker: &NatsJS, db: Database) -> ReqResult<Self> {
+  pub async fn new(broker: Arc<NatsJS>, db: Database) -> ReqResult<Self> {
     let keychain = KeyChain::new(broker.clone(), db.clone()).await;
     let positions = db.collection("binance.positions");
     let me = Self {
@@ -94,7 +95,7 @@ impl ExecutorTrait for Executor {
     let stream = try_stream! {
       let observer = TradeObserver::new(
       Some(self.db.clone()),
-      &self.broker,
+      self.broker.clone(),
     )
     .await;
     let mut sub = observer.subscribe().await?;

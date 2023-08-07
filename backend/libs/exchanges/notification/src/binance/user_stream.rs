@@ -42,7 +42,7 @@ pub struct UserStream {
 }
 
 impl UserStream {
-  pub fn new(broker: Broker) -> ReqResult<Self> {
+  pub fn new(broker: Arc<Broker>) -> ReqResult<Self> {
     return Ok(Self {
       key_pubsub: APIKeyPubSub::new(broker.clone()),
       notify_pubsub: NotifyPubSub::new(broker.clone()),

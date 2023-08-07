@@ -12,7 +12,7 @@ macro_rules! pubsub {
   ) => {
     #[derive(Debug, Clone)]
     $accessor struct $name {
-      js: ::nats::jetstream::JetStream
+      js: ::std::sync::Arc<::nats::jetstream::JetStream>
     }
 
     impl $name {
@@ -31,7 +31,7 @@ macro_rules! pubsub {
         let _ = self.js.add_consumer($id, cfg);
       }
 
-      pub fn new(js: ::nats::jetstream::JetStream) -> Self {
+      pub fn new(js: ::std::sync::Arc<::nats::jetstream::JetStream>) -> Self {
         let me = Self { js };
         me.add_stream();
         // me.add_consumer();

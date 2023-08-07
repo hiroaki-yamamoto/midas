@@ -1,3 +1,5 @@
+use ::std::sync::Arc;
+
 use ::clap::Parser;
 use ::futures::future::{select, Either};
 use ::libc::{SIGINT, SIGTERM};
@@ -22,12 +24,12 @@ async fn main() {
   let cmd_args: CmdArgs = CmdArgs::parse();
   let config = Config::from_fpath(Some(cmd_args.config)).unwrap();
 
-  let broker = config.nats_cli().unwrap();
+  let broker = Arc::new(config.nats_cli().unwrap());
   let db = config.db().await.unwrap();
   config.init_logger();
   let exchange: Box<dyn TradeObserverTrait> = match cmd_args.exchange {
     Exchanges::Binance => {
-      Box::new(binance::TradeObserver::new(Some(db), &broker).await)
+      Box::new(binance::TradeObserver::new(Some(db), broker).await)
     }
   };
   let mut sig =

@@ -4,6 +4,7 @@ mod pubsub;
 use ::std::collections::{HashMap, HashSet};
 use ::std::convert::TryFrom;
 use ::std::io::{Error as IOErr, ErrorKind as IOErrKind, Result as IOResult};
+use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
@@ -52,7 +53,7 @@ pub struct TradeObserver {
 }
 
 impl TradeObserver {
-  pub async fn new(db: Option<Database>, broker: &Broker) -> Self {
+  pub async fn new(db: Option<Database>, broker: Arc<Broker>) -> Self {
     let recorder = match db {
       None => None,
       Some(db) => Some(SymbolWriter::new(&db).await),

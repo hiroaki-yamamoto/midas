@@ -1,3 +1,4 @@
+use ::std::sync::Arc;
 use ::std::time::Duration as StdDur;
 
 use ::async_trait::async_trait;
@@ -25,13 +26,13 @@ use ::errors::StatusFailure;
 
 #[derive(Debug, Clone)]
 pub struct SymbolFetcher {
-  broker: NatsJS,
+  broker: Arc<NatsJS>,
   recorder: SymbolWriter,
   cli: RestClient,
 }
 
 impl SymbolFetcher {
-  pub async fn new(broker: &NatsJS, db: &Database) -> ReqRes<Self> {
+  pub async fn new(broker: Arc<NatsJS>, db: &Database) -> ReqRes<Self> {
     let recorder = SymbolWriter::new(&db).await;
     let urls: Vec<Url> = REST_ENDPOINTS
       .into_iter()
@@ -40,7 +41,7 @@ impl SymbolFetcher {
       })
       .collect();
     let ret = Self {
-      broker: broker.clone(),
+      broker: broker,
       cli: RestClient::new(urls, StdDur::from_secs(5), StdDur::from_secs(5))?,
       recorder,
     };
@@ -69,7 +70,7 @@ impl SymbolFetcherTrait for SymbolFetcher {
       let info: ExchangeInfo = resp.json().await?;
       let new_symbols = info.symbols.clone();
       let update_event_manager = SymbolUpdateEventManager::new(
-        &self.broker,
+        self.broker.clone(),
         new_symbols.clone(),
         old_symbols,
       );
