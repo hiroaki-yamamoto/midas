@@ -12,6 +12,7 @@ types = { path = "../../types" }
 config = { path = "../../config" }
 rpc = { path = "../../rpc" }
 subscribe = { path = "../../subscribe" }
+kvs = { path = "../../kvs" }
 
 entities = { path = "../../entities" }
 

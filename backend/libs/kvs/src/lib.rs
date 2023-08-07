@@ -70,8 +70,8 @@ macro_rules! symbol_kvs {
       }
       fn channel_name<E, S>(&self, exchange: E, symbol: S) -> String
       where
-        E: AsRef<str> + Display,
-        S: AsRef<str> + Display,
+        E: AsRef<str> + ::std::fmt::Display,
+        S: AsRef<str> + ::std::fmt::Display,
       {
         return format!($ch_name, exchange, symbol);
       }

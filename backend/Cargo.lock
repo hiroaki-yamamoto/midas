@@ -2194,6 +2194,7 @@ dependencies = [
  "errors",
  "futures",
  "gmp-mpfr-sys",
+ "kvs",
  "log",
  "mongodb",
  "nats",
@@ -3744,6 +3745,7 @@ dependencies = [
  "config",
  "entities",
  "kvs",
+ "log",
  "observers",
  "tokio",
 ]

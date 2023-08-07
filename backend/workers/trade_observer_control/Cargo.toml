@@ -12,3 +12,4 @@ kvs = { path = "../../libs/kvs" }
 entities = { path = "../../libs/entities" }
 observers = { path = "../../libs/exchanges/observers" }
 config = { path = "../../libs/config" }
+log = "0.4.19"

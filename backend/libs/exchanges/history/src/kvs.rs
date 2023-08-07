@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use ::kvs::kvs_incr;
 
 kvs_incr!(
