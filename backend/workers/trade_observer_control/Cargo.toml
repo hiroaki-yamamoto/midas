@@ -13,7 +13,12 @@ config = { path = "../../libs/config" }
 subscribe = { path = "../../libs/subscribe" }
 errors = { path = "../../libs/errors" }
 
-tokio = { version = "1.29.1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.29.1", features = [
+  "macros",
+  "rt-multi-thread",
+  "time",
+  "sync",
+] }
 log = "0.4.19"
 futures = "0.3.28"
 uuid = "1.4.1"
