@@ -21,7 +21,7 @@ where
   let random = Builder::from_random_bytes(seed);
   let random = random.as_uuid();
   let lock: String = dlock.set(
-    "init_lock",
+    "lock",
     random.to_string(),
     WriteOption::default()
       .duration(Duration::from_secs(3).into())
@@ -30,7 +30,7 @@ where
   )?;
   if lock == "OK" {
     func_on_success();
-    dlock.del("init_lock")?;
+    dlock.del("lock")?;
     return Ok(());
   }
   return Err(DLockError::CastFailure("Failed to acquire lock"));
