@@ -1,4 +1,5 @@
 use ::std::fmt::Display;
+use ::std::time::Duration;
 
 use ::redis::{Commands, FromRedisValue, RedisResult, SetOptions, ToRedisArgs};
 
@@ -48,6 +49,19 @@ where
       cmds.set(&channel_name, value)
     };
     return result;
+  }
+
+  fn expire(&mut self, key: &str, dur: Duration) -> RedisResult<bool>
+  where
+    V: FromRedisValue,
+  {
+    let dur_mils = dur.as_millis() as usize;
+    let channel_name = self.channel_name(key);
+    if self.commands().pexpire::<_, u16>(channel_name, dur_mils)? == 1 {
+      return Ok(true);
+    } else {
+      return Ok(false);
+    };
   }
 }
 
