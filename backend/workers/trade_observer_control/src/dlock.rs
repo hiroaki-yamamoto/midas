@@ -25,6 +25,7 @@ where
   let dlock = Arc::new(Mutex::new(dlock));
   let dlock2 = dlock.clone();
   let expire_refresh = async move {
+    let _ = refresh_rx.recv().await;
     let mut refresh_timer = interval(Duration::from_secs(1));
     let mut dlock = dlock2.lock().unwrap();
     loop {
@@ -54,6 +55,7 @@ where
         .into(),
     )?;
     if lock == "OK" {
+      let _ = refresh_tx.send(());
       func_on_success();
       let _ = refresh_tx.send(());
       dlock.del("lock")?;
