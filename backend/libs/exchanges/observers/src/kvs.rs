@@ -1,3 +1,3 @@
-use ::kvs::symbol_kvs;
+use ::kvs::exchange_kvs;
 
-symbol_kvs!(pub, ObserverNodeKVS, String, "symbol_kvs.{}.{}");
+exchange_kvs!(pub, ObserverNodeKVS, String, "observer_node.{}");

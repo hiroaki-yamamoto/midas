@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 types = { path = "../types" }
+rpc = { path = "../rpc" }
 redis = "0.23.1"

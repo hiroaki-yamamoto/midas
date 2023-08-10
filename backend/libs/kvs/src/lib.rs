@@ -2,7 +2,9 @@ mod options;
 mod traits;
 
 pub use crate::options::WriteOption;
-pub use crate::traits::{IncrementalStore, Store, SymbolKeyStore};
+pub use crate::traits::{
+  ExchangeKeyStore, IncrementalStore, Store, SymbolKeyStore,
+};
 pub use ::redis;
 
 #[macro_export]
@@ -39,6 +41,17 @@ macro_rules! kvs {
           }
         }
     };
+}
+
+#[macro_export]
+macro_rules! exchange_kvs {
+  ($acc: vis, $name: ident, $vtype: ty, $ch_name: expr) => {
+    ::kvs::kvs!($acc, $name, $vtype, $ch_name);
+    impl<T> ::kvs::ExchangeKeyStore<T, $vtype> for $name<T> where
+      T: ::kvs::redis::Commands
+    {
+    }
+  };
 }
 
 #[macro_export]

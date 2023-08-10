@@ -2,6 +2,7 @@ use ::std::fmt::Display;
 use ::std::time::Duration;
 
 use ::redis::{Commands, FromRedisValue, RedisResult, SetOptions, ToRedisArgs};
+use ::rpc::entities::Exchanges;
 
 use super::options::{WriteOption, WriteOptionTrait};
 
@@ -62,6 +63,53 @@ where
     } else {
       return Ok(false);
     };
+  }
+}
+
+pub trait ExchangeKeyStore<T, V>: Store<T, V>
+where
+  T: Commands,
+  V: FromRedisValue + ToRedisArgs,
+{
+  fn channel_name(&self, exchange: Exchanges) -> String {
+    return Store::channel_name(self, exchange.as_str_name());
+  }
+
+  fn del<S>(&mut self, exchange: Exchanges) -> RedisResult<()>
+  where
+    S: AsRef<str> + Display,
+  {
+    let channel_name = ExchangeKeyStore::channel_name(self, exchange);
+    return self.commands().del(channel_name);
+  }
+
+  fn get<E, S>(&mut self, exchange: Exchanges) -> RedisResult<V>
+  where
+    S: AsRef<str> + Display,
+  {
+    let channel_name = ExchangeKeyStore::channel_name(self, exchange);
+    return self.commands().get(channel_name);
+  }
+
+  fn set<R, S>(
+    &mut self,
+    exchange: Exchanges,
+    value: V,
+    opt: Option<WriteOption>,
+  ) -> RedisResult<R>
+  where
+    R: FromRedisValue,
+    S: AsRef<str> + Display,
+  {
+    let channel_name = ExchangeKeyStore::channel_name(self, exchange);
+    let cmds = self.commands();
+    let result = if let Some(opt) = opt {
+      let opt: SetOptions = opt.into();
+      cmds.set_options(&channel_name, value, opt)
+    } else {
+      cmds.set(&channel_name, value)
+    };
+    return result;
   }
 }
 

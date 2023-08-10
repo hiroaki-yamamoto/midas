@@ -2,13 +2,12 @@ use ::serde::{Deserialize, Serialize};
 use ::uuid::Uuid;
 
 use ::rpc::entities::Exchanges;
-use ::rpc::symbols::SymbolInfo;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TradeObserverNodeEvent {
   Regist(Uuid, Exchanges),
   Unregist(Uuid),
-  Ping(Uuid, Vec<SymbolInfo>),
+  Ping(Uuid),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
