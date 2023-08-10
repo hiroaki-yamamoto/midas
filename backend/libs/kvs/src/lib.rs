@@ -93,7 +93,7 @@ macro_rules! symbol_kvs {
 }
 
 #[macro_export]
-macro_rules! kvs_incr {
+macro_rules! incr_kvs {
   ($acc: vis, $name: ident, $vtype: ty, $ch_name: expr) => {
     ::kvs::symbol_kvs!($acc, $name, $vtype, $ch_name);
     impl<T> ::kvs::IncrementalStore<T> for $name<T> where

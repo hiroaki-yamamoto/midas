@@ -12,8 +12,8 @@ use ::errors::{DLockError, DLockResult};
 use ::kvs::redis::{Commands, RedisError};
 use ::kvs::{kvs, Store, WriteOption};
 
-kvs!(pub, InitLock, String, "init_lock.{}");
-kvs!(pub, InitFinLock, String, "init_fin_lock.{}");
+kvs!(pub, InitLock, String, "init_lock:{}");
+kvs!(pub, InitFinLock, String, "init_fin_lock:{}");
 
 pub async fn lock<F, S, T>(dlock: T, func_on_success: F) -> DLockResult<()>
 where
