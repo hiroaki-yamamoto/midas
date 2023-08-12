@@ -4,7 +4,6 @@ mod constants;
 
 use std::future::Future;
 use std::net::SocketAddr;
-use std::sync::Arc;
 
 use ::clap::Parser;
 use ::libc::{SIGINT, SIGTERM};
@@ -18,12 +17,12 @@ pub use self::cmdargs::CmdArgs;
 pub use self::config::Config;
 
 use ::mongodb::Database;
-use ::nats::jetstream::JetStream as Broker;
+use ::nats::jetstream::JetStream as NatsJS;
 use ::tokio::signal::unix as signal;
 
 pub async fn init<S, T>(func: T)
 where
-  T: FnOnce(Config, signal::Signal, Database, Arc<Broker>, SocketAddr) -> S,
+  T: FnOnce(Config, signal::Signal, Database, NatsJS, SocketAddr) -> S,
   S: Future<Output = ()>,
 {
   let sig =
@@ -32,7 +31,7 @@ where
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
   cfg.init_logger();
   let db = cfg.db().await.unwrap();
-  let broker = Arc::new(cfg.nats_cli().unwrap());
+  let broker = cfg.nats_cli().unwrap();
   let host: SocketAddr = cfg.host.parse().unwrap();
   func(cfg, sig, db, broker, host).await;
 }

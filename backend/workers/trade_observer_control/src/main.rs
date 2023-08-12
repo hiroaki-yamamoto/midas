@@ -5,7 +5,7 @@ use ::futures::StreamExt;
 use ::log::info;
 use ::tokio::select;
 
-use ::observers::pubsub::{NodeControlEventPubSub, NodeEventPubSub};
+use ::observers::pubsub::NodeEventPubSub;
 use ::subscribe::PubSub;
 
 use ::config;

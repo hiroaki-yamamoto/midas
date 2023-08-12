@@ -1,7 +1,5 @@
 pub mod pubsub;
 
-use ::std::sync::Arc;
-
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::oid::ObjectId;
@@ -29,7 +27,7 @@ pub struct KeyChain {
 }
 
 impl KeyChain {
-  pub async fn new(broker: Arc<NatsJS>, db: Database) -> Self {
+  pub async fn new(broker: NatsJS, db: Database) -> Self {
     let col = db.collection("apiKeyChains");
     let ret = Self {
       pubsub: APIKeyPubSub::new(broker),

@@ -2,7 +2,6 @@ use ::std::collections::HashSet;
 
 use ::log::{as_error, error};
 use ::nats::jetstream::JetStream as NatsJS;
-use ::std::sync::Arc;
 
 use super::entities::{Symbol, SymbolEvent};
 use super::pubsub::SymbolEventPubSub;
@@ -16,7 +15,7 @@ pub struct SymbolUpdateEventManager {
 }
 
 impl SymbolUpdateEventManager {
-  pub fn new<S, T>(broker: Arc<NatsJS>, new: S, old: T) -> Self
+  pub fn new<S, T>(broker: NatsJS, new: S, old: T) -> Self
   where
     S: IntoIterator<Item = Symbol> + Clone,
     T: IntoIterator<Item = Symbol> + Clone,

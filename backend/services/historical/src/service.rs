@@ -43,7 +43,7 @@ type TSCurrentSyncProgressStore =
 
 impl Service {
   pub async fn new(
-    nats: Arc<NatsJS>,
+    nats: NatsJS,
     redis_cli: &redis::Client,
     db: &Database,
   ) -> Self {

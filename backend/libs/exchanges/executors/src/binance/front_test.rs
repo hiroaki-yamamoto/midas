@@ -1,5 +1,4 @@
 use ::std::collections::HashMap;
-use ::std::sync::Arc;
 
 use ::async_stream::try_stream;
 use ::async_trait::async_trait;
@@ -31,11 +30,7 @@ pub struct Executor {
 }
 
 impl Executor {
-  pub async fn new(
-    broker: Arc<NatsJS>,
-    maker_fee: Float,
-    taker_fee: Float,
-  ) -> Self {
+  pub async fn new(broker: NatsJS, maker_fee: Float, taker_fee: Float) -> Self {
     return Self {
       observer: TradeObserver::new(None, broker).await,
       orders: HashMap::new(),

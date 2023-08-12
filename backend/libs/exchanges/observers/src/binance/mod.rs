@@ -4,7 +4,6 @@ mod pubsub;
 use ::std::collections::{HashMap, HashSet};
 use ::std::convert::TryFrom;
 use ::std::io::{Error as IOErr, ErrorKind as IOErrKind, Result as IOResult};
-use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
@@ -15,7 +14,7 @@ use ::futures::FutureExt;
 use ::log::{as_display, as_error, as_serde, debug, error, info, warn};
 use ::mongodb::bson::doc;
 use ::mongodb::Database;
-use ::nats::jetstream::JetStream as Broker;
+use ::nats::jetstream::JetStream as NatsJS;
 use ::rug::Float;
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
 use ::subscribe::PubSub;
@@ -53,7 +52,7 @@ pub struct TradeObserver {
 }
 
 impl TradeObserver {
-  pub async fn new(db: Option<Database>, broker: Arc<Broker>) -> Self {
+  pub async fn new(db: Option<Database>, broker: NatsJS) -> Self {
     let recorder = match db {
       None => None,
       Some(db) => Some(SymbolWriter::new(&db).await),

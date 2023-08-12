@@ -6,7 +6,7 @@ use ::async_trait::async_trait;
 use ::futures::future::join_all;
 use ::futures::{SinkExt, StreamExt};
 use ::log::{as_display, error, info, warn};
-use ::nats::jetstream::JetStream as Broker;
+use ::nats::jetstream::JetStream as NatsJS;
 use ::serde_json::{from_slice as from_json_bin, from_str as from_json_str};
 use ::tokio::select;
 use ::tokio::sync::Mutex;
@@ -42,7 +42,7 @@ pub struct UserStream {
 }
 
 impl UserStream {
-  pub fn new(broker: Arc<Broker>) -> ReqResult<Self> {
+  pub fn new(broker: NatsJS) -> ReqResult<Self> {
     return Ok(Self {
       key_pubsub: APIKeyPubSub::new(broker.clone()),
       notify_pubsub: NotifyPubSub::new(broker.clone()),

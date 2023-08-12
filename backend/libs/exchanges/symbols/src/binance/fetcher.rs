@@ -1,4 +1,3 @@
-use ::std::sync::Arc;
 use ::std::time::Duration as StdDur;
 
 use ::async_trait::async_trait;
@@ -26,13 +25,13 @@ use ::errors::StatusFailure;
 
 #[derive(Debug, Clone)]
 pub struct SymbolFetcher {
-  broker: Arc<NatsJS>,
+  broker: NatsJS,
   recorder: SymbolWriter,
   cli: RestClient,
 }
 
 impl SymbolFetcher {
-  pub async fn new(broker: Arc<NatsJS>, db: &Database) -> ReqRes<Self> {
+  pub async fn new(broker: NatsJS, db: &Database) -> ReqRes<Self> {
     let recorder = SymbolWriter::new(&db).await;
     let urls: Vec<Url> = REST_ENDPOINTS
       .into_iter()

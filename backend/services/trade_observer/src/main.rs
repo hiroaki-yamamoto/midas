@@ -1,5 +1,4 @@
 use ::std::collections::HashMap;
-use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::futures::{FutureExt, SinkExt, StreamExt};
@@ -22,7 +21,7 @@ use ::rpc::entities::Exchanges;
 
 async fn get_exchange(
   exchange: Exchanges,
-  broker: Arc<NatsJS>,
+  broker: NatsJS,
 ) -> Option<impl TradeObserverTrait> {
   return match exchange {
     Exchanges::Binance => Some(binance::TradeObserver::new(None, broker).await),
@@ -95,7 +94,7 @@ async fn main() {
         return (exchange, broker.clone());
       })
       .untuple_one()
-      .and_then(|exchange: String, broker: Arc<NatsJS>| async move {
+      .and_then(|exchange: String, broker: NatsJS| async move {
         let exchange: Exchanges =
           exchange.parse().map_err(|_| ::warp::reject::not_found())?;
         let observer = match exchange {

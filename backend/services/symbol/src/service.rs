@@ -1,5 +1,3 @@
-use ::std::sync::Arc;
-
 use ::futures::StreamExt;
 use ::mongodb::Database;
 use ::nats::jetstream::JetStream as NatsJS;
@@ -23,7 +21,7 @@ pub struct Service {
 impl Service {
   pub async fn new(
     db: &Database,
-    broker: Arc<NatsJS>,
+    broker: NatsJS,
   ) -> binance_fetcher::ReqRes<Self> {
     return Ok(Self {
       binance_fetcher: binance_fetcher::SymbolFetcher::new(broker, db).await?,
