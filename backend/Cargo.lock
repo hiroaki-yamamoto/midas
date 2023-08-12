@@ -1432,7 +1432,6 @@ dependencies = [
  "mongodb",
  "nats",
  "num-traits",
- "probe",
  "rmp-serde",
  "rpc",
  "serde",
@@ -2421,13 +2420,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "probe"
-version = "0.1.0"
-dependencies = [
- "warp",
-]
-
-[[package]]
 name = "proc-macro-error"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3407,7 +3399,6 @@ dependencies = [
  "mongodb",
  "nats",
  "num-traits",
- "probe",
  "rpc",
  "serde",
  "serde_json",

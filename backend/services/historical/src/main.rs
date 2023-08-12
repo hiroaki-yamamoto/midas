@@ -6,7 +6,6 @@ use ::warp::Filter;
 
 use ::config::init;
 use ::csrf::{CSRFOption, CSRF};
-use ::probe::probe;
 use ::rpc::rejection_handler::handle_rejection;
 
 use crate::service::Service;
@@ -21,7 +20,6 @@ async fn main() {
     let route = csrf
       .protect()
       .and(svc.route())
-      .or(probe())
       .recover(handle_rejection)
       .with(access_log);
 
