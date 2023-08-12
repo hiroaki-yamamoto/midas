@@ -42,8 +42,8 @@ pub struct Executor {
 }
 
 impl Executor {
-  pub async fn new(broker: NatsJS, db: Database) -> ReqResult<Self> {
-    let keychain = KeyChain::new(broker.clone(), db.clone()).await;
+  pub async fn new(broker: NatsJS, db: Database) -> ExecutionResult<Self> {
+    let keychain = KeyChain::new(broker.clone(), db.clone()).await?;
     let positions = db.collection("binance.positions");
     let me = Self {
       broker: broker.clone(),
@@ -96,7 +96,7 @@ impl ExecutorTrait for Executor {
       Some(self.db.clone()),
       self.broker.clone(),
     )
-    .await;
+    .await?;
     let mut sub = observer.subscribe().await?;
       while let Some(book_ticker) = sub.next().await {
         yield book_ticker;

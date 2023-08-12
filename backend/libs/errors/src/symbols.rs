@@ -2,6 +2,7 @@ use ::err_derive::Error;
 
 use ::mongodb::error::Error as DBErr;
 use ::reqwest::Error as ReqErr;
+use ::std::io::Error as IOError;
 
 use crate::HTTPErrors;
 
@@ -13,6 +14,8 @@ pub enum SymbolFetchError {
   HTTPErr(#[source] HTTPErrors),
   #[error(display = "Databse Error")]
   DBErr(#[source] DBErr),
+  #[error(display = "IO Error (Perhaps from broker?): {}", _0)]
+  IOError(#[source] IOError),
 }
 
 pub type SymbolFetchResult<T> = Result<T, SymbolFetchError>;

@@ -16,12 +16,13 @@ macro_rules! pubsub {
     }
 
     impl $name {
-      fn add_stream(&self){
+      fn add_stream(&self) -> ::std::io::Result<()> {
         let mut option: ::nats::jetstream::StreamConfig = $id.into();
         option.retention = ::nats::jetstream::RetentionPolicy::Limits;
         if self.js.update_stream(&option).is_err() {
-          let _ = self.js.add_stream(option);
+          let _ = self.js.add_stream(option)?;
         }
+        return Ok(());
       }
 
       fn add_consumer(&self) {
@@ -31,11 +32,11 @@ macro_rules! pubsub {
         let _ = self.js.add_consumer($id, cfg);
       }
 
-      pub fn new(js: ::nats::jetstream::JetStream) -> Self {
+      pub fn new(js: ::nats::jetstream::JetStream) -> ::std::io::Result<Self> {
         let me = Self { js };
-        me.add_stream();
+        me.add_stream()?;
         // me.add_consumer();
-        return me;
+        return Ok(me);
       }
     }
 

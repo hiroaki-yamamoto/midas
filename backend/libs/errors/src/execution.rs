@@ -1,12 +1,12 @@
 use ::err_derive::Error;
 use ::mongodb::bson::ser::Error as BSONEncodeErr;
 use ::mongodb::error::Error as DBErr;
+use ::reqwest::header::InvalidHeaderName;
 use ::reqwest::header::InvalidHeaderValue;
 use ::reqwest::Error as ReqwestErr;
 use ::serde_qs::Error as QueryError;
 use ::std::convert::From;
 use ::std::io::Error as IOError;
-use reqwest::header::InvalidHeaderName;
 
 use crate::{
   APIHeaderErrors, HTTPErrors, ObjectNotFound, ParseError, StatusFailure,

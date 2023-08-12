@@ -52,18 +52,18 @@ pub struct TradeObserver {
 }
 
 impl TradeObserver {
-  pub async fn new(db: Option<Database>, broker: NatsJS) -> Self {
+  pub async fn new(db: Option<Database>, broker: NatsJS) -> IOResult<Self> {
     let recorder = match db {
       None => None,
       Some(db) => Some(SymbolWriter::new(&db).await),
     };
     let me = Self {
-      symbol_event: SymbolEventPubSub::new(broker.clone()),
-      bookticker_pubsub: BookTickerPubSub::new(broker.clone()),
+      symbol_event: SymbolEventPubSub::new(broker.clone())?,
+      bookticker_pubsub: BookTickerPubSub::new(broker.clone())?,
       add_symbol_count: 0,
       recorder,
     };
-    return me;
+    return Ok(me);
   }
 
   async fn init_socket(&self) -> Result<TLSWebSocket, WebsocketError> {

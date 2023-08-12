@@ -30,9 +30,9 @@ async fn main() {
     let mut cur_prog_kvs = CurrentSyncProgressStore::new(cfg.redis().unwrap());
     let mut num_prg_kvs = NumObjectsToFetchStore::new(cfg.redis().unwrap());
 
-    let req_pubsub = HistChartDateSplitPubSub::new(broker.clone());
+    let req_pubsub = HistChartDateSplitPubSub::new(broker.clone()).unwrap();
     let mut req_sub = req_pubsub.queue_subscribe("dateSplitSub").unwrap();
-    let resp_pubsub = HistChartPubSub::new(broker.clone());
+    let resp_pubsub = HistChartPubSub::new(broker.clone()).unwrap();
 
     loop {
       select! {

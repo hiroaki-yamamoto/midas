@@ -22,7 +22,9 @@ use ::round::{reqwest::Result as ReqResult, RestClient};
 
 use crate::traits::UserStream as UserStreamTrait;
 use ::entities::{APIKey, APIKeyEvent, APIKeyInner};
-use ::errors::{MaximumAttemptExceeded, NotificationResult, WebsocketError};
+use ::errors::{
+  MaximumAttemptExceeded, NotificationResult, UserStreamResult, WebsocketError,
+};
 use ::keychain::pubsub::APIKeyPubSub;
 use ::subscribe::PubSub;
 use ::types::TLSWebSocket;
@@ -42,12 +44,12 @@ pub struct UserStream {
 }
 
 impl UserStream {
-  pub fn new(broker: NatsJS) -> ReqResult<Self> {
+  pub fn new(broker: NatsJS) -> UserStreamResult<Self> {
     return Ok(Self {
-      key_pubsub: APIKeyPubSub::new(broker.clone()),
-      notify_pubsub: NotifyPubSub::new(broker.clone()),
-      reauth_pubsub: ReauthPubSub::new(broker.clone()),
-      listen_key_pubsub: ListenKeyPubSub::new(broker.clone()),
+      key_pubsub: APIKeyPubSub::new(broker.clone())?,
+      notify_pubsub: NotifyPubSub::new(broker.clone())?,
+      reauth_pubsub: ReauthPubSub::new(broker.clone())?,
+      listen_key_pubsub: ListenKeyPubSub::new(broker.clone())?,
       cli: RestClient::new(
         REST_ENDPOINTS
           .into_iter()

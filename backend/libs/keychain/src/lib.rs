@@ -1,5 +1,7 @@
 pub mod pubsub;
 
+use ::std::io::Result as IOResult;
+
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::oid::ObjectId;
@@ -27,15 +29,15 @@ pub struct KeyChain {
 }
 
 impl KeyChain {
-  pub async fn new(broker: NatsJS, db: Database) -> Self {
+  pub async fn new(broker: NatsJS, db: Database) -> IOResult<Self> {
     let col = db.collection("apiKeyChains");
     let ret = Self {
-      pubsub: APIKeyPubSub::new(broker),
+      pubsub: APIKeyPubSub::new(broker)?,
       db,
       col,
     };
     ret.update_indices(&["exchange"]).await;
-    return ret;
+    return Ok(ret);
   }
 
   pub async fn push(

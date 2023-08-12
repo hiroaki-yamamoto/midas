@@ -1,4 +1,5 @@
 use ::std::fmt::Debug;
+use ::std::io::Result as IOResult;
 use ::std::sync::{Arc, Mutex};
 
 use ::futures::stream::BoxStream;
@@ -46,14 +47,14 @@ impl Service {
     nats: NatsJS,
     redis_cli: &redis::Client,
     db: &Database,
-  ) -> Self {
+  ) -> IOResult<Self> {
     let ret = Self {
-      status: FetchStatusEventPubSub::new(nats.clone()),
-      splitter: HistChartDateSplitPubSub::new(nats.clone()),
+      status: FetchStatusEventPubSub::new(nats.clone())?,
+      splitter: HistChartDateSplitPubSub::new(nats.clone())?,
       redis_cli: redis_cli.clone(),
       db: db.clone(),
     };
-    return ret;
+    return Ok(ret);
   }
 
   pub fn route(&self) -> BoxedFilter<(impl Reply,)> {

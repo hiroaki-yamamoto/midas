@@ -1,4 +1,5 @@
 use ::std::collections::HashMap;
+use ::std::io::Result as IOResult;
 use ::std::time::Duration;
 
 use ::futures::{FutureExt, SinkExt, StreamExt};
@@ -22,10 +23,12 @@ use ::rpc::entities::Exchanges;
 async fn get_exchange(
   exchange: Exchanges,
   broker: NatsJS,
-) -> Option<impl TradeObserverTrait> {
-  return match exchange {
-    Exchanges::Binance => Some(binance::TradeObserver::new(None, broker).await),
-  };
+) -> IOResult<Option<impl TradeObserverTrait>> {
+  return Ok(match exchange {
+    Exchanges::Binance => {
+      Some(binance::TradeObserver::new(None, broker).await?)
+    }
+  });
 }
 
 fn handle_websocket(
@@ -99,7 +102,8 @@ async fn main() {
           exchange.parse().map_err(|_| ::warp::reject::not_found())?;
         let observer = match exchange {
           Exchanges::Binance => get_exchange(exchange, broker).await,
-        };
+        }
+        .unwrap();
         return match observer {
           None => Err(::warp::reject::not_found()),
           Some(o) => Ok(o),

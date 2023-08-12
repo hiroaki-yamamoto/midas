@@ -10,13 +10,12 @@ use ::rug::Float;
 use ::entities::{
   BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
 };
-use ::errors::ExecutionFailed;
+use ::errors::{ExecutionFailed, ExecutionResult};
 use ::observers::traits::TradeObserver as TradeObserverTrait;
 
 use crate::traits::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
 };
-use ::errors::ExecutionResult;
 
 use ::observers::binance::TradeObserver;
 
@@ -30,15 +29,19 @@ pub struct Executor {
 }
 
 impl Executor {
-  pub async fn new(broker: NatsJS, maker_fee: Float, taker_fee: Float) -> Self {
-    return Self {
-      observer: TradeObserver::new(None, broker).await,
+  pub async fn new(
+    broker: NatsJS,
+    maker_fee: Float,
+    taker_fee: Float,
+  ) -> ExecutionResult<Self> {
+    return Ok(Self {
+      observer: TradeObserver::new(None, broker).await?,
       orders: HashMap::new(),
       positions: HashMap::new(),
       cur_trade: None,
       maker_fee,
       taker_fee,
-    };
+    });
   }
 }
 

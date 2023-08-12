@@ -30,7 +30,7 @@ macro_rules! declare_reject_func {
 async fn main() {
   init(|cfg, mut sig, db, broker, host| async move {
     let log_access = log();
-    let keychain = KeyChain::new(broker, db).await;
+    let keychain = KeyChain::new(broker, db).await.unwrap();
     let path_param = ::warp::any()
       .map(move || {
         return (keychain.clone(),);

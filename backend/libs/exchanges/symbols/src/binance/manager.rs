@@ -1,4 +1,5 @@
 use ::std::collections::HashSet;
+use ::std::io::Result as IOResult;
 
 use ::log::{as_error, error};
 use ::nats::jetstream::JetStream as NatsJS;
@@ -15,7 +16,7 @@ pub struct SymbolUpdateEventManager {
 }
 
 impl SymbolUpdateEventManager {
-  pub fn new<S, T>(broker: NatsJS, new: S, old: T) -> Self
+  pub fn new<S, T>(broker: NatsJS, new: S, old: T) -> IOResult<Self>
   where
     S: IntoIterator<Item = Symbol> + Clone,
     T: IntoIterator<Item = Symbol> + Clone,
@@ -36,11 +37,11 @@ impl SymbolUpdateEventManager {
       .into_iter()
       .filter(move |item| to_remove.contains(&item.symbol))
       .collect();
-    return Self {
+    return Ok(Self {
       to_add,
       to_remove,
-      event: SymbolEventPubSub::new(broker.clone()),
-    };
+      event: SymbolEventPubSub::new(broker.clone())?,
+    });
   }
 
   pub async fn publish_changes(&self) {

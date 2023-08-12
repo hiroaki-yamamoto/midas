@@ -31,9 +31,9 @@ async fn main() {
     let redis = cfg.redis().unwrap();
     let mut cur_prog_kvs = CurrentSyncProgressStore::new(redis);
 
-    let pubsub = HistChartPubSub::new(broker.clone());
+    let pubsub = HistChartPubSub::new(broker.clone()).unwrap();
     let mut sub = pubsub.queue_subscribe("histFetcherWorkerSubsc").unwrap();
-    let change_event_pub = FetchStatusEventPubSub::new(broker);
+    let change_event_pub = FetchStatusEventPubSub::new(broker).unwrap();
 
     let mut reg: HashMap<Exchanges, Box<dyn HistoryFetcherTrait>> =
       HashMap::new();
