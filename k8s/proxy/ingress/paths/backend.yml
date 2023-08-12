@@ -4,7 +4,7 @@
     - host: "minikube"
       http:
         paths: []
-    - host: "virt"
+    - host: "localhost"
       http:
         paths: []
 - op: add
