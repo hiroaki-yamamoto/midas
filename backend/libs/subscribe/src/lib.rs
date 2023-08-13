@@ -1,7 +1,7 @@
 mod traits;
 
 pub use ::log;
-pub use ::tokio::time::interval;
+pub use ::tokio::time::sleep;
 
 pub use self::traits::PubSub;
 
@@ -15,18 +15,20 @@ macro_rules! pubsub {
   ) => {
     #[derive(Debug, Clone)]
     $accessor struct $name {
-      js: ::nats::jetstream::JetStream
+      js: ::nats::jetstream::JetStream,
     }
 
     impl $name {
       async fn add_stream(&self) -> ::std::io::Result<()> {
-        let option: ::nats::jetstream::StreamConfig = $id.into();
-        let mut sleep = ::subscribe::interval(::std::time::Duration::from_secs(1));
-        for count in 1..=600 {
+        let mut option: ::nats::jetstream::StreamConfig = $id.into();
+        option.max_consumers = -1;
+
+        const MAX_RETRY: usize = 30;
+        for count in 1..=MAX_RETRY {
           if let Err(e) = self.js.update_stream(&option) {
             ::subscribe::log::warn!(
               "Failed to update the stream. Retrying after
-                1 sec...({}/600): {}", count, e
+                1 sec...({}/{}): {}", count, e, MAX_RETRY
             );
           } else {
             match self.js.add_stream(&option) {
@@ -34,27 +36,22 @@ macro_rules! pubsub {
               Err(e) => {
                 ::subscribe::log::warn!(
                   "Failed to acquire stream. Retrying after
-                    1 sec...({}/600): {}", count, e
+                    1 sec...({}/{}): {}", count, e, MAX_RETRY
                 );
               },
             }
           }
-          sleep.tick().await;
+          ::subscribe::sleep(::std::time::Duration::from_secs(1)).await;
         }
-        return Ok(());
-      }
-
-      fn add_consumer(&self) {
-        let mut cfg: ::nats::jetstream::ConsumerConfig = $id.into();
-        cfg.deliver_policy = ::nats::jetstream::DeliverPolicy::All;
-        cfg.ack_policy = ::nats::jetstream::AckPolicy::Explicit;
-        let _ = self.js.add_consumer($id, cfg);
+        return Err(::std::io::Error::new(
+          ::std::io::ErrorKind::Other,
+          "Failed to acquire stream",
+        ));
       }
 
       pub async fn new(js: ::nats::jetstream::JetStream) -> ::std::io::Result<Self> {
-        let me = Self { js };
+        let mut me = Self {js};
         me.add_stream().await?;
-        // me.add_consumer();
         return Ok(me);
       }
     }

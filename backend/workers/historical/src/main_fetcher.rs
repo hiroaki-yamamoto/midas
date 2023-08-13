@@ -32,7 +32,7 @@ async fn main() {
     let mut cur_prog_kvs = CurrentSyncProgressStore::new(redis);
 
     let pubsub = HistChartPubSub::new(broker.clone()).await.unwrap();
-    let mut sub = pubsub.queue_subscribe("histFetcherWorkerSubsc").unwrap();
+    let mut sub = pubsub.queue_subscribe("histFetcherWorkerSubsc").await.unwrap();
     let change_event_pub = FetchStatusEventPubSub::new(broker).await.unwrap();
 
     let mut reg: HashMap<Exchanges, Box<dyn HistoryFetcherTrait>> =

@@ -35,7 +35,7 @@ async fn main() {
       HistChartPubSub::new(broker.clone()),
     );
     let (req_pubsub, resp_pubsub) = (req_pubsub.unwrap(), resp_pubsub.unwrap());
-    let mut req_sub = req_pubsub.queue_subscribe("dateSplitSub").unwrap();
+    let mut req_sub = req_pubsub.queue_subscribe("dateSplitSub").await.unwrap();
 
     loop {
       select! {

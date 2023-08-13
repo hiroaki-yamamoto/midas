@@ -18,6 +18,7 @@ async fn main() {
     let node_event_pubsub = NodeEventPubSub::new(broker.clone()).await.unwrap();
     let mut node_event = node_event_pubsub
       .queue_subscribe("tradeObserverControl")
+      .await
       .unwrap();
     loop {
       select! {
