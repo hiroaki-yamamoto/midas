@@ -9,7 +9,6 @@ use ::mongodb::bson::{doc, oid::ObjectId, to_document, DateTime};
 use ::mongodb::options::{UpdateModifications, UpdateOptions};
 use ::mongodb::{Collection, Database};
 use ::nats::jetstream::JetStream as NatsJS;
-use ::reqwest::Result as ReqResult;
 use ::rug::Float;
 use ::serde_qs::to_string as to_qs;
 

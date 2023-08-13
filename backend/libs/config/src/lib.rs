@@ -7,6 +7,7 @@ use std::net::SocketAddr;
 
 use ::clap::Parser;
 use ::libc::{SIGINT, SIGTERM};
+use ::tokio::join;
 
 pub use self::constants::{
   CHAN_BUF_SIZE, DEFAULT_CONFIG_PATH, DEFAULT_RECONNECT_INTERVAL,
@@ -30,8 +31,9 @@ where
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
   cfg.init_logger();
-  let db = cfg.db().await.unwrap();
-  let broker = cfg.nats_cli().unwrap();
+  let (db, broker) = join!(cfg.db(), cfg.nats_cli());
+  let db = db.unwrap();
+  let broker = broker.unwrap();
   let host: SocketAddr = cfg.host.parse().unwrap();
   func(cfg, sig, db, broker, host).await;
 }

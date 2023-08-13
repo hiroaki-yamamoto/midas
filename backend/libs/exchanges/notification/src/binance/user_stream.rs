@@ -18,7 +18,7 @@ use ::tokio_tungstenite::tungstenite::{
 };
 
 use ::clients::binance::{APIHeader, REST_ENDPOINTS, WS_ENDPOINT};
-use ::round::{reqwest::Result as ReqResult, RestClient};
+use ::round::RestClient;
 
 use crate::traits::UserStream as UserStreamTrait;
 use ::entities::{APIKey, APIKeyEvent, APIKeyInner};

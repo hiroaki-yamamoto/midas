@@ -1,6 +1,7 @@
 use ::clap::Parser;
 use ::futures::future::{select, Either};
 use ::libc::{SIGINT, SIGTERM};
+use ::tokio::join;
 use ::tokio::signal::unix as signal;
 
 use ::config::{Config, DEFAULT_CONFIG_PATH};
@@ -22,8 +23,9 @@ async fn main() {
   let cmd_args: CmdArgs = CmdArgs::parse();
   let config = Config::from_fpath(Some(cmd_args.config)).unwrap();
 
-  let broker = config.nats_cli().unwrap();
-  let db = config.db().await.unwrap();
+  let (broker, db) = join!(config.nats_cli(), config.db());
+  let broker = broker.unwrap();
+  let db = db.unwrap();
   config.init_logger();
   let exchange: Box<dyn TradeObserverTrait> = match cmd_args.exchange {
     Exchanges::Binance => {

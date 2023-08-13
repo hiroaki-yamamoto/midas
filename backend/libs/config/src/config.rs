@@ -11,6 +11,7 @@ use ::reqwest::{Certificate, Client};
 use ::serde::de::Error as SerdeError;
 use ::serde::{Deserialize, Deserializer};
 use ::serde_yaml::Result as YaMLResult;
+use ::tokio::time::sleep;
 
 use ::errors::{ConfigResult, MaximumAttemptExceeded};
 use ::nats::connect as nats_connect;
@@ -104,9 +105,19 @@ impl Config {
     return Ok(Client::builder().add_root_certificate(ca).build()?);
   }
 
-  pub fn nats_cli(&self) -> ConfigResult<NatsJS> {
-    let broker = nats_connect(&self.broker_url)?;
-    let js = nats_js_new(broker);
-    return Ok(js);
+  pub async fn nats_cli(&self) -> ConfigResult<NatsJS> {
+    for count in 1..=30 {
+      if let Ok(broker) = nats_connect(&self.broker_url) {
+        let js = nats_js_new(broker);
+        return Ok(js);
+      }
+      warn!(
+        "Failed to establish the connection to nats.
+          Retrying in 1 sec ({}/30)",
+        count
+      );
+      sleep(Duration::from_secs(1)).await;
+    }
+    return Err(MaximumAttemptExceeded::default().into());
   }
 }
