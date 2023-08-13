@@ -32,7 +32,7 @@ impl KeyChain {
   pub async fn new(broker: NatsJS, db: Database) -> IOResult<Self> {
     let col = db.collection("apiKeyChains");
     let ret = Self {
-      pubsub: APIKeyPubSub::new(broker)?,
+      pubsub: APIKeyPubSub::new(broker).await?,
       db,
       col,
     };

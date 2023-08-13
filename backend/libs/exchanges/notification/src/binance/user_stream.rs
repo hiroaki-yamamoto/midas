@@ -8,9 +8,9 @@ use ::futures::{SinkExt, StreamExt};
 use ::log::{as_display, error, info, warn};
 use ::nats::jetstream::JetStream as NatsJS;
 use ::serde_json::{from_slice as from_json_bin, from_str as from_json_str};
-use ::tokio::select;
 use ::tokio::sync::Mutex;
 use ::tokio::time::{interval, sleep};
+use ::tokio::{join, select};
 use ::tokio_stream::StreamMap;
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::{
@@ -44,12 +44,24 @@ pub struct UserStream {
 }
 
 impl UserStream {
-  pub fn new(broker: NatsJS) -> UserStreamResult<Self> {
+  pub async fn new(broker: NatsJS) -> UserStreamResult<Self> {
+    let (key_pubsub, notify_pubsub, reauth_pubsub, listen_key_pubsub) = join!(
+      APIKeyPubSub::new(broker.clone()),
+      NotifyPubSub::new(broker.clone()),
+      ReauthPubSub::new(broker.clone()),
+      ListenKeyPubSub::new(broker.clone()),
+    );
+    let (key_pubsub, notify_pubsub, reauth_pubsub, listen_key_pubsub) = (
+      key_pubsub?,
+      notify_pubsub?,
+      reauth_pubsub?,
+      listen_key_pubsub?,
+    );
     return Ok(Self {
-      key_pubsub: APIKeyPubSub::new(broker.clone())?,
-      notify_pubsub: NotifyPubSub::new(broker.clone())?,
-      reauth_pubsub: ReauthPubSub::new(broker.clone())?,
-      listen_key_pubsub: ListenKeyPubSub::new(broker.clone())?,
+      key_pubsub,
+      notify_pubsub,
+      reauth_pubsub,
+      listen_key_pubsub,
       cli: RestClient::new(
         REST_ENDPOINTS
           .into_iter()

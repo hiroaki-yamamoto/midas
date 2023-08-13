@@ -10,7 +10,7 @@ use ::mongodb::Database;
 use ::nats::jetstream::JetStream as NatsJS;
 use ::serde_json::{from_slice as parse_json, to_string as jsonify};
 use ::subscribe::PubSub;
-use ::tokio::select;
+use ::tokio::{join, select};
 use ::warp::filters::BoxedFilter;
 use ::warp::reject::{custom as cus_rej, Rejection};
 use ::warp::ws::{Message, WebSocket, Ws};
@@ -48,9 +48,13 @@ impl Service {
     redis_cli: &redis::Client,
     db: &Database,
   ) -> IOResult<Self> {
+    let (status, splitter) = join!(
+      FetchStatusEventPubSub::new(nats.clone()),
+      HistChartDateSplitPubSub::new(nats.clone())
+    );
     let ret = Self {
-      status: FetchStatusEventPubSub::new(nats.clone())?,
-      splitter: HistChartDateSplitPubSub::new(nats.clone())?,
+      status: status?,
+      splitter: splitter?,
       redis_cli: redis_cli.clone(),
       db: db.clone(),
     };

@@ -16,7 +16,7 @@ pub struct SymbolUpdateEventManager {
 }
 
 impl SymbolUpdateEventManager {
-  pub fn new<S, T>(broker: NatsJS, new: S, old: T) -> IOResult<Self>
+  pub async fn new<S, T>(broker: NatsJS, new: S, old: T) -> IOResult<Self>
   where
     S: IntoIterator<Item = Symbol> + Clone,
     T: IntoIterator<Item = Symbol> + Clone,
@@ -40,7 +40,7 @@ impl SymbolUpdateEventManager {
     return Ok(Self {
       to_add,
       to_remove,
-      event: SymbolEventPubSub::new(broker.clone())?,
+      event: SymbolEventPubSub::new(broker.clone()).await?,
     });
   }
 

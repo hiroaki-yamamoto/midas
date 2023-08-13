@@ -72,7 +72,8 @@ impl SymbolFetcherTrait for SymbolFetcher {
         self.broker.clone(),
         new_symbols.clone(),
         old_symbols,
-      )?;
+      )
+      .await?;
       let (update, _) = join(
         self.recorder.update_symbols(new_symbols),
         update_event_manager.publish_changes(),

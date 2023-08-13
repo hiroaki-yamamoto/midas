@@ -58,8 +58,8 @@ impl TradeObserver {
       Some(db) => Some(SymbolWriter::new(&db).await),
     };
     let me = Self {
-      symbol_event: SymbolEventPubSub::new(broker.clone())?,
-      bookticker_pubsub: BookTickerPubSub::new(broker.clone())?,
+      symbol_event: SymbolEventPubSub::new(broker.clone()).await?,
+      bookticker_pubsub: BookTickerPubSub::new(broker.clone()).await?,
       add_symbol_count: 0,
       recorder,
     };

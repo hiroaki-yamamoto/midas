@@ -1,5 +1,8 @@
 mod traits;
 
+pub use ::log;
+pub use ::tokio::time::interval;
+
 pub use self::traits::PubSub;
 
 #[macro_export]
@@ -16,11 +19,27 @@ macro_rules! pubsub {
     }
 
     impl $name {
-      fn add_stream(&self) -> ::std::io::Result<()> {
-        let mut option: ::nats::jetstream::StreamConfig = $id.into();
-        option.retention = ::nats::jetstream::RetentionPolicy::Limits;
-        if self.js.update_stream(&option).is_err() {
-          let _ = self.js.add_stream(option)?;
+      async fn add_stream(&self) -> ::std::io::Result<()> {
+        let option: ::nats::jetstream::StreamConfig = $id.into();
+        let mut sleep = ::subscribe::interval(::std::time::Duration::from_secs(1));
+        for count in 1..=600 {
+          if let Err(e) = self.js.update_stream(&option) {
+            ::subscribe::log::warn!(
+              "Failed to update the stream. Retrying after
+                1 sec...({}/600): {}", count, e
+            );
+          } else {
+            match self.js.add_stream(&option) {
+              Ok(_) => return Ok(()),
+              Err(e) => {
+                ::subscribe::log::warn!(
+                  "Failed to acquire stream. Retrying after
+                    1 sec...({}/600): {}", count, e
+                );
+              },
+            }
+          }
+          sleep.tick().await;
         }
         return Ok(());
       }
@@ -32,9 +51,9 @@ macro_rules! pubsub {
         let _ = self.js.add_consumer($id, cfg);
       }
 
-      pub fn new(js: ::nats::jetstream::JetStream) -> ::std::io::Result<Self> {
+      pub async fn new(js: ::nats::jetstream::JetStream) -> ::std::io::Result<Self> {
         let me = Self { js };
-        me.add_stream()?;
+        me.add_stream().await?;
         // me.add_consumer();
         return Ok(me);
       }

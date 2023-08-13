@@ -13,7 +13,7 @@ use ::date_splitter::DateSplitter;
 use ::history::binance::fetcher::HistoryFetcher as BinanceHistFetcher;
 use ::history::binance::writer::HistoryWriter as BinanceHistoryWriter;
 use ::history::kvs::{CurrentSyncProgressStore, NumObjectsToFetchStore};
-use ::tokio::select;
+use ::tokio::{join, select};
 
 use ::history::pubsub::{HistChartDateSplitPubSub, HistChartPubSub};
 use ::history::traits::{
@@ -30,9 +30,12 @@ async fn main() {
     let mut cur_prog_kvs = CurrentSyncProgressStore::new(cfg.redis().unwrap());
     let mut num_prg_kvs = NumObjectsToFetchStore::new(cfg.redis().unwrap());
 
-    let req_pubsub = HistChartDateSplitPubSub::new(broker.clone()).unwrap();
+    let (req_pubsub, resp_pubsub) = join!(
+      HistChartDateSplitPubSub::new(broker.clone()),
+      HistChartPubSub::new(broker.clone()),
+    );
+    let (req_pubsub, resp_pubsub) = (req_pubsub.unwrap(), resp_pubsub.unwrap());
     let mut req_sub = req_pubsub.queue_subscribe("dateSplitSub").unwrap();
-    let resp_pubsub = HistChartPubSub::new(broker.clone()).unwrap();
 
     loop {
       select! {
