@@ -13,6 +13,6 @@ notification = { path = "../../libs/exchanges/notification" }
 
 clap = { version = "4.3.0", features = ["derive"] }
 tokio = { version = "1.25.0", features = ["rt", "rt-multi-thread", "signal"] }
-nats = "0.24.0"
+async-nats = "0.31.0"
 libc = "0.2.139"
 futures = "0.3.26"

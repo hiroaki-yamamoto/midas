@@ -22,7 +22,7 @@ kvs = { path = "../../libs/kvs" }
 
 serde = { version = "1.0.152", features = ["derive"] }
 rmp-serde = "1.1.1"
-nats = "0.24.0"
+async-nats = "0.31.0"
 mongodb = { version = "2.4.0", default-features = false, features = [
   "async-std-runtime",
 ] }

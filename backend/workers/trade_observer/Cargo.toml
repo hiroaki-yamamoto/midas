@@ -18,7 +18,7 @@ tokio = { version = "1.25.0", features = [
   "rt-multi-thread",
   "macros",
 ] }
-nats = "0.24.0"
+async-nats = "0.31.0"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 futures = "0.3.26"
 libc = "0.2.139"

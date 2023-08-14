@@ -32,7 +32,7 @@ tokio = { version = "1.25.0", features = [
   "macros",
   "signal",
 ] }
-nats = "0.24.0"
+async-nats = "0.31.0"
 clap = { version = "4.3.0", features = ["derive"] }
 mongodb = { version = "2.4.0", default-features = false, features = [
   "async-std-runtime",

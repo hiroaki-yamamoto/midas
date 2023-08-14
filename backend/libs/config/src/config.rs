@@ -13,9 +13,10 @@ use ::serde::{Deserialize, Deserializer};
 use ::serde_yaml::Result as YaMLResult;
 use ::tokio::time::sleep;
 
+use ::async_nats::connect as nats_connect;
+use ::async_nats::jetstream::context::Context as NatsJS;
+use ::async_nats::jetstream::new as nats_js_new;
 use ::errors::{ConfigResult, MaximumAttemptExceeded};
-use ::nats::connect as nats_connect;
-use ::nats::jetstream::{new as nats_js_new, JetStream as NatsJS};
 use ::redis::{Client as RedisClient, Connection};
 
 #[derive(Debug, Clone, Deserialize)]
@@ -107,7 +108,7 @@ impl Config {
 
   pub async fn nats_cli(&self) -> ConfigResult<NatsJS> {
     for count in 1..=30 {
-      if let Ok(broker) = nats_connect(&self.broker_url) {
+      if let Ok(broker) = nats_connect(&self.broker_url).await {
         let js = nats_js_new(broker);
         return Ok(js);
       }

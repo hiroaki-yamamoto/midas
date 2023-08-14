@@ -4,6 +4,8 @@ pub use ::log;
 pub use ::tokio::time::sleep;
 
 pub use self::traits::PubSub;
+pub use ::async_nats as nats;
+pub use ::async_nats::jetstream as natsJS;
 
 #[macro_export]
 macro_rules! pubsub {
@@ -15,50 +17,30 @@ macro_rules! pubsub {
   ) => {
     #[derive(Debug, Clone)]
     $accessor struct $name {
-      js: ::nats::jetstream::JetStream,
+      stream: ::async_nats::jetstream::stream::Stream,
     }
 
     impl $name {
-      async fn add_stream(&self) -> ::std::io::Result<()> {
-        let mut option: ::nats::jetstream::StreamConfig = $id.into();
+      async fn add_stream(
+        &self, ctx: async_nats::jetstream::context::Context,
+      ) -> ::std::io::Result<::async_nats::jetstream::stream::Stream> {
+        let mut option: ::async_nats::jetstream::stream::Config = $id.into();
         option.max_consumers = -1;
-
-        const MAX_RETRY: usize = 30;
-        for count in 1..=MAX_RETRY {
-          if let Err(e) = self.js.update_stream(&option) {
-            ::subscribe::log::warn!(
-              "Failed to update the stream. Retrying after
-                1 sec...({}/{}): {}", count, e, MAX_RETRY
-            );
-          } else {
-            match self.js.add_stream(&option) {
-              Ok(_) => return Ok(()),
-              Err(e) => {
-                ::subscribe::log::warn!(
-                  "Failed to acquire stream. Retrying after
-                    1 sec...({}/{}): {}", count, e, MAX_RETRY
-                );
-              },
-            }
-          }
-          ::subscribe::sleep(::std::time::Duration::from_secs(1)).await;
-        }
-        return Err(::std::io::Error::new(
-          ::std::io::ErrorKind::Other,
-          "Failed to acquire stream",
-        ));
+        return ctx.get_or_create_stream(option).await?;
       }
 
-      pub async fn new(js: ::nats::jetstream::JetStream) -> ::std::io::Result<Self> {
-        let mut me = Self {js};
-        me.add_stream().await?;
+      pub async fn new(
+        ctx: ::async_nats::jetstream::context::Context,
+      ) -> ::std::io::Result<Self> {
+        let stream = me.add_stream(ctx).await?;
+        let mut me = Self { stream };
         return Ok(me);
       }
     }
 
     impl ::subscribe::PubSub<$entity> for $name {
-      fn get_natsjs(&self) -> &::nats::jetstream::JetStream {
-        return &self.js;
+      fn get_stream(&self) -> &::async_nats::jetstream::context::Context {
+        return &self.stream;
       }
       fn get_subject(&self) -> &str {
         return $id;
