@@ -1792,7 +1792,6 @@ dependencies = [
 name = "keychain"
 version = "0.1.0"
 dependencies = [
- "async-nats",
  "entities",
  "errors",
  "futures",

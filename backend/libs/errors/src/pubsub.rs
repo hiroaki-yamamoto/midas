@@ -4,6 +4,7 @@ use ::async_nats::jetstream::stream::ConsumerError as JSConsumerError;
 use ::err_derive::Error;
 use ::rmp_serde::decode::Error as MsgPackDecErr;
 use ::rmp_serde::encode::Error as MsgPackEncErr;
+use async_nats::jetstream::context::CreateStreamError;
 
 #[derive(Debug, Error)]
 pub enum PublishError {
@@ -23,5 +24,6 @@ pub enum ConsumerError {
   DecodeError(#[source] MsgPackDecErr),
 }
 
+pub type CreateStreamResult<T> = Result<T, CreateStreamError>;
 pub type ConsumerResult<T> = Result<T, ConsumerError>;
 pub type PublishResult<T> = Result<T, PublishError>;

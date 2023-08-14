@@ -17,29 +17,33 @@ macro_rules! pubsub {
   ) => {
     #[derive(Debug, Clone)]
     $accessor struct $name {
-      stream: ::async_nats::jetstream::stream::Stream,
+      stream: ::subscribe::natsJS::stream::Stream,
+      ctx: ::subscribe::natsJS::context::Context,
     }
 
     impl $name {
       async fn add_stream(
-        &self, ctx: async_nats::jetstream::context::Context,
-      ) -> ::std::io::Result<::async_nats::jetstream::stream::Stream> {
-        let mut option: ::async_nats::jetstream::stream::Config = $id.into();
+        ctx: &::subscribe::natsJS::context::Context,
+      ) -> ::errors::CreateStreamResult<::subscribe::natsJS::stream::Stream> {
+        let mut option: ::subscribe::natsJS::stream::Config = $id.into();
         option.max_consumers = -1;
-        return ctx.get_or_create_stream(option).await?;
+        return ctx.get_or_create_stream(option).await;
       }
 
       pub async fn new(
-        ctx: ::async_nats::jetstream::context::Context,
-      ) -> ::std::io::Result<Self> {
-        let stream = me.add_stream(ctx).await?;
-        let mut me = Self { stream };
+        ctx: &::subscribe::natsJS::context::Context,
+      ) -> ::errors::CreateStreamResult<Self> {
+        let stream = Self::add_stream(ctx).await?;
+        let mut me = Self { stream, ctx: ctx.clone() };
         return Ok(me);
       }
     }
 
     impl ::subscribe::PubSub<$entity> for $name {
-      fn get_stream(&self) -> &::async_nats::jetstream::context::Context {
+      fn get_ctx(&self) -> &::subscribe::natsJS::context::Context {
+        return &self.ctx;
+      }
+      fn get_stream(&self) -> &::subscribe::natsJS::stream::Stream {
         return &self.stream;
       }
       fn get_subject(&self) -> &str {

@@ -9,7 +9,7 @@ use ::mongodb::bson::{doc, Document};
 use ::mongodb::error::Result;
 use ::mongodb::options::UpdateModifications;
 use ::mongodb::{Collection, Database};
-use ::nats::jetstream::JetStream as NatsJS;
+use ::subscribe::natsJS::context::Context;
 use ::subscribe::PubSub;
 
 use ::errors::KeyChainResult;
@@ -29,7 +29,7 @@ pub struct KeyChain {
 }
 
 impl KeyChain {
-  pub async fn new(broker: NatsJS, db: Database) -> IOResult<Self> {
+  pub async fn new(broker: &Context, db: Database) -> KeyChainResult<Self> {
     let col = db.collection("apiKeyChains");
     let ret = Self {
       pubsub: APIKeyPubSub::new(broker).await?,
@@ -49,7 +49,7 @@ impl KeyChain {
     let mut api_key = api_key.clone();
     api_key.inner_mut().id = id.clone();
     let event = APIKeyEvent::Add(api_key);
-    let _ = self.pubsub.publish(&event)?;
+    let _ = self.pubsub.publish(&event).await?;
     return Ok(id.clone());
   }
 
@@ -108,7 +108,7 @@ impl KeyChain {
     {
       let api_key: APIKey = doc;
       let event = APIKeyEvent::Remove(api_key);
-      let _ = self.pubsub.publish(&event)?;
+      let _ = self.pubsub.publish(&event).await?;
     }
     return Ok(());
   }
