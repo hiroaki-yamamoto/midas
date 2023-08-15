@@ -4,7 +4,6 @@ use ::async_stream::try_stream;
 use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
-use ::nats::jetstream::JetStream as NatsJS;
 use ::rug::Float;
 
 use ::entities::{
@@ -12,6 +11,7 @@ use ::entities::{
 };
 use ::errors::{ExecutionFailed, ExecutionResult};
 use ::observers::traits::TradeObserver as TradeObserverTrait;
+use ::subscribe::natsJS::context::Context as NatsJS;
 
 use crate::traits::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
@@ -35,7 +35,7 @@ impl Executor {
     taker_fee: Float,
   ) -> ExecutionResult<Self> {
     return Ok(Self {
-      observer: TradeObserver::new(None, broker).await?,
+      observer: TradeObserver::new(None, &broker).await?,
       orders: HashMap::new(),
       positions: HashMap::new(),
       cur_trade: None,

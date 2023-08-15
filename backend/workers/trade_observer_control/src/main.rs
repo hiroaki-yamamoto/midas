@@ -15,11 +15,8 @@ async fn main() {
   info!("Starting trade_observer_control");
   config::init(|cfg, mut sig, db, broker, host| async move {
     let mut kvs = cfg.redis().unwrap();
-    let node_event_pubsub = NodeEventPubSub::new(broker.clone()).await.unwrap();
-    let mut node_event = node_event_pubsub
-      .queue_subscribe("tradeObserverControl")
-      .await
-      .unwrap();
+    let node_event_pubsub = NodeEventPubSub::new(&broker).await.unwrap();
+    let mut node_event = node_event_pubsub.queue_subscribe().await.unwrap();
     loop {
       select! {
         event = node_event.next() => if let Some((event, _)) = event {

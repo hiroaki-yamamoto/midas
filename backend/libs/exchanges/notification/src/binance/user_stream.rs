@@ -6,7 +6,6 @@ use ::async_trait::async_trait;
 use ::futures::future::join_all;
 use ::futures::{SinkExt, StreamExt};
 use ::log::{as_display, error, info, warn};
-use ::nats::jetstream::JetStream as NatsJS;
 use ::serde_json::{from_slice as from_json_bin, from_str as from_json_str};
 use ::tokio::sync::Mutex;
 use ::tokio::time::{interval, sleep};
@@ -18,16 +17,15 @@ use ::tokio_tungstenite::tungstenite::{
 };
 
 use ::clients::binance::{APIHeader, REST_ENDPOINTS, WS_ENDPOINT};
-use ::round::RestClient;
-
-use crate::traits::UserStream as UserStreamTrait;
 use ::entities::{APIKey, APIKeyEvent, APIKeyInner};
-use ::errors::{
-  MaximumAttemptExceeded, NotificationResult, UserStreamResult, WebsocketError,
-};
+use ::errors::{MaximumAttemptExceeded, NotificationResult, WebsocketError};
 use ::keychain::pubsub::APIKeyPubSub;
+use ::round::RestClient;
+use ::subscribe::natsJS::context::Context as NatsJS;
 use ::subscribe::PubSub;
 use ::types::TLSWebSocket;
+
+use crate::traits::UserStream as UserStreamTrait;
 
 use super::entities::{
   CastedUserStreamEvents, ListenKey, ListenKeyPair, RawUserStreamEvents,
@@ -44,12 +42,12 @@ pub struct UserStream {
 }
 
 impl UserStream {
-  pub async fn new(broker: NatsJS) -> UserStreamResult<Self> {
+  pub async fn new(broker: &NatsJS) -> NotificationResult<Self> {
     let (key_pubsub, notify_pubsub, reauth_pubsub, listen_key_pubsub) = join!(
-      APIKeyPubSub::new(broker.clone()),
-      NotifyPubSub::new(broker.clone()),
-      ReauthPubSub::new(broker.clone()),
-      ListenKeyPubSub::new(broker.clone()),
+      APIKeyPubSub::new(broker),
+      NotifyPubSub::new(broker),
+      ReauthPubSub::new(broker),
+      ListenKeyPubSub::new(broker),
     );
     let (key_pubsub, notify_pubsub, reauth_pubsub, listen_key_pubsub) = (
       key_pubsub?,
@@ -99,10 +97,13 @@ impl UserStream {
     &self,
     uds: RawUserStreamEvents,
   ) -> NotificationResult<()> {
-    let _ = self.notify_pubsub.publish({
-      let casted: NotificationResult<CastedUserStreamEvents> = uds.into();
-      &casted?
-    })?;
+    let _ = self
+      .notify_pubsub
+      .publish({
+        let casted: NotificationResult<CastedUserStreamEvents> = uds.into();
+        &casted?
+      })
+      .await?;
     return Ok(());
   }
   async fn handle_message(
@@ -202,7 +203,7 @@ impl UserStreamTrait for UserStream {
       .json()
       .await?;
     let key = ListenKeyPair::new(resp.listen_key, api_key.pub_key.clone());
-    let _ = self.listen_key_pubsub.publish(&key)?;
+    let _ = self.listen_key_pubsub.publish(&key).await?;
     return Ok(());
   }
   async fn close_listen_key(
@@ -220,9 +221,9 @@ impl UserStreamTrait for UserStream {
   }
   async fn start(&mut self) -> NotificationResult<()> {
     let (keychain_sub, listen_key_sub, reauth_sub) = join!(
-      self.key_pubsub.queue_subscribe("KeyChainUserStream"),
-      self.listen_key_pubsub.queue_subscribe("KeyChainListener"),
-      self.reauth_pubsub.queue_subscribe("KeyChainReAuthListener")
+      self.key_pubsub.queue_subscribe(),
+      self.listen_key_pubsub.queue_subscribe(),
+      self.reauth_pubsub.queue_subscribe()
     );
     let (keychain_sub, listen_key_sub, reauth_sub) =
       (keychain_sub?, listen_key_sub?, reauth_sub?);
@@ -234,7 +235,7 @@ impl UserStreamTrait for UserStream {
     let mut sockets: StreamMap<String, TLSWebSocket> = StreamMap::new();
     // Key = Pub API key, Value = Listen Key
     let mut listen_keys: HashMap<String, String> = HashMap::new();
-    let me = Arc::new(Mutex::new(self));
+    let me = Arc::new(Mutex::new(self.clone()));
     loop {
       let me = Arc::clone(&me);
       select! {

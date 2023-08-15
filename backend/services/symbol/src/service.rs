@@ -1,12 +1,12 @@
 use ::futures::StreamExt;
 use ::mongodb::Database;
-use ::nats::jetstream::JetStream as NatsJS;
 use ::warp::filters::BoxedFilter;
 use ::warp::reject;
 use ::warp::{Filter, Rejection, Reply};
 
 use ::rpc::entities::{Exchanges, Status};
 use ::rpc::symbols::{BaseSymbols, SymbolInfo, SymbolList};
+use ::subscribe::natsJS::context::Context as NatsJS;
 use ::symbols::binance::{
   fetcher as binance_fetcher, recorder as binance_recorder,
 };

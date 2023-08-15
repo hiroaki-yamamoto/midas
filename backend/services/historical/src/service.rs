@@ -1,5 +1,4 @@
 use ::std::fmt::Debug;
-use ::std::io::Result as IOResult;
 use ::std::sync::{Arc, Mutex};
 
 use ::futures::stream::BoxStream;
@@ -7,7 +6,6 @@ use ::futures::{SinkExt, StreamExt};
 use ::http::StatusCode;
 use ::mongodb::bson::doc;
 use ::mongodb::Database;
-use ::nats::jetstream::JetStream as NatsJS;
 use ::serde_json::{from_slice as parse_json, to_string as jsonify};
 use ::subscribe::PubSub;
 use ::tokio::{join, select};
@@ -17,6 +15,7 @@ use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
 
 use ::entities::HistoryFetchRequest as HistFetchReq;
+use ::errors::CreateStreamResult;
 use ::history::kvs::{CurrentSyncProgressStore, NumObjectsToFetchStore};
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartDateSplitPubSub};
 use ::kvs::redis;
@@ -25,6 +24,7 @@ use ::rpc::entities::{Exchanges, Status};
 use ::rpc::historical::{
   HistoryFetchRequest as RPCHistFetchReq, Progress, StatusCheckRequest,
 };
+use ::subscribe::natsJS::context::Context as NatsJS;
 use ::symbols::binance::entities::ListSymbolStream as BinanceListSymbolStream;
 use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
 use ::symbols::traits::SymbolWriter as SymbolWriterTrait;
@@ -44,13 +44,13 @@ type TSCurrentSyncProgressStore =
 
 impl Service {
   pub async fn new(
-    nats: NatsJS,
+    nats: &NatsJS,
     redis_cli: &redis::Client,
     db: &Database,
-  ) -> IOResult<Self> {
+  ) -> CreateStreamResult<Self> {
     let (status, splitter) = join!(
-      FetchStatusEventPubSub::new(nats.clone()),
-      HistChartDateSplitPubSub::new(nats.clone())
+      FetchStatusEventPubSub::new(nats),
+      HistChartDateSplitPubSub::new(nats)
     );
     let ret = Self {
       status: status?,
@@ -162,7 +162,7 @@ impl Service {
             let _ = sock.feed(payload).await;
           }
           let _ = sock.flush();
-          let subsc = me.status.queue_subscribe("histServiceFetchStatus").await;
+          let subsc = me.status.queue_subscribe().await;
           match subsc {
             Err(e) => {
               let msg = format!(
@@ -207,7 +207,7 @@ impl Service {
                   }
                   if let Ok(req) = parse_json::<RPCHistFetchReq>(msg.as_bytes()) {
                     let req: HistFetchReq = req.into();
-                    match me.splitter.publish(&req) {
+                    match me.splitter.publish(&req).await {
                       Ok(_) => { println!("Published Sync Start and End Date"); }
                       Err(e) => { println!("Publishing Sync Date Failed: {:?}", e); }
                     }

@@ -12,6 +12,7 @@ errors = { path = "../../errors" }
 rpc = { path = "../../rpc" }
 keychain = { path = "../../keychain" }
 round = { path = "../../round" }
+subscribe = { path = "../../subscribe" }
 
 clients = { path = "../clients" }
 history = { path = "../history" }
@@ -26,7 +27,6 @@ futures = "0.3.26"
 mongodb = { version = "2.4.0", default-features = false, features = [
   "async-std-runtime",
 ] }
-async-nats = "0.31.0"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 ring = "0.16.20"
 serde = { version = "1.0.152", features = ["derive"] }

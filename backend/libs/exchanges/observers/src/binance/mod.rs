@@ -14,17 +14,17 @@ use ::futures::FutureExt;
 use ::log::{as_display, as_error, as_serde, debug, error, info, warn};
 use ::mongodb::bson::doc;
 use ::mongodb::Database;
-use ::nats::jetstream::JetStream as NatsJS;
 use ::rug::Float;
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
-use ::subscribe::PubSub;
-use ::tokio::select;
 use ::tokio::time::{interval, sleep};
+use ::tokio::{join, select};
 use ::tokio_stream::StreamMap;
 use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
 use ::config::DEFAULT_RECONNECT_INTERVAL;
-use ::errors::{EmptyError, ObserverResult};
+use ::errors::{CreateStreamResult, EmptyError, ObserverResult};
+use ::subscribe::natsJS::context::Context as NatsJS;
+use ::subscribe::PubSub;
 use ::symbols::binance::entities::{ListSymbolStream, Symbol, SymbolEvent};
 use ::symbols::binance::pubsub::SymbolEventPubSub;
 use ::symbols::binance::recorder::SymbolWriter;
@@ -52,14 +52,22 @@ pub struct TradeObserver {
 }
 
 impl TradeObserver {
-  pub async fn new(db: Option<Database>, broker: NatsJS) -> IOResult<Self> {
+  pub async fn new(
+    db: Option<Database>,
+    broker: &NatsJS,
+  ) -> CreateStreamResult<Self> {
     let recorder = match db {
       None => None,
       Some(db) => Some(SymbolWriter::new(&db).await),
     };
+    let (symbol_event, bookticker_pubsub) = join!(
+      SymbolEventPubSub::new(&broker),
+      BookTickerPubSub::new(&broker)
+    );
+    let (symbol_event, bookticker_pubsub) = (symbol_event?, bookticker_pubsub?);
     let me = Self {
-      symbol_event: SymbolEventPubSub::new(broker.clone()).await?,
-      bookticker_pubsub: BookTickerPubSub::new(broker.clone()).await?,
+      symbol_event,
+      bookticker_pubsub,
       add_symbol_count: 0,
       recorder,
     };
@@ -258,8 +266,7 @@ impl TradeObserver {
   ) -> ObserverResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
     let nats_symbol = self.symbol_event.clone();
-    let mut symbol_event =
-      nats_symbol.queue_subscribe("observerSymbolEvent").await?;
+    let mut symbol_event = nats_symbol.queue_subscribe().await?;
     let mut clear_sym_map_flag = false;
     let mut initial_symbols_stream = self.init().await?;
     let mut symbol_indices: HashMap<String, (usize, usize)> = HashMap::new();
@@ -357,13 +364,8 @@ impl TradeObserverTrait for TradeObserver {
     };
     return Ok(());
   }
-  async fn subscribe(
-    &self,
-  ) -> ::std::io::Result<BoxStream<'_, CommonBookTicker>> {
-    let st = self
-      .bookticker_pubsub
-      .queue_subscribe("observerBookTicker")
-      .await?;
+  async fn subscribe(&self) -> ObserverResult<BoxStream<'_, CommonBookTicker>> {
+    let st = self.bookticker_pubsub.queue_subscribe().await?;
     let st = st.map(|(item, _)| {
       let ret: CommonBookTicker = item.into();
       return ret;

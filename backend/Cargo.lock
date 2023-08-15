@@ -1107,7 +1107,6 @@ checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 name = "executors"
 version = "0.1.0"
 dependencies = [
- "async-nats",
  "async-stream",
  "async-trait",
  "clients",
@@ -1128,6 +1127,7 @@ dependencies = [
  "rug",
  "serde",
  "serde_qs",
+ "subscribe",
  "tokio",
  "types",
  "writers",
@@ -1438,7 +1438,6 @@ name = "historical_service"
 version = "0.1.0"
 dependencies = [
  "access_logger",
- "async-nats",
  "clap",
  "config",
  "csrf",
@@ -1468,7 +1467,6 @@ dependencies = [
 name = "historical_worker"
 version = "0.1.0"
 dependencies = [
- "async-nats",
  "clap",
  "config",
  "date_splitter",
@@ -2075,7 +2073,6 @@ dependencies = [
 name = "notification"
 version = "0.1.0"
 dependencies = [
- "async-nats",
  "async-trait",
  "clients",
  "entities",
@@ -2166,7 +2163,6 @@ dependencies = [
 name = "observers"
 version = "0.1.0"
 dependencies = [
- "async-nats",
  "async-trait",
  "clients",
  "config",
@@ -3339,7 +3335,6 @@ name = "symbol_service"
 version = "0.1.0"
 dependencies = [
  "access_logger",
- "async-nats",
  "clap",
  "config",
  "csrf",
@@ -3352,6 +3347,7 @@ dependencies = [
  "rpc",
  "serde",
  "serde_json",
+ "subscribe",
  "symbols",
  "tokio",
  "types",
@@ -3362,7 +3358,6 @@ dependencies = [
 name = "symbols"
 version = "0.1.0"
 dependencies = [
- "async-nats",
  "async-trait",
  "clients",
  "errors",
@@ -3714,10 +3709,10 @@ name = "trade_observer_service"
 version = "0.1.0"
 dependencies = [
  "access_logger",
- "async-nats",
  "clap",
  "config",
  "csrf",
+ "errors",
  "futures",
  "libc",
  "log",
@@ -3725,6 +3720,7 @@ dependencies = [
  "observers",
  "rpc",
  "serde_json",
+ "subscribe",
  "tokio",
  "warp",
 ]

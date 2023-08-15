@@ -5,6 +5,7 @@ use ::reqwest::Error as ReqErr;
 use ::std::io::Error as IOError;
 
 use crate::HTTPErrors;
+use async_nats::jetstream::context::CreateStreamError;
 
 #[derive(Debug, Error)]
 pub enum SymbolFetchError {
@@ -16,6 +17,8 @@ pub enum SymbolFetchError {
   DBErr(#[source] DBErr),
   #[error(display = "IO Error (Perhaps from broker?): {}", _0)]
   IOError(#[source] IOError),
+  #[error(display = "NATS Create Stream Error: {}", _0)]
+  NatsCreateStreamError(#[source] CreateStreamError),
 }
 
 pub type SymbolFetchResult<T> = Result<T, SymbolFetchError>;

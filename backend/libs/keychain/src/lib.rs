@@ -1,7 +1,5 @@
 pub mod pubsub;
 
-use ::std::io::Result as IOResult;
-
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::oid::ObjectId;

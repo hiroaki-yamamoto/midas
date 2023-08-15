@@ -5,6 +5,7 @@ use ::err_derive::Error;
 use ::mongodb::error::Error as DBErr;
 use ::serde_json::Error as JSONErr;
 
+use crate::pubsub::ConsumerError;
 use crate::EmptyError;
 use crate::InitError;
 use crate::MaximumAttemptExceeded;
@@ -25,6 +26,8 @@ pub enum ObserverError {
   InitErr(#[source] InitError),
   #[error(display = "DB Error: {}", _0)]
   DBErr(#[source] DBErr),
+  #[error(display = "NATS consumer error: {}", _0)]
+  ConsumerError(#[source] ConsumerError),
 }
 
 pub type ObserverResult<T> = Result<T, ObserverError>;

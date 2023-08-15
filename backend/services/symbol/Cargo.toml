@@ -14,6 +14,7 @@ errors = { path = "../../libs/errors" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 access_logger = { path = "../../libs/access_logger" }
+subscribe = { path = "../../libs/subscribe" }
 
 mongodb = { version = "2.4.0", default-features = false, features = [
   "async-std-runtime",
@@ -28,7 +29,6 @@ tokio = { version = "1.25.0", features = [
 ] }
 futures = "0.3.26"
 libc = "0.2.139"
-async-nats = "0.31.0"
 warp = { version = "0.3.3", features = ["tls"] }
 num-traits = "0.2.15"
 serde = { version = "1.0.152", features = ["derive"] }

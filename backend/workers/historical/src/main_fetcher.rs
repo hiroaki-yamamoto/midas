@@ -11,7 +11,6 @@ use ::log::{as_error, error, info};
 use ::log::{as_serde, warn};
 
 use ::rpc::entities::Exchanges;
-use ::subscribe::PubSub;
 use ::tokio::select;
 
 use ::history::binance::fetcher::HistoryFetcher;
@@ -23,6 +22,7 @@ use ::history::traits::{
   HistoryFetcher as HistoryFetcherTrait, HistoryWriter as HistoryWriterTrait,
 };
 use ::kvs::{IncrementalStore, WriteOption};
+use ::subscribe::PubSub;
 
 #[tokio::main]
 async fn main() {
@@ -31,9 +31,9 @@ async fn main() {
     let redis = cfg.redis().unwrap();
     let mut cur_prog_kvs = CurrentSyncProgressStore::new(redis);
 
-    let pubsub = HistChartPubSub::new(broker.clone()).await.unwrap();
-    let mut sub = pubsub.queue_subscribe("histFetcherWorkerSubsc").await.unwrap();
-    let change_event_pub = FetchStatusEventPubSub::new(broker).await.unwrap();
+    let pubsub = HistChartPubSub::new(&broker).await.unwrap();
+    let mut sub = pubsub.queue_subscribe().await.unwrap();
+    let change_event_pub = FetchStatusEventPubSub::new(&broker).await.unwrap();
 
     let mut reg: HashMap<Exchanges, Box<dyn HistoryFetcherTrait>> =
       HashMap::new();
@@ -94,7 +94,7 @@ async fn main() {
           if let Err(e) = change_event_pub.publish(&FetchStatusChanged{
             exchange: req.exchange,
             symbol: req.symbol,
-          }) {
+          }).await {
             error!(
               error = as_error!(e);
               "Failed to broadcast progress changed event"
