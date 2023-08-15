@@ -11,3 +11,6 @@ nats:
     memStorage:
       enabled: true
       size: 2Gi
+    fileStorage:
+      enabled: false
+      size: 1Gi
