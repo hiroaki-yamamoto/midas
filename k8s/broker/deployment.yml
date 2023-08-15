@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: broker
+  name: broker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: broker
+  template:
+    metadata:
+      labels:
+        app: broker
+    spec:
+      containers:
+        - name: broker
+          image: nats:2.9.21-alpine
+          args: ["-c", "/etc/nats/nats.conf"]
+          resources:
+            requests:
+              cpu: 2m
+              memory: 1Mi
+            limits:
+              cpu: 1000m
+              memory: 4Gi
+          volumeMounts:
+            - name: config
+              mountPath: "/etc/nats"
+              readOnly: true
+            # - name: svc-cert
+            #   mountPath: "/etc/midas/certs"
+            #   readOnly: true
+      volumes:
+        # - name: svc-cert
+        #   secret:
+        #     secretName: svc-cert
+        - name: config
+          configMap:
+            name: nats-config

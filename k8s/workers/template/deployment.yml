@@ -16,23 +16,26 @@ spec:
         app: template
     spec:
       containers:
-      - image: template
-        name: template
-        args: ["-c", "/etc/midas/config.yml"]
-        resources:
-          requests:
-            cpu: 2m
-            memory: 1Mi
-          limits:
-            cpu: 1000m
-            memory: 1Gi
-        volumeMounts:
-          - name: config
-            mountPath: "/etc/midas"
-            readOnly: true
-          - name: svc-cert
-            mountPath: "/etc/midas/certs"
-            readOnly: true
+        - image: template
+          name: template
+          args: ["-c", "/etc/midas/config.yml"]
+          env:
+            - name: RUST_LOG
+              value: "debug"
+          resources:
+            requests:
+              cpu: 2m
+              memory: 1Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: "/etc/midas"
+              readOnly: true
+            - name: svc-cert
+              mountPath: "/etc/midas/certs"
+              readOnly: true
       volumes:
         - name: svc-cert
           secret:

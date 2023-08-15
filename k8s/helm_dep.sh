@@ -36,11 +36,11 @@ MIDAS_NAMESPACE=`yq '.metadata.name' $NAMESPACE_PATH`
 echo "Refreshing the release menu in the repo"
 helm repo update
 
-addRepo 'nats' 'https://nats-io.github.io/k8s/helm/charts/'
-helmInstall broker nats/nats \
-  -n $MIDAS_NAMESPACE --create-namespace \
-  -f $WORKDIR/./broker/config.yml
-kubectl apply -f $WORKDIR/./broker/svc.yml -n midas
+# addRepo 'nats' 'https://nats-io.github.io/k8s/helm/charts/'
+# helmInstall broker nats/nats \
+#   -n $MIDAS_NAMESPACE --create-namespace \
+#   -f $WORKDIR/./broker/config.yml
+# kubectl apply -f $WORKDIR/./broker/svc.yml -n midas
 
 # addRepo 'mongodb' 'https://mongodb.github.io/helm-charts'
 # helmInstall mongodb mongodb/mongodb \
