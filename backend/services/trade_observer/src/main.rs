@@ -1,10 +1,8 @@
 use ::std::collections::HashMap;
-use ::std::io::Result as IOResult;
 use ::std::time::Duration;
 
 use ::futures::{FutureExt, SinkExt, StreamExt};
 use ::log::{info, warn};
-use ::nats::jetstream::JetStream as NatsJS;
 use ::rpc::entities::Status;
 use ::serde_json::to_string;
 use ::tokio::select;
@@ -15,15 +13,17 @@ use ::warp::{Filter, Reply};
 use ::access_logger::log;
 use ::config::init;
 use ::csrf::{CSRFOption, CSRF};
+use ::errors::CreateStreamResult;
 use ::observers::binance;
 use ::observers::traits::TradeObserver as TradeObserverTrait;
 use ::rpc::bookticker::BookTicker;
 use ::rpc::entities::Exchanges;
+use ::subscribe::natsJS::context::Context as NatsJS;
 
 async fn get_exchange(
   exchange: Exchanges,
-  broker: NatsJS,
-) -> IOResult<Option<impl TradeObserverTrait>> {
+  broker: &NatsJS,
+) -> CreateStreamResult<Option<impl TradeObserverTrait>> {
   return Ok(match exchange {
     Exchanges::Binance => {
       Some(binance::TradeObserver::new(None, broker).await?)
@@ -101,7 +101,7 @@ async fn main() {
         let exchange: Exchanges =
           exchange.parse().map_err(|_| ::warp::reject::not_found())?;
         let observer = match exchange {
-          Exchanges::Binance => get_exchange(exchange, broker).await,
+          Exchanges::Binance => get_exchange(exchange, &broker).await,
         }
         .unwrap();
         return match observer {

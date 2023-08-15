@@ -28,9 +28,11 @@ async fn main() {
   let db = db.unwrap();
   config.init_logger();
   let exchange: Box<dyn TradeObserverTrait> = match cmd_args.exchange {
-    Exchanges::Binance => {
-      Box::new(binance::TradeObserver::new(Some(db), broker).await.unwrap())
-    }
+    Exchanges::Binance => Box::new(
+      binance::TradeObserver::new(Some(db), &broker)
+        .await
+        .unwrap(),
+    ),
   };
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();

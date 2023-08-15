@@ -1,5 +1,7 @@
 use ::std::io::Error as IOErr;
 
+use ::async_nats::jetstream::context::CreateStreamError;
+
 use ::err_derive::Error;
 use ::reqwest::Error as ReqErr;
 use ::serde_json::Error as JSONErr;
@@ -10,6 +12,7 @@ use crate::MaximumAttemptExceeded;
 use crate::ParseError;
 use crate::VecElementErrs;
 use crate::WebsocketError;
+use crate::{ConsumerError, PublishError};
 
 #[derive(Debug, Error)]
 pub enum NotificationError {
@@ -29,6 +32,12 @@ pub enum NotificationError {
   JSONErr(#[source] JSONErr),
   #[error(display = "Maximum Attempt Exceeded: {}", _0)]
   MaximumAttemptExceeded(#[source] MaximumAttemptExceeded),
+  #[error(display = "Nats Stream Creation Error: {}", _0)]
+  CreateStreamError(#[source] CreateStreamError),
+  #[error(display = "Nats Publish Error: {}", _0)]
+  PublishError(#[source] PublishError),
+  #[error(display = "Nats Consumer Error: {}", _0)]
+  ConsumerError(#[source] ConsumerError),
 }
 
 impl From<ReqErr> for NotificationError {

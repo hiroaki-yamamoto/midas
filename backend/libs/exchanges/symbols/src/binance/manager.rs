@@ -1,8 +1,8 @@
 use ::std::collections::HashSet;
-use ::std::io::Result as IOResult;
 
+use ::errors::CreateStreamResult;
 use ::log::{as_error, error};
-use ::nats::jetstream::JetStream as NatsJS;
+use ::subscribe::natsJS::context::Context as NatsJS;
 
 use super::entities::{Symbol, SymbolEvent};
 use super::pubsub::SymbolEventPubSub;
@@ -16,7 +16,11 @@ pub struct SymbolUpdateEventManager {
 }
 
 impl SymbolUpdateEventManager {
-  pub async fn new<S, T>(broker: NatsJS, new: S, old: T) -> IOResult<Self>
+  pub async fn new<S, T>(
+    broker: &NatsJS,
+    new: S,
+    old: T,
+  ) -> CreateStreamResult<Self>
   where
     S: IntoIterator<Item = Symbol> + Clone,
     T: IntoIterator<Item = Symbol> + Clone,
@@ -40,13 +44,17 @@ impl SymbolUpdateEventManager {
     return Ok(Self {
       to_add,
       to_remove,
-      event: SymbolEventPubSub::new(broker.clone()).await?,
+      event: SymbolEventPubSub::new(broker).await?,
     });
   }
 
   pub async fn publish_changes(&self) {
     for add_item in &self.to_add[..] {
-      if let Err(e) = self.event.publish(&SymbolEvent::Add(add_item.clone())) {
+      if let Err(e) = self
+        .event
+        .publish(&SymbolEvent::Add(add_item.clone()))
+        .await
+      {
         error!(
           symbol = add_item.symbol.to_owned(),
           error = as_error!(e);
@@ -55,7 +63,10 @@ impl SymbolUpdateEventManager {
       };
     }
     for del_item in &self.to_remove[..] {
-      if let Err(e) = self.event.publish(&SymbolEvent::Remove(del_item.clone()))
+      if let Err(e) = self
+        .event
+        .publish(&SymbolEvent::Remove(del_item.clone()))
+        .await
       {
         error!(
           symbol = del_item.symbol.to_owned(),

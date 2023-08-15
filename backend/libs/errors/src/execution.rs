@@ -1,3 +1,4 @@
+use ::async_nats::jetstream::context::CreateStreamError;
 use ::err_derive::Error;
 use ::mongodb::bson::ser::Error as BSONEncodeErr;
 use ::mongodb::error::Error as DBErr;
@@ -9,7 +10,8 @@ use ::std::convert::From;
 use ::std::io::Error as IOError;
 
 use crate::{
-  APIHeaderErrors, HTTPErrors, ObjectNotFound, ParseError, StatusFailure,
+  APIHeaderErrors, HTTPErrors, KeyChainError, ObjectNotFound, ObserverError,
+  ParseError, StatusFailure,
 };
 
 #[derive(Debug, Clone, Error)]
@@ -49,6 +51,12 @@ pub enum ExecutionErrors {
   ParseError(#[source] ParseError),
   #[error(display = "I/O Error: {}", _0)]
   IOError(#[source] IOError),
+  #[error(display = "NATS Stream Creation Error: {}", _0)]
+  NATSStreamCreationError(#[source] CreateStreamError),
+  #[error(display = "Keychain Reference Error: {}", _0)]
+  KeyChainError(#[source] KeyChainError),
+  #[error(display = "Observer Error: {}", _0)]
+  ObserverError(#[source] ObserverError),
 }
 
 pub type ExecutionResult<T> = Result<T, ExecutionErrors>;

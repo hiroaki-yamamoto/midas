@@ -8,7 +8,6 @@ use ::futures::{FutureExt, StreamExt};
 use ::mongodb::bson::{doc, oid::ObjectId, to_document, DateTime};
 use ::mongodb::options::{UpdateModifications, UpdateOptions};
 use ::mongodb::{Collection, Database};
-use ::nats::jetstream::JetStream as NatsJS;
 use ::rug::Float;
 use ::serde_qs::to_string as to_qs;
 
@@ -23,6 +22,7 @@ use ::writers::DatabaseWriter;
 use ::clients::binance::{APIHeader, FindKey, REST_ENDPOINTS};
 use ::observers::binance::TradeObserver;
 use ::observers::traits::TradeObserver as TradeObserverTrait;
+use ::subscribe::natsJS::context::Context as NatsJS;
 
 use crate::traits::Executor as ExecutorTrait;
 
@@ -41,8 +41,8 @@ pub struct Executor {
 }
 
 impl Executor {
-  pub async fn new(broker: NatsJS, db: Database) -> ExecutionResult<Self> {
-    let keychain = KeyChain::new(broker.clone(), db.clone()).await?;
+  pub async fn new(broker: &NatsJS, db: Database) -> ExecutionResult<Self> {
+    let keychain = KeyChain::new(broker, db.clone()).await?;
     let positions = db.collection("binance.positions");
     let me = Self {
       broker: broker.clone(),
@@ -93,7 +93,7 @@ impl ExecutorTrait for Executor {
     let stream = try_stream! {
       let observer = TradeObserver::new(
       Some(self.db.clone()),
-      self.broker.clone(),
+      &self.broker,
     )
     .await?;
     let mut sub = observer.subscribe().await?;

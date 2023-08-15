@@ -17,8 +17,8 @@ pub use self::constants::{
 pub use self::cmdargs::CmdArgs;
 pub use self::config::Config;
 
+use ::async_nats::jetstream::context::Context as NatsJS;
 use ::mongodb::Database;
-use ::nats::jetstream::JetStream as NatsJS;
 use ::tokio::signal::unix as signal;
 
 pub async fn init<S, T>(func: T)

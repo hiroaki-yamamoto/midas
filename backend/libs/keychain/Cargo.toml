@@ -19,4 +19,3 @@ mongodb = { version = "2.4.0", default-features = false, features = [
   "async-std-runtime",
 ] }
 rmp-serde = "1.1.1"
-nats = "0.24.0"

@@ -11,6 +11,7 @@ mod notification;
 mod object;
 mod observers;
 mod parse;
+mod pubsub;
 mod status;
 mod symbols;
 mod unknown;
@@ -32,6 +33,10 @@ pub use notification::{NotificationError, NotificationResult};
 pub use object::ObjectNotFound;
 pub use observers::{ObserverError, ObserverResult};
 pub use parse::{ParseError, ParseResult};
+pub use pubsub::{
+  ConsumerError, ConsumerResult, CreateStreamResult, PublishError,
+  PublishResult,
+};
 pub use status::{HTTPErrors, HTTPResult, StatusFailure};
 pub use symbols::{SymbolFetchError, SymbolFetchResult};
 pub use unknown::UnknownExchangeError;

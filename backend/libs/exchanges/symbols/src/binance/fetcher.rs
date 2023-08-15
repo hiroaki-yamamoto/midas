@@ -6,7 +6,6 @@ use ::futures::stream::StreamExt;
 use ::mongodb::bson::{doc, Document};
 use ::mongodb::error::Result as DBResult;
 use ::mongodb::Database;
-use ::nats::jetstream::JetStream as NatsJS;
 pub use ::reqwest::Result as ReqRes;
 use ::url::Url;
 
@@ -14,6 +13,7 @@ use ::clients::binance::REST_ENDPOINTS;
 use ::errors::{SymbolFetchError, SymbolFetchResult};
 use ::round::RestClient;
 use ::rpc::symbols::SymbolInfo;
+use ::subscribe::natsJS::context::Context as NatsJS;
 
 use super::entities::{ExchangeInfo, Symbol};
 use super::manager::SymbolUpdateEventManager;
@@ -69,7 +69,7 @@ impl SymbolFetcherTrait for SymbolFetcher {
       let info: ExchangeInfo = resp.json().await?;
       let new_symbols = info.symbols.clone();
       let update_event_manager = SymbolUpdateEventManager::new(
-        self.broker.clone(),
+        &self.broker,
         new_symbols.clone(),
         old_symbols,
       )

@@ -23,7 +23,7 @@ reqwest = { version = "0.11.14", features = [
   "rustls-tls",
 ] }
 redis = { version = "0.23.0", features = ["connection-manager", "tokio-comp"] }
-nats = "0.24.0"
+async-nats = "0.31.0"
 json_env_logger2 = { version = "0.2.1", features = [
   "iso-timestamps",
   "backtrace",
