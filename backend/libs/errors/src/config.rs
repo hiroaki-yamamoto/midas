@@ -1,5 +1,6 @@
 use ::std::io::Error as IOErr;
 
+use ::async_nats::ConnectError;
 use ::err_derive::Error;
 use ::reqwest::Error as ReqwestErr;
 use ::serde_yaml::Error as YamlErr;
@@ -16,6 +17,8 @@ pub enum ConfigError {
   YamlErr(#[source] YamlErr),
   #[error(display = "Requwest Err: {}", _0)]
   ReqwestErr(#[source] ReqwestErr),
+  #[error(display = "NATS Connection Err: {}", _0)]
+  ConnectError(#[source] ConnectError),
 }
 
 pub type ConfigResult<T> = Result<T, ConfigError>;

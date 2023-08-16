@@ -16,7 +16,7 @@ use ::tokio::time::sleep;
 use ::async_nats::connect as nats_connect;
 use ::async_nats::jetstream::context::Context as NatsJS;
 use ::async_nats::jetstream::new as nats_js_new;
-use ::errors::{ConfigResult, MaximumAttemptExceeded};
+use ::errors::{ConfigError, ConfigResult, MaximumAttemptExceeded};
 use ::redis::{Client as RedisClient, Connection};
 
 #[derive(Debug, Clone, Deserialize)]
@@ -107,18 +107,29 @@ impl Config {
   }
 
   pub async fn nats_cli(&self) -> ConfigResult<NatsJS> {
+    let mut err = None;
     for count in 1..=30 {
-      if let Ok(broker) = nats_connect(&self.broker_url).await {
-        let js = nats_js_new(broker);
-        return Ok(js);
+      match nats_connect(&self.broker_url).await {
+        Ok(broker) => {
+          let js = nats_js_new(broker);
+          return Ok(js);
+        }
+        Err(e) => {
+          warn!(
+            "Failed to establish the connection to nats: {}
+              Retrying in 1 sec ({}/30)",
+            e, count
+          );
+          err = Some(e);
+        }
       }
-      warn!(
-        "Failed to establish the connection to nats.
-          Retrying in 1 sec ({}/30)",
-        count
-      );
       sleep(Duration::from_secs(1)).await;
     }
-    return Err(MaximumAttemptExceeded::default().into());
+    return Err(
+      err
+        .map(|e| ConfigError::from(e))
+        .unwrap_or(MaximumAttemptExceeded::default().into())
+        .into(),
+    );
   }
 }

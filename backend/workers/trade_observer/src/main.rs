@@ -22,11 +22,11 @@ struct CmdArgs {
 async fn main() {
   let cmd_args: CmdArgs = CmdArgs::parse();
   let config = Config::from_fpath(Some(cmd_args.config)).unwrap();
+  config.init_logger();
 
   let (broker, db) = join!(config.nats_cli(), config.db());
   let broker = broker.unwrap();
   let db = db.unwrap();
-  config.init_logger();
   let exchange: Box<dyn TradeObserverTrait> = match cmd_args.exchange {
     Exchanges::Binance => Box::new(
       binance::TradeObserver::new(Some(db), &broker)
