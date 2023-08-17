@@ -28,16 +28,25 @@ where
   fn get_stream(&self) -> &NatsJS;
   fn get_ctx(&self) -> &Context;
 
-  async fn add_consumer(&self) -> ConsumerResult<Consumer<Config>> {
-    let name = self.get_subject();
+  async fn add_consumer<C>(
+    &self,
+    consumer_name: C,
+  ) -> ConsumerResult<Consumer<Config>>
+  where
+    C: AsRef<str> + Send + Sync,
+  {
     let stream = self.get_stream();
     let mut cfg = Config {
-      name: Some(format!("{}Consumer", name)),
+      name: Some(consumer_name.as_ref().into()),
       ..Default::default()
     };
     cfg.deliver_policy = DeliverPolicy::All;
     cfg.ack_policy = AckPolicy::Explicit;
-    return Ok(stream.get_or_create_consumer(name, cfg).await?);
+    return Ok(
+      stream
+        .get_or_create_consumer(self.get_subject(), cfg)
+        .await?,
+    );
   }
 
   fn serialize<S>(entity: &S) -> Result<Bytes, EncodeErr>
@@ -53,8 +62,14 @@ where
     return Ok(res?);
   }
 
-  async fn queue_subscribe(&self) -> ConsumerResult<BoxStream<(T, Message)>> {
-    let consumer = self.add_consumer().await?;
+  async fn queue_subscribe<C>(
+    &self,
+    consumer_name: C,
+  ) -> ConsumerResult<BoxStream<(T, Message)>>
+  where
+    C: AsRef<str> + Send + Sync,
+  {
+    let consumer = self.add_consumer(consumer_name).await?;
     let msg = consumer
       .messages()
       .await?

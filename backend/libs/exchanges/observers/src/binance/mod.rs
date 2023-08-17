@@ -266,7 +266,8 @@ impl TradeObserver {
   ) -> ObserverResult<()> {
     let (mut add_buf, mut del_buf) = (HashSet::new(), HashSet::new());
     let nats_symbol = self.symbol_event.clone();
-    let mut symbol_event = nats_symbol.queue_subscribe().await?;
+    let mut symbol_event =
+      nats_symbol.queue_subscribe("binanceObserver").await?;
     let mut clear_sym_map_flag = false;
     let mut initial_symbols_stream = self.init().await?;
     let mut symbol_indices: HashMap<String, (usize, usize)> = HashMap::new();
@@ -365,7 +366,10 @@ impl TradeObserverTrait for TradeObserver {
     return Ok(());
   }
   async fn subscribe(&self) -> ObserverResult<BoxStream<'_, CommonBookTicker>> {
-    let st = self.bookticker_pubsub.queue_subscribe().await?;
+    let st = self
+      .bookticker_pubsub
+      .queue_subscribe("binanceObserver")
+      .await?;
     let st = st.map(|(item, _)| {
       let ret: CommonBookTicker = item.into();
       return ret;

@@ -162,7 +162,7 @@ impl Service {
             let _ = sock.feed(payload).await;
           }
           let _ = sock.flush();
-          let subsc = me.status.queue_subscribe().await;
+          let subsc = me.status.queue_subscribe("historyService").await;
           match subsc {
             Err(e) => {
               let msg = format!(

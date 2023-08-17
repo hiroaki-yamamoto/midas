@@ -221,9 +221,9 @@ impl UserStreamTrait for UserStream {
   }
   async fn start(&mut self) -> NotificationResult<()> {
     let (keychain_sub, listen_key_sub, reauth_sub) = join!(
-      self.key_pubsub.queue_subscribe(),
-      self.listen_key_pubsub.queue_subscribe(),
-      self.reauth_pubsub.queue_subscribe()
+      self.key_pubsub.queue_subscribe("userStream"),
+      self.listen_key_pubsub.queue_subscribe("userStream"),
+      self.reauth_pubsub.queue_subscribe("userStream")
     );
     let (keychain_sub, listen_key_sub, reauth_sub) =
       (keychain_sub?, listen_key_sub?, reauth_sub?);
