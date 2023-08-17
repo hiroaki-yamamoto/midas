@@ -13,11 +13,11 @@ use ::serde::{Deserialize, Deserializer};
 use ::serde_yaml::Result as YaMLResult;
 use ::tokio::time::sleep;
 
-use ::async_nats::connect as nats_connect;
-use ::async_nats::jetstream::context::Context as NatsJS;
-use ::async_nats::jetstream::new as nats_js_new;
 use ::errors::{ConfigError, ConfigResult, MaximumAttemptExceeded};
 use ::redis::{Client as RedisClient, Connection};
+use ::subscribe::nats::connect as nats_connect;
+use ::subscribe::natsJS::context::Context as NatsJS;
+use ::subscribe::natsJS::new as nats_js_new;
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]

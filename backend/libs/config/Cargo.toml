@@ -7,6 +7,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+subscribe = { path = "../subscribe" }
+
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 errors = { path = "../errors" }
 
@@ -23,7 +25,6 @@ reqwest = { version = "0.11.14", features = [
   "rustls-tls",
 ] }
 redis = { version = "0.23.0", features = ["connection-manager", "tokio-comp"] }
-async-nats = "0.31.0"
 json_env_logger2 = { version = "0.2.1", features = [
   "iso-timestamps",
   "backtrace",

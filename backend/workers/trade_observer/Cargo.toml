@@ -10,6 +10,7 @@ edition = "2021"
 observers = { path = "../../libs/exchanges/observers" }
 rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
+subscribe = { path = "../../libs/subscribe" }
 
 clap = { version = "4.3.0", features = ["derive"] }
 tokio = { version = "1.25.0", features = [
@@ -18,7 +19,6 @@ tokio = { version = "1.25.0", features = [
   "rt-multi-thread",
   "macros",
 ] }
-async-nats = "0.31.0"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 futures = "0.3.26"
 libc = "0.2.139"

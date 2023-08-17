@@ -12,6 +12,7 @@ rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 access_logger = { path = "../../libs/access_logger" }
+subscribe = { path = "../../libs/subscribe" }
 
 clap = { version = "4.3.0", features = ["derive"] }
 mongodb = { version = "2.4.0", default-features = false, features = [
@@ -30,4 +31,3 @@ serde = { version = "1.0.152", features = ["derive"] }
 libc = "0.2.139"
 num-traits = "0.2.15"
 http = "0.2.9"
-async-nats = "0.31.0"
