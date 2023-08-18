@@ -1,5 +1,6 @@
 use ::async_trait::async_trait;
 use ::bytes::Bytes;
+// use ::std::time::Duration;
 
 use ::futures::stream::{BoxStream, StreamExt};
 use ::log::warn;
@@ -38,8 +39,24 @@ where
     let stream = self.get_stream();
     let mut cfg = Config {
       name: Some(consumer_name.as_ref().into()),
+      max_deliver: 1024,
+      memory_storage: true,
       ..Default::default()
     };
+    // let mut cfg = push::Config {
+    //   deliver_subject: format!(
+    //     "{}.{}.deliver",
+    //     self.get_subject(),
+    //     consumer_name.as_ref()
+    //   ),
+    //   deliver_group: Some(consumer_name.as_ref().into()),
+    //   name: Some(consumer_name.as_ref().into()),
+    //   flow_control: true,
+    //   idle_heartbeat: Duration::from_secs(1),
+    //   max_deliver: 1024,
+    //   memory_storage: true,
+    //   ..Default::default()
+    // };
     cfg.deliver_policy = DeliverPolicy::All;
     cfg.ack_policy = AckPolicy::Explicit;
     return Ok(
@@ -80,8 +97,11 @@ where
         }
         return msg_result.ok();
       })
+      .filter_map(|msg| async {
+        let _ = msg.ack().await.ok()?;
+        return Some(msg);
+      })
       .map(|msg| {
-        let _ = msg.ack();
         return (from_msgpack::<T>(&msg.message.payload), msg);
       })
       .filter_map(|(res, msg)| async {
@@ -92,17 +112,6 @@ where
         return res.ok().map(|obj| (obj, msg));
       })
       .boxed();
-    // let (sender, recv) = unbounded_channel();
-    // thread::spawn(move || {
-    //   while let Some(msg) = sub.next() {
-    //     let _ = msg.ack();
-    //     let obj = from_msgpack::<T>(&msg.data).map(|obj| (obj, msg));
-    //     if let Err(ref e) = obj {
-    //       println!("Msg deserialization failure: {:?}", e);
-    //     }
-    //     let _ = sender.send(obj.unwrap());
-    //   }
-    // });
     return Ok(msg);
   }
 }

@@ -130,7 +130,7 @@ impl UserStream {
         let _ = socket.close(None).await;
       }
       listen_keys.remove(api_key);
-      let _ = self.reauth_pubsub.publish(&api_key);
+      let _ = self.reauth_pubsub.publish(&api_key).await;
       return Ok(());
     }
     let socket_opt = sockets
@@ -311,7 +311,7 @@ impl UserStreamTrait for UserStream {
                 WebSocketError::AlreadyClosed => {
                   sockets.remove(&api_key);
                   listen_keys.remove(&api_key);
-                  let _ = me.reauth_pubsub.publish(&api_key);
+                  let _ = me.reauth_pubsub.publish(&api_key).await;
                 },
                 _ => warn!(error = as_display!(e); "Failed to receive payload"),
               }

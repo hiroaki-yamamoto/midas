@@ -209,7 +209,7 @@ impl TradeObserver {
         Ok(v) => v,
       },
     };
-    let _ = self.bookticker_pubsub.publish(&book);
+    let _ = self.bookticker_pubsub.publish(&book).await;
   }
 
   async fn handle_websocket_message(
