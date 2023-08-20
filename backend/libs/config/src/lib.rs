@@ -9,10 +9,7 @@ use ::clap::Parser;
 use ::libc::{SIGINT, SIGTERM};
 use ::tokio::join;
 
-pub use self::constants::{
-  CHAN_BUF_SIZE, DEFAULT_CONFIG_PATH, DEFAULT_RECONNECT_INTERVAL,
-  NUM_OBJECTS_TO_FETCH,
-};
+pub use self::constants::{DEFAULT_CONFIG_PATH, DEFAULT_RECONNECT_INTERVAL};
 
 pub use self::cmdargs::CmdArgs;
 pub use self::config::Config;
