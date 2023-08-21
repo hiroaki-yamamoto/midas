@@ -1,6 +1,8 @@
+mod nats;
 mod options;
 mod traits;
 
+pub use crate::nats::NatsKVS;
 pub use crate::options::WriteOption;
 pub use crate::traits::{
   ExchangeKeyStore, IncrementalStore, Store, SymbolKeyStore,

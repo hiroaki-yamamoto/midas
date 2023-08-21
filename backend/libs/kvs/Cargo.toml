@@ -6,6 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+errors = { path = "../errors" }
 types = { path = "../types" }
 rpc = { path = "../rpc" }
+subscribe = { path = "../subscribe" }
+
 redis = "0.23.1"
+serde = "1.0.185"
+rmp-serde = "1.1.2"
