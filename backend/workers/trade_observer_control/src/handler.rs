@@ -16,7 +16,7 @@ where
 {
   match event {
     TradeObserverNodeEvent::Ping(node_id) => {
-      kvs.expire(&node_id.to_string(), Duration::from_secs(5))?;
+      kvs.expire(&node_id.to_string(), Duration::from_secs(10))?;
     }
     TradeObserverNodeEvent::Regist(node_id, exchange) => {}
     TradeObserverNodeEvent::Unregist(node_id) => {}
