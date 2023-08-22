@@ -25,8 +25,11 @@ impl NatsKVS {
     return Err(NatsKVSError::NoValue);
   }
 
-  pub async fn refresh(&self, key: &str) -> NatsKVSResult<()> {
-    if let Some(entry) = self.store.entry(key).await? {
+  pub async fn refresh<S>(&self, key: S) -> NatsKVSResult<()>
+  where
+    S: AsRef<str>,
+  {
+    if let Some(entry) = self.store.entry(key.as_ref()).await? {
       self.store.put(key, entry.value).await?;
       return Ok(());
     }
