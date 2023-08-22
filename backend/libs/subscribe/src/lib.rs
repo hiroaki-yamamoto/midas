@@ -6,6 +6,7 @@ pub use ::tokio::time::sleep;
 pub use self::traits::PubSub;
 pub use ::async_nats as nats;
 pub use ::async_nats::jetstream as natsJS;
+pub use ::bytes;
 pub use ::errors;
 
 #[macro_export]
