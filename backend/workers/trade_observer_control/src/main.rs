@@ -6,7 +6,7 @@ use ::futures::StreamExt;
 use ::log::{error, info};
 use ::tokio::select;
 
-use ::observers::kvs::ObserverNodeKVS;
+use ::observers::kvs::{ObserverNodeKVS, ObserverNodeLastCheckKVS};
 use ::observers::pubsub::NodeEventPubSub;
 use ::subscribe::PubSub;
 
@@ -19,6 +19,7 @@ async fn main() {
     let mut kvs = cfg.redis().unwrap();
     let node_event_pubsub = NodeEventPubSub::new(&broker).await.unwrap();
     let mut node_kvs = ObserverNodeKVS::new(&mut kvs);
+    let mut node_last_check_kvs = ObserverNodeLastCheckKVS::new(&mut kvs);
     let mut node_event = node_event_pubsub
       .queue_subscribe("tradeObserverController")
       .await
@@ -26,7 +27,7 @@ async fn main() {
     loop {
       select! {
         event = node_event.next() => if let Some((event, _)) = event {
-          if let Err(e) = handler::events_from_node(event, &mut node_kvs) {
+          if let Err(e) = handler::events_from_node(event, &mut node_kvs, &mut node_last_check_kvs) {
             error!("Error handling node event: {}", e);
           }
         },
