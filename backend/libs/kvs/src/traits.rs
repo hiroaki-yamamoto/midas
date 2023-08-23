@@ -13,33 +13,25 @@ where
   V: FromRedisValue + ToRedisArgs,
 {
   fn lock_commands(&self) -> MutexGuard<T>;
-  fn channel_name<S>(&self, key: S) -> String
-  where
-    S: AsRef<str> + Display;
+  fn channel_name(&self, key: impl AsRef<str> + Display) -> String;
 
-  fn del<S>(&mut self, key: S) -> KVSResult<()>
-  where
-    S: AsRef<str> + Display + Send + Sync,
-  {
+  fn del(&mut self, key: impl AsRef<str> + Display) -> KVSResult<()> {
     let channel_name = self.channel_name(key);
     return Ok(self.lock_commands().del(channel_name)?);
   }
-  fn get<S>(&mut self, key: S) -> KVSResult<V>
-  where
-    S: AsRef<str> + Display,
-  {
+
+  fn get(&mut self, key: impl AsRef<str> + Display) -> KVSResult<V> {
     let channel_name = self.channel_name(key);
     return Ok(self.lock_commands().get(channel_name)?);
   }
 
-  fn set<R, S>(
+  fn set<R>(
     &mut self,
-    key: S,
+    key: impl AsRef<str> + Display,
     value: V,
     opt: Option<WriteOption>,
   ) -> KVSResult<R>
   where
-    S: AsRef<str> + Display,
     R: FromRedisValue,
   {
     let channel_name = self.channel_name(key);
@@ -76,16 +68,14 @@ where
   T: Commands,
   V: FromRedisValue + ToRedisArgs,
 {
-  fn set<LC, R, S>(
+  fn set<R>(
     &mut self,
-    key: S,
+    key: impl AsRef<str> + Display,
     value: V,
     opt: Option<WriteOption>,
-    last_checked: &mut LC,
+    last_checked: &mut impl Store<T, u64>,
   ) -> KVSResult<R>
   where
-    LC: Store<T, u64>,
-    S: AsRef<str> + Display,
     R: FromRedisValue,
   {
     let ret = Store::set(self, &key, value, opt.clone())?;
@@ -93,15 +83,13 @@ where
     return Ok(ret);
   }
 
-  fn flag_last_checked<LC, S, R>(
+  fn flag_last_checked<R>(
     &mut self,
-    key: S,
-    last_checked: &mut LC,
+    key: impl AsRef<str> + Display,
+    last_checked: &mut impl Store<T, u64>,
     opt: Option<WriteOption>,
   ) -> KVSResult<R>
   where
-    S: AsRef<str> + Display,
-    LC: Store<T, u64>,
     R: FromRedisValue,
   {
     let now = SystemTime::now()
@@ -110,16 +98,12 @@ where
     return Ok(last_checked.set(key, now, opt)?);
   }
 
-  fn expire<LC>(
+  fn expire(
     &mut self,
     key: &str,
     dur: Duration,
-    last_checked: &mut LC,
-  ) -> KVSResult<bool>
-  where
-    V: FromRedisValue,
-    LC: Store<T, u64>,
-  {
+    last_checked: &mut impl Store<T, u64>,
+  ) -> KVSResult<bool> {
     let ret = Store::expire(self, key, dur)?;
     self.flag_last_checked(
       key,
@@ -127,6 +111,16 @@ where
       WriteOption::default().duration(dur.into()).into(),
     )?;
     return Ok(ret);
+  }
+
+  fn del(
+    &mut self,
+    key: &(impl AsRef<str> + Display + Send + Sync),
+    last_checked: &mut impl Store<T, u64>,
+  ) -> KVSResult<()> {
+    let ret = Store::del(self, key);
+    let _ = last_checked.del(key)?;
+    return ret;
   }
 }
 
@@ -137,10 +131,11 @@ where
 {
   fn lock_commands(&self) -> MutexGuard<T>;
 
-  fn channel_name<E, S>(&self, exchange: E, symbol: S) -> String
-  where
-    E: AsRef<str> + Display,
-    S: AsRef<str> + Display;
+  fn channel_name(
+    &self,
+    exchange: impl AsRef<str> + Display,
+    symbol: impl AsRef<str> + Display,
+  ) -> String;
 
   fn del<E, S>(&mut self, exchange: E, symbol: S) -> KVSResult<()>
   where
@@ -160,17 +155,15 @@ where
     return Ok(self.lock_commands().get(channel_name)?);
   }
 
-  fn set<E, R, S>(
+  fn set<R>(
     &mut self,
-    exchange: E,
-    symbol: S,
+    exchange: impl AsRef<str> + Display,
+    symbol: impl AsRef<str> + Display,
     value: V,
     opt: Option<WriteOption>,
   ) -> KVSResult<R>
   where
-    E: AsRef<str> + Display,
     R: FromRedisValue,
-    S: AsRef<str> + Display,
   {
     let channel_name = SymbolKeyStore::channel_name(self, exchange, symbol);
     let mut cmds = self.lock_commands();
@@ -188,17 +181,13 @@ pub trait IncrementalStore<T>: SymbolKeyStore<T, i64>
 where
   T: Commands,
 {
-  fn incr<E, S>(
+  fn incr(
     &mut self,
-    exchange: E,
-    symbol: S,
+    exchange: impl AsRef<str> + Display,
+    symbol: impl AsRef<str> + Display,
     delta: i64,
     opt: Option<WriteOption>,
-  ) -> KVSResult<()>
-  where
-    E: AsRef<str> + Display,
-    S: AsRef<str> + Display,
-  {
+  ) -> KVSResult<()> {
     let channel_name =
       SymbolKeyStore::<T, i64>::channel_name(self, exchange, symbol);
     let mut cmds = self.lock_commands();
@@ -207,11 +196,11 @@ where
     })?);
   }
 
-  fn reset<E, S>(&mut self, exchange: E, symbol: S) -> KVSResult<()>
-  where
-    E: AsRef<str> + Display,
-    S: AsRef<str> + Display,
-  {
+  fn reset(
+    &mut self,
+    exchange: impl AsRef<str> + Display,
+    symbol: impl AsRef<str> + Display,
+  ) -> KVSResult<()> {
     let channel_name =
       SymbolKeyStore::<T, i64>::channel_name(self, exchange, symbol);
     return Ok(self.lock_commands().set(channel_name, 0)?);

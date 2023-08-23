@@ -34,8 +34,10 @@ macro_rules! kvs {
         where
           T: ::kvs::redis::Commands,
         {
-          fn channel_name< S>(&self, key: S) -> String where
-            S: AsRef<str> + ::std::fmt::Display,
+          fn channel_name(
+            &self,
+            key: impl AsRef<str> + ::std::fmt::Display
+          ) -> String where
           {
             return format!($ch_name, key);
           }
@@ -73,10 +75,11 @@ macro_rules! symbol_kvs {
       fn lock_commands(&self) -> ::std::sync::MutexGuard<T> {
         return self.con.lock().unwrap();
       }
-      fn channel_name<E, S>(&self, exchange: E, symbol: S) -> String
-      where
-        E: AsRef<str> + ::std::fmt::Display,
-        S: AsRef<str> + ::std::fmt::Display,
+      fn channel_name(
+        &self,
+        exchange: impl AsRef<str> + ::std::fmt::Display,
+        symbol: impl AsRef<str> + ::std::fmt::Display
+      ) -> String
       {
         return format!($ch_name, exchange, symbol);
       }
