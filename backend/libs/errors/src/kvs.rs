@@ -1,0 +1,14 @@
+use ::std::time::SystemTimeError;
+
+use ::err_derive::Error;
+use ::redis::RedisError;
+
+#[derive(Debug, Error)]
+pub enum KVSError {
+  #[error(display = "Redis error: {}", _0)]
+  Redis(#[error(source)] RedisError),
+  #[error(display = "System time error: {}", _0)]
+  SystemTime(#[error(source)] SystemTimeError),
+}
+
+pub type KVSResult<T> = Result<T, KVSError>;

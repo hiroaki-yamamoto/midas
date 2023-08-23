@@ -1,9 +1,13 @@
-use ::kvs::exchange_kvs;
+use ::kvs::kvs;
+use ::kvs::redis::Commands;
+use ::kvs::SoftExpirationStore;
 
-exchange_kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");
-exchange_kvs!(
+kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");
+kvs!(
   pub,
   ObserverNodeLastCheckKVS,
   u64,
   "observer_node_last_check_epoch:{}"
 );
+
+impl<T> SoftExpirationStore<T, String> for ObserverNodeKVS<T> where T: Commands {}

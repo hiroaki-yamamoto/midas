@@ -1,11 +1,14 @@
 mod options;
 mod traits;
 
+pub use ::redis;
+
 pub use crate::options::WriteOption;
 pub use crate::traits::{
-  ExchangeKeyStore, IncrementalStore, Store, SymbolKeyStore,
+  IncrementalStore, SoftExpirationStore, Store, SymbolKeyStore,
 };
-pub use ::redis;
+
+pub use ::errors::{KVSError, KVSResult};
 
 #[macro_export]
 macro_rules! kvs {
@@ -15,14 +18,14 @@ macro_rules! kvs {
         where
           T: ::kvs::redis::Commands,
         {
-          con: T,
+          con: ::std::sync::Arc<::std::sync::Mutex<T>>,
         }
 
         impl<T> $name<T>
         where
           T: ::kvs::redis::Commands,
         {
-          pub fn new(con: T) -> Self {
+          pub fn new(con: ::std::sync::Arc<::std::sync::Mutex<T>>) -> Self {
             return Self { con: con };
           }
         }
@@ -36,22 +39,11 @@ macro_rules! kvs {
           {
             return format!($ch_name, key);
           }
-          fn commands(&mut self) -> &mut T {
-            return &mut self.con;
+          fn lock_commands(&self) -> ::std::sync::MutexGuard<T> {
+            return self.con.lock().unwrap();
           }
         }
     };
-}
-
-#[macro_export]
-macro_rules! exchange_kvs {
-  ($acc: vis, $name: ident, $vtype: ty, $ch_name: expr) => {
-    ::kvs::kvs!($acc, $name, $vtype, $ch_name);
-    impl<T> ::kvs::ExchangeKeyStore<T, $vtype> for $name<T> where
-      T: ::kvs::redis::Commands
-    {
-    }
-  };
 }
 
 #[macro_export]
@@ -62,14 +54,14 @@ macro_rules! symbol_kvs {
     where
       T: ::kvs::redis::Commands,
     {
-      con: T,
+      con: ::std::sync::Arc<::std::sync::Mutex<T>>,
     }
 
     impl<T> $name<T>
     where
       T: ::kvs::redis::Commands,
     {
-      pub fn new(con: T) -> Self {
+      pub fn new(con: ::std::sync::Arc<::std::sync::Mutex<T>>) -> Self {
         return Self { con: con };
       }
     }
@@ -78,8 +70,8 @@ macro_rules! symbol_kvs {
     where
       T: ::kvs::redis::Commands,
     {
-      fn commands(&mut self) -> &mut T {
-        return &mut self.con;
+      fn lock_commands(&self) -> ::std::sync::MutexGuard<T> {
+        return self.con.lock().unwrap();
       }
       fn channel_name<E, S>(&self, exchange: E, symbol: S) -> String
       where

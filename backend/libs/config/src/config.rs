@@ -1,5 +1,6 @@
 use ::std::fs::{read_to_string, File};
 use ::std::io::Read;
+use ::std::sync::{Arc, Mutex};
 use ::std::time::Duration;
 
 use ::log::{as_error, warn};
@@ -58,13 +59,13 @@ impl Config {
     return ::redis::Client::open(url).map_err(|e| SerdeError::custom(e));
   }
 
-  pub fn redis(&self) -> ConfigResult<Connection> {
+  pub fn redis(&self) -> ConfigResult<Arc<Mutex<Connection>>> {
     for _ in 0..10 {
       match self
         .redis
         .get_connection_with_timeout(Duration::from_secs(1))
       {
-        Ok(o) => return Ok(o),
+        Ok(o) => return Ok(Arc::new(Mutex::new(o))),
         Err(e) => {
           warn!(
             error = as_error!(e);

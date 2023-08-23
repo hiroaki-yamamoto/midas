@@ -1,8 +1,8 @@
-use ::std::time::{Duration, SystemTime};
+use ::std::time::Duration;
 
 use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 use ::kvs::redis::Commands;
-use ::kvs::{Store, WriteOption};
+use ::kvs::{SoftExpirationStore, WriteOption};
 use ::observers::kvs::{ObserverNodeKVS, ObserverNodeLastCheckKVS};
 
 use crate::errors::Result as ControlResult;
@@ -17,16 +17,10 @@ where
 {
   match event {
     TradeObserverNodeEvent::Ping(node_id) => {
-      let now = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)?
-        .as_secs();
-      kvs.expire(&node_id.to_string(), Duration::from_secs(30))?;
-      last_check_kvs.set(
+      kvs.expire(
         &node_id.to_string(),
-        now,
-        WriteOption::default()
-          .duration(Duration::from_secs(30).into())
-          .into(),
+        Duration::from_secs(30),
+        last_check_kvs,
       )?;
     }
     TradeObserverNodeEvent::Regist(node_id, exchange) => {}

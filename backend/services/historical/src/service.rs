@@ -15,7 +15,7 @@ use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
 
 use ::entities::HistoryFetchRequest as HistFetchReq;
-use ::errors::CreateStreamResult;
+use ::errors::{CreateStreamResult, KVSResult};
 use ::history::kvs::{CurrentSyncProgressStore, NumObjectsToFetchStore};
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartDateSplitPubSub};
 use ::kvs::redis;
@@ -84,6 +84,7 @@ impl Service {
         let size = me.redis_cli
           .get_connection()
           .map(|con| {
+            let con = Arc::new(Mutex::new(con));
             return Arc::new(Mutex::new(NumObjectsToFetchStore::new(con)));
           })
           .map_err(|err| {
@@ -95,6 +96,7 @@ impl Service {
         let cur = me.redis_cli
           .get_connection()
           .map(|con| {
+            let con = Arc::new(Mutex::new(con));
             return Arc::new(Mutex::new(CurrentSyncProgressStore::new(con)));
           })
           .map_err(|err| {
@@ -123,8 +125,8 @@ impl Service {
           );
         }).filter_map(|
           (size, cur, sym): (
-            redis::RedisResult<i64>,
-            redis::RedisResult<i64>,
+            KVSResult<i64>,
+            KVSResult<i64>,
             String
           )
         | async {

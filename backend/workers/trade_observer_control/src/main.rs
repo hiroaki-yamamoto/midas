@@ -16,10 +16,10 @@ use ::config;
 async fn main() {
   info!("Starting trade_observer_control");
   config::init(|cfg, mut sig, db, broker, host| async move {
-    let mut kvs = cfg.redis().unwrap();
+    let kvs = cfg.redis().unwrap();
     let node_event_pubsub = NodeEventPubSub::new(&broker).await.unwrap();
-    let mut node_kvs = ObserverNodeKVS::new(&mut kvs);
-    let mut node_last_check_kvs = ObserverNodeLastCheckKVS::new(&mut kvs);
+    let mut node_kvs = ObserverNodeKVS::new(kvs.clone());
+    let mut node_last_check_kvs = ObserverNodeLastCheckKVS::new(kvs);
     let mut node_event = node_event_pubsub
       .queue_subscribe("tradeObserverController")
       .await
