@@ -18,8 +18,7 @@ async fn main() {
   config::init(|cfg, mut sig, db, broker, host| async move {
     let kvs = cfg.redis().unwrap();
     let node_event_pubsub = NodeEventPubSub::new(&broker).await.unwrap();
-    let mut node_kvs = ObserverNodeKVS::new(kvs.clone());
-    let mut node_last_check_kvs = ObserverNodeLastCheckKVS::new(kvs);
+    let mut node_event_handler = handler::FromNodeEventHandler::new(kvs);
     let mut node_event = node_event_pubsub
       .queue_subscribe("tradeObserverController")
       .await
@@ -27,7 +26,7 @@ async fn main() {
     loop {
       select! {
         event = node_event.next() => if let Some((event, _)) = event {
-          if let Err(e) = handler::events_from_node(event, &mut node_kvs, &mut node_last_check_kvs) {
+          if let Err(e) = node_event_handler.handle(event) {
             error!("Error handling node event: {}", e);
           }
         },
