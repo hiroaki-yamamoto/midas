@@ -29,14 +29,14 @@ where
     &mut self,
     key: impl AsRef<str> + Display,
     value: V,
-    opt: Option<WriteOption>,
+    opt: impl Into<Option<WriteOption>>,
   ) -> KVSResult<R>
   where
     R: FromRedisValue,
   {
     let channel_name = self.channel_name(key);
     let mut cmds = self.lock_commands();
-    let result = if let Some(opt) = opt {
+    let result = if let Some(opt) = opt.into() {
       let opt: SetOptions = opt.into();
       cmds.set_options(&channel_name, value, opt)
     } else {
@@ -45,7 +45,11 @@ where
     return Ok(result?);
   }
 
-  fn expire(&mut self, key: &str, dur: Duration) -> KVSResult<bool>
+  fn expire(
+    &mut self,
+    key: impl AsRef<str> + Display,
+    dur: Duration,
+  ) -> KVSResult<bool>
   where
     V: FromRedisValue,
   {
@@ -61,6 +65,23 @@ where
       return Ok(false);
     };
   }
+
+  fn lpush<R>(
+    &mut self,
+    key: impl AsRef<str> + Display,
+    value: V,
+    opt: impl Into<Option<WriteOption>>,
+  ) -> KVSResult<R>
+  where
+    R: FromRedisValue,
+  {
+    let channel_name = self.channel_name(key);
+    let mut cmds = self.lock_commands();
+    let result = cmds.lpush(&channel_name, value)?;
+    let opt: Option<WriteOption> = opt.into();
+    opt.execute(&mut cmds, &channel_name)?;
+    return Ok(result);
+  }
 }
 
 pub trait SoftExpirationStore<T, V>: Store<T, V>
@@ -72,7 +93,7 @@ where
     &mut self,
     key: impl AsRef<str> + Display,
     value: V,
-    opt: Option<WriteOption>,
+    opt: impl Into<Option<WriteOption>> + Clone,
     last_checked: &mut impl Store<T, u64>,
   ) -> KVSResult<R>
   where
@@ -121,6 +142,21 @@ where
     let ret = Store::del(self, key);
     let _ = last_checked.del(key)?;
     return ret;
+  }
+
+  fn lpush<R>(
+    &mut self,
+    key: impl AsRef<str> + Display,
+    value: V,
+    opt: Option<WriteOption>,
+    last_checked: &mut impl Store<T, u64>,
+  ) -> KVSResult<R>
+  where
+    R: FromRedisValue,
+  {
+    let ret = Store::lpush(self, &key, value, opt.clone())?;
+    self.flag_last_checked(key, last_checked, opt.into())?;
+    return Ok(ret);
   }
 }
 

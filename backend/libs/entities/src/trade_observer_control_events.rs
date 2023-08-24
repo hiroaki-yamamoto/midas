@@ -5,7 +5,7 @@ use ::rpc::entities::Exchanges;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TradeObserverNodeEvent {
-  Regist(Uuid, Exchanges),
+  Regist(Exchanges, Uuid),
   Unregist(Uuid),
   Ping(Uuid),
 }

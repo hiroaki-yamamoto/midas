@@ -3702,6 +3702,7 @@ dependencies = [
  "log",
  "observers",
  "rand",
+ "rpc",
  "subscribe",
  "tokio",
  "uuid",

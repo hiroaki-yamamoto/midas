@@ -49,10 +49,11 @@ where
     let lock: String = dlock.set(
       "lock",
       random.to_string(),
-      WriteOption::default()
-        .duration(Duration::from_secs(3).into())
-        .non_existent_only(true)
-        .into(),
+      Some(
+        WriteOption::default()
+          .duration(Duration::from_secs(3).into())
+          .non_existent_only(true),
+      ),
     )?;
     if lock == "OK" {
       let _ = refresh_tx.send(());
