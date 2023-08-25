@@ -1,6 +1,7 @@
 use ::kvs::kvs;
-use ::kvs::redis::Commands;
+use ::kvs::redis::{Commands, RedisResult};
 use ::kvs::SoftExpirationStore;
+use kvs::Store;
 
 kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");
 kvs!(pub, ONEXTypeKVS, String, "observer_node_exchange_type:{}");
@@ -19,3 +20,17 @@ kvs!(
 
 impl<T> SoftExpirationStore<T, String> for ObserverNodeKVS<T> where T: Commands {}
 impl<T> SoftExpirationStore<T, String> for ONEXTypeKVS<T> where T: Commands {}
+
+impl<T> ObserverNodeKVS<T>
+where
+  T: Commands,
+{
+  pub fn count_nodes(&self) -> RedisResult<usize> {
+    return Ok(
+      self
+        .lock_commands()
+        .scan_match::<_, String>("observer_node:*")?
+        .count(),
+    );
+  }
+}

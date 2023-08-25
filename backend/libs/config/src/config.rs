@@ -30,9 +30,15 @@ pub struct TLS {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ServiceAddresses {
-  pub historical: String,
-  pub symbol: String,
+#[serde(rename_all = "camelCase")]
+pub struct TradeObserverInitNodeNumbers {
+  pub binance: usize,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ObserverConfig {
+  pub init_trigger_node_numbers: TradeObserverInitNodeNumbers,
 }
 
 #[derive(Debug, Deserialize)]
@@ -48,6 +54,7 @@ pub struct Config {
   #[serde(rename = "redisURL", deserialize_with = "Config::redis_client")]
   pub redis: RedisClient,
   pub tls: TLS,
+  pub observer: ObserverConfig,
 }
 
 impl Config {
