@@ -3,6 +3,7 @@ use ::std::time::Duration;
 
 use ::uuid::Uuid;
 
+use ::config::Database;
 use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 use ::errors::KVSResult;
 use ::kvs::redis::Commands;
@@ -21,6 +22,7 @@ where
   C: Commands,
 {
   kvs: ObserverNodeKVS<C>,
+  db: Database,
   type_kvs: ONEXTypeKVS<C>,
   last_check_kvs: ObserverNodeLastCheckKVS<C>,
   type_last_check_kvs: ONEXTypeLastCheckedKVS<C>,
@@ -30,12 +32,13 @@ impl<C> FromNodeEventHandler<C>
 where
   C: Commands,
 {
-  pub fn new(kvs_com: Arc<Mutex<C>>) -> Self {
+  pub fn new(kvs_com: Arc<Mutex<C>>, db: Database) -> Self {
     return Self {
       kvs: ObserverNodeKVS::new(kvs_com.clone()),
       type_kvs: ONEXTypeKVS::new(kvs_com.clone()),
       last_check_kvs: ObserverNodeLastCheckKVS::new(kvs_com.clone()),
       type_last_check_kvs: ONEXTypeLastCheckedKVS::new(kvs_com.clone()),
+      db,
     };
   }
 
@@ -67,7 +70,7 @@ where
                 node_id.to_string(),
                 exchange.as_str_name().into(),
                 redis_option,
-                &mut self.last_check_kvs,
+                &mut self.type_last_check_kvs,
               )?;
               info!(
                 "Node Connected. NodeID: {}, Exchange: {}",

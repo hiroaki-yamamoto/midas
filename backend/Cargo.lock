@@ -3700,10 +3700,13 @@ dependencies = [
  "futures",
  "kvs",
  "log",
+ "num-derive",
+ "num-traits",
  "observers",
  "rand",
  "rpc",
  "subscribe",
+ "symbols",
  "tokio",
  "uuid",
 ]

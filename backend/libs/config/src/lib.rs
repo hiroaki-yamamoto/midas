@@ -14,7 +14,7 @@ pub use self::constants::{DEFAULT_CONFIG_PATH, DEFAULT_RECONNECT_INTERVAL};
 pub use self::cmdargs::CmdArgs;
 pub use self::config::Config;
 
-use ::mongodb::Database;
+pub use ::mongodb::Database;
 use ::subscribe::natsJS::context::Context as NatsJS;
 use ::tokio::signal::unix as signal;
 

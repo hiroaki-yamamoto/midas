@@ -1,12 +1,13 @@
 mod dlock;
 mod errors;
-mod handler;
+mod handlers;
+mod kvs;
+mod status;
 
 use ::futures::StreamExt;
 use ::log::{error, info};
 use ::tokio::select;
 
-use ::observers::kvs::{ObserverNodeKVS, ObserverNodeLastCheckKVS};
 use ::observers::pubsub::NodeEventPubSub;
 use ::subscribe::PubSub;
 
@@ -18,7 +19,7 @@ async fn main() {
   config::init(|cfg, mut sig, db, broker, host| async move {
     let kvs = cfg.redis().unwrap();
     let node_event_pubsub = NodeEventPubSub::new(&broker).await.unwrap();
-    let mut node_event_handler = handler::FromNodeEventHandler::new(kvs);
+    let mut node_event_handler = handlers::FromNodeEventHandler::new(kvs, db);
     let mut node_event = node_event_pubsub
       .queue_subscribe("tradeObserverController")
       .await
