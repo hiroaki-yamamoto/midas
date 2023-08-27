@@ -2,9 +2,6 @@ use ::config::Database;
 use ::kvs::redis::Commands;
 use ::kvs::Connection as KVSConnection;
 
-use crate::kvs::InitStatusKVS;
-use crate::status::Status;
-
 pub struct SyncHandler<T>
 where
   T: Commands,
