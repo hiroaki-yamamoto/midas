@@ -1,4 +1,3 @@
-use ::std::sync::{Arc, Mutex};
 use ::std::time::Duration;
 
 use ::uuid::Uuid;
@@ -7,6 +6,7 @@ use ::config::Database;
 use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 use ::errors::KVSResult;
 use ::kvs::redis::Commands;
+use ::kvs::Connection;
 use ::kvs::{SoftExpirationStore, WriteOption};
 use ::log::info;
 use ::observers::kvs::{
@@ -32,12 +32,12 @@ impl<C> FromNodeEventHandler<C>
 where
   C: Commands,
 {
-  pub fn new(kvs_com: Arc<Mutex<C>>, db: Database) -> Self {
+  pub fn new(kvs_com: Connection<C>, db: Database) -> Self {
     return Self {
-      kvs: ObserverNodeKVS::new(kvs_com.clone()),
-      type_kvs: ONEXTypeKVS::new(kvs_com.clone()),
-      last_check_kvs: ObserverNodeLastCheckKVS::new(kvs_com.clone()),
-      type_last_check_kvs: ONEXTypeLastCheckedKVS::new(kvs_com.clone()),
+      kvs: ObserverNodeKVS::new(kvs_com.clone().into()),
+      type_kvs: ONEXTypeKVS::new(kvs_com.clone().into()),
+      last_check_kvs: ObserverNodeLastCheckKVS::new(kvs_com.clone().into()),
+      type_last_check_kvs: ONEXTypeLastCheckedKVS::new(kvs_com.into()),
       db,
     };
   }

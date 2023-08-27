@@ -84,8 +84,7 @@ impl Service {
         let size = me.redis_cli
           .get_connection()
           .map(|con| {
-            let con = Arc::new(Mutex::new(con));
-            return Arc::new(Mutex::new(NumObjectsToFetchStore::new(con)));
+            return Arc::new(Mutex::new(NumObjectsToFetchStore::new(con.into())));
           })
           .map_err(|err| {
             return cus_rej(Status::new(
@@ -96,8 +95,7 @@ impl Service {
         let cur = me.redis_cli
           .get_connection()
           .map(|con| {
-            let con = Arc::new(Mutex::new(con));
-            return Arc::new(Mutex::new(CurrentSyncProgressStore::new(con)));
+            return Arc::new(Mutex::new(CurrentSyncProgressStore::new(con.into())));
           })
           .map_err(|err| {
             return cus_rej(Status::new(

@@ -1,3 +1,4 @@
+mod connection;
 mod options;
 mod traits;
 
@@ -8,24 +9,26 @@ pub use crate::traits::{
   IncrementalStore, SoftExpirationStore, Store, SymbolKeyStore,
 };
 
+pub use crate::connection::Connection;
+
 pub use ::errors::{KVSError, KVSResult};
 
 #[macro_export]
 macro_rules! kvs {
     ($acc: vis, $name: ident, $vtype: ty, $ch_name: expr) => {
-        #[derive(Debug)]
+        #[derive(Clone)]
         $acc struct $name<T>
         where
           T: ::kvs::redis::Commands,
         {
-          con: ::std::sync::Arc<::std::sync::Mutex<T>>,
+          con: ::kvs::Connection<T>,
         }
 
         impl<T> $name<T>
         where
           T: ::kvs::redis::Commands,
         {
-          pub fn new(con: ::std::sync::Arc<::std::sync::Mutex<T>>) -> Self {
+          pub fn new(con: ::kvs::Connection<T>) -> Self {
             return Self { con: con };
           }
         }
@@ -51,19 +54,19 @@ macro_rules! kvs {
 #[macro_export]
 macro_rules! symbol_kvs {
   ($acc: vis, $name: ident, $vtype: ty, $ch_name: expr) => {
-    #[derive(Debug)]
+    #[derive(Clone)]
     $acc struct $name<T>
     where
       T: ::kvs::redis::Commands,
     {
-      con: ::std::sync::Arc<::std::sync::Mutex<T>>,
+      con: ::kvs::Connection<T>,
     }
 
     impl<T> $name<T>
     where
       T: ::kvs::redis::Commands,
     {
-      pub fn new(con: ::std::sync::Arc<::std::sync::Mutex<T>>) -> Self {
+      pub fn new(con: ::kvs::Connection<T>) -> Self {
         return Self { con: con };
       }
     }

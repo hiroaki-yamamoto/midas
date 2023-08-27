@@ -2,11 +2,10 @@ use ::std::sync::{Arc, Mutex};
 use ::std::time::Duration;
 
 use ::futures::future::join;
-use ::rand::{thread_rng, Rng};
 use ::tokio::select;
 use ::tokio::sync::mpsc::channel;
 use ::tokio::time::interval;
-use ::uuid::{Builder, Bytes};
+use ::uuid::Uuid;
 
 use ::errors::{DLockError, DLockResult};
 use ::kvs::redis::{Commands, RedisError};
@@ -41,10 +40,7 @@ where
     Ok::<(), RedisError>(())
   };
   let acquire_process = async {
-    let mut rng = thread_rng();
-    let seed: Bytes = rng.gen();
-    let random = Builder::from_random_bytes(seed);
-    let random = random.as_uuid();
+    let random = Uuid::new_v4();
     let mut dlock = dlock.lock().unwrap();
     let lock: String = dlock.set(
       "lock",

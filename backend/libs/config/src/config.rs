@@ -1,6 +1,5 @@
 use ::std::fs::{read_to_string, File};
 use ::std::io::Read;
-use ::std::sync::{Arc, Mutex};
 use ::std::time::Duration;
 
 use ::log::{as_error, warn};
@@ -15,7 +14,8 @@ use ::serde_yaml::Result as YaMLResult;
 use ::tokio::time::sleep;
 
 use ::errors::{ConfigError, ConfigResult, MaximumAttemptExceeded};
-use ::redis::{Client as RedisClient, Connection};
+use ::kvs::redis::{Client as RedisClient, Connection as RedisConnection};
+use ::kvs::Connection as KVSConnection;
 use ::subscribe::nats::connect as nats_connect;
 use ::subscribe::natsJS::context::Context as NatsJS;
 use ::subscribe::natsJS::new as nats_js_new;
@@ -66,13 +66,13 @@ impl Config {
     return ::redis::Client::open(url).map_err(|e| SerdeError::custom(e));
   }
 
-  pub fn redis(&self) -> ConfigResult<Arc<Mutex<Connection>>> {
+  pub fn redis(&self) -> ConfigResult<KVSConnection<RedisConnection>> {
     for _ in 0..10 {
       match self
         .redis
         .get_connection_with_timeout(Duration::from_secs(1))
       {
-        Ok(o) => return Ok(Arc::new(Mutex::new(o))),
+        Ok(o) => return Ok(o.into()),
         Err(e) => {
           warn!(
             error = as_error!(e);
