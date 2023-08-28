@@ -82,6 +82,32 @@ where
     opt.execute(&mut cmds, &channel_name)?;
     return Ok(result);
   }
+
+  fn lrange<R>(
+    &mut self,
+    key: impl AsRef<str> + Display,
+    start: isize,
+    stop: isize,
+  ) -> KVSResult<R>
+  where
+    R: FromRedisValue,
+  {
+    let channel_name = self.channel_name(key);
+    return Ok(self.lock_commands().lrange(channel_name, start, stop)?);
+  }
+
+  fn scan_match<'a, R>(
+    &mut self,
+    pattern: impl AsRef<str> + Display,
+  ) -> KVSResult<Vec<R>>
+  where
+    R: FromRedisValue,
+  {
+    let channel_name = self.channel_name(pattern);
+    let matched: Vec<R> =
+      self.lock_commands().scan_match(channel_name)?.collect();
+    return Ok(matched);
+  }
 }
 
 pub trait SoftExpirationStore<T, V>: Store<T, V>

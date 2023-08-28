@@ -47,6 +47,9 @@ impl SymbolWriterTrait for SymbolWriter {
     let cur = cur.filter_map(|doc| async { doc.ok() }).boxed();
     return Ok(cur as Self::ListStream);
   }
+  async fn list_trading(&self) -> DBResult<Self::ListStream> {
+    return self.list(bson::doc! {"status": "TRADING"}).await;
+  }
   async fn update_symbols(
     &self,
     value: Vec<Self::Type>,

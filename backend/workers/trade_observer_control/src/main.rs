@@ -2,7 +2,6 @@ mod dlock;
 mod errors;
 mod handlers;
 mod kvs;
-mod status;
 
 use ::futures::StreamExt;
 use ::log::{error, info};

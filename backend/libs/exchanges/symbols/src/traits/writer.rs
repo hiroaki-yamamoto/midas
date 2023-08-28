@@ -14,7 +14,8 @@ pub trait SymbolWriter {
   async fn list(
     &self,
     query: impl Into<Option<Document>> + Send + 'async_trait,
-  ) -> DBResult<Self::ListStream>;
+  ) -> DBResult<Self::ListStream>; // will remove
+  async fn list_trading(&self) -> DBResult<Self::ListStream>;
   async fn update_symbols(
     &self,
     value: Vec<Self::Type>,
