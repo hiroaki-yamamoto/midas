@@ -1,4 +1,4 @@
-use std::clone;
+use ::std::collections::HashSet;
 
 use ::futures::StreamExt;
 use ::kvs::redis::Commands;
@@ -36,7 +36,7 @@ where
 
   pub async fn get_symbol_diff(
     &mut self,
-  ) -> ObserverControlResult<Vec<String>> {
+  ) -> ObserverControlResult<Vec<SymbolDiff>> {
     let node_ids: Vec<String> = self.kvs.scan_match("*")?;
     let mut nodes_symbols = vec![];
     for node_id in node_ids {
@@ -47,9 +47,22 @@ where
         }
       }
     }
-    let db_symbols = self.symbol_db.list_trading().await?.map(|s| s.symbol());
-    unimplemented!();
-    return Ok(nodes_symbols);
+    let nodes_symbols = HashSet::from_iter(nodes_symbols.into_iter());
+    let db_symbols: HashSet<String> = self
+      .symbol_db
+      .list_trading()
+      .await?
+      .map(|s| s.symbol())
+      .collect()
+      .await;
+    let to_add = (&db_symbols - &nodes_symbols)
+      .into_iter()
+      .map(|s| SymbolDiff::Add(s));
+    let to_remove = (&nodes_symbols - &db_symbols)
+      .into_iter()
+      .map(|s| SymbolDiff::Del(s));
+    let merged: Vec<SymbolDiff> = to_add.chain(to_remove).collect();
+    return Ok(merged);
   }
 
   pub fn handle(&self) {}
