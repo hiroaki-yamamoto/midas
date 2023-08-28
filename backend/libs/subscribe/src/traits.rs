@@ -1,7 +1,6 @@
 use ::async_trait::async_trait;
 use ::bytes::Bytes;
-use ::std::borrow::Cow;
-use std::borrow::Borrow;
+use ::std::borrow::Borrow;
 
 use ::futures::stream::{BoxStream, StreamExt};
 use ::log::warn;
