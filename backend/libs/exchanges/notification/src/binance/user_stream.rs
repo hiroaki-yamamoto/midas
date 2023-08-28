@@ -130,7 +130,7 @@ impl UserStream {
         let _ = socket.close(None).await;
       }
       listen_keys.remove(api_key);
-      let _ = self.reauth_pubsub.publish(&api_key).await;
+      let _ = self.reauth_pubsub.publish(api_key).await;
       return Ok(());
     }
     let socket_opt = sockets

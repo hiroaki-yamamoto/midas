@@ -14,4 +14,8 @@ pub enum TradeObserverNodeEvent {
 pub enum TradeObserverControlEvent {
   // First UUID is the old node ID, second UUID is the new node ID.
   NodeIDChanged(Uuid, Uuid),
+  // Triggered when the controller instructs the observer to add a symbol.
+  SymbolAdd(String),
+  // Triggered when the controller instructs the observer to remove a symbol.
+  SymbolDel(String),
 }

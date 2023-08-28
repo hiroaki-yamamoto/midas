@@ -1,6 +1,7 @@
 use ::async_trait::async_trait;
 use ::bytes::Bytes;
-// use ::std::time::Duration;
+use ::std::borrow::Cow;
+use std::borrow::Borrow;
 
 use ::futures::stream::{BoxStream, StreamExt};
 use ::log::warn;
@@ -73,8 +74,11 @@ where
     return to_msgpack(entity).map(|v| Bytes::from(v));
   }
 
-  async fn publish(&self, entity: &T) -> PublishResult<PublishAckFuture> {
-    let msg = Self::serialize(entity)?;
+  async fn publish(
+    &self,
+    entity: impl Borrow<T> + Send + Sync,
+  ) -> PublishResult<PublishAckFuture> {
+    let msg = Self::serialize(entity.borrow())?;
     let res = self.get_ctx().publish(self.get_subject().into(), msg).await;
     return Ok(res?);
   }

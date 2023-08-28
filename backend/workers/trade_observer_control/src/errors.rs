@@ -1,8 +1,10 @@
 use ::std::time::SystemTimeError;
 
 use ::err_derive::Error;
+use ::errors::PublishError;
 use ::kvs::redis::RedisError;
 use ::mongodb::error::Error as DBErr;
+use ::subscribe::natsJS::context::CreateStreamError as NatsCreateStreamError;
 
 use ::errors::KVSError;
 
@@ -16,6 +18,10 @@ pub enum Error {
   SystemTime(#[source] SystemTimeError),
   #[error(display = "DB Error: {}", _0)]
   DB(#[source] DBErr),
+  #[error(display = "Nats Stream Creation Error: {}", _0)]
+  NatsCreateStreamError(#[source] NatsCreateStreamError),
+  #[error(display = "Nats Publish Error: {}", _0)]
+  NatsPublishError(#[source] PublishError),
 }
 
 pub type Result<T> = ::std::result::Result<T, Error>;
