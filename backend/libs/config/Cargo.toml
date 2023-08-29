@@ -12,6 +12,7 @@ subscribe = { path = "../subscribe" }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 errors = { path = "../errors" }
 kvs = { path = "../kvs" }
+rpc = { path = "../rpc" }
 
 mongodb = { version = "2.4.0", default-features = false, features = [
   "async-std-runtime",

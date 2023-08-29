@@ -91,10 +91,7 @@ where
               node_id = Uuid::new_v4();
             }
           }
-          let init_max = match exchange {
-            Exchanges::Binance => config.init_trigger_node_numbers.binance,
-          };
-          if self.kvs.count_nodes()? == init_max {
+          if self.kvs.count_nodes()? == config.min_node_init(exchange) {
             let _ = self
               .init_lock
               .lock(|| {

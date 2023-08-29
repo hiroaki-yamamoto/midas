@@ -16,6 +16,7 @@ use ::tokio::time::sleep;
 use ::errors::{ConfigError, ConfigResult, MaximumAttemptExceeded};
 use ::kvs::redis::{Client as RedisClient, Connection as RedisConnection};
 use ::kvs::Connection as KVSConnection;
+use ::rpc::entities::Exchanges;
 use ::subscribe::nats::connect as nats_connect;
 use ::subscribe::natsJS::context::Context as NatsJS;
 use ::subscribe::natsJS::new as nats_js_new;
@@ -38,7 +39,16 @@ pub struct TradeObserverInitNodeNumbers {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ObserverConfig {
-  pub init_trigger_node_numbers: TradeObserverInitNodeNumbers,
+  init_trigger_node_numbers: TradeObserverInitNodeNumbers,
+}
+
+impl ObserverConfig {
+  /// Returns the minimum number of nodes to be initialized.
+  pub fn min_node_init(&self, exchange: Exchanges) -> usize {
+    return match exchange {
+      Exchanges::Binance => self.init_trigger_node_numbers.binance,
+    };
+  }
 }
 
 #[derive(Debug, Deserialize)]
