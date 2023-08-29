@@ -17,7 +17,7 @@ use crate::errors::Result as ObserverControlResult;
 
 pub struct SyncHandler<S, T>
 where
-  T: Commands,
+  T: Commands + Send + Sync,
   S: SymbolWriter,
 {
   symbol_db: S,
@@ -28,7 +28,7 @@ where
 impl<S, T> SyncHandler<S, T>
 where
   S: SymbolWriter,
-  T: Commands,
+  T: Commands + Send + Sync,
 {
   pub fn new(symbol_db: S, cmd: KVSConnection<T>, nats: &Context) -> Self {
     return Self {

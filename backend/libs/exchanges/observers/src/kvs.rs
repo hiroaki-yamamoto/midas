@@ -18,12 +18,18 @@ kvs!(
   "observer_node_exchange_type_last_checked_epoch:{}"
 );
 
-impl<T> SoftExpirationStore<T, String> for ObserverNodeKVS<T> where T: Commands {}
-impl<T> SoftExpirationStore<T, String> for ONEXTypeKVS<T> where T: Commands {}
+impl<T> SoftExpirationStore<T, String> for ObserverNodeKVS<T> where
+  T: Commands + Send + Sync
+{
+}
+impl<T> SoftExpirationStore<T, String> for ONEXTypeKVS<T> where
+  T: Commands + Send + Sync
+{
+}
 
 impl<T> ObserverNodeKVS<T>
 where
-  T: Commands,
+  T: Commands + Send + Sync,
 {
   pub fn count_nodes(&self) -> RedisResult<usize> {
     return Ok(

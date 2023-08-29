@@ -19,14 +19,14 @@ macro_rules! kvs {
         #[derive(Clone)]
         $acc struct $name<T>
         where
-          T: ::kvs::redis::Commands,
+          T: ::kvs::redis::Commands + Send + Sync,
         {
           con: ::kvs::Connection<T>,
         }
 
         impl<T> $name<T>
         where
-          T: ::kvs::redis::Commands,
+          T: ::kvs::redis::Commands + Send + Sync,
         {
           pub fn new(con: ::kvs::Connection<T>) -> Self {
             return Self { con: con };
@@ -35,7 +35,7 @@ macro_rules! kvs {
 
         impl<T> ::kvs::Store<T, $vtype> for $name<T>
         where
-          T: ::kvs::redis::Commands,
+          T: ::kvs::redis::Commands + Send + Sync,
         {
           fn channel_name(
             &self,
@@ -57,14 +57,14 @@ macro_rules! symbol_kvs {
     #[derive(Clone)]
     $acc struct $name<T>
     where
-      T: ::kvs::redis::Commands,
+      T: ::kvs::redis::Commands + Send,
     {
       con: ::kvs::Connection<T>,
     }
 
     impl<T> $name<T>
     where
-      T: ::kvs::redis::Commands,
+      T: ::kvs::redis::Commands + Send,
     {
       pub fn new(con: ::kvs::Connection<T>) -> Self {
         return Self { con: con };
@@ -73,7 +73,7 @@ macro_rules! symbol_kvs {
 
     impl<T> ::kvs::SymbolKeyStore<T, $vtype> for $name<T>
     where
-      T: ::kvs::redis::Commands,
+      T: ::kvs::redis::Commands + Send,
     {
       fn lock_commands(&self) -> ::std::sync::MutexGuard<T> {
         return self.con.lock().unwrap();
@@ -95,7 +95,7 @@ macro_rules! incr_kvs {
   ($acc: vis, $name: ident, $vtype: ty, $ch_name: expr) => {
     ::kvs::symbol_kvs!($acc, $name, $vtype, $ch_name);
     impl<T> ::kvs::IncrementalStore<T> for $name<T> where
-      T: ::kvs::redis::Commands
+      T: ::kvs::redis::Commands + Send
     {
     }
   };
