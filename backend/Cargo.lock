@@ -1851,7 +1851,6 @@ dependencies = [
  "errors",
  "redis",
  "rmp-serde",
- "rpc",
  "serde",
  "types",
 ]

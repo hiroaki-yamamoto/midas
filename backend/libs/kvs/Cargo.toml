@@ -8,7 +8,6 @@ edition = "2021"
 [dependencies]
 errors = { path = "../errors" }
 types = { path = "../types" }
-rpc = { path = "../rpc" }
 
 redis = "0.23.1"
 serde = "1.0.185"
