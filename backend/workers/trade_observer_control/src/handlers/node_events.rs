@@ -46,7 +46,7 @@ where
     };
   }
 
-  pub fn handle(
+  pub async fn handle(
     &mut self,
     event: TradeObserverNodeEvent,
     config: &ObserverConfig,
@@ -95,10 +95,13 @@ where
             Exchanges::Binance => config.init_trigger_node_numbers.binance,
           };
           if self.kvs.count_nodes()? == init_max {
-            let _ = self.init_lock.lock(|| {
-              info!("Init Triggered");
-              unimplemented!("Not Implemented Yet");
-            });
+            let _ = self
+              .init_lock
+              .lock(|| {
+                info!("Init Triggered");
+                unimplemented!("Not Implemented Yet");
+              })
+              .await;
           }
         }
       }

@@ -26,7 +26,7 @@ async fn main() {
     loop {
       select! {
         event = node_event.next() => if let Some((event, _)) = event {
-          if let Err(e) = node_event_handler.handle(event, &cfg.observer) {
+          if let Err(e) = node_event_handler.handle(event, &cfg.observer).await {
             error!("Error handling node event: {}", e);
           }
         },
