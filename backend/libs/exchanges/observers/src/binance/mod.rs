@@ -12,7 +12,6 @@ use ::futures::sink::SinkExt;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::futures::FutureExt;
 use ::log::{as_display, as_error, as_serde, debug, error, info, warn};
-use ::mongodb::bson::doc;
 use ::mongodb::Database;
 use ::rug::Float;
 use ::serde_json::{from_slice as from_json, to_vec as to_json};
