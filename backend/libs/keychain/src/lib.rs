@@ -92,7 +92,7 @@ impl KeyChain {
       .find_one(
         doc! {
           "_id": id,
-          "exchange": exchange.as_string()
+          "exchange": exchange.as_str_name().to_lowercase(),
         },
         None,
       )

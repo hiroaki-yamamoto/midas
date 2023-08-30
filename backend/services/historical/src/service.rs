@@ -117,8 +117,8 @@ impl Service {
           let mut size = size_ref.lock().unwrap();
           let mut cur = cur_ref.lock().unwrap();
           return (
-            size.get(Exchanges::Binance.as_string(), &symbol.symbol),
-            cur.get(Exchanges::Binance.as_string(), &symbol.symbol),
+            size.get(Exchanges::Binance.as_str_name().to_lowercase(), &symbol.symbol),
+            cur.get(Exchanges::Binance.as_str_name().to_lowercase(), &symbol.symbol),
             symbol.symbol
           );
         }).filter_map(|
@@ -178,14 +178,14 @@ impl Service {
                   let size = {
                     let mut size = (*size).lock().unwrap();
                     size.get(
-                      item.exchange.as_string(),
+                      item.exchange.as_str_name().to_lowercase(),
                       &item.symbol
                     ).unwrap_or(0)
                   };
                   let cur = {
                     let mut cur = (*cur).lock().unwrap();
                     cur.get(
-                      item.exchange.as_string(), &item.symbol
+                      item.exchange.as_str_name().to_lowercase(), &item.symbol
                     ).unwrap_or(0)
                   };
                   let prog = Progress {
@@ -212,7 +212,7 @@ impl Service {
                       Err(e) => { println!("Publishing Sync Date Failed: {:?}", e); }
                     }
                   } else if let Ok(req) = parse_json::<StatusCheckRequest>(msg.as_bytes()) {
-                    let exchange = req.exchange().as_string();
+                    let exchange = req.exchange().as_str_name().to_lowercase();
                     let size = {
                       let mut size = (*size).lock().unwrap();
                       size.get(&exchange, &req.symbol).unwrap_or(0)

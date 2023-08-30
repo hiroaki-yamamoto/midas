@@ -76,7 +76,7 @@ async fn main() {
               }
             },
             None => {
-              error!("Unknown Exchange: {}", req.exchange.as_string());
+              error!("Unknown Exchange: {}", req.exchange.as_str_name().to_lowercase());
               continue;
             }
           };
@@ -85,7 +85,7 @@ async fn main() {
             continue;
           }
           if let Err(e) = cur_prog_kvs.incr(
-            req.exchange.as_string(),
+            req.exchange.as_str_name().to_lowercase(),
             req.symbol.clone(), 1,
             WriteOption::default().duration(Duration::from_secs(180).into()).into()
           ) {

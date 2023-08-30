@@ -19,6 +19,8 @@ use ::rpc::entities::Exchanges;
 use crate::dlock::InitLock;
 use crate::errors::Result as ControlResult;
 
+use super::SyncHandler;
+
 pub(crate) struct FromNodeEventHandler<C>
 where
   C: Commands + Send + Sync,

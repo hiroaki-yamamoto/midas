@@ -80,12 +80,12 @@ async fn main() {
             },
             Ok(v) => v
           };
-          if let Err(e) = cur_prog_kvs.reset(req.exchange.as_string(), &req.symbol) {
+          if let Err(e) = cur_prog_kvs.reset(req.exchange.as_str_name().to_lowercase(), &req.symbol) {
             error!(error = as_error!(e); "Failed to reset the progress");
             continue;
           }
           if let Err(e) = num_prg_kvs.set::<()>(
-            req.exchange.as_string(),
+            req.exchange.as_str_name().to_lowercase(),
             &req.symbol,
             splitter.len().unwrap_or(0) as i64,
             WriteOption::default().duration(Duration::from_secs(180).into()).into(),

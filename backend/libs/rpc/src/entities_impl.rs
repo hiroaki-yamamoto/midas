@@ -10,12 +10,6 @@ use ::warp::Filter;
 use ::errors::ParseError;
 
 impl Exchanges {
-  pub fn as_string(&self) -> String {
-    return String::from(match self {
-      Exchanges::Binance => "binance",
-    });
-  }
-
   pub fn by_param(
   ) -> impl Filter<Extract = (Exchanges,), Error = ::warp::Rejection>
        + Clone
@@ -40,12 +34,6 @@ impl ::std::str::FromStr for Exchanges {
       _ => return Err(ParseError::new(None::<&str>, Some(s), None::<&str>)),
     };
     return Ok(ret);
-  }
-}
-
-impl From<Exchanges> for String {
-  fn from(exchange: Exchanges) -> Self {
-    return exchange.as_string();
   }
 }
 
