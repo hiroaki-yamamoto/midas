@@ -4,7 +4,6 @@ use ::rpc::entities::Exchanges;
 use ::rpc::symbols::{SymbolInfo, Type as SymbolType};
 
 use super::filters::Filters;
-use crate::traits::Symbol as SymbolTrait;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -25,12 +24,6 @@ pub struct Symbol {
   pub is_margin_trading_allowed: bool,
   pub filters: Vec<Filters>,
   pub permissions: Vec<String>,
-}
-
-impl SymbolTrait for Symbol {
-  fn symbol(&self) -> String {
-    return self.symbol.clone();
-  }
 }
 
 impl From<&Symbol> for SymbolInfo {

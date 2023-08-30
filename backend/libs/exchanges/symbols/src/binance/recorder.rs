@@ -1,13 +1,17 @@
 use ::async_trait::async_trait;
-use ::futures::stream::StreamExt;
+use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson;
 use ::mongodb::error::Result as DBResult;
 use ::mongodb::results::InsertManyResult;
 use ::mongodb::{Collection, Database};
 
-use super::entities::{ListSymbolStream, Symbol};
-use crate::traits::SymbolWriter as SymbolWriterTrait;
 use ::writers::DatabaseWriter as DBWriterTrait;
+
+use crate::traits::SymbolWriter as SymbolWriterTrait;
+
+use super::entities::{ListSymbolStream, Symbol};
+
+pub(crate) type InHouseListSymbolStream<'a> = BoxStream<'a, Symbol>;
 
 #[derive(Debug, Clone)]
 pub struct SymbolWriter {
@@ -24,6 +28,23 @@ impl SymbolWriter {
     ret.update_indices(&["symbol"]).await;
     return ret;
   }
+
+  pub(crate) async fn list(
+    &self,
+    query: impl Into<Option<bson::Document>> + Send,
+  ) -> DBResult<InHouseListSymbolStream> {
+    let cur = self.col.find(query, None).await?;
+    let cur = cur.filter_map(|doc| async { doc.ok() }).boxed();
+    return Ok(cur);
+  }
+
+  pub(crate) async fn update_symbols(
+    &self,
+    value: Vec<Symbol>,
+  ) -> DBResult<InsertManyResult> {
+    let _ = self.col.delete_many(bson::doc! {}, None).await?;
+    return Ok(self.col.insert_many(value.into_iter(), None).await?);
+  }
 }
 
 impl DBWriterTrait for SymbolWriter {
@@ -38,25 +59,23 @@ impl DBWriterTrait for SymbolWriter {
 #[async_trait]
 impl SymbolWriterTrait for SymbolWriter {
   type ListStream = ListSymbolStream<'static>;
-  type Type = Symbol;
   async fn list(
     &self,
     query: impl Into<Option<bson::Document>> + Send + 'async_trait,
   ) -> DBResult<Self::ListStream> {
     let cur = self.col.find(query, None).await?;
-    let cur = cur.filter_map(|doc| async { doc.ok() }).boxed();
+    let cur = cur
+      .filter_map(|doc| async { doc.ok() })
+      .map(|doc| doc.into())
+      .boxed();
     return Ok(cur as Self::ListStream);
   }
+
   async fn list_trading(&self) -> DBResult<Self::ListStream> {
-    return self.list(bson::doc! {"status": "TRADING"}).await;
+    return SymbolWriterTrait::list(self, bson::doc! {"status": "TRADING"})
+      .await;
   }
-  async fn update_symbols(
-    &self,
-    value: Vec<Self::Type>,
-  ) -> DBResult<InsertManyResult> {
-    let _ = self.col.delete_many(bson::doc! {}, None).await?;
-    return Ok(self.col.insert_many(value.into_iter(), None).await?);
-  }
+
   async fn list_base_currencies(&self) -> DBResult<Vec<String>> {
     return Ok(
       self

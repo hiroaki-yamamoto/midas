@@ -11,7 +11,7 @@ use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
 use ::subscribe::natsJS::context::Context;
 use ::subscribe::PubSub;
-use ::symbols::traits::{Symbol, SymbolWriter};
+use ::symbols::traits::SymbolWriter;
 
 use crate::errors::Result as ObserverControlResult;
 
@@ -57,7 +57,7 @@ where
       .symbol_db
       .list_trading()
       .await?
-      .map(|s| s.symbol())
+      .map(|s| s.symbol)
       .collect()
       .await;
     let to_add = (&db_symbols - &nodes_symbols)

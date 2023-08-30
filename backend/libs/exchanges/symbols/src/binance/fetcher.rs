@@ -20,7 +20,6 @@ use super::manager::SymbolUpdateEventManager;
 use super::recorder::SymbolWriter;
 
 use crate::traits::SymbolFetcher as SymbolFetcherTrait;
-use crate::traits::SymbolWriter as SymbolWriterTrait;
 use ::errors::StatusFailure;
 
 #[derive(Debug, Clone)]
@@ -59,8 +58,7 @@ impl SymbolFetcher {
 
 #[async_trait]
 impl SymbolFetcherTrait for SymbolFetcher {
-  type SymbolType = Symbol;
-  async fn refresh(&mut self) -> SymbolFetchResult<Vec<Self::SymbolType>> {
+  async fn refresh(&mut self) -> SymbolFetchResult<Vec<SymbolInfo>> {
     let resp = self.cli.get::<()>(None, None).await?;
     let old_symbols = self.recorder.list(doc! {}).await?;
     let old_symbols: Vec<Symbol> = old_symbols.collect().await;
@@ -80,7 +78,15 @@ impl SymbolFetcherTrait for SymbolFetcher {
       )
       .await;
       update?;
-      return Ok(self.recorder.list(None).await?.collect().await);
+      return Ok(
+        self
+          .recorder
+          .list(None)
+          .await?
+          .map(|item| item.into())
+          .collect()
+          .await,
+      );
     } else {
       return Err(SymbolFetchError::HTTPErr(
         StatusFailure {
