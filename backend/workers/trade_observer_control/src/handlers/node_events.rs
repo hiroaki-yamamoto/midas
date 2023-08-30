@@ -7,14 +7,15 @@ use ::dlock::Dlock;
 use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 use ::errors::KVSResult;
 use ::kvs::redis::Commands;
-use ::kvs::Connection;
-use ::kvs::{SoftExpirationStore, WriteOption};
+use ::kvs::{Connection, SoftExpirationStore, WriteOption};
 use ::log::info;
 use ::observers::kvs::{
   ONEXTypeKVS, ONEXTypeLastCheckedKVS, ObserverNodeKVS,
   ObserverNodeLastCheckKVS,
 };
 use ::rpc::entities::Exchanges;
+use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
+use ::symbols::traits::SymbolWriter as SymbolWriterTrait;
 
 use crate::dlock::InitLock;
 use crate::errors::Result as ControlResult;
@@ -48,6 +49,41 @@ where
     };
   }
 
+  /// Push NodeID to KVS
+  /// Note that the return ID is not always the same as the input ID.
+  /// E.g. When the id is duplicated, the new ID is generated and returned.
+  /// Return Value: NodeID that pushed to KVS.
+  fn push_nodeid(
+    &mut self,
+    node_id: &Uuid,
+    exchange: Exchanges,
+  ) -> KVSResult<Uuid> {
+    let mut node_id = node_id.clone();
+    let redis_option: Option<WriteOption> = WriteOption::default()
+      .duration(Duration::from_secs(30).into())
+      .non_existent_only(true)
+      .into();
+    loop {
+      let push_result: KVSResult<usize> = self.kvs.lpush(
+        &node_id.to_string(),
+        "".into(),
+        redis_option.clone(),
+        &mut self.last_check_kvs,
+      );
+      if push_result.is_ok() {
+        break;
+      }
+      node_id = Uuid::new_v4();
+    }
+    self.type_kvs.set(
+      node_id.to_string(),
+      exchange.as_str_name().into(),
+      redis_option,
+      &mut self.type_last_check_kvs,
+    )?;
+    return Ok(node_id);
+  }
+
   pub async fn handle(
     &mut self,
     event: TradeObserverNodeEvent,
@@ -62,46 +98,21 @@ where
         )?;
       }
       TradeObserverNodeEvent::Regist(exchange, node_id) => {
-        let mut node_id = node_id;
-        let redis_option: Option<WriteOption> = WriteOption::default()
-          .duration(Duration::from_secs(30).into())
-          .non_existent_only(true)
-          .into();
-        loop {
-          let push_result: KVSResult<usize> = self.kvs.lpush(
-            &node_id.to_string(),
-            "".into(),
-            redis_option.clone(),
-            &mut self.last_check_kvs,
+        if self.push_nodeid(&node_id, exchange).is_ok() {
+          info!(
+            "Node Connected. NodeID: {}, Exchange: {}",
+            node_id,
+            exchange.as_str_name()
           );
-          match push_result {
-            Ok(_) => {
-              let _ = self.type_kvs.set(
-                node_id.to_string(),
-                exchange.as_str_name().into(),
-                redis_option,
-                &mut self.type_last_check_kvs,
-              )?;
-              info!(
-                "Node Connected. NodeID: {}, Exchange: {}",
-                node_id,
-                exchange.as_str_name()
-              );
-              break;
-            }
-            Err(_) => {
-              node_id = Uuid::new_v4();
-            }
-          }
-          if self.kvs.count_nodes()? == config.min_node_init(exchange) {
-            let _ = self
-              .init_lock
-              .lock(|| {
-                info!("Init Triggered");
-                unimplemented!("Not Implemented Yet");
-              })
-              .await;
-          }
+        }
+        if self.kvs.count_nodes()? == config.min_node_init(exchange) {
+          let _ = self
+            .init_lock
+            .lock(|| {
+              info!("Init Triggered");
+              unimplemented!("Not Implemented Yet");
+            })
+            .await;
         }
       }
       TradeObserverNodeEvent::Unregist(node_id) => {}
