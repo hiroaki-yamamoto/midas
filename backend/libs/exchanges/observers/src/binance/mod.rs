@@ -24,9 +24,10 @@ use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::errors::{CreateStreamResult, EmptyError, ObserverResult};
 use ::subscribe::natsJS::context::Context as NatsJS;
 use ::subscribe::PubSub;
-use ::symbols::binance::entities::{ListSymbolStream, Symbol, SymbolEvent};
+use ::symbols::binance::entities::{Symbol, SymbolEvent};
 use ::symbols::binance::pubsub::SymbolEventPubSub;
 use ::symbols::binance::recorder::SymbolWriter;
+use ::symbols::types::ListSymbolStream;
 use ::types::TLSWebSocket;
 
 use ::clients::binance::WS_ENDPOINT;
@@ -330,10 +331,10 @@ impl TradeObserver {
     return Ok(());
   }
 
-  async fn init(&self) -> ObserverResult<ListSymbolStream<'static>> {
+  async fn init(&self) -> ObserverResult<ListSymbolStream> {
     let reader = self.symbol_reader.clone();
     let symbols = reader.list_trading().await?;
-    return Ok(symbols.boxed());
+    return Ok(symbols);
   }
 }
 

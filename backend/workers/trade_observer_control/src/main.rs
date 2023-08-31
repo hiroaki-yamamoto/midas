@@ -18,7 +18,7 @@ async fn main() {
   config::init(|cfg, mut sig, db, broker, host| async move {
     let kvs = cfg.redis().unwrap();
     let node_event_pubsub = NodeEventPubSub::new(&broker).await.unwrap();
-    let mut node_event_handler = handlers::FromNodeEventHandler::new(kvs, db);
+    let mut node_event_handler = handlers::FromNodeEventHandler::new(kvs, db, &broker);
     let mut node_event = node_event_pubsub
       .queue_subscribe("tradeObserverController")
       .await

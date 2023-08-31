@@ -8,13 +8,13 @@ use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 use ::errors::KVSResult;
 use ::kvs::redis::Commands;
 use ::kvs::{Connection, SoftExpirationStore, WriteOption};
-use ::log::info;
+use ::log::{error, info};
 use ::observers::kvs::{
   ONEXTypeKVS, ONEXTypeLastCheckedKVS, ObserverNodeKVS,
   ObserverNodeLastCheckKVS,
 };
 use ::rpc::entities::Exchanges;
-use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
+use ::subscribe::natsJS::context::Context;
 use ::symbols::traits::SymbolReader as SymbolReaderTrait;
 
 use crate::dlock::InitLock;
@@ -26,7 +26,9 @@ pub(crate) struct FromNodeEventHandler<C>
 where
   C: Commands + Send + Sync,
 {
-  kvs: ObserverNodeKVS<C>,
+  kvs_cmd: Connection<C>,
+  nats: Context,
+  node_kvs: ObserverNodeKVS<C>,
   db: Database,
   type_kvs: ONEXTypeKVS<C>,
   last_check_kvs: ObserverNodeLastCheckKVS<C>,
@@ -38,9 +40,11 @@ impl<C> FromNodeEventHandler<C>
 where
   C: Commands + Send + Sync,
 {
-  pub fn new(kvs_com: Connection<C>, db: Database) -> Self {
+  pub fn new(kvs_com: Connection<C>, db: Database, nats: &Context) -> Self {
     return Self {
-      kvs: ObserverNodeKVS::new(kvs_com.clone().into()),
+      kvs_cmd: kvs_com.clone().into(),
+      nats: nats.clone(),
+      node_kvs: ObserverNodeKVS::new(kvs_com.clone().into()),
       type_kvs: ONEXTypeKVS::new(kvs_com.clone().into()),
       last_check_kvs: ObserverNodeLastCheckKVS::new(kvs_com.clone().into()),
       type_last_check_kvs: ONEXTypeLastCheckedKVS::new(kvs_com.clone().into()),
@@ -64,7 +68,7 @@ where
       .non_existent_only(true)
       .into();
     loop {
-      let push_result: KVSResult<usize> = self.kvs.lpush(
+      let push_result: KVSResult<usize> = self.node_kvs.lpush(
         &node_id.to_string(),
         "".into(),
         redis_option.clone(),
@@ -91,7 +95,7 @@ where
   ) -> ControlResult<()> {
     match event {
       TradeObserverNodeEvent::Ping(node_id) => {
-        self.kvs.expire(
+        self.node_kvs.expire(
           &node_id.to_string(),
           Duration::from_secs(30),
           &mut self.last_check_kvs,
@@ -105,12 +109,19 @@ where
             exchange.as_str_name()
           );
         }
-        if self.kvs.count_nodes()? == config.min_node_init(exchange) {
+        if self.node_kvs.count_nodes()? == config.min_node_init(exchange) {
           let _ = self
             .init_lock
-            .lock(|| {
+            .lock(|| async {
+              let mut sync_handler: SyncHandler<_> = SyncHandler::new(
+                &self.db,
+                self.kvs_cmd.clone().into(),
+                &self.nats,
+              );
               info!("Init Triggered");
-              unimplemented!("Not Implemented Yet");
+              if let Err(e) = sync_handler.handle(&exchange).await {
+                error!("Synchronization Handling Filed: {}", e);
+              };
             })
             .await;
         }

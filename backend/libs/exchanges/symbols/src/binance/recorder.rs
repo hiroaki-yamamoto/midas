@@ -8,8 +8,9 @@ use ::mongodb::{Collection, Database};
 use ::writers::DatabaseWriter as DBWriterTrait;
 
 use crate::traits::SymbolReader as SymbolReaderTrait;
+use crate::types::ListSymbolStream;
 
-use super::entities::{ListSymbolStream, Symbol};
+use super::entities::Symbol;
 
 pub(crate) type InHouseListSymbolStream<'a> = BoxStream<'a, Symbol>;
 
@@ -58,8 +59,7 @@ impl DBWriterTrait for SymbolWriter {
 
 #[async_trait]
 impl SymbolReaderTrait for SymbolWriter {
-  type ListStream = ListSymbolStream<'static>;
-  async fn list_all(&self) -> DBResult<Self::ListStream> {
+  async fn list_all(&self) -> DBResult<ListSymbolStream> {
     let cur = self.col.find(None, None).await?;
     let cur = cur
       .filter_map(|doc_res| async { doc_res.ok() })
@@ -67,7 +67,7 @@ impl SymbolReaderTrait for SymbolWriter {
     return Ok(cur.boxed());
   }
 
-  async fn list_trading(&self) -> DBResult<Self::ListStream> {
+  async fn list_trading(&self) -> DBResult<ListSymbolStream> {
     return Ok(
       self
         .col

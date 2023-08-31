@@ -1,7 +1,8 @@
 use ::std::collections::HashSet;
 
-use ::futures::future::try_join_all;
+use ::futures::future::{try_join_all, TryFutureExt};
 use ::futures::StreamExt;
+use ::mongodb::Database;
 
 use ::entities::TradeObserverControlEvent as Event;
 use ::kvs::redis::Commands;
@@ -11,28 +12,27 @@ use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
 use ::subscribe::natsJS::context::Context;
 use ::subscribe::PubSub;
+use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
 use ::symbols::traits::SymbolReader as SymbolReaderTrait;
 
 use crate::errors::Result as ObserverControlResult;
 
-pub struct SyncHandler<S, T>
+pub struct SyncHandler<T>
 where
   T: Commands + Send + Sync,
-  S: SymbolReaderTrait,
 {
-  symbol_db: S,
+  db: Database,
   kvs: ObserverNodeKVS<T>,
   nats: Context,
 }
 
-impl<S, T> SyncHandler<S, T>
+impl<T> SyncHandler<T>
 where
-  S: SymbolReaderTrait,
   T: Commands + Send + Sync,
 {
-  pub fn new(symbol_db: S, cmd: KVSConnection<T>, nats: &Context) -> Self {
+  pub fn new(db: &Database, cmd: KVSConnection<T>, nats: &Context) -> Self {
     return Self {
-      symbol_db,
+      db: db.clone(),
       kvs: ObserverNodeKVS::new(cmd.clone().into()),
       nats: nats.clone(),
     };
@@ -42,6 +42,14 @@ where
     &mut self,
     exchange: &Exchanges,
   ) -> ObserverControlResult<Vec<Event>> {
+    let symbol_reader: Box<dyn SymbolReaderTrait + Send + Sync> = match exchange
+    {
+      Exchanges::Binance => Box::new(BinanceSymbolWriter::new(&self.db).await),
+    };
+    let trading_symbols_list = symbol_reader.list_trading().await?;
+    let db_symbols: HashSet<String> =
+      trading_symbols_list.map(|s| s.symbol).collect().await;
+
     let node_ids: Vec<String> = self.kvs.scan_match("*")?;
     let mut nodes_symbols = vec![];
     for node_id in node_ids {
@@ -53,13 +61,6 @@ where
       }
     }
     let nodes_symbols = HashSet::from_iter(nodes_symbols.into_iter());
-    let db_symbols: HashSet<String> = self
-      .symbol_db
-      .list_trading()
-      .await?
-      .map(|s| s.symbol)
-      .collect()
-      .await;
     let to_add = (&db_symbols - &nodes_symbols)
       .into_iter()
       .map(|s| Event::SymbolAdd(exchange.clone(), s));

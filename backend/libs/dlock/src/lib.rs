@@ -1,3 +1,6 @@
+use ::std::error::Error as ErrorTrait;
+use ::std::fmt::Display;
+use ::std::future::Future;
 use ::std::sync::Arc;
 use ::std::time::Duration;
 
@@ -18,10 +21,13 @@ pub trait Dlock<S>: Store<S, String>
 where
   S: Commands + Send,
 {
-  async fn lock(
+  async fn lock<Ft>(
     &mut self,
-    func_on_success: impl Fn() + Send + Sync,
-  ) -> DLockResult<()> {
+    func_on_success: impl (Fn() -> Ft) + Send + Sync,
+  ) -> DLockResult<()>
+  where
+    Ft: Future<Output = ()> + Send,
+  {
     let (refresh_tx, mut refresh_rx) = channel::<()>(1);
     let dlock = Arc::new(Mutex::new(self));
     let dlock2 = dlock.clone();
@@ -55,7 +61,7 @@ where
       )?;
       if lock == "OK" {
         let _ = refresh_tx.send(());
-        func_on_success();
+        let ret = func_on_success().await;
         let _ = refresh_tx.send(());
         dlock.del("lock")?;
         return Ok(());

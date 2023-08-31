@@ -24,9 +24,9 @@ use ::rpc::historical::{
   HistoryFetchRequest as RPCHistFetchReq, Progress, StatusCheckRequest,
 };
 use ::subscribe::natsJS::context::Context as NatsJS;
-use ::symbols::binance::entities::ListSymbolStream as BinanceListSymbolStream;
 use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
 use ::symbols::traits::SymbolReader as SymbolReaderTrait;
+use ::symbols::types::ListSymbolStream;
 
 #[derive(Debug, Clone)]
 pub struct Service {
@@ -106,7 +106,7 @@ impl Service {
         Self,
         TSNumObjectsToFetchStore,
         TSCurrentSyncProgressStore,
-        BinanceListSymbolStream<'static>,
+        ListSymbolStream,
       )| async move {
         let size_ref = size.clone();
         let cur_ref = cur.clone();
