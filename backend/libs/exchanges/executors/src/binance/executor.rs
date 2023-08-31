@@ -20,8 +20,8 @@ use ::round::RestClient;
 use ::writers::DatabaseWriter;
 
 use ::clients::binance::{APIHeader, FindKey, REST_ENDPOINTS};
-use ::observers::binance::TradeObserver;
-use ::observers::traits::TradeObserver as TradeObserverTrait;
+use ::observers::binance::TradeSubscriber;
+use ::observers::traits::TradeSubscriber as TradeSubscriberTrait;
 use ::subscribe::natsJS::context::Context as NatsJS;
 
 use crate::traits::Executor as ExecutorTrait;
@@ -91,8 +91,7 @@ impl ExecutorTrait for Executor {
     &mut self,
   ) -> ExecutionResult<BoxStream<'_, ExecutionResult<BookTicker>>> {
     let stream = try_stream! {
-      let observer = TradeObserver::new(
-      Some(self.db.clone()),
+      let observer = TradeSubscriber::new(
       &self.broker,
     )
     .await?;

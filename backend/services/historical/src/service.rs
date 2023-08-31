@@ -4,7 +4,6 @@ use ::std::sync::{Arc, Mutex};
 use ::futures::stream::BoxStream;
 use ::futures::{SinkExt, StreamExt};
 use ::http::StatusCode;
-use ::mongodb::bson::doc;
 use ::mongodb::Database;
 use ::serde_json::{from_slice as parse_json, to_string as jsonify};
 use ::subscribe::PubSub;
@@ -27,7 +26,7 @@ use ::rpc::historical::{
 use ::subscribe::natsJS::context::Context as NatsJS;
 use ::symbols::binance::entities::ListSymbolStream as BinanceListSymbolStream;
 use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
-use ::symbols::traits::SymbolWriter as SymbolWriterTrait;
+use ::symbols::traits::SymbolReader as SymbolReaderTrait;
 
 #[derive(Debug, Clone)]
 pub struct Service {
@@ -73,9 +72,7 @@ impl Service {
       })
       .and_then(|me: Self| async move {
         let writer = BinanceSymbolWriter::new(&me.db).await;
-        let symbols = writer.list(Some(doc! {
-          "status": "TRADING",
-        })).await.map_err(|err| {
+        let symbols = writer.list_trading().await.map_err(|err| {
           return cus_rej(Status::new(
             StatusCode::SERVICE_UNAVAILABLE,
             format!("(DB, Symbol): {}", err)

@@ -1,7 +1,7 @@
 use ::serde::{Deserialize, Serialize};
 use ::serde_json::Value;
 
-use super::Symbol;
+use super::symbol::Symbol;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]

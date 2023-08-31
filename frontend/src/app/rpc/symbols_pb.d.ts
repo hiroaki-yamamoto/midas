@@ -1,8 +1,15 @@
 import * as jspb from 'google-protobuf'
 
+import * as entities_pb from './entities_pb';
 
 
 export class SymbolInfo extends jspb.Message {
+  getExchange(): entities_pb.Exchanges;
+  setExchange(value: entities_pb.Exchanges): SymbolInfo;
+
+  getType(): Type;
+  setType(value: Type): SymbolInfo;
+
   getSymbol(): string;
   setSymbol(value: string): SymbolInfo;
 
@@ -15,6 +22,18 @@ export class SymbolInfo extends jspb.Message {
   getQuote(): string;
   setQuote(value: string): SymbolInfo;
 
+  getBasePrecision(): number;
+  setBasePrecision(value: number): SymbolInfo;
+
+  getQuotePrecision(): number;
+  setQuotePrecision(value: number): SymbolInfo;
+
+  getBaseCommissionPrecision(): number;
+  setBaseCommissionPrecision(value: number): SymbolInfo;
+
+  getQuoteCommissionPrecision(): number;
+  setQuoteCommissionPrecision(value: number): SymbolInfo;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): SymbolInfo.AsObject;
   static toObject(includeInstance: boolean, msg: SymbolInfo): SymbolInfo.AsObject;
@@ -25,10 +44,16 @@ export class SymbolInfo extends jspb.Message {
 
 export namespace SymbolInfo {
   export type AsObject = {
+    exchange: entities_pb.Exchanges,
+    type: Type,
     symbol: string,
     status: string,
     base: string,
     quote: string,
+    basePrecision: number,
+    quotePrecision: number,
+    baseCommissionPrecision: number,
+    quoteCommissionPrecision: number,
   }
 }
 
@@ -72,3 +97,7 @@ export namespace BaseSymbols {
   }
 }
 
+export enum Type { 
+  CRYPTO = 0,
+  STOCK = 1,
+}

@@ -15,7 +15,7 @@ use ::observers::kvs::{
 };
 use ::rpc::entities::Exchanges;
 use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
-use ::symbols::traits::SymbolWriter as SymbolWriterTrait;
+use ::symbols::traits::SymbolReader as SymbolReaderTrait;
 
 use crate::dlock::InitLock;
 use crate::errors::Result as ControlResult;

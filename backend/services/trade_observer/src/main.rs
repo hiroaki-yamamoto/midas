@@ -15,7 +15,7 @@ use ::config::init;
 use ::csrf::{CSRFOption, CSRF};
 use ::errors::CreateStreamResult;
 use ::observers::binance;
-use ::observers::traits::TradeObserver as TradeObserverTrait;
+use ::observers::traits::TradeSubscriber as TradeSubscriberTrait;
 use ::rpc::bookticker::BookTicker;
 use ::rpc::entities::Exchanges;
 use ::subscribe::natsJS::context::Context as NatsJS;
@@ -23,16 +23,14 @@ use ::subscribe::natsJS::context::Context as NatsJS;
 async fn get_exchange(
   exchange: Exchanges,
   broker: &NatsJS,
-) -> CreateStreamResult<Option<impl TradeObserverTrait>> {
+) -> CreateStreamResult<Option<impl TradeSubscriberTrait>> {
   return Ok(match exchange {
-    Exchanges::Binance => {
-      Some(binance::TradeObserver::new(None, broker).await?)
-    }
+    Exchanges::Binance => Some(binance::TradeSubscriber::new(broker).await?),
   });
 }
 
 fn handle_websocket(
-  exchange: impl TradeObserverTrait + Send + Sync + 'static,
+  exchange: impl TradeSubscriberTrait + Send + Sync + 'static,
   ws: ::warp::ws::Ws,
 ) -> impl Reply {
   return ws.on_upgrade(|mut socket: ::warp::ws::WebSocket| async move {

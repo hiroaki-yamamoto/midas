@@ -34,41 +34,37 @@ use ::clients::binance::WS_ENDPOINT;
 use self::entities::{BookTicker, SubscribeRequest, SubscribeRequestInner};
 use self::pubsub::BookTickerPubSub;
 
-use crate::traits::TradeObserver as TradeObserverTrait;
+use crate::traits::{
+  TradeObserver as TradeObserverTrait, TradeSubscriber as TradeSubscriberTrait,
+};
 use ::entities::BookTicker as CommonBookTicker;
-use ::errors::{InitError, MaximumAttemptExceeded, WebsocketError};
-use ::symbols::traits::SymbolWriter as SymbolWriterTrait;
+use ::errors::{MaximumAttemptExceeded, WebsocketError};
+use ::symbols::traits::SymbolReader as SymbolReaderTrait;
 
 const NUM_SOCKET: usize = 10;
 const EVENT_DELAY: Duration = Duration::from_secs(1);
 
 #[derive(Clone)]
 pub struct TradeObserver {
-  recorder: Option<SymbolWriter>,
+  symbol_reader: SymbolWriter,
   symbol_event: SymbolEventPubSub,
   bookticker_pubsub: BookTickerPubSub,
   add_symbol_count: usize,
 }
 
 impl TradeObserver {
-  pub async fn new(
-    db: Option<Database>,
-    broker: &NatsJS,
-  ) -> CreateStreamResult<Self> {
-    let recorder = match db {
-      None => None,
-      Some(db) => Some(SymbolWriter::new(&db).await),
-    };
+  pub async fn new(db: &Database, broker: &NatsJS) -> CreateStreamResult<Self> {
     let (symbol_event, bookticker_pubsub) = join!(
       SymbolEventPubSub::new(&broker),
       BookTickerPubSub::new(&broker)
     );
+    let symbol_reader = SymbolWriter::new(db).await;
     let (symbol_event, bookticker_pubsub) = (symbol_event?, bookticker_pubsub?);
     let me = Self {
       symbol_event,
       bookticker_pubsub,
       add_symbol_count: 0,
-      recorder,
+      symbol_reader,
     };
     return Ok(me);
   }
@@ -335,11 +331,9 @@ impl TradeObserver {
   }
 
   async fn init(&self) -> ObserverResult<ListSymbolStream<'static>> {
-    let recorder = self
-      .recorder
-      .clone()
-      .ok_or(InitError::new::<String>("binance.observer".into()))?;
-    return Ok(recorder.list_trading().await?);
+    let reader = self.symbol_reader.clone();
+    let symbols = reader.list_trading().await?;
+    return Ok(symbols.boxed());
   }
 }
 
@@ -364,11 +358,24 @@ impl TradeObserverTrait for TradeObserver {
     };
     return Ok(());
   }
+}
+
+#[derive(Clone, Debug)]
+pub struct TradeSubscriber {
+  pubsub: BookTickerPubSub,
+}
+
+impl TradeSubscriber {
+  pub async fn new(broker: &NatsJS) -> CreateStreamResult<Self> {
+    let pubsub = BookTickerPubSub::new(&broker).await?;
+    return Ok(Self { pubsub });
+  }
+}
+
+#[async_trait]
+impl TradeSubscriberTrait for TradeSubscriber {
   async fn subscribe(&self) -> ObserverResult<BoxStream<'_, CommonBookTicker>> {
-    let st = self
-      .bookticker_pubsub
-      .queue_subscribe("binanceObserver")
-      .await?;
+    let st = self.pubsub.queue_subscribe("binanceObserver").await?;
     let st = st.map(|(item, _)| {
       let ret: CommonBookTicker = item.into();
       return ret;
