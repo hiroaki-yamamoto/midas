@@ -1,5 +1,3 @@
-use ::std::error::Error as ErrorTrait;
-use ::std::fmt::Display;
 use ::std::future::Future;
 use ::std::sync::Arc;
 use ::std::time::Duration;
@@ -61,7 +59,7 @@ where
       )?;
       if lock == "OK" {
         let _ = refresh_tx.send(());
-        let ret = func_on_success().await;
+        let _ = func_on_success().await;
         let _ = refresh_tx.send(());
         dlock.del("lock")?;
         return Ok(());

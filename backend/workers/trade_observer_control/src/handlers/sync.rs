@@ -1,6 +1,6 @@
 use ::std::collections::HashSet;
 
-use ::futures::future::{try_join_all, TryFutureExt};
+use ::futures::future::try_join_all;
 use ::futures::StreamExt;
 use ::mongodb::Database;
 

@@ -13,9 +13,10 @@ use ::observers::kvs::{
   ONEXTypeKVS, ONEXTypeLastCheckedKVS, ObserverNodeKVS,
   ObserverNodeLastCheckKVS,
 };
+use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
 use ::subscribe::natsJS::context::Context;
-use ::symbols::traits::SymbolReader as SymbolReaderTrait;
+use ::subscribe::PubSub;
 
 use crate::dlock::InitLock;
 use crate::errors::Result as ControlResult;
@@ -57,12 +58,12 @@ where
   /// Note that the return ID is not always the same as the input ID.
   /// E.g. When the id is duplicated, the new ID is generated and returned.
   /// Return Value: NodeID that pushed to KVS.
-  fn push_nodeid(
+  async fn push_nodeid(
     &mut self,
     node_id: &Uuid,
     exchange: Exchanges,
-  ) -> KVSResult<Uuid> {
-    let mut node_id = node_id.clone();
+  ) -> ControlResult<Uuid> {
+    let mut fixed_node_id = node_id.clone();
     let redis_option: Option<WriteOption> = WriteOption::default()
       .duration(Duration::from_secs(30).into())
       .non_existent_only(true)
@@ -77,15 +78,24 @@ where
       if push_result.is_ok() {
         break;
       }
-      node_id = Uuid::new_v4();
+      fixed_node_id = Uuid::new_v4();
     }
     self.type_kvs.set(
-      node_id.to_string(),
+      fixed_node_id.to_string(),
       exchange.as_str_name().into(),
       redis_option,
       &mut self.type_last_check_kvs,
     )?;
-    return Ok(node_id);
+    if node_id != &fixed_node_id {
+      let pubsub = NodeControlEventPubSub::new(&self.nats).await?;
+      pubsub
+        .publish(TradeObserverControlEvent::NodeIDChanged(
+          node_id.clone(),
+          fixed_node_id.clone(),
+        ))
+        .await?;
+    }
+    return Ok(fixed_node_id);
   }
 
   pub async fn handle(
@@ -102,7 +112,7 @@ where
         )?;
       }
       TradeObserverNodeEvent::Regist(exchange, node_id) => {
-        if self.push_nodeid(&node_id, exchange).is_ok() {
+        if self.push_nodeid(&node_id, exchange).await.is_ok() {
           info!(
             "Node Connected. NodeID: {}, Exchange: {}",
             node_id,

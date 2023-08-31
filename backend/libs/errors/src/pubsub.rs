@@ -1,10 +1,10 @@
 use ::async_nats::jetstream::consumer::StreamError;
+use ::async_nats::jetstream::context::CreateStreamError;
 use ::async_nats::jetstream::context::PublishError as JSPublishError;
 use ::async_nats::jetstream::stream::ConsumerError as JSConsumerError;
 use ::err_derive::Error;
 use ::rmp_serde::decode::Error as MsgPackDecErr;
 use ::rmp_serde::encode::Error as MsgPackEncErr;
-use async_nats::jetstream::context::CreateStreamError;
 
 #[derive(Debug, Error)]
 pub enum PublishError {
