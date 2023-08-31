@@ -119,7 +119,9 @@ where
             exchange.as_str_name()
           );
         }
-        if self.node_kvs.count_nodes()? == config.min_node_init(exchange) {
+        let node_count = self.node_kvs.count_nodes()?;
+        let min_node_init = config.min_node_init(exchange);
+        if node_count == min_node_init {
           let _ = self
             .init_lock
             .lock(|| async {
@@ -134,6 +136,9 @@ where
               };
             })
             .await;
+        } else if node_count > min_node_init {
+          // TODO: Assign Symbol from alaready registered nodes
+          // to flatten observation task.
         }
       }
       TradeObserverNodeEvent::Unregist(node_id) => {}
