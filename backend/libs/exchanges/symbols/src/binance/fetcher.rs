@@ -3,8 +3,6 @@ use ::std::time::Duration as StdDur;
 use ::async_trait::async_trait;
 use ::futures::future::join;
 use ::futures::stream::StreamExt;
-use ::mongodb::bson::{doc, Document};
-use ::mongodb::error::Result as DBResult;
 use ::mongodb::Database;
 pub use ::reqwest::Result as ReqRes;
 use ::url::Url;
@@ -45,22 +43,13 @@ impl SymbolFetcher {
     };
     return Ok(ret);
   }
-
-  pub async fn get(
-    &self,
-    filter: impl Into<Option<Document>> + Send,
-  ) -> DBResult<Vec<SymbolInfo>> {
-    let docs = self.recorder.list(filter).await?;
-    let docs: Vec<SymbolInfo> = docs.map(|doc| doc.into()).collect().await;
-    return Ok(docs);
-  }
 }
 
 #[async_trait]
 impl SymbolFetcherTrait for SymbolFetcher {
   async fn refresh(&mut self) -> SymbolFetchResult<Vec<SymbolInfo>> {
     let resp = self.cli.get::<()>(None, None).await?;
-    let old_symbols = self.recorder.list(doc! {}).await?;
+    let old_symbols = self.recorder.list(None).await?;
     let old_symbols: Vec<Symbol> = old_symbols.collect().await;
     let resp_status = resp.status();
     if resp_status.is_success() {

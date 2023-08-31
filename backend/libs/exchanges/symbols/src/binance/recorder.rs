@@ -7,7 +7,7 @@ use ::mongodb::{Collection, Database};
 
 use ::writers::DatabaseWriter as DBWriterTrait;
 
-use crate::traits::SymbolWriter as SymbolWriterTrait;
+use crate::traits::SymbolReader as SymbolReaderTrait;
 
 use super::entities::{ListSymbolStream, Symbol};
 
@@ -57,23 +57,26 @@ impl DBWriterTrait for SymbolWriter {
 }
 
 #[async_trait]
-impl SymbolWriterTrait for SymbolWriter {
+impl SymbolReaderTrait for SymbolWriter {
   type ListStream = ListSymbolStream<'static>;
-  async fn list(
-    &self,
-    query: impl Into<Option<bson::Document>> + Send + 'async_trait,
-  ) -> DBResult<Self::ListStream> {
-    let cur = self.col.find(query, None).await?;
+  async fn list_all(&self) -> DBResult<Self::ListStream> {
+    let cur = self.col.find(None, None).await?;
     let cur = cur
-      .filter_map(|doc| async { doc.ok() })
-      .map(|doc| doc.into())
-      .boxed();
-    return Ok(cur as Self::ListStream);
+      .filter_map(|doc_res| async { doc_res.ok() })
+      .map(|doc| doc.into());
+    return Ok(cur.boxed());
   }
 
   async fn list_trading(&self) -> DBResult<Self::ListStream> {
-    return SymbolWriterTrait::list(self, bson::doc! {"status": "TRADING"})
-      .await;
+    return Ok(
+      self
+        .col
+        .find(bson::doc! {"status": "TRADING"}, None)
+        .await?
+        .filter_map(|doc_res| async { doc_res.ok() })
+        .map(|item| item.into())
+        .boxed(),
+    );
   }
 
   async fn list_base_currencies(&self) -> DBResult<Vec<String>> {

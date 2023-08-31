@@ -10,17 +10,17 @@ use ::entities::{
   BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
 };
 use ::errors::{ExecutionFailed, ExecutionResult};
-use ::observers::traits::TradeObserver as TradeObserverTrait;
+use ::observers::traits::TradeSubscriber as TradeSubscriberTrait;
 use ::subscribe::natsJS::context::Context as NatsJS;
 
 use crate::traits::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
 };
 
-use ::observers::binance::TradeObserver;
+use ::observers::binance::TradeSubscriber;
 
 pub struct Executor {
-  observer: TradeObserver,
+  observer: TradeSubscriber,
   orders: HashMap<ObjectId, Order>,
   positions: HashMap<ObjectId, OrderInner>,
   cur_trade: Option<BookTicker>,
@@ -35,7 +35,7 @@ impl Executor {
     taker_fee: Float,
   ) -> ExecutionResult<Self> {
     return Ok(Self {
-      observer: TradeObserver::new(None, &broker).await?,
+      observer: TradeSubscriber::new(&broker).await?,
       orders: HashMap::new(),
       positions: HashMap::new(),
       cur_trade: None,

@@ -1,5 +1,5 @@
 mod fetcher;
-mod writer;
+mod reader;
 
 pub use self::fetcher::SymbolFetcher;
-pub use self::writer::SymbolWriter;
+pub use self::reader::SymbolReader;

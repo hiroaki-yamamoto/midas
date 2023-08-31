@@ -11,14 +11,14 @@ use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
 use ::subscribe::natsJS::context::Context;
 use ::subscribe::PubSub;
-use ::symbols::traits::SymbolWriter;
+use ::symbols::traits::SymbolReader as SymbolReaderTrait;
 
 use crate::errors::Result as ObserverControlResult;
 
 pub struct SyncHandler<S, T>
 where
   T: Commands + Send + Sync,
-  S: SymbolWriter,
+  S: SymbolReaderTrait,
 {
   symbol_db: S,
   kvs: ObserverNodeKVS<T>,
@@ -27,7 +27,7 @@ where
 
 impl<S, T> SyncHandler<S, T>
 where
-  S: SymbolWriter,
+  S: SymbolReaderTrait,
   T: Commands + Send + Sync,
 {
   pub fn new(symbol_db: S, cmd: KVSConnection<T>, nats: &Context) -> Self {

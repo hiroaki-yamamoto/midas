@@ -10,7 +10,7 @@ use ::subscribe::natsJS::context::Context as NatsJS;
 use ::symbols::binance::{
   fetcher as binance_fetcher, recorder as binance_recorder,
 };
-use ::symbols::traits::{SymbolFetcher, SymbolWriter};
+use ::symbols::traits::{SymbolFetcher, SymbolReader};
 
 #[derive(Clone)]
 pub struct Service {
@@ -41,7 +41,7 @@ impl Service {
   fn get_recorder(
     &self,
     exchange: Exchanges,
-  ) -> impl SymbolWriter + Send + Sync {
+  ) -> impl SymbolReader + Send + Sync {
     return match exchange {
       Exchanges::Binance => self.binance_recorder.clone(),
     };
@@ -111,9 +111,9 @@ impl Service {
 }
 
 async fn handle_supported_currencies(
-  recorder: impl SymbolWriter + Send + Sync,
+  recorder: impl SymbolReader + Send + Sync,
 ) -> Result<Vec<SymbolInfo>, Rejection> {
-  let symbols = recorder.list(None).await.map_err(|err| {
+  let symbols = recorder.list_all().await.map_err(|err| {
     reject::custom(Status::new(
       ::warp::http::StatusCode::SERVICE_UNAVAILABLE,
       format!("{}", err),
@@ -124,7 +124,7 @@ async fn handle_supported_currencies(
 }
 
 async fn handle_base_currencies(
-  recorder: impl SymbolWriter + Send + Sync,
+  recorder: impl SymbolReader + Send + Sync,
 ) -> Result<Vec<String>, Rejection> {
   return recorder.list_base_currencies().await.map_err(|err| {
     reject::custom(Status::new(
