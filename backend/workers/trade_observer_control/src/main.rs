@@ -20,7 +20,7 @@ async fn main() {
     let node_event_pubsub = NodeEventPubSub::new(&broker).await.unwrap();
     let mut node_event_handler = handlers::FromNodeEventHandler::new(kvs, db, &broker);
     let mut node_event = node_event_pubsub
-      .queue_subscribe("tradeObserverController")
+      .pull_subscribe("tradeObserverController")
       .await
       .unwrap();
     loop {

@@ -82,7 +82,7 @@ where
     return Ok(res?);
   }
 
-  async fn queue_subscribe<C>(
+  async fn pull_subscribe<C>(
     &self,
     consumer_name: C,
   ) -> ConsumerResult<BoxStream<(T, Message)>>
