@@ -3,7 +3,7 @@ use ::std::num::NonZeroUsize;
 use ::std::sync::MutexGuard;
 use ::std::time::{Duration, SystemTime};
 
-use ::errors::KVSResult;
+use ::errors::{KVSError, KVSResult};
 use ::redis::{Commands, FromRedisValue, SetOptions, ToRedisArgs};
 
 use super::options::{WriteOption, WriteOptionTrait};
@@ -76,17 +76,28 @@ where
   where
     R: FromRedisValue,
   {
-    let channel_name = self.channel_name(key);
-    let mut cmds = self.lock_commands();
+    let channel_name = self.channel_name(&key);
     let opt: Option<WriteOption> = opt.into();
-    let result = if opt.non_existent_only() {
-      cmds.lpush_exists(&channel_name, value)?
+
+    let key_exists = self.exists(&key);
+    let mut cmds = self.lock_commands();
+    let res = if opt.non_existent_only() {
+      match key_exists {
+        Ok(exists) => {
+          if exists {
+            return Err(KVSError::KeyExists(key.to_string()));
+          } else {
+            cmds.lpush(&channel_name, value)?
+          }
+        }
+        Err(e) => return Err(e),
+      }
     } else {
       cmds.lpush(&channel_name, value)?
     };
 
     opt.execute(&mut cmds, &channel_name)?;
-    return Ok(result);
+    return Ok(res);
   }
 
   fn lpop<R>(
@@ -112,6 +123,11 @@ where
   {
     let channel_name = self.channel_name(key);
     return Ok(self.lock_commands().lrange(channel_name, start, stop)?);
+  }
+
+  fn exists(&mut self, key: impl AsRef<str> + Display) -> KVSResult<bool> {
+    let channel_name = self.channel_name(key);
+    return Ok(self.lock_commands().exists(channel_name)?);
   }
 }
 

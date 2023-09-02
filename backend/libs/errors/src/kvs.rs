@@ -9,6 +9,8 @@ pub enum KVSError {
   Redis(#[error(source)] RedisError),
   #[error(display = "System time error: {}", _0)]
   SystemTime(#[error(source)] SystemTimeError),
+  #[error(display = "Specified key exists: {}", _0)]
+  KeyExists(String),
 }
 
 pub type KVSResult<T> = Result<T, KVSError>;
