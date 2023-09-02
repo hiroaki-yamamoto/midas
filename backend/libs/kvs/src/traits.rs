@@ -69,7 +69,7 @@ where
   fn lpush<R>(
     &mut self,
     key: impl AsRef<str> + Display,
-    value: V,
+    value: Option<V>,
     opt: impl Into<Option<WriteOption>>,
   ) -> KVSResult<R>
   where
@@ -77,8 +77,13 @@ where
   {
     let channel_name = self.channel_name(key);
     let mut cmds = self.lock_commands();
-    let result = cmds.lpush(&channel_name, value)?;
     let opt: Option<WriteOption> = opt.into();
+    let result = if opt.non_existent_only() {
+      cmds.lpush_exists(&channel_name, value)?
+    } else {
+      cmds.lpush(&channel_name, value)?
+    };
+
     opt.execute(&mut cmds, &channel_name)?;
     return Ok(result);
   }
@@ -94,19 +99,6 @@ where
   {
     let channel_name = self.channel_name(key);
     return Ok(self.lock_commands().lrange(channel_name, start, stop)?);
-  }
-
-  fn scan_match<'a, R>(
-    &mut self,
-    pattern: impl AsRef<str> + Display,
-  ) -> KVSResult<Vec<R>>
-  where
-    R: FromRedisValue,
-  {
-    let channel_name = self.channel_name(pattern);
-    let matched: Vec<R> =
-      self.lock_commands().scan_match(channel_name)?.collect();
-    return Ok(matched);
   }
 }
 
@@ -173,7 +165,7 @@ where
   fn lpush<R>(
     &mut self,
     key: impl AsRef<str> + Display,
-    value: V,
+    value: Option<V>,
     opt: Option<WriteOption>,
     last_checked: &mut impl Store<T, u64>,
   ) -> KVSResult<R>

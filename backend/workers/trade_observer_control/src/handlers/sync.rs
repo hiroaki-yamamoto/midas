@@ -6,7 +6,7 @@ use ::mongodb::Database;
 
 use ::entities::TradeObserverControlEvent as Event;
 use ::kvs::redis::Commands;
-use ::kvs::{Connection as KVSConnection, Store};
+use ::kvs::Connection as KVSConnection;
 use ::observers::kvs::ObserverNodeKVS;
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
@@ -50,17 +50,8 @@ where
     let db_symbols: HashSet<String> =
       trading_symbols_list.map(|s| s.symbol).collect().await;
 
-    let node_ids: Vec<String> = self.kvs.scan_match("*")?;
-    let mut nodes_symbols = vec![];
-    for node_id in node_ids {
-      let symbols: Vec<String> = self.kvs.lrange(&node_id, 0, -1)?;
-      for symbol in symbols {
-        if !symbol.is_empty() {
-          nodes_symbols.push(symbol);
-        }
-      }
-    }
-    let nodes_symbols = HashSet::from_iter(nodes_symbols.into_iter());
+    let nodes_symbols: HashSet<String> =
+      self.kvs.get_handling_symbols()?.collect().await;
     let to_add = (&db_symbols - &nodes_symbols)
       .into_iter()
       .map(|s| Event::SymbolAdd(exchange.clone(), s));

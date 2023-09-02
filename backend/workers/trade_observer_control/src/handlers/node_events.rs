@@ -71,7 +71,7 @@ where
     loop {
       let push_result: KVSResult<usize> = self.node_kvs.lpush(
         &node_id.to_string(),
-        "".into(),
+        None,
         redis_option.clone(),
         &mut self.last_check_kvs,
       );
