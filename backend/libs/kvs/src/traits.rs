@@ -1,4 +1,5 @@
 use ::std::fmt::Display;
+use ::std::num::NonZeroUsize;
 use ::std::sync::MutexGuard;
 use ::std::time::{Duration, SystemTime};
 
@@ -69,7 +70,7 @@ where
   fn lpush<R>(
     &mut self,
     key: impl AsRef<str> + Display,
-    value: Option<V>,
+    value: V,
     opt: impl Into<Option<WriteOption>>,
   ) -> KVSResult<R>
   where
@@ -86,6 +87,18 @@ where
 
     opt.execute(&mut cmds, &channel_name)?;
     return Ok(result);
+  }
+
+  fn lpop<R>(
+    &mut self,
+    key: impl AsRef<str> + Display,
+    count: Option<NonZeroUsize>,
+  ) -> KVSResult<R>
+  where
+    R: FromRedisValue,
+  {
+    let channel_name = self.channel_name(key);
+    return Ok(self.lock_commands().lpop(channel_name, count)?);
   }
 
   fn lrange<R>(
@@ -165,7 +178,7 @@ where
   fn lpush<R>(
     &mut self,
     key: impl AsRef<str> + Display,
-    value: Option<V>,
+    value: V,
     opt: Option<WriteOption>,
     last_checked: &mut impl Store<T, u64>,
   ) -> KVSResult<R>
@@ -174,6 +187,20 @@ where
   {
     let ret = Store::lpush(self, &key, value, opt.clone())?;
     self.flag_last_checked(key, last_checked, opt.into())?;
+    return Ok(ret);
+  }
+
+  fn lpop<R>(
+    &mut self,
+    key: impl AsRef<str> + Display,
+    count: Option<NonZeroUsize>,
+    last_checked: &mut impl Store<T, u64>,
+  ) -> KVSResult<R>
+  where
+    R: FromRedisValue,
+  {
+    let ret = Store::lpop(self, &key, count)?;
+    self.flag_last_checked(key, last_checked, None)?;
     return Ok(ret);
   }
 }

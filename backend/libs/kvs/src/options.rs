@@ -1,7 +1,6 @@
 use ::std::convert::From;
 use ::std::fmt::Display;
 use ::std::time::Duration;
-use std::ops::Deref;
 
 use ::redis::{Commands, ExistenceCheck, RedisResult, SetExpiry, SetOptions};
 

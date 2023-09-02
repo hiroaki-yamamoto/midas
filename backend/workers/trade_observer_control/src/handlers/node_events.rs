@@ -70,12 +70,17 @@ where
       .into();
     loop {
       let push_result: KVSResult<usize> = self.node_kvs.lpush(
-        &node_id.to_string(),
-        None,
+        node_id.to_string(),
+        "".into(),
         redis_option.clone(),
         &mut self.last_check_kvs,
       );
       if push_result.is_ok() {
+        self.node_kvs.lpop(
+          node_id.to_string(),
+          None,
+          &mut self.last_check_kvs,
+        )?;
         break;
       }
       fixed_node_id = Uuid::new_v4();
