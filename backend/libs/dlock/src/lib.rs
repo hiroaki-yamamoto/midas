@@ -4,15 +4,25 @@ use ::std::time::Duration;
 
 use ::async_trait::async_trait;
 use ::futures::future::join;
+use ::rand::distributions::Alphanumeric;
+use ::rand::{thread_rng, Rng};
 use ::tokio::select;
 use ::tokio::sync::mpsc::channel;
 use ::tokio::sync::Mutex;
 use ::tokio::time::interval;
-use ::uuid::Uuid;
 
 use ::errors::{DLockError, DLockResult};
 use ::kvs::redis::{Commands, RedisError};
 use ::kvs::{Store, WriteOption};
+
+fn rand_txt(len: usize) -> String {
+  let rand_string: String = thread_rng()
+    .sample_iter(&Alphanumeric)
+    .take(len)
+    .map(char::from)
+    .collect();
+  return rand_string;
+}
 
 #[async_trait]
 pub trait Dlock<S>: Store<S, String>
@@ -46,7 +56,7 @@ where
       Ok::<(), RedisError>(())
     };
     let acquire_process = async {
-      let random = Uuid::new_v4();
+      let random = rand_txt(32);
       let mut dlock = dlock.lock().await;
       let lock: String = dlock.set(
         "lock",

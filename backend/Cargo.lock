@@ -961,8 +961,8 @@ dependencies = [
  "errors",
  "futures",
  "kvs",
+ "rand",
  "tokio",
- "uuid",
 ]
 
 [[package]]
