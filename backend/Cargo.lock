@@ -954,18 +954,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dlock"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "errors",
- "futures",
- "kvs",
- "rand",
- "tokio",
-]
-
-[[package]]
 name = "ed25519"
 version = "1.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1849,10 +1837,14 @@ dependencies = [
 name = "kvs"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "errors",
+ "futures",
+ "rand",
  "redis",
  "rmp-serde",
  "serde",
+ "tokio",
  "types",
 ]
 
@@ -3707,7 +3699,6 @@ name = "trade_observer_control_worker"
 version = "0.1.0"
 dependencies = [
  "config",
- "dlock",
  "entities",
  "err-derive",
  "errors",

@@ -114,8 +114,8 @@ impl Service {
           let mut size = size_ref.lock().unwrap();
           let mut cur = cur_ref.lock().unwrap();
           return (
-            size.get(Exchanges::Binance.as_str_name().to_lowercase(), &symbol.symbol),
-            cur.get(Exchanges::Binance.as_str_name().to_lowercase(), &symbol.symbol),
+            size.get(Exchanges::Binance.as_str_name().to_lowercase(), &symbol.symbol).await,
+            cur.get(Exchanges::Binance.as_str_name().to_lowercase(), &symbol.symbol).await,
             symbol.symbol
           );
         }).filter_map(|
@@ -177,13 +177,13 @@ impl Service {
                     size.get(
                       item.exchange.as_str_name().to_lowercase(),
                       &item.symbol
-                    ).unwrap_or(0)
+                    ).await.unwrap_or(0)
                   };
                   let cur = {
                     let mut cur = (*cur).lock().unwrap();
                     cur.get(
                       item.exchange.as_str_name().to_lowercase(), &item.symbol
-                    ).unwrap_or(0)
+                    ).await.unwrap_or(0)
                   };
                   let prog = Progress {
                     exchange: item.exchange as i32,
@@ -212,11 +212,11 @@ impl Service {
                     let exchange = req.exchange().as_str_name().to_lowercase();
                     let size = {
                       let mut size = (*size).lock().unwrap();
-                      size.get(&exchange, &req.symbol).unwrap_or(0)
+                      size.get(&exchange, &req.symbol).await.unwrap_or(0)
                     };
                     let cur = {
                       let mut cur = (*cur).lock().unwrap();
-                      cur.get(&exchange, &req.symbol).unwrap_or(0)
+                      cur.get(&exchange, &req.symbol).await.unwrap_or(0)
                     };
                     let prog = Progress {
                       exchange: req.exchange,

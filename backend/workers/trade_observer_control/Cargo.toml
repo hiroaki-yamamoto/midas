@@ -14,7 +14,6 @@ config = { path = "../../libs/config" }
 subscribe = { path = "../../libs/subscribe" }
 errors = { path = "../../libs/errors" }
 rpc = { path = "../../libs/rpc" }
-dlock = { path = "../../libs/dlock" }
 
 tokio = { version = "1.30.0", features = [
   "macros",

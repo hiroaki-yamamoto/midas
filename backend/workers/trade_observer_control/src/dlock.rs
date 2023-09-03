@@ -1,7 +1,7 @@
 use ::kvs::kvs;
 use ::kvs::redis::Commands;
-
-use ::dlock::Dlock;
+use ::kvs::traits::StoreLock;
 
 kvs!(pub, InitLock, String, "init_lock:{}");
-impl<T> Dlock<T> for InitLock<T> where T: Commands + Send + Sync {}
+
+impl<S> StoreLock<S, String> for InitLock<S> where S: Commands + Send + Sync {}

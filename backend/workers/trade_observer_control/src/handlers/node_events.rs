@@ -3,7 +3,6 @@ use ::std::time::Duration;
 use ::uuid::Uuid;
 
 use ::config::{Database, ObserverConfig};
-use ::dlock::Dlock;
 use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 use ::errors::KVSResult;
 use ::kvs::redis::Commands;

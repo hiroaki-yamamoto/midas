@@ -1,140 +1,24 @@
+mod normal;
+
 use ::std::fmt::Display;
 use ::std::num::NonZeroUsize;
 use ::std::sync::MutexGuard;
 use ::std::time::{Duration, SystemTime};
 
-use ::errors::{KVSError, KVSResult};
 use ::redis::{Commands, FromRedisValue, SetOptions, ToRedisArgs};
 
+use ::errors::KVSResult;
+
+pub use self::normal::{
+  NormalStoreBase, NormalStoreExist, NormalStoreExpiration, NormalStoreGet,
+  NormalStoreListOp, NormalStoreLock, NormalStoreRemove, NormalStoreSet, Store,
+};
 use super::options::{WriteOption, WriteOptionTrait};
-
-pub trait Store<T, V>
-where
-  T: Commands,
-  V: FromRedisValue + ToRedisArgs,
-{
-  fn lock_commands(&self) -> MutexGuard<T>;
-  fn channel_name(&self, key: impl AsRef<str> + Display) -> String;
-
-  fn del(&mut self, key: impl AsRef<str> + Display) -> KVSResult<()> {
-    let channel_name = self.channel_name(key);
-    return Ok(self.lock_commands().del(channel_name)?);
-  }
-
-  fn get(&mut self, key: impl AsRef<str> + Display) -> KVSResult<V> {
-    let channel_name = self.channel_name(key);
-    return Ok(self.lock_commands().get(channel_name)?);
-  }
-
-  fn set<R>(
-    &mut self,
-    key: impl AsRef<str> + Display,
-    value: V,
-    opt: impl Into<Option<WriteOption>>,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
-    let channel_name = self.channel_name(key);
-    let mut cmds = self.lock_commands();
-    let result = if let Some(opt) = opt.into() {
-      let opt: SetOptions = opt.into();
-      cmds.set_options(&channel_name, value, opt)
-    } else {
-      cmds.set(&channel_name, value)
-    };
-    return Ok(result?);
-  }
-
-  fn expire(
-    &mut self,
-    key: impl AsRef<str> + Display,
-    dur: Duration,
-  ) -> KVSResult<bool>
-  where
-    V: FromRedisValue,
-  {
-    let dur_mils = dur.as_millis() as usize;
-    let channel_name = self.channel_name(key);
-    if self
-      .lock_commands()
-      .pexpire::<_, u16>(channel_name, dur_mils)?
-      == 1
-    {
-      return Ok(true);
-    } else {
-      return Ok(false);
-    };
-  }
-
-  fn lpush<R>(
-    &mut self,
-    key: impl AsRef<str> + Display,
-    value: V,
-    opt: impl Into<Option<WriteOption>>,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
-    let channel_name = self.channel_name(&key);
-    let opt: Option<WriteOption> = opt.into();
-
-    let key_exists = self.exists(&key);
-    let mut cmds = self.lock_commands();
-    let res = if opt.non_existent_only() {
-      match key_exists {
-        Ok(exists) => {
-          if exists {
-            return Err(KVSError::KeyExists(key.to_string()));
-          } else {
-            cmds.lpush(&channel_name, value)?
-          }
-        }
-        Err(e) => return Err(e),
-      }
-    } else {
-      cmds.lpush(&channel_name, value)?
-    };
-
-    opt.execute(&mut cmds, &channel_name)?;
-    return Ok(res);
-  }
-
-  fn lpop<R>(
-    &mut self,
-    key: impl AsRef<str> + Display,
-    count: Option<NonZeroUsize>,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
-    let channel_name = self.channel_name(key);
-    return Ok(self.lock_commands().lpop(channel_name, count)?);
-  }
-
-  fn lrange<R>(
-    &mut self,
-    key: impl AsRef<str> + Display,
-    start: isize,
-    stop: isize,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
-    let channel_name = self.channel_name(key);
-    return Ok(self.lock_commands().lrange(channel_name, start, stop)?);
-  }
-
-  fn exists(&mut self, key: impl AsRef<str> + Display) -> KVSResult<bool> {
-    let channel_name = self.channel_name(key);
-    return Ok(self.lock_commands().exists(channel_name)?);
-  }
-}
 
 pub trait SoftExpirationStore<T, V>: Store<T, V>
 where
-  T: Commands,
-  V: FromRedisValue + ToRedisArgs,
+  T: Commands + Send,
+  V: FromRedisValue + ToRedisArgs + Send,
 {
   fn set<R>(
     &mut self,

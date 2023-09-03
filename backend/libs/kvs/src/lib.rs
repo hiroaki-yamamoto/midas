@@ -1,6 +1,6 @@
 mod connection;
 mod options;
-mod traits;
+pub mod traits;
 
 pub use ::redis;
 
