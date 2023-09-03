@@ -1,3 +1,4 @@
+mod last_checked;
 mod normal;
 
 use ::std::fmt::Display;
@@ -33,21 +34,6 @@ where
     let ret = Store::set(self, &key, value, opt.clone())?;
     self.flag_last_checked(key, last_checked, opt.into())?;
     return Ok(ret);
-  }
-
-  fn flag_last_checked<R>(
-    &mut self,
-    key: impl AsRef<str> + Display,
-    last_checked: &mut impl Store<T, u64>,
-    opt: Option<WriteOption>,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
-    let now = SystemTime::now()
-      .duration_since(SystemTime::UNIX_EPOCH)?
-      .as_secs();
-    return Ok(last_checked.set(key, now, opt)?);
   }
 
   fn expire(

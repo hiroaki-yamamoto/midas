@@ -11,6 +11,8 @@ pub enum KVSError {
   SystemTime(#[error(source)] SystemTimeError),
   #[error(display = "Specified key exists: {}", _0)]
   KeyExists(String),
+  #[error(display = "Timestamp Error: {}", _0)]
+  TimestampError(i64),
 }
 
 pub type KVSResult<T> = Result<T, KVSError>;
