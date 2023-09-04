@@ -75,7 +75,7 @@ where
         let _ = refresh_tx.send(());
         let _ = func_on_success().await;
         let _ = refresh_tx.send(());
-        dlock.del::<_, usize>("lock");
+        let _ = dlock.del::<_, usize>("lock");
         Ok::<(), DLockError>(())
       } else {
         Err(DLockError::CastFailure("Failed to acquire lock"))

@@ -2,7 +2,7 @@ use ::futures::stream::{iter, BoxStream, StreamExt};
 
 use ::kvs::kvs;
 use ::kvs::redis::{Commands, RedisResult};
-use ::kvs::{LastCheckStore, Store};
+use ::kvs::traits::last_checked::LastCheckStore;
 use ::rpc::entities::Exchanges;
 
 kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");

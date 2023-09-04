@@ -1,5 +1,7 @@
-use ::std::sync::{Arc, Mutex};
-use std::ops::{Deref, DerefMut};
+use ::std::ops::{Deref, DerefMut};
+use ::std::sync::Arc;
+
+use ::tokio::sync::Mutex;
 
 pub use ::redis::Commands as RedisCommands;
 
