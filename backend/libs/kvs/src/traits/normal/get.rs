@@ -4,7 +4,7 @@ use ::std::fmt::Display;
 
 use ::errors::KVSResult;
 
-use super::Base;
+use super::base::Base;
 
 #[async_trait]
 pub trait Get<T, V>: Base<T, V>
