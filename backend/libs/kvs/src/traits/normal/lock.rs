@@ -13,7 +13,7 @@ use ::tokio::time::interval;
 use ::errors::{DLockError, DLockResult};
 use ::redis::{Commands, FromRedisValue, RedisError, ToRedisArgs};
 
-use super::NormalStoreBase;
+use super::Base;
 use crate::options::WriteOption;
 
 fn rand_txt(len: usize) -> String {
@@ -26,7 +26,7 @@ fn rand_txt(len: usize) -> String {
 }
 
 #[async_trait]
-pub trait Lock<S, V>: NormalStoreBase<S, V>
+pub trait Lock<S, V>: Base<S, V>
 where
   S: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,

@@ -6,10 +6,10 @@ use ::redis::{Commands, FromRedisValue, ToRedisArgs};
 
 use ::errors::KVSResult;
 
-use super::NormalStoreBase;
+use super::Base;
 
 #[async_trait]
-pub trait Expiration<T, V>: NormalStoreBase<T, V>
+pub trait Expiration<T, V>: Base<T, V>
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,

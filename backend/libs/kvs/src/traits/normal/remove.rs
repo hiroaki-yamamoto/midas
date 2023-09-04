@@ -5,15 +5,18 @@ use ::redis::{Commands, FromRedisValue, ToRedisArgs};
 
 use ::errors::KVSResult;
 
-use super::NormalStoreBase;
+use super::Base;
 
 #[async_trait]
-pub trait Remove<T, V>: NormalStoreBase<T, V>
+pub trait Remove<T, V>: Base<T, V>
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,
 {
-  async fn del(&self, key: impl AsRef<str> + Send + Display) -> KVSResult<()> {
+  async fn del<R>(
+    &self,
+    key: impl AsRef<str> + Send + Display,
+  ) -> KVSResult<R> {
     let mut cmd = self.commands().lock().await;
     let channel_name = self.channel_name(key);
     return Ok(cmd.del(channel_name)?);

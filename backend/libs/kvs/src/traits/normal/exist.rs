@@ -5,10 +5,10 @@ use ::redis::{Commands, FromRedisValue, ToRedisArgs};
 
 use ::errors::KVSResult;
 
-use super::NormalStoreBase;
+use super::Base;
 
 #[async_trait]
-pub trait Exist<T, V>: NormalStoreBase<T, V>
+pub trait Exist<T, V>: Base<T, V>
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,

@@ -7,10 +7,10 @@ use ::errors::{KVSError, KVSResult};
 use ::redis::{Commands, FromRedisValue, SetOptions, ToRedisArgs};
 
 use crate::options::WriteOption;
-use crate::traits::normal::NormalStoreBase;
+use crate::traits::normal::Base as NormalBase;
 
 #[async_trait]
-pub trait Base<T, V>: NormalStoreBase<T, V>
+pub trait Base<T, V>: NormalBase<T, V>
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,
@@ -56,5 +56,14 @@ where
       Some(opt) => cmd.set_options(key, now, opt)?,
       None => cmd.set(key, now)?,
     });
+  }
+
+  async fn del_last_checked<R>(
+    &self,
+    key: impl AsRef<str> + Display,
+  ) -> KVSResult<R> {
+    let key = self.get_timestamp_channel(key);
+    let mut cmd = self.commands().lock().await?;
+    return Ok(cmd.del(key)?);
   }
 }

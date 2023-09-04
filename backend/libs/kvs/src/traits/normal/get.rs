@@ -4,10 +4,10 @@ use ::std::fmt::Display;
 
 use ::errors::KVSResult;
 
-use super::NormalStoreBase;
+use super::Base;
 
 #[async_trait]
-pub trait Get<T, V>: NormalStoreBase<T, V>
+pub trait Get<T, V>: Base<T, V>
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,

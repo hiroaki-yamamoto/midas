@@ -5,11 +5,11 @@ use ::redis::{Commands, FromRedisValue, SetOptions, ToRedisArgs};
 
 use ::errors::KVSResult;
 
-use super::NormalStoreBase;
+use super::Base;
 use crate::options::WriteOption;
 
 #[async_trait]
-pub trait Set<T, V>: NormalStoreBase<T, V>
+pub trait Set<T, V>: Base<T, V>
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,

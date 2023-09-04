@@ -1,95 +1,14 @@
-mod last_checked;
-mod normal;
+pub mod last_checked;
+pub mod normal;
 
 use ::std::fmt::Display;
 use ::std::num::NonZeroUsize;
 use ::std::sync::MutexGuard;
-use ::std::time::{Duration, SystemTime};
 
 use ::redis::{Commands, FromRedisValue, SetOptions, ToRedisArgs};
 
-use ::errors::KVSResult;
-
-pub use self::normal::{
-  NormalStoreBase, NormalStoreExist, NormalStoreExpiration, NormalStoreGet,
-  NormalStoreListOp, NormalStoreLock, NormalStoreRemove, NormalStoreSet, Store,
-};
 use super::options::{WriteOption, WriteOptionTrait};
-
-pub trait SoftExpirationStore<T, V>: Store<T, V>
-where
-  T: Commands + Send,
-  V: FromRedisValue + ToRedisArgs + Send,
-{
-  fn set<R>(
-    &mut self,
-    key: impl AsRef<str> + Display,
-    value: V,
-    opt: impl Into<Option<WriteOption>> + Clone,
-    last_checked: &mut impl Store<T, u64>,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
-    let ret = Store::set(self, &key, value, opt.clone())?;
-    self.flag_last_checked(key, last_checked, opt.into())?;
-    return Ok(ret);
-  }
-
-  fn expire(
-    &mut self,
-    key: &str,
-    dur: Duration,
-    last_checked: &mut impl Store<T, u64>,
-  ) -> KVSResult<bool> {
-    let ret = Store::expire(self, key, dur)?;
-    self.flag_last_checked(
-      key,
-      last_checked,
-      WriteOption::default().duration(dur.into()).into(),
-    )?;
-    return Ok(ret);
-  }
-
-  fn del(
-    &mut self,
-    key: &(impl AsRef<str> + Display + Send + Sync),
-    last_checked: &mut impl Store<T, u64>,
-  ) -> KVSResult<()> {
-    let ret = Store::del(self, key);
-    let _ = last_checked.del(key)?;
-    return ret;
-  }
-
-  fn lpush<R>(
-    &mut self,
-    key: impl AsRef<str> + Display,
-    value: V,
-    opt: Option<WriteOption>,
-    last_checked: &mut impl Store<T, u64>,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
-    let ret = Store::lpush(self, &key, value, opt.clone())?;
-    self.flag_last_checked(key, last_checked, opt.into())?;
-    return Ok(ret);
-  }
-
-  fn lpop<R>(
-    &mut self,
-    key: impl AsRef<str> + Display,
-    count: Option<NonZeroUsize>,
-    last_checked: &mut impl Store<T, u64>,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
-    let ret = Store::lpop(self, &key, count)?;
-    self.flag_last_checked(key, last_checked, None)?;
-    return Ok(ret);
-  }
-}
+use ::errors::KVSResult;
 
 pub trait SymbolKeyStore<T, V>
 where
