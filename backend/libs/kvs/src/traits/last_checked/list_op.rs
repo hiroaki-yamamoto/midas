@@ -11,7 +11,7 @@ use crate::options::WriteOption;
 use crate::traits::normal::ListOp as NormalListOp;
 
 #[async_trait]
-pub trait ListOp<T, V>: Base<T, V> + NormalListOp<T, V>
+pub trait ListOp<T, V>: Base<T> + NormalListOp<T, V>
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,
@@ -30,14 +30,11 @@ where
     return Ok(ret);
   }
 
-  async fn lpop<R>(
+  async fn lpop(
     &self,
     key: impl AsRef<str> + Display + Send + Sync,
     count: Option<NonZeroUsize>,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
+  ) -> KVSResult<V> {
     let ret = NormalListOp::lpop(self, &key, count).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);

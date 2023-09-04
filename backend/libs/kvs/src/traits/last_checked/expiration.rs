@@ -1,7 +1,7 @@
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::redis::{Commands, FromRedisValue, ToRedisArgs};
+use ::redis::Commands;
 
 use ::errors::KVSResult;
 
@@ -11,10 +11,9 @@ use crate::traits::normal::Expiration as NormalExp;
 use super::base::Base;
 
 #[async_trait]
-pub trait Expiration<T, V>: Base<T, V> + NormalExp<T, V>
+pub trait Expiration<T>: Base<T> + NormalExp<T>
 where
   T: Commands + Send,
-  V: FromRedisValue + ToRedisArgs + Send,
 {
   async fn expire(&self, key: &str, dur: Duration) -> KVSResult<bool> {
     let ret = NormalExp::expire(self, key, dur).await?;

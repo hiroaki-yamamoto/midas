@@ -1,12 +1,12 @@
 use ::std::fmt::Display;
 
 use ::async_trait::async_trait;
+use ::errors::KVSResult;
 use ::redis::{Commands, FromRedisValue, SetOptions, ToRedisArgs};
 
-use ::errors::KVSResult;
-
-use super::{Base, ChannelName};
+use super::channel_name::ChannelName;
 use crate::options::WriteOption;
+use crate::traits::normal::Base;
 
 #[async_trait]
 pub trait Set<T, V>: Base<T> + ChannelName
@@ -16,16 +16,17 @@ where
 {
   async fn set<R>(
     &self,
-    key: impl AsRef<str> + Send + Display,
+    exchange: impl AsRef<str> + Display + Send,
+    symbol: impl AsRef<str> + Display + Send,
     value: V,
-    opt: impl Into<Option<WriteOption>> + Send,
+    opt: Option<WriteOption>,
   ) -> KVSResult<R>
   where
     R: FromRedisValue,
   {
-    let channel_name = self.channel_name(key);
+    let channel_name = self.channel_name(exchange, symbol);
     let mut cmds = self.commands().lock().await;
-    let result = if let Some(opt) = opt.into() {
+    let result = if let Some(opt) = opt {
       let opt: SetOptions = opt.into();
       cmds.set_options(&channel_name, value, opt)
     } else {

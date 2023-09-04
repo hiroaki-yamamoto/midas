@@ -11,7 +11,7 @@ use crate::options::WriteOptionTrait;
 use crate::WriteOption;
 
 #[async_trait]
-pub trait ListOp<T, V>: Base<T, V> + Lock<T, V> + Exist<T, V>
+pub trait ListOp<T, V>: Base<T> + Lock<T> + Exist<T>
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,
@@ -49,14 +49,11 @@ where
     return Ok(res);
   }
 
-  async fn lpop<R>(
+  async fn lpop(
     &self,
     key: impl AsRef<str> + Display + Send,
     count: Option<NonZeroUsize>,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
+  ) -> KVSResult<V> {
     let channel_name = self.channel_name(key);
     let mut cmd = self.commands().lock().await;
     return Ok(cmd.lpop(channel_name, count)?);

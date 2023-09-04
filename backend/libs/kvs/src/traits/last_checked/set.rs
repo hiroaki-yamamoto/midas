@@ -11,10 +11,10 @@ use crate::traits::normal::Set as NormalSet;
 use super::base::Base;
 
 #[async_trait]
-pub trait Set<T, V>: Base<T, V> + NormalSet<T, V>
+pub trait Set<T, V>: Base<T> + NormalSet<T, V>
 where
   T: Commands + Send,
-  V: FromRedisValue + ToRedisArgs + Send,
+  V: ToRedisArgs + Send,
 {
   async fn set<R>(
     &self,

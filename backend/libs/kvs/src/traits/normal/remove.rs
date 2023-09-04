@@ -1,17 +1,16 @@
 use ::std::fmt::Display;
 
 use ::async_trait::async_trait;
-use ::redis::{Commands, FromRedisValue, ToRedisArgs};
+use ::redis::{Commands, FromRedisValue};
 
 use ::errors::KVSResult;
 
 use super::{Base, ChannelName};
 
 #[async_trait]
-pub trait Remove<T, V>: Base<T, V> + ChannelName
+pub trait Remove<T>: Base<T> + ChannelName
 where
   T: Commands + Send,
-  V: FromRedisValue + ToRedisArgs + Send,
 {
   async fn del<R>(&self, key: impl AsRef<str> + Send + Display) -> KVSResult<R>
   where

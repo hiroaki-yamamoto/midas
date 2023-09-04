@@ -14,13 +14,8 @@ pub use self::list_op::ListOp;
 pub use self::remove::Remove;
 pub use self::set::Set;
 
-pub trait SoftExpirationStore<T, V>:
-  Base<T, V>
-  + Expiration<T, V>
-  + Get<T, V>
-  + ListOp<T, V>
-  + Remove<T, V>
-  + Set<T, V>
+pub trait LastCheckStore<T, V>:
+  Base<T> + Expiration<T> + Get<T, V> + ListOp<T, V> + Remove<T> + Set<T, V>
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,

@@ -23,13 +23,13 @@ use ::redis::{Commands, FromRedisValue, ToRedisArgs};
 
 #[async_trait]
 pub trait Store<T, V>:
-  Base<T, V>
-  + Exist<T, V>
-  + Expiration<T, V>
+  Base<T>
+  + Exist<T>
+  + Expiration<T>
   + Get<T, V>
   + ListOp<T, V>
-  + Lock<T, V>
-  + Remove<T, V>
+  + Lock<T>
+  + Remove<T>
   + Set<T, V>
 where
   T: Commands + Send,

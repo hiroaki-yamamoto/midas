@@ -11,7 +11,7 @@ use ::tokio::sync::mpsc::channel;
 use ::tokio::time::interval;
 
 use ::errors::{DLockError, DLockResult};
-use ::redis::{Commands, FromRedisValue, RedisError, ToRedisArgs};
+use ::redis::{Commands, RedisError};
 
 use super::{Base, ChannelName};
 use crate::options::WriteOption;
@@ -26,10 +26,9 @@ fn rand_txt(len: usize) -> String {
 }
 
 #[async_trait]
-pub trait Lock<S, V>: Base<S, V> + ChannelName
+pub trait Lock<S>: Base<S> + ChannelName
 where
   S: Commands + Send,
-  V: FromRedisValue + ToRedisArgs + Send,
 {
   async fn lock<Ft>(
     &mut self,

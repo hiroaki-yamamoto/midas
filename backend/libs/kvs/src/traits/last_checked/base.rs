@@ -10,10 +10,9 @@ use crate::options::WriteOption;
 use crate::traits::normal::{Base as NormalBase, ChannelName};
 
 #[async_trait]
-pub trait Base<T, V>: NormalBase<T, V> + ChannelName
+pub trait Base<T>: NormalBase<T> + ChannelName
 where
   T: Commands + Send,
-  V: FromRedisValue + ToRedisArgs + Send,
 {
   fn get_timestamp_channel(&self, key: impl AsRef<str> + Display) -> String {
     return format!("last_check_timestamp:{}", self.channel_name(key));

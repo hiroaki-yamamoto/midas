@@ -1,13 +1,10 @@
-use ::std::fmt::Display;
-
 use ::tokio::sync::Mutex;
 
-use ::redis::{Commands, FromRedisValue, ToRedisArgs};
+use ::redis::Commands;
 
-pub trait Base<T, V>
+pub trait Base<T>
 where
   T: Commands,
-  V: FromRedisValue + ToRedisArgs,
 {
   fn commands(&self) -> Mutex<T>;
 }
