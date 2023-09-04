@@ -6,7 +6,7 @@ use ::chrono::{DateTime, Local, LocalResult, TimeZone};
 use ::errors::{KVSError, KVSResult};
 use ::redis::{Commands, FromRedisValue, SetOptions, ToRedisArgs};
 
-use crate::options::{WriteOption, WriteOptionTrait};
+use crate::options::WriteOption;
 use crate::traits::normal::NormalStoreBase;
 
 #[async_trait]
