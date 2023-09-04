@@ -13,9 +13,11 @@ where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,
 {
-  async fn get(&self, key: impl AsRef<str> + Display + Send) -> KVSResult<V> {
-    let cmd = self.commands().lock().await;
-    let value = NormalGet::get(self, key).await?;
+  async fn get(
+    &self,
+    key: impl AsRef<str> + Display + Send + Sync,
+  ) -> KVSResult<V> {
+    let value = NormalGet::get(self, &key).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(value);
   }

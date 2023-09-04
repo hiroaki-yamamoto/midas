@@ -19,7 +19,8 @@ where
     symbol: impl AsRef<str> + Display + Send,
   ) -> KVSResult<()> {
     let channel_name = self.channel_name(exchange, symbol);
-    let cmd = self.commands().lock().await;
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
     return Ok(cmd.del(channel_name)?);
   }
 }

@@ -14,7 +14,7 @@ use crate::WriteOption;
 pub trait ListOp<T, V>: Base<T> + Lock<T> + Exist<T>
 where
   T: Commands + Send,
-  V: FromRedisValue + ToRedisArgs + Send,
+  for<'a> V: FromRedisValue + ToRedisArgs + Send + 'a,
 {
   async fn lpush<R>(
     &self,
@@ -29,7 +29,8 @@ where
     let opt: Option<WriteOption> = opt.into();
 
     let key_exists = self.exists(&key).await;
-    let mut cmds = self.commands().lock().await;
+    let cmds = self.commands();
+    let mut cmds = cmds.lock().await;
     let res = if opt.non_existent_only() {
       match key_exists {
         Ok(exists) => {
@@ -55,7 +56,8 @@ where
     count: Option<NonZeroUsize>,
   ) -> KVSResult<V> {
     let channel_name = self.channel_name(key);
-    let mut cmd = self.commands().lock().await;
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
     return Ok(cmd.lpop(channel_name, count)?);
   }
 
@@ -69,7 +71,8 @@ where
     R: FromRedisValue,
   {
     let channel_name = self.channel_name(key);
-    let mut cmd = self.commands().lock().await;
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
     return Ok(cmd.lrange(channel_name, start, stop)?);
   }
 }

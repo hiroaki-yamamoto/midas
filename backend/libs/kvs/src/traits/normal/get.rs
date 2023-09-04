@@ -13,7 +13,8 @@ where
   V: FromRedisValue,
 {
   async fn get(&self, key: impl AsRef<str> + Display + Send) -> KVSResult<V> {
-    let mut cmd = self.commands().lock().await;
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
     let channel_name = self.channel_name(key);
     return Ok(cmd.get(channel_name)?);
   }

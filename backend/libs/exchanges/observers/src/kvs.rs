@@ -2,7 +2,7 @@ use ::futures::stream::{iter, BoxStream, StreamExt};
 
 use ::kvs::kvs;
 use ::kvs::redis::{Commands, RedisResult};
-use ::kvs::{SoftExpirationStore, Store};
+use ::kvs::{LastCheckStore, Store};
 use ::rpc::entities::Exchanges;
 
 kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");
@@ -20,7 +20,7 @@ kvs!(
   "observer_node_exchange_type_last_checked_epoch:{}"
 );
 
-impl<T> SoftExpirationStore<T, String> for ObserverNodeKVS<T> where
+impl<T> LastCheckStore<T, String> for ObserverNodeKVS<T> where
   T: Commands + Send + Sync
 {
 }
@@ -62,7 +62,7 @@ where
   }
 }
 
-impl<T> SoftExpirationStore<T, String> for ONEXTypeKVS<T> where
+impl<T> LastCheckStore<T, String> for ONEXTypeKVS<T> where
   T: Commands + Send + Sync
 {
 }

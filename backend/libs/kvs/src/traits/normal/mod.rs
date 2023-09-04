@@ -33,6 +33,6 @@ pub trait Store<T, V>:
   + Set<T, V>
 where
   T: Commands + Send,
-  V: FromRedisValue + ToRedisArgs + Send,
+  for<'a> V: FromRedisValue + ToRedisArgs + Send + 'a,
 {
 }

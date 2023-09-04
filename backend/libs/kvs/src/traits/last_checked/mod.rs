@@ -18,6 +18,6 @@ pub trait LastCheckStore<T, V>:
   Base<T> + Expiration<T> + Get<T, V> + ListOp<T, V> + Remove<T> + Set<T, V>
 where
   T: Commands + Send,
-  V: FromRedisValue + ToRedisArgs + Send,
+  for<'async_trait> V: FromRedisValue + ToRedisArgs + Send + 'async_trait,
 {
 }

@@ -4,7 +4,7 @@ use ::std::time::SystemTime;
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Local, LocalResult, TimeZone};
 use ::errors::{KVSError, KVSResult};
-use ::redis::{Commands, FromRedisValue, SetOptions, ToRedisArgs};
+use ::redis::{Commands, FromRedisValue, SetOptions};
 
 use crate::options::WriteOption;
 use crate::traits::normal::{Base as NormalBase, ChannelName};
@@ -23,7 +23,8 @@ where
     key: impl AsRef<str> + Display + Send,
   ) -> KVSResult<SystemTime> {
     let key = self.get_timestamp_channel(key);
-    let cmd = self.commands().lock().await;
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
     let timestamp: i64 = cmd.get(key)?;
     let datetime: DateTime<Local> = match Local.timestamp_opt(timestamp, 0) {
       LocalResult::Single(dt) => dt,
@@ -50,7 +51,8 @@ where
       .duration_since(SystemTime::UNIX_EPOCH)?
       .as_secs();
     let opt: Option<SetOptions> = opt.map(|opt| opt.into());
-    let mut cmd = self.commands().lock().await;
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
     return Ok(match opt {
       Some(opt) => cmd.set_options(key, now, opt)?,
       None => cmd.set(key, now)?,
@@ -65,7 +67,8 @@ where
     R: FromRedisValue + Send,
   {
     let key = self.get_timestamp_channel(key);
-    let mut cmd = self.commands().lock().await;
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
     return Ok(cmd.del(key)?);
   }
 }

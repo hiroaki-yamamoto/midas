@@ -6,7 +6,7 @@ pub use ::redis;
 
 pub use crate::options::WriteOption;
 pub use crate::traits::{
-  IncrementalStore, SoftExpirationStore, Store, SymbolKeyStore,
+  symbol::Incr as IncrementalStore, LastCheckStore, Store, SymbolKeyStore,
 };
 
 pub use crate::connection::Connection;

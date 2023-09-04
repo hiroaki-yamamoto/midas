@@ -14,18 +14,18 @@ use super::base::Base;
 pub trait Set<T, V>: Base<T> + NormalSet<T, V>
 where
   T: Commands + Send,
-  V: ToRedisArgs + Send,
+  for<'a> V: ToRedisArgs + Send + 'a,
 {
   async fn set<R>(
     &self,
-    key: impl AsRef<str> + Display + Send,
+    key: impl AsRef<str> + Display + Send + Sync,
     value: V,
     opt: Option<WriteOption>,
   ) -> KVSResult<R>
   where
     R: FromRedisValue + Send,
   {
-    let ret = NormalSet::set(self, key, value, opt.clone()).await?;
+    let ret = NormalSet::set(self, &key, value, opt.clone()).await?;
     self.flag_last_checked(key, opt.into()).await?;
     return Ok(ret);
   }

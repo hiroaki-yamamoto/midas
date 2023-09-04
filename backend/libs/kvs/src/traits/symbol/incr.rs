@@ -23,7 +23,8 @@ where
     opt: Option<WriteOption>,
   ) -> KVSResult<()> {
     let channel_name = self.channel_name(exchange, symbol);
-    let mut cmds = self.commands().lock().await;
+    let cmds = self.commands();
+    let mut cmds = cmds.lock().await;
     return Ok(cmds.incr(&channel_name, delta).and_then(|_: ()| {
       return opt.execute(&mut cmds, &channel_name);
     })?);

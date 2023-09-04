@@ -12,7 +12,7 @@ use crate::traits::normal::Base;
 pub trait Set<T, V>: Base<T> + ChannelName
 where
   T: Commands + Send,
-  V: ToRedisArgs + Send,
+  for<'a> V: ToRedisArgs + Send + 'a,
 {
   async fn set<R>(
     &self,
@@ -25,7 +25,8 @@ where
     R: FromRedisValue,
   {
     let channel_name = self.channel_name(exchange, symbol);
-    let mut cmds = self.commands().lock().await;
+    let cmds = self.commands();
+    let mut cmds = cmds.lock().await;
     let result = if let Some(opt) = opt {
       let opt: SetOptions = opt.into();
       cmds.set_options(&channel_name, value, opt)

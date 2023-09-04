@@ -16,7 +16,8 @@ where
   where
     R: FromRedisValue,
   {
-    let mut cmd = self.commands().lock().await;
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
     let channel_name = self.channel_name(key);
     return Ok(cmd.del(channel_name)?);
   }

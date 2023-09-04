@@ -17,7 +17,8 @@ where
     key: impl AsRef<str> + Display + Send,
   ) -> KVSResult<bool> {
     let channel_name = self.channel_name(key);
-    let cmd = self.commands().lock().await;
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
     return Ok(cmd.exists(channel_name)?);
   }
 }

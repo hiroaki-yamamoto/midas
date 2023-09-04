@@ -19,9 +19,10 @@ where
     dur: Duration,
   ) -> KVSResult<bool> {
     let dur_mils = dur.as_millis() as usize;
-    let commands = self.commands().lock().await;
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
     let channel_name = self.channel_name(key);
-    if commands.pexpire::<_, u16>(channel_name, dur_mils)? == 1 {
+    if cmd.pexpire::<_, u16>(channel_name, dur_mils)? == 1 {
       return Ok(true);
     } else {
       return Ok(false);

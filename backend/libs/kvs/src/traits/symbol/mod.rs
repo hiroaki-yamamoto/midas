@@ -18,6 +18,6 @@ pub trait SymbolKeyStore<T, V>:
   Base<T> + ChannelName + Get<T, V> + Remove<T> + Set<T, V>
 where
   T: Commands + Send,
-  V: FromRedisValue + ToRedisArgs + Send,
+  for<'a> V: FromRedisValue + ToRedisArgs + Send + 'a,
 {
 }
