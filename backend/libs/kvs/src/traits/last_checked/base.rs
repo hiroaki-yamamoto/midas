@@ -60,10 +60,13 @@ where
 
   async fn del_last_checked<R>(
     &self,
-    key: impl AsRef<str> + Display,
-  ) -> KVSResult<R> {
+    key: impl AsRef<str> + Display + Send,
+  ) -> KVSResult<R>
+  where
+    R: FromRedisValue + Send,
+  {
     let key = self.get_timestamp_channel(key);
-    let mut cmd = self.commands().lock().await?;
+    let mut cmd = self.commands().lock().await;
     return Ok(cmd.del(key)?);
   }
 }

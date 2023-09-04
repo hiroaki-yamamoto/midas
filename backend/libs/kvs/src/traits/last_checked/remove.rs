@@ -14,12 +14,15 @@ where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,
 {
-  async fn del(
+  async fn del<R>(
     &self,
     key: &(impl AsRef<str> + Display + Send + Sync),
-  ) -> KVSResult<()> {
+  ) -> KVSResult<R>
+  where
+    R: FromRedisValue + Send,
+  {
     let ret = NormalRemove::del(self, key).await?;
     let _ = self.del_last_checked(key).await?;
-    return ret;
+    return Ok(ret);
   }
 }

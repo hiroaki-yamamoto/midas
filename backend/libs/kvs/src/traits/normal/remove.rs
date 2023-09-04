@@ -13,10 +13,10 @@ where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,
 {
-  async fn del<R>(
-    &self,
-    key: impl AsRef<str> + Send + Display,
-  ) -> KVSResult<R> {
+  async fn del<R>(&self, key: impl AsRef<str> + Send + Display) -> KVSResult<R>
+  where
+    R: FromRedisValue,
+  {
     let mut cmd = self.commands().lock().await;
     let channel_name = self.channel_name(key);
     return Ok(cmd.del(channel_name)?);
