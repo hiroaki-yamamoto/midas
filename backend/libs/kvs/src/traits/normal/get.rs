@@ -4,10 +4,10 @@ use ::std::fmt::Display;
 
 use ::errors::KVSResult;
 
-use super::base::Base;
+use super::{Base, ChannelName};
 
 #[async_trait]
-pub trait Get<T, V>: Base<T, V>
+pub trait Get<T, V>: Base<T, V> + ChannelName
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,

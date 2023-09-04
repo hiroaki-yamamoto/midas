@@ -5,10 +5,10 @@ use ::redis::{Commands, FromRedisValue, ToRedisArgs};
 
 use ::errors::KVSResult;
 
-use super::Base;
+use super::{Base, ChannelName};
 
 #[async_trait]
-pub trait Exist<T, V>: Base<T, V>
+pub trait Exist<T, V>: Base<T, V> + ChannelName
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,

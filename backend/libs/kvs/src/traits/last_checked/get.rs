@@ -8,7 +8,7 @@ use super::base::Base;
 use crate::traits::normal::Get as NormalGet;
 
 #[async_trait]
-pub trait Get<T, V>: Base<T, V> + NormalGet<T, V> + Send
+pub trait Get<T, V>: Base<T, V> + NormalGet<T, V>
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,

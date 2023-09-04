@@ -11,7 +11,7 @@ use crate::traits::normal::Expiration as NormalExp;
 use super::base::Base;
 
 #[async_trait]
-pub trait Expiration<T, V>: Base<T, V> + NormalExp<T, V> + Send
+pub trait Expiration<T, V>: Base<T, V> + NormalExp<T, V>
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,

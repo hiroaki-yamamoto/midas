@@ -11,7 +11,7 @@ use crate::options::WriteOption;
 use crate::traits::normal::ListOp as NormalListOp;
 
 #[async_trait]
-pub trait ListOp<T, V>: Base<T, V> + NormalListOp<T, V> + Send
+pub trait ListOp<T, V>: Base<T, V> + NormalListOp<T, V>
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,

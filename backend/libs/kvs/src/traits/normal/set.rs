@@ -5,11 +5,11 @@ use ::redis::{Commands, FromRedisValue, SetOptions, ToRedisArgs};
 
 use ::errors::KVSResult;
 
-use super::Base;
+use super::{Base, ChannelName};
 use crate::options::WriteOption;
 
 #[async_trait]
-pub trait Set<T, V>: Base<T, V>
+pub trait Set<T, V>: Base<T, V> + ChannelName
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,

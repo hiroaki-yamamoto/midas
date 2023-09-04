@@ -1,4 +1,5 @@
 mod base;
+mod channel_name;
 mod exist;
 mod expiration;
 mod get;
@@ -8,6 +9,7 @@ mod remove;
 mod set;
 
 pub use self::base::Base;
+pub use self::channel_name::ChannelName;
 pub use self::exist::Exist;
 pub use self::expiration::Expiration;
 pub use self::get::Get;

@@ -9,7 +9,7 @@ use super::base::Base;
 use crate::traits::normal::Remove as NormalRemove;
 
 #[async_trait]
-pub trait Remove<T, V>: Base<T, V> + NormalRemove<T, V> + Send
+pub trait Remove<T, V>: Base<T, V> + NormalRemove<T, V>
 where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,
