@@ -1853,7 +1853,6 @@ dependencies = [
 name = "kvs_macros"
 version = "0.1.0"
 dependencies = [
- "kvs",
  "quote",
  "syn 2.0.31",
 ]

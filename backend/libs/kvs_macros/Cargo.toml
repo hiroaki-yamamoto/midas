@@ -9,7 +9,5 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-kvs = { path = "../kvs" }
-
 quote = "1.0.33"
 syn = "2.0.31"

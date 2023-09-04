@@ -7,18 +7,6 @@ use ::rpc::entities::Exchanges;
 
 kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");
 kvs!(pub, ONEXTypeKVS, String, "observer_node_exchange_type:{}");
-kvs!(
-  pub,
-  ObserverNodeLastCheckKVS,
-  u64,
-  "observer_node_last_check_epoch:{}"
-);
-kvs!(
-  pub,
-  ONEXTypeLastCheckedKVS,
-  u64,
-  "observer_node_exchange_type_last_checked_epoch:{}"
-);
 
 impl<T> LastCheckStore<T, String> for ObserverNodeKVS<T> where
   T: Commands + Send + Sync
@@ -60,11 +48,6 @@ where
       });
     return Ok(iter(keys).boxed());
   }
-}
-
-impl<T> LastCheckStore<T, String> for ONEXTypeKVS<T> where
-  T: Commands + Send + Sync
-{
 }
 
 impl<T> ObserverNodeKVS<T>
