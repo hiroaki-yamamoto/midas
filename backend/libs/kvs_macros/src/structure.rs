@@ -39,6 +39,33 @@ impl Expanded {
     return self.implement;
   }
 
+  pub fn impl_symbol_channel_name(self) -> Self {
+    let generics = self.generics.clone();
+    let cmd_constraint = self.cmd_constraint.clone();
+    let ch_name = self.ch_name.clone();
+    let name = self.name.clone();
+    let mut structure = self.implement;
+    let imple = TokenStream::from(quote! {
+      impl #generics ::kvs::traits::symbol::ChannelName for #name <T>
+      #cmd_constraint
+      {
+        fn channel_name(
+          &self,
+          exchange: impl AsRef<str> + ::std::fmt::Display,
+          symbol: impl AsRef<str> + ::std::fmt::Display
+        ) -> String
+        {
+          return format!(#ch_name, exchange, symbol);
+        }
+      }
+    });
+    structure.extend(imple);
+    return Self {
+      implement: structure,
+      ..self
+    };
+  }
+
   pub fn impl_normal_channel_name(self) -> Self {
     let generics = self.generics.clone();
     let cmd_constraint = self.cmd_constraint.clone();

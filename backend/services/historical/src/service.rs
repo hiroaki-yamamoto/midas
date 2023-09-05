@@ -18,7 +18,7 @@ use ::errors::{CreateStreamResult, KVSResult};
 use ::history::kvs::{CurrentSyncProgressStore, NumObjectsToFetchStore};
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartDateSplitPubSub};
 use ::kvs::redis;
-use ::kvs::SymbolKeyStore;
+use ::kvs::traits::SymbolKeyStore;
 use ::rpc::entities::{Exchanges, Status};
 use ::rpc::historical::{
   HistoryFetchRequest as RPCHistFetchReq, Progress, StatusCheckRequest,

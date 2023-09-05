@@ -1,9 +1,9 @@
-use ::kvs::incr_kvs;
+use ::kvs_macros::symbol_kvs;
 
-incr_kvs!(
+symbol_kvs!(
   pub,
   CurrentSyncProgressStore,
   i64,
   "{}:{}:kline_sync:current"
 );
-incr_kvs!(pub, NumObjectsToFetchStore, i64, "{}:{}:kline_sync:num");
+symbol_kvs!(pub, NumObjectsToFetchStore, i64, "{}:{}:kline_sync:num");

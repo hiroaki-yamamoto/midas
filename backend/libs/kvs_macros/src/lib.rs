@@ -9,7 +9,31 @@ use crate::structure::Expanded;
 
 use crate::kvs_args::KVSArgs;
 
+/// Declare KVS structure with exchange and symbol as "key".
+///
+/// Arguments:
+/// 1. Visibility
+/// 2. Name
+/// 3. Value type
+/// 4. Channel name
+#[proc_macro]
+pub fn symbol_kvs(input: TokenStream) -> TokenStream {
+  let parsed: KVSArgs = parse_macro_input!(input as KVSArgs);
+  let expand = Expanded::new(parsed)
+    .impl_symbol_channel_name()
+    .impl_trait(&[
+      parse_quote!(::kvs::traits::symbol::Incr),
+      parse_quote!(::kvs::traits::symbol::Remove),
+    ])
+    .impl_trait_with_vtype(&[
+      parse_quote!(::kvs::traits::symbol::Get),
+      parse_quote!(::kvs::traits::symbol::Set),
+    ]);
+  return expand.build();
+}
+
 /// Declare KVS structure with last checked date.
+///
 /// Arguments:
 /// 1. Visibility
 /// 2. Name
