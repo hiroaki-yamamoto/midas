@@ -139,6 +139,14 @@ impl Expanded {
         }
       }
 
+      impl #generics Clone for #name #generics #cmd_constraint {
+        fn clone(&self) -> Self {
+          return Self {
+            con: self.con.clone().into(),
+          };
+        }
+      }
+
       impl #generics kvs::traits::normal::Base #generics for #name #generics
       #cmd_constraint
       {
