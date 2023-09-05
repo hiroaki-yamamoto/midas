@@ -1,7 +1,7 @@
+mod balancer;
 mod dlock;
 mod errors;
 mod handlers;
-mod kvs;
 
 use ::futures::StreamExt;
 use ::log::{error, info};

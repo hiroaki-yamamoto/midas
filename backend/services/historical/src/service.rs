@@ -1,5 +1,4 @@
 use ::std::fmt::Debug;
-use ::std::sync::Arc;
 
 use ::futures::stream::BoxStream;
 use ::futures::{SinkExt, StreamExt};
@@ -7,7 +6,6 @@ use ::http::StatusCode;
 use ::mongodb::Database;
 use ::serde_json::{from_slice as parse_json, to_string as jsonify};
 use ::subscribe::PubSub;
-use ::tokio::sync::Mutex;
 use ::tokio::{join, select};
 use ::warp::filters::BoxedFilter;
 use ::warp::reject::{custom as cus_rej, Rejection};
@@ -36,11 +34,6 @@ pub struct Service {
   splitter: HistChartDateSplitPubSub,
   db: Database,
 }
-
-type TSNumObjectsToFetchStore =
-  Arc<Mutex<NumObjectsToFetchStore<redis::Connection>>>;
-type TSCurrentSyncProgressStore =
-  Arc<Mutex<CurrentSyncProgressStore<redis::Connection>>>;
 
 impl Service {
   pub async fn new(
@@ -82,7 +75,7 @@ impl Service {
         let size = me.redis_cli
           .get_connection()
           .map(|con| {
-            return Arc::new(Mutex::new(NumObjectsToFetchStore::new(con.into())));
+            return NumObjectsToFetchStore::new(con.into());
           })
           .map_err(|err| {
             return cus_rej(Status::new(
@@ -93,7 +86,7 @@ impl Service {
         let cur = me.redis_cli
           .get_connection()
           .map(|con| {
-            return Arc::new(Mutex::new(CurrentSyncProgressStore::new(con.into())));
+            return CurrentSyncProgressStore::new(con.into());
           })
           .map_err(|err| {
             return cus_rej(Status::new(
@@ -105,15 +98,14 @@ impl Service {
       })
       .and_then(|(me, size, cur, symbol): (
         Self,
-        TSNumObjectsToFetchStore,
-        TSCurrentSyncProgressStore,
+        NumObjectsToFetchStore<redis::Connection>,
+        CurrentSyncProgressStore<redis::Connection>,
         ListSymbolStream,
       )| async move {
-        let (size_clos, cur_clos) = (size.clone(), cur.clone());
+        let (clos_size, clos_cur) = (size.clone(), cur.clone());
         let prog = symbol.map(move |symbol| {
-          return (symbol.symbol, size_clos.clone(), cur_clos.clone());
+          return (symbol.symbol, clos_size.clone(), clos_cur.clone());
         }).filter_map(|(sym, size, cur)| async move {
-          let (size, cur) = join!(size.lock(), cur.lock());
           let size = size.get(Exchanges::Binance.as_str_name().to_lowercase(), &sym);
           let cur = cur.get(Exchanges::Binance.as_str_name().to_lowercase(), &sym);
           let (size, cur) = join!(size, cur);
@@ -141,8 +133,8 @@ impl Service {
       .and(::warp::ws())
       .map(|
         me: Self,
-        size: TSNumObjectsToFetchStore,
-        cur: TSCurrentSyncProgressStore,
+        size: NumObjectsToFetchStore<_>,
+        cur: CurrentSyncProgressStore<_>,
         mut start_prog: BoxStream<'static, Message>,
         ws: Ws
       | {
@@ -165,14 +157,12 @@ impl Service {
               select! {
                 Some((item, _)) = resp.next() => {
                   let size = async {
-                    let size = size.lock().await;
                     size.get(
                       item.exchange.as_str_name().to_lowercase(),
                       &item.symbol
                     ).await.unwrap_or(0)
                   }.await;
                   let cur = async {
-                    let cur = cur.lock().await;
                     cur.get(
                       item.exchange.as_str_name().to_lowercase(), &item.symbol
                     ).await.unwrap_or(0)
@@ -203,11 +193,9 @@ impl Service {
                   } else if let Ok(req) = parse_json::<StatusCheckRequest>(msg.as_bytes()) {
                     let exchange = req.exchange().as_str_name().to_lowercase();
                     let size = async {
-                      let size = size.lock().await;
                       size.get(&exchange, &req.symbol).await.unwrap_or(0)
                     }.await;
                     let cur = async {
-                      let cur = cur.lock().await;
                       cur.get(&exchange, &req.symbol).await.unwrap_or(0)
                     }.await;
                     let prog = Progress {
