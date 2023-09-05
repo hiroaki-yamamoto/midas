@@ -1,5 +1,5 @@
 use ::std::fmt::Debug;
-use ::std::sync::{Arc, Mutex};
+use ::std::sync::Arc;
 
 use ::futures::stream::BoxStream;
 use ::futures::{SinkExt, StreamExt};
@@ -7,6 +7,7 @@ use ::http::StatusCode;
 use ::mongodb::Database;
 use ::serde_json::{from_slice as parse_json, to_string as jsonify};
 use ::subscribe::PubSub;
+use ::tokio::sync::Mutex;
 use ::tokio::{join, select};
 use ::warp::filters::BoxedFilter;
 use ::warp::reject::{custom as cus_rej, Rejection};
@@ -14,11 +15,11 @@ use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
 
 use ::entities::HistoryFetchRequest as HistFetchReq;
-use ::errors::{CreateStreamResult, KVSResult};
+use ::errors::CreateStreamResult;
 use ::history::kvs::{CurrentSyncProgressStore, NumObjectsToFetchStore};
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartDateSplitPubSub};
 use ::kvs::redis;
-use ::kvs::SymbolKeyStore;
+use ::kvs::traits::symbol::Get;
 use ::rpc::entities::{Exchanges, Status};
 use ::rpc::historical::{
   HistoryFetchRequest as RPCHistFetchReq, Progress, StatusCheckRequest,
@@ -108,23 +109,14 @@ impl Service {
         TSCurrentSyncProgressStore,
         ListSymbolStream,
       )| async move {
-        let size_ref = size.clone();
-        let cur_ref = cur.clone();
+        let (size_clos, cur_clos) = (size.clone(), cur.clone());
         let prog = symbol.map(move |symbol| {
-          let mut size = size_ref.lock().unwrap();
-          let mut cur = cur_ref.lock().unwrap();
-          return (
-            size.get(Exchanges::Binance.as_str_name().to_lowercase(), &symbol.symbol),
-            cur.get(Exchanges::Binance.as_str_name().to_lowercase(), &symbol.symbol),
-            symbol.symbol
-          );
-        }).filter_map(|
-          (size, cur, sym): (
-            KVSResult<i64>,
-            KVSResult<i64>,
-            String
-          )
-        | async {
+          return (symbol.symbol, size_clos.clone(), cur_clos.clone());
+        }).filter_map(|(sym, size, cur)| async move {
+          let (size, cur) = join!(size.lock(), cur.lock());
+          let size = size.get(Exchanges::Binance.as_str_name().to_lowercase(), &sym);
+          let cur = cur.get(Exchanges::Binance.as_str_name().to_lowercase(), &sym);
+          let (size, cur) = join!(size, cur);
           if let Some(size) = size.ok() {
             if let Some(cur) = cur.ok() {
               return Some((size, cur, sym));
@@ -172,19 +164,19 @@ impl Service {
             Ok(mut resp) => loop {
               select! {
                 Some((item, _)) = resp.next() => {
-                  let size = {
-                    let mut size = (*size).lock().unwrap();
+                  let size = async {
+                    let size = size.lock().await;
                     size.get(
                       item.exchange.as_str_name().to_lowercase(),
                       &item.symbol
-                    ).unwrap_or(0)
-                  };
-                  let cur = {
-                    let mut cur = (*cur).lock().unwrap();
+                    ).await.unwrap_or(0)
+                  }.await;
+                  let cur = async {
+                    let cur = cur.lock().await;
                     cur.get(
                       item.exchange.as_str_name().to_lowercase(), &item.symbol
-                    ).unwrap_or(0)
-                  };
+                    ).await.unwrap_or(0)
+                  }.await;
                   let prog = Progress {
                     exchange: item.exchange as i32,
                     symbol: item.symbol.clone(),
@@ -210,14 +202,14 @@ impl Service {
                     }
                   } else if let Ok(req) = parse_json::<StatusCheckRequest>(msg.as_bytes()) {
                     let exchange = req.exchange().as_str_name().to_lowercase();
-                    let size = {
-                      let mut size = (*size).lock().unwrap();
-                      size.get(&exchange, &req.symbol).unwrap_or(0)
-                    };
-                    let cur = {
-                      let mut cur = (*cur).lock().unwrap();
-                      cur.get(&exchange, &req.symbol).unwrap_or(0)
-                    };
+                    let size = async {
+                      let size = size.lock().await;
+                      size.get(&exchange, &req.symbol).await.unwrap_or(0)
+                    }.await;
+                    let cur = async {
+                      let cur = cur.lock().await;
+                      cur.get(&exchange, &req.symbol).await.unwrap_or(0)
+                    }.await;
                     let prog = Progress {
                       exchange: req.exchange,
                       symbol: req.symbol,

@@ -13,6 +13,7 @@ config = { path = "../../config" }
 rpc = { path = "../../rpc" }
 subscribe = { path = "../../subscribe" }
 kvs = { path = "../../kvs" }
+kvs_macros = { path = "../../kvs_macros" }
 
 entities = { path = "../../entities" }
 

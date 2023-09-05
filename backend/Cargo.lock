@@ -345,7 +345,7 @@ checksum = "16e62a023e7c117e27523144c5d2459f4397fcc3cab0085af8e2224f643a0193"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -362,7 +362,7 @@ checksum = "bc00ceb34980c03614e35a3a4e218276a0a824e911d07651cd0d858a51e8c0f0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -597,9 +597,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.26"
+version = "0.4.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec837a71355b28f6556dbd569b37b3f363091c0bd4b2e735674521b4c5fd9bc5"
+checksum = "95ed24df0632f708f5f6d8082675bef2596f7084dee3dd55f632290bf35bfe0f"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
@@ -608,7 +608,7 @@ dependencies = [
  "serde",
  "time 0.1.45",
  "wasm-bindgen",
- "winapi",
+ "windows-targets",
 ]
 
 [[package]]
@@ -643,7 +643,7 @@ dependencies = [
  "heck",
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -951,18 +951,6 @@ dependencies = [
  "block-buffer 0.10.4",
  "crypto-common",
  "subtle",
-]
-
-[[package]]
-name = "dlock"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "errors",
- "futures",
- "kvs",
- "tokio",
- "uuid",
 ]
 
 [[package]]
@@ -1285,7 +1273,7 @@ checksum = "89ca545a94061b6365f2c7355b4b32bd20df3ff95f02da9329b34ccc3bd6ee72"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -1508,6 +1496,7 @@ dependencies = [
  "futures",
  "gmp-mpfr-sys",
  "kvs",
+ "kvs_macros",
  "log",
  "mongodb",
  "num_cpus",
@@ -1849,11 +1838,24 @@ dependencies = [
 name = "kvs"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "chrono",
  "errors",
+ "futures",
+ "rand",
  "redis",
  "rmp-serde",
  "serde",
+ "tokio",
  "types",
+]
+
+[[package]]
+name = "kvs_macros"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -2143,7 +2145,7 @@ checksum = "9e6a0fd4f737c707bd9086cc16c925f294943eb62eb71499e9fd4cf71f8b9f4e"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -2186,6 +2188,7 @@ dependencies = [
  "futures",
  "gmp-mpfr-sys",
  "kvs",
+ "kvs_macros",
  "log",
  "mongodb",
  "rmp-serde",
@@ -2236,7 +2239,7 @@ checksum = "a948666b637a0f465e8564c73e89d4dde00d72d4d473cc972f390fc3dcee7d9c"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -2343,7 +2346,7 @@ checksum = "4359fd9c9171ec6e8c62926d6faaf553a8dc3f64e1507e76da7911b4f6a04405"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -2519,9 +2522,9 @@ checksum = "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
 
 [[package]]
 name = "quote"
-version = "1.0.32"
+version = "1.0.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50f3b39ccfb720540debaa0164757101c08ecb8d326b15358ce76a62c7e85965"
+checksum = "5267fca4496028628a95160fc423a33e8b2e6af8a5302579e322e4b520293cae"
 dependencies = [
  "proc-macro2",
 ]
@@ -2570,9 +2573,9 @@ dependencies = [
 
 [[package]]
 name = "redis"
-version = "0.23.2"
+version = "0.23.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffd6543a7bc6428396845f6854ccf3d1ae8823816592e2cbe74f20f50f209d02"
+checksum = "4f49cdc0bb3f412bf8e7d1bd90fe1d9eb10bc5c399ba90973c14662a27b3f8ba"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -2993,7 +2996,7 @@ checksum = "dc59dfdcbad1437773485e0367fea4b090a2e0a16d9ffc46af47764536a298ec"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -3045,7 +3048,7 @@ checksum = "8725e1dfadb3a50f7e5ce0b1a540466f6ed3fe7a0fca2ac2b8b831d31316bd00"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -3404,9 +3407,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.28"
+version = "2.0.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04361975b3f5e348b2189d8dc55bc942f278b2d482a6a0365de5bdd62d351567"
+checksum = "718fa2415bcb8d8bd775917a1bf12a7931b6dfa890753378538118181e0cb398"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3467,7 +3470,7 @@ checksum = "090198534930841fab3a5d1bb637cde49e339654e606195f8d9c76eeb081dc96"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -3566,7 +3569,7 @@ checksum = "630bdcf245f78637c13ec01ffae6187cca34625e8c63150d424b59e55af2675e"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -3690,7 +3693,7 @@ checksum = "5f4f31f56159e98206da9efd823404b79b6ef3143b4a7ab76e67b1751b25a4ab"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -3707,12 +3710,12 @@ name = "trade_observer_control_worker"
 version = "0.1.0"
 dependencies = [
  "config",
- "dlock",
  "entities",
  "err-derive",
  "errors",
  "futures",
  "kvs",
+ "kvs_macros",
  "log",
  "mongodb",
  "num-derive",
@@ -3975,7 +3978,7 @@ checksum = "f7e1ba1f333bd65ce3c9f27de592fcbc256dafe3af2717f56d7c87761fbaccf4"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]
 
 [[package]]
@@ -4106,7 +4109,7 @@ dependencies = [
  "once_cell",
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
  "wasm-bindgen-shared",
 ]
 
@@ -4140,7 +4143,7 @@ checksum = "54681b18a46765f095758388f2d0cf16eb8d4169b639ab575a8f5693af210c7b"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
@@ -4404,5 +4407,5 @@ checksum = "ce36e65b0d2999d2aafac989fb249189a141aee1f53c612c1f37d72631959f69"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.28",
+ "syn 2.0.31",
 ]

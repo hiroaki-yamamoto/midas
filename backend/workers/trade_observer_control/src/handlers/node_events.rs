@@ -3,16 +3,13 @@ use ::std::time::Duration;
 use ::uuid::Uuid;
 
 use ::config::{Database, ObserverConfig};
-use ::dlock::Dlock;
 use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 use ::errors::KVSResult;
 use ::kvs::redis::Commands;
-use ::kvs::{Connection, SoftExpirationStore, WriteOption};
+use ::kvs::traits::normal::{Expiration, ListOp, Lock, Set};
+use ::kvs::{Connection, WriteOption};
 use ::log::{error, info};
-use ::observers::kvs::{
-  ONEXTypeKVS, ONEXTypeLastCheckedKVS, ObserverNodeKVS,
-  ObserverNodeLastCheckKVS,
-};
+use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
 use ::subscribe::natsJS::context::Context;
@@ -32,8 +29,6 @@ where
   node_kvs: ObserverNodeKVS<C>,
   db: Database,
   type_kvs: ONEXTypeKVS<C>,
-  last_check_kvs: ObserverNodeLastCheckKVS<C>,
-  type_last_check_kvs: ONEXTypeLastCheckedKVS<C>,
   init_lock: InitLock<C>,
 }
 
@@ -47,8 +42,6 @@ where
       nats: nats.clone(),
       node_kvs: ObserverNodeKVS::new(kvs_com.clone().into()),
       type_kvs: ONEXTypeKVS::new(kvs_com.clone().into()),
-      last_check_kvs: ObserverNodeLastCheckKVS::new(kvs_com.clone().into()),
-      type_last_check_kvs: ONEXTypeLastCheckedKVS::new(kvs_com.clone().into()),
       init_lock: InitLock::new(kvs_com.into()),
       db,
     };
@@ -69,28 +62,24 @@ where
       .non_existent_only(true)
       .into();
     loop {
-      let push_result: KVSResult<usize> = self.node_kvs.lpush(
-        node_id.to_string(),
-        "".into(),
-        redis_option.clone(),
-        &mut self.last_check_kvs,
-      );
+      let push_result: KVSResult<usize> = self
+        .node_kvs
+        .lpush(node_id.to_string(), "".into(), redis_option.clone())
+        .await;
       if push_result.is_ok() {
-        self.node_kvs.lpop(
-          node_id.to_string(),
-          None,
-          &mut self.last_check_kvs,
-        )?;
+        self.node_kvs.lpop(node_id.to_string(), None).await?;
         break;
       }
       fixed_node_id = Uuid::new_v4();
     }
-    self.type_kvs.set(
-      fixed_node_id.to_string(),
-      exchange.as_str_name().into(),
-      redis_option,
-      &mut self.type_last_check_kvs,
-    )?;
+    self
+      .type_kvs
+      .set(
+        fixed_node_id.to_string(),
+        exchange.as_str_name().into(),
+        redis_option,
+      )
+      .await?;
     if node_id != &fixed_node_id {
       let pubsub = NodeControlEventPubSub::new(&self.nats).await?;
       pubsub
@@ -110,11 +99,10 @@ where
   ) -> ControlResult<()> {
     match event {
       TradeObserverNodeEvent::Ping(node_id) => {
-        self.node_kvs.expire(
-          &node_id.to_string(),
-          Duration::from_secs(30),
-          &mut self.last_check_kvs,
-        )?;
+        self
+          .node_kvs
+          .expire(&node_id.to_string(), Duration::from_secs(30))
+          .await?;
       }
       TradeObserverNodeEvent::Regist(exchange, node_id) => {
         if self.push_nodeid(&node_id, exchange).await.is_ok() {
@@ -124,12 +112,12 @@ where
             exchange.as_str_name()
           );
         }
-        let node_count = self.node_kvs.count_nodes()?;
+        let node_count = self.node_kvs.count_nodes().await?;
         let min_node_init = config.min_node_init(exchange);
         if node_count == min_node_init {
           let _ = self
             .init_lock
-            .lock(|| async {
+            .lock("observer_control_node_event_handler", || async {
               let mut sync_handler: SyncHandler<_> = SyncHandler::new(
                 &self.db,
                 self.kvs_cmd.clone().into(),

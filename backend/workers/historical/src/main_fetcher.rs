@@ -21,7 +21,8 @@ use ::history::pubsub::{FetchStatusEventPubSub, HistChartPubSub};
 use ::history::traits::{
   HistoryFetcher as HistoryFetcherTrait, HistoryWriter as HistoryWriterTrait,
 };
-use ::kvs::{IncrementalStore, WriteOption};
+use ::kvs::traits::symbol::Incr;
+use ::kvs::WriteOption;
 use ::subscribe::PubSub;
 
 #[tokio::main]
@@ -29,7 +30,7 @@ async fn main() {
   info!("Starting kline fetch worker");
   ::config::init(|cfg, mut sig, db, broker, _| async move {
     let redis = cfg.redis().unwrap();
-    let mut cur_prog_kvs = CurrentSyncProgressStore::new(redis);
+    let cur_prog_kvs = CurrentSyncProgressStore::new(redis);
 
     let pubsub = HistChartPubSub::new(&broker).await.unwrap();
     let mut sub = pubsub.pull_subscribe("historyFetchWroker").await.unwrap();
@@ -88,7 +89,7 @@ async fn main() {
             req.exchange.as_str_name().to_lowercase(),
             req.symbol.clone(), 1,
             WriteOption::default().duration(Duration::from_secs(180).into()).into()
-          ) {
+          ).await {
             error!(error = as_error!(e); "Failed to report the progress");
           };
           if let Err(e) = change_event_pub.publish(&FetchStatusChanged{
