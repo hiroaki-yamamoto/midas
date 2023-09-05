@@ -56,12 +56,10 @@ pub fn last_check_kvs(input: TokenStream) -> TokenStream {
     .impl_trait_with_vtype(&[
       parse_quote!(::kvs::traits::normal::Get),
       parse_quote!(::kvs::traits::normal::Set),
-      parse_quote!(::kvs::traits::normal::Store),
       parse_quote!(::kvs::traits::normal::ListOp),
       parse_quote!(::kvs::traits::last_checked::Get),
       parse_quote!(::kvs::traits::last_checked::Set),
       parse_quote!(::kvs::traits::last_checked::ListOp),
-      parse_quote!(::kvs::traits::last_checked::LastCheckStore),
     ]);
 
   return expand.build();
@@ -88,7 +86,6 @@ pub fn kvs(input: TokenStream) -> TokenStream {
     .impl_trait_with_vtype(&[
       parse_quote!(::kvs::traits::normal::Get),
       parse_quote!(::kvs::traits::normal::Set),
-      parse_quote!(::kvs::traits::normal::Store),
       parse_quote!(::kvs::traits::normal::ListOp),
     ]);
   return expand.build();

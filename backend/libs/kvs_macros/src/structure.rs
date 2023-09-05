@@ -132,6 +132,13 @@ impl Expanded {
         con: ::kvs::Connection #generics,
       }
 
+      impl #generics #name #generics #cmd_constraint,
+      {
+        pub fn new(con: ::kvs::Connection #generics) -> Self {
+          return Self { con: con };
+        }
+      }
+
       impl #generics kvs::traits::normal::Base #generics for #name #generics
       #cmd_constraint
       {

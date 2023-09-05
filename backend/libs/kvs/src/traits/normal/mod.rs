@@ -17,22 +17,3 @@ pub use self::list_op::ListOp;
 pub use self::lock::Lock;
 pub use self::remove::Remove;
 pub use self::set::Set;
-
-use ::async_trait::async_trait;
-use ::redis::{Commands, FromRedisValue, ToRedisArgs};
-
-#[async_trait]
-pub trait Store<T, V>:
-  Base<T>
-  + Exist<T>
-  + Expiration<T>
-  + Get<T, V>
-  + ListOp<T, V>
-  + Lock<T>
-  + Remove<T>
-  + Set<T, V>
-where
-  T: Commands + Send,
-  for<'a> V: FromRedisValue + ToRedisArgs + Send + 'a,
-{
-}

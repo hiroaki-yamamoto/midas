@@ -19,7 +19,8 @@ use ::history::pubsub::{HistChartDateSplitPubSub, HistChartPubSub};
 use ::history::traits::{
   HistoryFetcher as HistFetchTrait, HistoryWriter as HistoryWriterTrait,
 };
-use ::kvs::{IncrementalStore, SymbolKeyStore, WriteOption};
+use ::kvs::traits::symbol::{Incr, Set};
+use ::kvs::WriteOption;
 use ::rpc::entities::Exchanges;
 use ::subscribe::PubSub;
 
@@ -27,8 +28,8 @@ use ::subscribe::PubSub;
 async fn main() {
   info!("Starting kline date split worker");
   ::config::init(|cfg, mut sig, db, broker, _| async move {
-    let mut cur_prog_kvs = CurrentSyncProgressStore::new(cfg.redis().unwrap());
-    let mut num_prg_kvs = NumObjectsToFetchStore::new(cfg.redis().unwrap());
+    let cur_prog_kvs = CurrentSyncProgressStore::new(cfg.redis().unwrap());
+    let num_prg_kvs = NumObjectsToFetchStore::new(cfg.redis().unwrap());
 
     let (req_pubsub, resp_pubsub) = join!(
       HistChartDateSplitPubSub::new(&broker),
@@ -80,7 +81,7 @@ async fn main() {
             },
             Ok(v) => v
           };
-          if let Err(e) = cur_prog_kvs.reset(req.exchange.as_str_name().to_lowercase(), &req.symbol) {
+          if let Err(e) = cur_prog_kvs.reset(req.exchange.as_str_name().to_lowercase(), &req.symbol).await {
             error!(error = as_error!(e); "Failed to reset the progress");
             continue;
           }
@@ -89,7 +90,7 @@ async fn main() {
             &req.symbol,
             splitter.len().unwrap_or(0) as i64,
             WriteOption::default().duration(Duration::from_secs(180).into()).into(),
-          ) {
+          ).await {
             error!(error = as_error!(e); "Failed to set the number of objects to fetch");
           }
 
