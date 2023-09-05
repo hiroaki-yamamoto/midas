@@ -2,10 +2,12 @@ use ::futures::stream::{iter, BoxStream, StreamExt};
 
 use ::kvs::redis::{Commands, RedisResult};
 use ::kvs::traits::last_checked::LastCheckStore;
-use ::kvs_macros::kvs;
+use ::kvs_macros::{kvs, LastCheck};
 use ::rpc::entities::Exchanges;
 
+// #[derive(LastCheck)]
 kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");
+// #[derive(LastCheck)]
 kvs!(pub, ONEXTypeKVS, String, "observer_node_exchange_type:{}");
 
 impl<T> LastCheckStore<T, String> for ObserverNodeKVS<T> where

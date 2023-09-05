@@ -1,10 +1,52 @@
 mod kvs_args;
+mod structure;
+mod trait_impl;
 
 use ::proc_macro::TokenStream;
 use ::quote::quote;
-use ::syn::{parse_macro_input, parse_quote, ExprPath, WhereClause};
+use ::syn::{parse_macro_input, parse_quote, DeriveInput, Type};
+
+use crate::structure::make_structure;
+use crate::trait_impl::{impl_trait, impl_trait_with_vtype};
 
 use crate::kvs_args::KVSArgs;
+
+/// Derives LastCheck trait.
+#[proc_macro_derive(LastCheck, attributes(value_type))]
+pub fn impl_last_check(input: TokenStream) -> TokenStream {
+  let input = parse_macro_input!(input as DeriveInput);
+  let name = input.ident;
+  let vtype: Type = input.attrs[0].parse_args().unwrap();
+  let generics = input.generics;
+  let cmd_constraint = parse_quote! {
+    where #generics: ::kvs::redis::Commands + Send + Sync
+  };
+
+  let mut traits_impl = impl_trait(
+    &generics,
+    &[
+      parse_quote!(::kvs::traits::last_checked::Base),
+      parse_quote!(::kvs::traits::lats_checked::Expiration),
+      parse_quote!(::kvs::traits::last_checked::Remove),
+    ],
+    &name,
+    &cmd_constraint,
+  );
+
+  traits_impl.extend(impl_trait_with_vtype(
+    &generics,
+    &vtype,
+    &[
+      parse_quote!(::kvs::traits::last_checked::Get),
+      parse_quote!(::kvs::traits::last_checked::Set),
+      parse_quote!(::kvs::traits::last_checked::LastCheckStore),
+      parse_quote!(::kvs::traits::last_checked::ListOp),
+    ],
+    &name,
+    &cmd_constraint,
+  ));
+  return traits_impl;
+}
 
 /// Constructs KVS structure.
 ///
@@ -20,24 +62,9 @@ pub fn kvs(input: TokenStream) -> TokenStream {
   let name = parsed.name;
   let value_type = parsed.vtype;
   let ch_name = parsed.ch_name;
-  let cmd_constraint: WhereClause = parse_quote! {
-    where T: ::kvs::redis::Commands + Send + Sync
-  };
-  let mut ret = TokenStream::from(quote! {
-    #vis struct #name <T> #cmd_constraint,
-    {
-      con: ::kvs::Connection <T>,
-    }
-
-    impl <T> kvs::traits::normal::Base <T> for #name <T>
-    #cmd_constraint
-    {
-      fn commands(&self) -> ::tokio::sync::MutexGuard <T> {
-        return self.con.clone();
-      }
-    }
-
-    impl <T> ::kvs::traits::normal::ChannelName for #name <T>
+  let (mut structure, generics, cmd_constraint) = make_structure(&vis, &name);
+  let ch_impl = TokenStream::from(quote! {
+    impl #generics ::kvs::traits::normal::ChannelName for #name <T>
     #cmd_constraint
     {
       fn channel_name(
@@ -49,35 +76,31 @@ pub fn kvs(input: TokenStream) -> TokenStream {
       }
     }
   });
-  let first_traits: Vec<TokenStream> = [
-    parse_quote!(::kvs::traits::normal::Exist),
-    parse_quote!(::kvs::traits::normal::Expiration),
-    parse_quote!(::kvs::traits::normal::Lock),
-    parse_quote!(::kvs::traits::normal::Remove),
-  ]
-  .into_iter()
-  .map(|tr: ExprPath| {
-    return quote! {
-      impl <T> #tr <T> for #name <T> #cmd_constraint {}
-    };
-  })
-  .map(|ts| ts.into())
-  .collect();
-  let second_traits: Vec<TokenStream> = [
-    parse_quote!(::kvs::traits::normal::Get),
-    parse_quote!(::kvs::traits::normal::Set),
-    parse_quote!(::kvs::traits::normal::Store),
-    parse_quote!(::kvs::traits::normal::ListOp),
-  ]
-  .into_iter()
-  .map(|tr: ExprPath| {
-    return quote! {
-      impl <T> #tr <T, #value_type> for #name <T> #cmd_constraint {}
-    };
-  })
-  .map(|ts| ts.into())
-  .collect();
-  ret.extend(first_traits);
-  ret.extend(second_traits);
-  return ret;
+  let first_traits = impl_trait(
+    &generics,
+    &[
+      parse_quote!(::kvs::traits::normal::Exist),
+      parse_quote!(::kvs::traits::normal::Expiration),
+      parse_quote!(::kvs::traits::normal::Lock),
+      parse_quote!(::kvs::traits::normal::Remove),
+    ],
+    &name,
+    &cmd_constraint,
+  );
+  let second_traits = impl_trait_with_vtype(
+    &generics,
+    &value_type,
+    &[
+      parse_quote!(::kvs::traits::normal::Get),
+      parse_quote!(::kvs::traits::normal::Set),
+      parse_quote!(::kvs::traits::normal::Store),
+      parse_quote!(::kvs::traits::normal::ListOp),
+    ],
+    &name,
+    &cmd_constraint,
+  );
+  structure.extend(ch_impl);
+  structure.extend(first_traits);
+  structure.extend(second_traits);
+  return structure;
 }
