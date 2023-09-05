@@ -1,54 +1,56 @@
 use ::futures::stream::{iter, BoxStream, StreamExt};
 
-use ::kvs::redis::{Commands, RedisResult};
-use ::kvs::traits::last_checked::LastCheckStore;
-use ::kvs_macros::{kvs, LastCheck};
+use ::kvs::redis::{Commands, RedisError, RedisResult};
+use ::kvs_macros::last_check_kvs;
 use ::rpc::entities::Exchanges;
+use kvs::traits::normal::Base;
 
-// #[derive(LastCheck)]
-kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");
-// #[derive(LastCheck)]
-kvs!(pub, ONEXTypeKVS, String, "observer_node_exchange_type:{}");
-
-impl<T> LastCheckStore<T, String> for ObserverNodeKVS<T> where
-  T: Commands + Send + Sync
-{
-}
+last_check_kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");
+last_check_kvs!(pub, ONEXTypeKVS, String, "observer_node_exchange_type:{}");
 
 impl<T> ONEXTypeKVS<T>
 where
   T: Commands + Send + Sync,
 {
-  pub fn get_nodes_by_exchange(
+  pub async fn get_nodes_by_exchange(
     &self,
     exchange: Exchanges,
   ) -> RedisResult<BoxStream<'_, String>> {
-    let keys: Vec<String> = self
-      .lock_commands()
-      .scan_match("observer_node_exchange_type:*")?
-      .collect();
-    let keys = keys
-      .into_iter()
-      .map(|key| {
-        let mut cmd = self.lock_commands();
-        return (key.clone(), cmd.get::<_, String>(key));
+    let cmd_lock = self.commands();
+    let keys: Vec<String> = async {
+      let mut cmds = cmd_lock.lock().await;
+      Ok::<Vec<String>, RedisError>(
+        cmds.scan_match("observer_node_exchange_type:*")?.collect(),
+      )
+    }
+    .await?;
+    let keys = iter(keys)
+      .map(move |key| {
+        let exchange_key = key.clone();
+        let cmd_lock = self.commands();
+        let exchange = async move {
+          let mut cmd = cmd_lock.lock().await;
+          cmd.get::<_, String>(exchange_key.clone())
+        };
+        return (key, exchange);
       })
-      .filter_map(|(key, exchange)| {
-        let pair =
-          exchange.map(|exchange| (key, Exchanges::from_str_name(&exchange)));
+      .filter_map(|(key, exchange)| async {
+        let pair = exchange
+          .await
+          .map(|exchange| (key, Exchanges::from_str_name(&exchange)));
         return pair.ok();
       })
-      .filter_map(|(key, node_exchange)| {
+      .filter_map(|(key, node_exchange)| async move {
         return node_exchange.map(|node_exchange| (key, node_exchange));
       })
-      .filter_map(move |(key, node_exchange)| {
+      .filter_map(move |(key, node_exchange)| async move {
         if node_exchange == exchange {
           return Some(key);
         } else {
           return None;
         }
       });
-    return Ok(iter(keys).boxed());
+    return Ok(keys.boxed());
   }
 }
 
@@ -56,32 +58,27 @@ impl<T> ObserverNodeKVS<T>
 where
   T: Commands + Send + Sync,
 {
-  pub fn get_node_names(&self) -> RedisResult<Vec<String>> {
-    return Ok(
-      self
-        .lock_commands()
-        .scan_match("observer_node:*")?
-        .collect(),
-    );
+  pub async fn get_node_names(&self) -> RedisResult<Vec<String>> {
+    let cmd_lock = self.commands();
+    let mut cmds = cmd_lock.lock().await;
+    return Ok(cmds.scan_match("observer_node:*")?.collect());
   }
 
-  pub fn get_handling_symbols(&self) -> RedisResult<BoxStream<String>> {
-    let nodes = self.get_node_names()?;
+  pub async fn get_handling_symbols(&self) -> RedisResult<BoxStream<String>> {
+    let nodes = self.get_node_names().await?;
     let mut handling_symbols: Vec<String> = vec![];
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
     for node in nodes {
-      let mut symbols: Vec<String> =
-        self.lock_commands().lrange(node, 0, -1)?;
+      let mut symbols: Vec<String> = cmd.lrange(node, 0, -1)?;
       handling_symbols.append(&mut symbols);
     }
     return Ok(iter(handling_symbols).boxed());
   }
 
-  pub fn count_nodes(&self) -> RedisResult<usize> {
-    return Ok(
-      self
-        .lock_commands()
-        .scan_match::<_, String>("observer_node:*")?
-        .count(),
-    );
+  pub async fn count_nodes(&self) -> RedisResult<usize> {
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
+    return Ok(cmd.scan_match::<_, String>("observer_node:*")?.count());
   }
 }

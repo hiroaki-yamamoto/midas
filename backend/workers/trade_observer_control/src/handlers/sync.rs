@@ -51,7 +51,7 @@ where
       trading_symbols_list.map(|s| s.symbol).collect().await;
 
     let nodes_symbols: HashSet<String> =
-      self.kvs.get_handling_symbols()?.collect().await;
+      self.kvs.get_handling_symbols().await?.collect().await;
     let to_add = (&db_symbols - &nodes_symbols)
       .into_iter()
       .map(|s| Event::SymbolAdd(exchange.clone(), s));
