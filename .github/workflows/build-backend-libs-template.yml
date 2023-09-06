@@ -12,8 +12,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install build tools
         run: |
-          apt-get update
-          apt-get install -y \
+          sudo apt-get update
+          sudo apt-get install -y \
             musl-tools jq curl lld clang cmake protobuf-compiler \
             libprotobuf-dev
       - name: Setup Rust
