@@ -1,0 +1,11 @@
+name: "Build Backend"
+on:
+  push:
+    branches:
+      - '**'
+jobs:
+  build-access-logger:
+    - name: "Build Access Logger"
+      uses: "hiroaki-yamamoto/midas/.github/workflows/build-access-logger.yml@master"
+      with:
+        pkgid: "access_logger"

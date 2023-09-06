@@ -4,5 +4,6 @@ lto = true
 strip = true
 
 [workspace]
-members = ["libs/*", "libs/exchanges/*", "services/*", "workers/*"]
+resolver = "2"
+members = ["libs/exchanges/*", "libs/*", "services/*", "workers/*"]
 exclude = ["libs/exchanges", "services/transpiler"]

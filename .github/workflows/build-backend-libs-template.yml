@@ -1,0 +1,43 @@
+name: "Build Backend Library"
+on:
+  workflow_call:
+    inputs:
+      pkgid:
+        description: "Package ID"
+        required: true
+        type: string
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install build tools
+        run: |
+          apt-get update
+          apt-get install -y \
+            musl-tools jq curl lld clang cmake protobuf-compiler \
+            libprotobuf-dev
+      - name: Setup Rust
+        run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      - name: Setup Rustfmt
+        run: rustup component add rustfmt
+      - name: Target to x86_64-unknown-linux-musl
+        run: rustup target add x86_64-unknown-linux-musl
+      - name: "Extract musl dependencies"
+        run: |
+          mkdir ../deps
+          tar xJvf openssl.txz -C ../deps
+          tar xJvf gmp.txz -C ../deps
+          tar xJvf mpfr.txz -C ../deps
+          tar xJvf mpc.txz -C ../deps
+        working-directory: ./.circleci
+      - name: "Build the package"
+        run: |
+          cargo build -r \
+            --target x86_64-unknown-linux-musl \
+            -p ${{ github.event.inputs.pkgid }}
+      - name: "Upload the package"
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.event.inputs.pkgid }}
+          path: target
