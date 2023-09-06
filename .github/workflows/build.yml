@@ -53,11 +53,11 @@ jobs:
             --target x86_64-unknown-linux-musl \
             -p symbols
         working-directory: ./backend
-      - name: "Upload the package"
-        uses: actions/upload-artifact@v2
-        with:
-          name: libs
-          path: backend/target
+      # - name: "Upload the package"
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: libs
+      #     path: backend/target
   build-bot_service:
     needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
