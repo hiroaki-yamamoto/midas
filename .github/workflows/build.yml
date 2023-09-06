@@ -89,11 +89,6 @@ jobs:
     with:
       pkgid: trade_observer_service
   # TODO: Transpiler Service
-  build-bot_worker:
-    needs: build-libs
-    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
-    with:
-      pkgid: bot_worker
   build-historical_date_split_worker:
     needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master

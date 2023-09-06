@@ -34,7 +34,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: libs
-          path: target
+          path: backend/target
       - name: "Build the package"
         run: |
           cargo build -r \
