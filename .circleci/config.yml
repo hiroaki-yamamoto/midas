@@ -3,7 +3,7 @@ version: 2.1
 executors:
   backend-rust:
     docker:
-      - image: rust
+      - image: messense/rust-musl-cross:x86_64-musl
     environment:
       SCCACHE_VER: v0.5.4
       RUSTC_WRAPPER: /usr/local/bin/sccache
@@ -27,17 +27,20 @@ jobs:
             echo $PREV_REV
       - restore_cache:
           key: cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
+      # - run:
+      #     name: "Install musl tools"
+      #     command: |
+      #       apt-get update
+      #       apt-get install -y \
+      #         musl-tools jq curl lld clang cmake protobuf-compiler \
+      #         libprotobuf-dev
+      # - run: rustup component add rustfmt
+      # - run:
+      #     name: "Install musl package"
+      #     command: "rustup target add x86_64-unknown-linux-musl"
       - run:
-          name: "Install musl tools"
-          command: |
-            apt-get update
-            apt-get install -y \
-              musl-tools jq curl lld clang cmake protobuf-compiler \
-              libprotobuf-dev
-      - run: rustup component add rustfmt
-      - run:
-          name: "Install musl package"
-          command: "rustup target add x86_64-unknown-linux-musl"
+          name: "Update rust"
+          command: "rustup update"
       - run:
           name: "Install sccache"
           command: |
