@@ -1,7 +1,7 @@
 use ::futures::StreamExt;
 
 use ::kvs::redis::{Commands, RedisResult};
-use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
+use ::observers::kvs::{NodeFilter, ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
 
@@ -39,11 +39,13 @@ where
       .exchange_type_kvs
       .get_nodes_by_exchange(exchange)
       .await?;
-    let num_nodes = num_added_nodes;
-    let num_symbols = 0;
-    nodes.for_each(|node_id| {
-      num_nodes += 1;
-      self.node_kvs.get_handling_symbols()
-    });
+    let num_nodes = num_added_nodes + nodes.count().await;
+    let filter = NodeFilter::new(&self.node_kvs, &self.exchange_type_kvs);
+    let num_symbols = filter
+      .get_handling_symbol_at_exchange(exchange)
+      .await?
+      .count()
+      .await;
+    return Ok(num_symbols / num_nodes);
   }
 }
