@@ -4,78 +4,59 @@ on:
     branches:
       - '**'
 jobs:
-  build-access-logger:
-    name: "Build Access Logger"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "access_logger"
-  build-bot:
-    name: "Build Bot"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "bot"
-  build-config:
-    name: "Build Config"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "config"
-  build-csrf:
-    name: "Build CSRF Preventation Lib"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "csrf"
-  build-date_splitter:
-    name: "Build Date Splitter"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "date_splitter"
-  build-entities:
-    name: "Build Entities"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "entities"
-  build-errors:
-    name: "Build Error Entities"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "errors"
-  build-keychain:
-    name: "Build Keychain"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "keychain"
-  build-kvs:
-    name: "Build KVS Lib"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "kvs"
-  build-kvs_macros:
-    name: "Build KVS macro"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "kvs_macros"
-  build-round:
-    name: "Build Round-robin client"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "round"
-  build-rpc:
-    name: "Build RPC Entities"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "rpc"
-  build-subscribe:
-    name: "Build Pub/Sub Lib"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "subscribe"
-  build-types:
-    name: "Build Type Definitions"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "types"
-  build-writers:
-    name: "Build DB Writers"
-    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-base-libs-template.yml@master"
-    with:
-      pkgid: "writers"
+  build-libs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            musl-tools jq curl lld clang cmake protobuf-compiler \
+            libprotobuf-dev
+      - name: Setup Rust
+        run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      - name: Setup Rustfmt
+        run: rustup component add rustfmt
+      - name: Target to x86_64-unknown-linux-musl
+        run: rustup target add x86_64-unknown-linux-musl
+      - name: "Extract musl dependencies"
+        run: |
+          mkdir ../deps
+          tar xJvf openssl.txz -C ../deps
+          tar xJvf gmp.txz -C ../deps
+          tar xJvf mpfr.txz -C ../deps
+          tar xJvf mpc.txz -C ../deps
+        working-directory: ./.circleci
+      - name: "Build the package"
+        run: |
+          cargo build -r \
+            --target x86_64-unknown-linux-musl \
+            --libs
+          cargo build -r \
+            --target x86_64-unknown-linux-musl \
+            -p clients
+          cargo build -r \
+            --target x86_64-unknown-linux-musl \
+            -p executors
+          cargo build -r \
+            --target x86_64-unknown-linux-musl \
+            -p history
+          cargo build -r \
+            --target x86_64-unknown-linux-musl \
+            -p notification
+          cargo build -r \
+            --target x86_64-unknown-linux-musl \
+            -p observers
+          cargo build -r \
+            --target x86_64-unknown-linux-musl \
+            -p sign
+          cargo build -r \
+            --target x86_64-unknown-linux-musl \
+            -p symbols
+        working-directory: ./backend
+      - name: "Upload the package"
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ inputs.pkgid }}
+          path: backend/target
