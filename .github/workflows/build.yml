@@ -8,3 +8,59 @@ jobs:
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "access_logger"
+  build-bot:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "bot"
+  build-config:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "config"
+  build-csrf:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "csrf"
+  build-date_splitter:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "date_splitter"
+  build-entities:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "entities"
+  build-errors:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "errors"
+  build-keychain:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "keychain"
+  build-kvs:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "kvs"
+  build-kvs_macros:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "kvs_macros"
+  build-round:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "round"
+  build-rpc:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "rpc"
+  build-subscribe:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "subscribe"
+  build-types:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "types"
+  build-writers:
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "writers"
