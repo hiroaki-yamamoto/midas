@@ -1,4 +1,3 @@
-name: "Build Backend Library"
 on:
   workflow_call:
     inputs:
