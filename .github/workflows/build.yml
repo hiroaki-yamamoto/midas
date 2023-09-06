@@ -5,62 +5,77 @@ on:
       - '**'
 jobs:
   build-access-logger:
+    name: "Build Access Logger"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "access_logger"
   build-bot:
+    name: "Build Bot"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "bot"
   build-config:
+    name: "Build Config"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "config"
   build-csrf:
+    name: "Build CSRF Preventation Lib"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "csrf"
   build-date_splitter:
+    name: "Build Date Splitter"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "date_splitter"
   build-entities:
+    name: "Build Entities"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "entities"
   build-errors:
+    name: "Build Error Entities"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "errors"
   build-keychain:
+    name: "Build Keychain"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "keychain"
   build-kvs:
+    name: "Build KVS Lib"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "kvs"
   build-kvs_macros:
+    name: "Build KVS macro"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "kvs_macros"
   build-round:
+    name: "Build Round-robin client"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "round"
   build-rpc:
+    name: "Build RPC Entities"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "rpc"
   build-subscribe:
+    name: "Build Pub/Sub Lib"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "subscribe"
   build-types:
+    name: "Build Type Definitions"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "types"
   build-writers:
+    name: "Build DB Writers"
     uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
     with:
       pkgid: "writers"
