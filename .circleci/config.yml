@@ -163,7 +163,7 @@ workflows:
           filters:
             branches:
               only: master
-          service_name: historical_date_splitter
+          service_name: historical_date_split_worker
       - deploy-image:
           name: "Symbol Service Deployment"
           requires:

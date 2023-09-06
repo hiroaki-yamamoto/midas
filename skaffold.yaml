@@ -24,7 +24,7 @@ build:
       docker:
         dockerfile: devel.dockerfile
         buildArgs:
-          SERVICE: historical_date_splitter
+          SERVICE: historical_date_split_worker
     - image: symbol-service
       context: backend
       docker:
