@@ -5,9 +5,6 @@ on:
       - '**'
 jobs:
   build-access-logger:
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Build Access Logger"
-        uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
-        with:
-          pkgid: "access_logger"
+    uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
+    with:
+      pkgid: "access_logger"
