@@ -1,8 +1,6 @@
 name: "Build Backend"
 on:
-  push:
-    branches:
-      - '**'
+  push
 jobs:
   build-libs:
     runs-on: ubuntu-latest
@@ -61,6 +59,7 @@ jobs:
           name: libs
           path: backend/target
   build-bins:
+    needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
     with:
       pkgid: bot_service
