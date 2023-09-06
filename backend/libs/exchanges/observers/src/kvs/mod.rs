@@ -1,9 +1,13 @@
+mod filter;
+
 use ::futures::stream::{iter, BoxStream, StreamExt};
 
 use ::kvs::redis::{Commands, RedisError, RedisResult};
+use ::kvs::traits::normal::Base;
 use ::kvs_macros::last_check_kvs;
 use ::rpc::entities::Exchanges;
-use kvs::traits::normal::Base;
+
+pub use self::filter::NodeFilter;
 
 last_check_kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");
 last_check_kvs!(pub, ONEXTypeKVS, String, "observer_node_exchange_type:{}");
@@ -62,18 +66,6 @@ where
     let cmd_lock = self.commands();
     let mut cmds = cmd_lock.lock().await;
     return Ok(cmds.scan_match("observer_node:*")?.collect());
-  }
-
-  pub async fn get_handling_symbols(&self) -> RedisResult<BoxStream<String>> {
-    let nodes = self.get_node_names().await?;
-    let mut handling_symbols: Vec<String> = vec![];
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    for node in nodes {
-      let mut symbols: Vec<String> = cmd.lrange(node, 0, -1)?;
-      handling_symbols.append(&mut symbols);
-    }
-    return Ok(iter(handling_symbols).boxed());
   }
 
   pub async fn count_nodes(&self) -> RedisResult<usize> {

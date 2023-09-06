@@ -1,6 +1,9 @@
-use ::kvs::redis::Commands;
+use ::futures::StreamExt;
+
+use ::kvs::redis::{Commands, RedisResult};
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
+use ::rpc::entities::Exchanges;
 
 pub struct SymbolBalancer<T>
 where
@@ -27,5 +30,20 @@ where
     }
   }
 
-  async fn calc_num_average_symbols(&self) -> usize {}
+  async fn calc_num_average_symbols(
+    &self,
+    exchange: Exchanges,
+    num_added_nodes: usize,
+  ) -> RedisResult<usize> {
+    let nodes = self
+      .exchange_type_kvs
+      .get_nodes_by_exchange(exchange)
+      .await?;
+    let num_nodes = num_added_nodes;
+    let num_symbols = 0;
+    nodes.for_each(|node_id| {
+      num_nodes += 1;
+      self.node_kvs.get_handling_symbols()
+    });
+  }
 }

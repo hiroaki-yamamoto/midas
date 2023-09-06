@@ -7,7 +7,8 @@ use ::mongodb::Database;
 use ::entities::TradeObserverControlEvent as Event;
 use ::kvs::redis::Commands;
 use ::kvs::Connection as KVSConnection;
-use ::observers::kvs::ObserverNodeKVS;
+use ::observers::kvs::NodeFilter;
+use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
 use ::subscribe::natsJS::context::Context;
@@ -23,6 +24,7 @@ where
 {
   db: Database,
   kvs: ObserverNodeKVS<T>,
+  type_kvs: ONEXTypeKVS<T>,
   nats: Context,
 }
 
@@ -34,6 +36,7 @@ where
     return Self {
       db: db.clone(),
       kvs: ObserverNodeKVS::new(cmd.clone().into()),
+      type_kvs: ONEXTypeKVS::new(cmd.clone().into()),
       nats: nats.clone(),
     };
   }
@@ -50,8 +53,12 @@ where
     let db_symbols: HashSet<String> =
       trading_symbols_list.map(|s| s.symbol).collect().await;
 
-    let nodes_symbols: HashSet<String> =
-      self.kvs.get_handling_symbols().await?.collect().await;
+    let node_filter = NodeFilter::new(&self.kvs, &self.type_kvs);
+    let nodes_symbols: HashSet<String> = node_filter
+      .get_handling_symbol_at_exchange(exchange.clone())
+      .await?
+      .collect()
+      .await;
     let to_add = (&db_symbols - &nodes_symbols)
       .into_iter()
       .map(|s| Event::SymbolAdd(exchange.clone(), s));
