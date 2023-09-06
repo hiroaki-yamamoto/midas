@@ -6,6 +6,6 @@ on:
 jobs:
   build-access-logger:
     - name: "Build Access Logger"
-      uses: "hiroaki-yamamoto/midas/.github/workflows/build-access-logger.yml@master"
+      uses: "hiroaki-yamamoto/midas/.github/workflows/build-backend-libs-template.yml@master"
       with:
         pkgid: "access_logger"
