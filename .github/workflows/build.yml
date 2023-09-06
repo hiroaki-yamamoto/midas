@@ -58,8 +58,64 @@ jobs:
         with:
           name: libs
           path: backend/target
-  build-bins:
+  build-bot_service:
     needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
     with:
       pkgid: bot_service
+  build-historical_service:
+    needs: build-libs
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    with:
+      pkgid: historical_service
+  build-keychain_service:
+    needs: build-libs
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    with:
+      pkgid: keychain_service
+  build-symbol_service:
+    needs: build-libs
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    with:
+      pkgid: symbol_service
+  build-token_service:
+    needs: build-libs
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    with:
+      pkgid: token_service
+  build-trade_observer_service:
+    needs: build-libs
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    with:
+      pkgid: trade_observer_service
+  # TODO: Transpiler Service
+  build-bot_worker:
+    needs: build-libs
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    with:
+      pkgid: bot_worker
+  build-historical_date_split_worker:
+    needs: build-libs
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    with:
+      pkgid: historical_date_split_worker
+  build-historical_fetch_worker:
+    needs: build-libs
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    with:
+      pkgid: historical_fetch_worker
+  build-notify_worker:
+    needs: build-libs
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    with:
+      pkgid: notify_worker
+  build-trade_observer_worker:
+    needs: build-libs
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    with:
+      pkgid: trade_observer_worker
+  build-trade_observer_control_worker:
+    needs: build-libs
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    with:
+      pkgid: trade_observer_control_worker
