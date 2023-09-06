@@ -16,7 +16,7 @@ executors:
 jobs:
   build-backend:
     executor: backend-rust
-    resource_class: large
+    resource_class: arm.large
     environment:
       PREV_REV: << pipeline.git.base_revision >>
     steps:
@@ -41,7 +41,7 @@ jobs:
       - run:
           name: "Install sccache"
           command: |
-            TARGET="sccache-${SCCACHE_VER}-x86_64-unknown-linux-musl"
+            TARGET="sccache-${SCCACHE_VER}-aarch64-unknown-linux-musl"
             SCCACHE_ARCHIVE="${TARGET}.tar.gz"
             SCCACHE_URL='https://github.com/mozilla/sccache/releases/download/'
             SCCACHE_URL="${SCCACHE_URL}${SCCACHE_VER}/${SCCACHE_ARCHIVE}"
