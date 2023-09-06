@@ -34,9 +34,9 @@ jobs:
         run: |
           cargo build -r \
             --target x86_64-unknown-linux-musl \
-            -p ${{ github.event.inputs.pkgid }}
+            -p ${{ inputs.pkgid }}
       - name: "Upload the package"
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ github.event.inputs.pkgid }}
+          name: ${{ inputs.pkgid }}
           path: target
