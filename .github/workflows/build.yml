@@ -60,3 +60,7 @@ jobs:
         with:
           name: libs
           path: backend/target
+  build-bins:
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    with:
+      pkgid: bot_service
