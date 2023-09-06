@@ -27,20 +27,20 @@ jobs:
             echo $PREV_REV
       - restore_cache:
           key: cache-{{ .Branch }}-{{ checksum "backend/Cargo.lock"}}
-      # - run:
-      #     name: "Install musl tools"
-      #     command: |
-      #       apt-get update
-      #       apt-get install -y \
-      #         musl-tools jq curl lld clang cmake protobuf-compiler \
-      #         libprotobuf-dev
-      # - run: rustup component add rustfmt
-      # - run:
-      #     name: "Install musl package"
-      #     command: "rustup target add x86_64-unknown-linux-musl"
+      - run:
+          name: "Install musl tools"
+          command: |
+            apt-get update
+            apt-get install -y \
+              musl-tools jq curl lld clang cmake protobuf-compiler \
+              libprotobuf-dev
+      - run: rustup component add rustfmt
+      - run:
+          name: "Install musl package"
+          command: "rustup target add x86_64-unknown-linux-musl"
       - run:
           name: "Update rust"
-          command: "rustup update"
+          command: "rustup update --force"
       - run:
           name: "Install sccache"
           command: |
