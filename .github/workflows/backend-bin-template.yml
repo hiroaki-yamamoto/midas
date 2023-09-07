@@ -1,0 +1,57 @@
+on:
+  workflow_call:
+    inputs:
+      pkgid:
+        description: "Package ID"
+        required: true
+        type: string
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            musl-tools jq curl lld clang cmake protobuf-compiler \
+            libprotobuf-dev
+      - name: Setup Rust
+        run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      - name: Setup Rustfmt
+        run: rustup component add rustfmt
+      - name: Target to x86_64-unknown-linux-musl
+        run: rustup target add x86_64-unknown-linux-musl
+      - name: "Extract musl dependencies"
+        run: |
+          mkdir ../deps
+          tar xJvf openssl.txz -C ../deps
+          tar xJvf gmp.txz -C ../deps
+          tar xJvf mpfr.txz -C ../deps
+          tar xJvf mpc.txz -C ../deps
+        working-directory: ./.circleci
+      - name: "Download Library artifacts"
+        uses: actions/download-artifact@v2
+        with:
+          name: target.tzst
+          path: backend
+      - name: "Extract Library artifacts"
+        run: |
+          tar --zstd -xvf backend/target.tzst
+        working-directory: ./backend
+      - name: "Build the package"
+        run: |
+          cargo build -r \
+            --target x86_64-unknown-linux-musl \
+            -p ${{ inputs.pkgid }}
+        working-directory: ./backend
+      - name: "Compress the binary"
+        run: |
+          zstd -19 -T0 -o ${{ inputs.pkgid }}.zst \
+            backend/target/x86_64-unknown-linux-musl/release/${{ inputs.pkgid }}
+        working-directory: ./backend
+      - name: "Upload the package"
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ inputs.pkgid }}.zst
+          path: backend/${{ inputs.pkgid }}.zst
