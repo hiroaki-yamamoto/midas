@@ -2213,6 +2213,7 @@ dependencies = [
  "tokio-stream",
  "tokio-tungstenite 0.20.0",
  "types",
+ "uuid",
 ]
 
 [[package]]

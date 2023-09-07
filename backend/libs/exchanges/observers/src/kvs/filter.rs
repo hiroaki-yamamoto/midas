@@ -1,9 +1,11 @@
 use ::futures::stream::{iter, BoxStream, StreamExt};
+use ::kvs::traits::last_checked::ListOp;
 use ::std::collections::HashSet;
+use ::std::str::FromStr;
+use ::uuid::Uuid;
 
 use ::kvs::redis::Commands;
 use ::kvs::redis::RedisResult;
-use ::kvs::traits::normal::ListOp;
 use ::rpc::entities::Exchanges;
 
 use super::{ONEXTypeKVS, ObserverNodeKVS};
@@ -42,5 +44,29 @@ where
       .filter_map(|lrange_fut| async { lrange_fut.await.ok() })
       .flat_map(|symbols| iter(symbols));
     return Ok(nodes.boxed());
+  }
+
+  pub async fn get_overflowed_nodes(
+    &self,
+    exchange: Exchanges,
+    num_symbols: usize,
+  ) -> RedisResult<Vec<String>> {
+    let nodes: Vec<String> = self
+      .get_handling_symbol_at_exchange(exchange)
+      .await?
+      .filter_map(|node| async move {
+        return self
+          .node_kvs
+          .llen::<usize>(node.to_string())
+          .await
+          .map(|num| (node, num))
+          .ok();
+      })
+      .filter_map(|(node, num)| async move {
+        return if num > num_symbols { Some(node) } else { None };
+      })
+      .collect()
+      .await;
+    return Ok(nodes);
   }
 }

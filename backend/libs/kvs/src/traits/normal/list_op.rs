@@ -75,4 +75,14 @@ where
     let mut cmd = cmd.lock().await;
     return Ok(cmd.lrange(channel_name, start, stop)?);
   }
+
+  async fn llen<R>(&self, key: impl AsRef<str> + Display + Send) -> KVSResult<R>
+  where
+    R: FromRedisValue,
+  {
+    let channel_name = self.channel_name(key);
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
+    return Ok(cmd.llen(channel_name)?);
+  }
 }

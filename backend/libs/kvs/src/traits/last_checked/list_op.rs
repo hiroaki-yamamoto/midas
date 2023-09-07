@@ -39,4 +39,30 @@ where
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }
+
+  async fn lrange<R>(
+    &self,
+    key: impl AsRef<str> + Display + Send + Sync,
+    start: isize,
+    stop: isize,
+  ) -> KVSResult<R>
+  where
+    R: FromRedisValue + Send,
+  {
+    let ret = NormalListOp::lrange(self, &key, start, stop).await?;
+    self.flag_last_checked(key, None).await?;
+    return Ok(ret);
+  }
+
+  async fn llen<R>(
+    &self,
+    key: impl AsRef<str> + Display + Send + Sync,
+  ) -> KVSResult<R>
+  where
+    R: FromRedisValue + Send,
+  {
+    let ret = NormalListOp::llen(self, &key).await?;
+    self.flag_last_checked(key, None).await?;
+    return Ok(ret);
+  }
 }
