@@ -43,7 +43,7 @@ jobs:
           tar xJvf gmp.txz -C ../deps
           tar xJvf mpfr.txz -C ../deps
           tar xJvf mpc.txz -C ../deps
-        working-directory: ./.circleci
+        working-directory: ./.github
       - name: "Build the package"
         run: |
           cargo build -r \

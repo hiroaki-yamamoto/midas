@@ -31,5 +31,5 @@ cd -
 rm -rf $WORK_DIR/$EXTRACTED_NAME $WORK_DIR/$FILENAME
 
 cd $WORK_DIR/../deps
-tar cJvf $WORK_DIR/../.circleci/`basename $PREFIX`.txz `basename $PREFIX`
+tar cJvf $WORK_DIR/../.github/`basename $PREFIX`.txz `basename $PREFIX`
 cd -

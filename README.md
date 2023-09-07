@@ -1,7 +1,7 @@
 [![CI Img]][CI Link]
 
-[CI Img]: https://circleci.com/gh/hiroaki-yamamoto/midas.svg?style=svg
-[CI Link]: https://app.circleci.com/pipelines/github/hiroaki-yamamoto/midas
+[CI Img]: https://github.com/hiroaki-yamamoto/midas/actions/workflows/build.yml/badge.svg
+[CI Link]: https://github.com/hiroaki-yamamoto/midas/actions/workflows/build.yml
 
 # About License
 Refer [here](LICENSE.md)

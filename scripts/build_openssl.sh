@@ -30,5 +30,5 @@ cd -
 rm -rf $WORK_DIR/$EXTRACTED_NAME $WORK_DIR/$FILENAME
 
 cd $WORK_DIR/../deps
-tar cJvf $WORK_DIR/../.circleci/openssl.txz openssl
+tar cJvf $WORK_DIR/../.github/openssl.txz openssl
 cd -

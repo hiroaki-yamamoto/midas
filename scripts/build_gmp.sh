@@ -7,7 +7,7 @@ source ./curl.sh
 export CC="musl-gcc -fPIE -pie -O2"
 
 BASEDIR=`dirname $0`
-DOWNLOAD_URL='https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz'
+DOWNLOAD_URL='https://gmplib.org/download/gmp/gmp-6.3.0.tar.xz'
 FILENAME=`basename $DOWNLOAD_URL`
 EXTRACTED_NAME=`basename ${FILENAME} .tar.xz`
 WORK_DIR=`realpath $BASEDIR`
@@ -29,5 +29,5 @@ cd -
 rm -rf $WORK_DIR/$EXTRACTED_NAME $WORK_DIR/$FILENAME
 
 cd $WORK_DIR/../deps
-tar cJvf $WORK_DIR/../.circleci/`basename $PREFIX`.txz `basename $PREFIX`
+tar cJvf $WORK_DIR/../.github/`basename $PREFIX`.txz `basename $PREFIX`
 cd -
