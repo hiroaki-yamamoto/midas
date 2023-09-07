@@ -51,57 +51,57 @@ jobs:
           path: backend/target.tzst
   build-bot_service:
     needs: build-libs
-    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@${{github.ref_name}}
     with:
       pkgid: bot_service
   build-historical_service:
     needs: build-libs
-    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@${{github.ref_name}}
     with:
       pkgid: historical_service
   build-keychain_service:
     needs: build-libs
-    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@${{github.ref_name}}
     with:
       pkgid: keychain_service
   build-symbol_service:
     needs: build-libs
-    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@${{github.ref_name}}
     with:
       pkgid: symbol_service
   build-token_service:
     needs: build-libs
-    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@${{github.ref_name}}
     with:
       pkgid: token_service
   build-trade_observer_service:
     needs: build-libs
-    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@${{github.ref_name}}
     with:
       pkgid: trade_observer_service
   # TODO: Transpiler Service
   build-historical_date_split_worker:
     needs: build-libs
-    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@${{github.ref_name}}
     with:
       pkgid: historical_date_split_worker
   build-historical_fetch_worker:
     needs: build-libs
-    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@${{github.ref_name}}
     with:
       pkgid: historical_fetch_worker
   build-notify_worker:
     needs: build-libs
-    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@${{github.ref_name}}
     with:
       pkgid: notify_worker
   build-trade_observer_worker:
     needs: build-libs
-    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@${{github.ref_name}}
     with:
       pkgid: trade_observer_worker
   build-trade_observer_control_worker:
     needs: build-libs
-    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
+    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@${{github.ref_name}}
     with:
       pkgid: trade_observer_control_worker
