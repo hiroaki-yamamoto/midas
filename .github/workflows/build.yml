@@ -5,7 +5,14 @@ jobs:
   build-libs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo
+            ~/.cache/sccache
+            backend/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('backend/Cargo.lock') }}
       - name: Install build tools
         run: |
           sudo apt-get update
@@ -18,6 +25,17 @@ jobs:
         run: rustup component add rustfmt
       - name: Target to x86_64-unknown-linux-musl
         run: rustup target add x86_64-unknown-linux-musl
+      - name: "Install sccache"
+        run: |
+          TARGET="sccache-${SCCACHE_VER}-x86_64-unknown-linux-musl"
+          SCCACHE_ARCHIVE="${TARGET}.tar.gz"
+          SCCACHE_URL='https://github.com/mozilla/sccache/releases/download/'
+          SCCACHE_URL="${SCCACHE_URL}${SCCACHE_VER}/${SCCACHE_ARCHIVE}"
+          curl -fLC - ${SCCACHE_URL} -o ${SCCACHE_ARCHIVE}
+          tar xzf ${SCCACHE_ARCHIVE}
+          mv "${TARGET}/sccache" $RUSTC_WRAPPER
+          rm -rf ${SCCACHE_ARCHIVE} ${TARGET}
+          chmod u+x $RUSTC_WRAPPER
       - name: "Extract musl dependencies"
         run: |
           mkdir ../deps
