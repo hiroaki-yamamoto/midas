@@ -1,9 +1,6 @@
 name: "Build Backend"
 on:
   push
-env:
-  SCCACHE_VER: v0.5.4
-  RUSTC_WRAPPER: /usr/local/bin/sccache
 jobs:
   build-libs:
     runs-on: ubuntu-latest
@@ -30,15 +27,15 @@ jobs:
         run: rustup target add x86_64-unknown-linux-musl
       - name: "Install sccache"
         run: |
-          TARGET="sccache-${{env.SCCACHE_VER}}-x86_64-unknown-linux-musl"
+          TARGET="sccache-${{ vars.SCCACHE_VER }}-x86_64-unknown-linux-musl"
           SCCACHE_ARCHIVE="${TARGET}.tar.gz"
           SCCACHE_URL='https://github.com/mozilla/sccache/releases/download/'
-          SCCACHE_URL="${SCCACHE_URL}${{env.SCCACHE_VER}}/${SCCACHE_ARCHIVE}"
+          SCCACHE_URL="${SCCACHE_URL}${{ vars.SCCACHE_VER }}/${SCCACHE_ARCHIVE}"
           curl -fLC - ${SCCACHE_URL} -o ${SCCACHE_ARCHIVE}
           tar xzf ${SCCACHE_ARCHIVE}
-          mv "${TARGET}/sccache" ${{env.RUSTC_WRAPPER}}
+          mv "${TARGET}/sccache" ${{ vars.RUSTC_WRAPPER }}
           rm -rf ${SCCACHE_ARCHIVE} ${TARGET}
-          chmod u+x ${{env.RUSTC_WRAPPER}}
+          chmod u+x ${{ vars.RUSTC_WRAPPER }}
       - name: "Extract musl dependencies"
         run: |
           mkdir ../deps
@@ -75,65 +72,54 @@ jobs:
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@feat/github-parallel-build
     with:
       pkgid: bot_service
-      SCCACHE_VER: ${{ env.SCCACHE_VER }}
   build-historical_service:
     needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@feat/github-parallel-build
     with:
       pkgid: historical_service
-      SCCACHE_VER: ${{ env.SCCACHE_VER }}
   build-keychain_service:
     needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@feat/github-parallel-build
     with:
       pkgid: keychain_service
-      SCCACHE_VER: ${{ env.SCCACHE_VER }}
   build-symbol_service:
     needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@feat/github-parallel-build
     with:
       pkgid: symbol_service
-      SCCACHE_VER: ${{ env.SCCACHE_VER }}
   build-token_service:
     needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@feat/github-parallel-build
     with:
       pkgid: token_service
-      SCCACHE_VER: ${{ env.SCCACHE_VER }}
   build-trade_observer_service:
     needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@feat/github-parallel-build
     with:
       pkgid: trade_observer_service
-      SCCACHE_VER: ${{ env.SCCACHE_VER }}
   # TODO: Transpiler Service
   build-historical_date_split_worker:
     needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@feat/github-parallel-build
     with:
       pkgid: historical_date_split_worker
-      SCCACHE_VER: ${{ env.SCCACHE_VER }}
   build-historical_fetch_worker:
     needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@feat/github-parallel-build
     with:
       pkgid: historical_fetch_worker
-      SCCACHE_VER: ${{ env.SCCACHE_VER }}
   build-notify_worker:
     needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@feat/github-parallel-build
     with:
       pkgid: notify_worker
-      SCCACHE_VER: ${{ env.SCCACHE_VER }}
   build-trade_observer_worker:
     needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@feat/github-parallel-build
     with:
       pkgid: trade_observer_worker
-      SCCACHE_VER: ${{ env.SCCACHE_VER }}
   build-trade_observer_control_worker:
     needs: build-libs
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@feat/github-parallel-build
     with:
       pkgid: trade_observer_control_worker
-      SCCACHE_VER: ${{ env.SCCACHE_VER }}
