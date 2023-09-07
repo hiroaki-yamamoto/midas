@@ -47,7 +47,7 @@ jobs:
       - name: "Upload the package"
         uses: actions/upload-artifact@v2
         with:
-          name: libs.tzst
+          name: target.tzst
           path: backend/target.tzst
   build-bot_service:
     needs: build-libs
