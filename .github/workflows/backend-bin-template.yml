@@ -37,7 +37,7 @@ jobs:
           path: backend
       - name: "Extract Library artifacts"
         run: |
-          tar --zstd -xvf backend/target.tzst
+          tar --zstd -xvf target.tzst
         working-directory: ./backend
       - name: "Build the package"
         run: |
