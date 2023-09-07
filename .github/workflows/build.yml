@@ -58,6 +58,8 @@ jobs:
             -p observers \
             -p symbols
           # -p sign
+        env:
+          RUSTC_WRAPPER: ${{ vars.RUSTC_WRAPPER }}
         working-directory: ./backend
       - name: "Compress the built files"
         run: tar --zstd -cvf target.tzst target
