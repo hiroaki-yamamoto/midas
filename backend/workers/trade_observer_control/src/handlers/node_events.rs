@@ -15,6 +15,7 @@ use ::rpc::entities::Exchanges;
 use ::subscribe::natsJS::context::Context;
 use ::subscribe::PubSub;
 
+use crate::balancer::SymbolBalancer;
 use crate::dlock::InitLock;
 use crate::errors::Result as ControlResult;
 
@@ -24,27 +25,40 @@ pub(crate) struct FromNodeEventHandler<C>
 where
   C: Commands + Send + Sync,
 {
-  kvs_cmd: Connection<C>,
   nats: Context,
+  kvs_cmd: Connection<C>,
+  control_event: NodeControlEventPubSub,
   node_kvs: ObserverNodeKVS<C>,
   db: Database,
   type_kvs: ONEXTypeKVS<C>,
   init_lock: InitLock<C>,
+  symbol_balancer: SymbolBalancer<C>,
 }
 
 impl<C> FromNodeEventHandler<C>
 where
   C: Commands + Send + Sync,
 {
-  pub fn new(kvs_com: Connection<C>, db: Database, nats: &Context) -> Self {
-    return Self {
+  pub async fn new(
+    kvs_com: Connection<C>,
+    db: Database,
+    nats: &Context,
+  ) -> ControlResult<Self> {
+    let control_event = NodeControlEventPubSub::new(nats).await?;
+    let node_kvs = ObserverNodeKVS::new(kvs_com.clone().into());
+    let type_kvs = ONEXTypeKVS::new(kvs_com.clone().into());
+    let symbol_balancer =
+      SymbolBalancer::new(&control_event, &node_kvs, &type_kvs);
+    return Ok(Self {
       kvs_cmd: kvs_com.clone().into(),
       nats: nats.clone(),
-      node_kvs: ObserverNodeKVS::new(kvs_com.clone().into()),
-      type_kvs: ONEXTypeKVS::new(kvs_com.clone().into()),
       init_lock: InitLock::new(kvs_com.into()),
+      control_event,
+      node_kvs,
+      type_kvs,
+      symbol_balancer,
       db,
-    };
+    });
   }
 
   /// Push NodeID to KVS
@@ -81,8 +95,8 @@ where
       )
       .await?;
     if node_id != &fixed_node_id {
-      let pubsub = NodeControlEventPubSub::new(&self.nats).await?;
-      pubsub
+      self
+        .control_event
         .publish(TradeObserverControlEvent::NodeIDChanged(
           node_id.clone(),
           fixed_node_id.clone(),
@@ -130,8 +144,10 @@ where
             })
             .await;
         } else if node_count > min_node_init {
-          // TODO: Assign Symbol from alaready registered nodes
-          // to flatten observation task.
+          let _ = self
+            .symbol_balancer
+            .broadcast_equalization(exchange, 1)
+            .await;
         }
       }
       TradeObserverNodeEvent::Unregist(node_id) => {}

@@ -1,8 +1,6 @@
 use ::futures::stream::{iter, BoxStream, StreamExt};
 use ::kvs::traits::last_checked::ListOp;
 use ::std::collections::HashSet;
-use ::std::str::FromStr;
-use ::uuid::Uuid;
 
 use ::kvs::redis::Commands;
 use ::kvs::redis::RedisResult;
