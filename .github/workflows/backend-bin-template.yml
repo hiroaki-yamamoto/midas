@@ -7,6 +7,7 @@ on:
         type: string
 jobs:
   build:
+    name: "Build ${{ inputs.pkgid }}"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -75,3 +76,38 @@ jobs:
         with:
           name: ${{ inputs.pkgid }}.zst
           path: backend/${{ inputs.pkgid }}.zst
+
+  docker-deploy:
+    name: "Deploy ${{ inputs.pkgid }} to ghcr.io (Docker)"
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: mkdir -p ./backend/target/x86_64-unknown-linux-musl/release
+      - name: "Download Built Package"
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ inputs.pkgid }}.zst
+          path: ./backend/target/x86_64-unknown-linux-musl/release
+      - name: "Extract Built Package"
+        run: zstd -d ${{ inputs.pkgid }}.zst
+        working-directory: ./backend/target/x86_64-unknown-linux-musl/release
+      - name: "Log into the registry"
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract Docker metadata
+        id: docker_meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/hiroaki-yamamoto/${{ inputs.pkgid }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: backend
+          file: ./prod.dockerfile
+          push: true
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
