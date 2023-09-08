@@ -79,7 +79,6 @@ jobs:
 
   docker-deploy:
     name: "Deploy ${{ inputs.pkgid }} to ghcr.io (Docker)"
-    environment: GHCR
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -97,7 +96,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ env.TOKEN }}
+          password: ${{ secrets.GHCR }}
       - name: Extract Docker metadata
         id: docker_meta
         uses: docker/metadata-action@v4
