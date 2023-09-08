@@ -102,6 +102,9 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ghcr.io/hiroaki-yamamoto/${{ inputs.pkgid }}
+      - run: ls -la
+      - run: ls -la
+        working-directory: ./backend
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
