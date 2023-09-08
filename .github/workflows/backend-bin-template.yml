@@ -83,15 +83,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: mkdir -p ./backend/target/x86_64-unknown-linux-musl/release
       - name: "Download Built Package"
         uses: actions/download-artifact@v2
         with:
           name: ${{ inputs.pkgid }}.zst
-          path: ./backend/target/x86_64-unknown-linux-musl/release
+          path: ./backend
       - name: "Extract Built Package"
         run: zstd -d ${{ inputs.pkgid }}.zst
-        working-directory: ./backend/target/x86_64-unknown-linux-musl/release
+        working-directory: ./backend
       - name: "Log into the registry"
         uses: docker/login-action@v2
         with:
