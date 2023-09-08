@@ -3,5 +3,5 @@ FROM scratch
 ARG SERVICE
 ENV SERVICE=${SERVICE}
 
-COPY ./backend/${SERVICE} /app
+COPY ./${SERVICE} /app
 ENTRYPOINT [ "/app" ]
