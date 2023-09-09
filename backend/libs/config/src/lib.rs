@@ -15,12 +15,12 @@ pub use self::cmdargs::CmdArgs;
 pub use self::config::{Config, ObserverConfig, TradeObserverInitNodeNumbers};
 
 pub use ::mongodb::Database;
-use ::subscribe::natsJS::context::Context as NatsJS;
+use ::subscribe::nats::Client as Nats;
 use ::tokio::signal::unix as signal;
 
 pub async fn init<S, T>(func: T)
 where
-  T: FnOnce(Config, signal::Signal, Database, NatsJS, SocketAddr) -> S,
+  T: FnOnce(Config, signal::Signal, Database, Nats, SocketAddr) -> S,
   S: Future<Output = ()>,
 {
   let sig =

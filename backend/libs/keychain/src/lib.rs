@@ -7,7 +7,7 @@ use ::mongodb::bson::{doc, Document};
 use ::mongodb::error::Result;
 use ::mongodb::options::UpdateModifications;
 use ::mongodb::{Collection, Database};
-use ::subscribe::natsJS::context::Context;
+use ::subscribe::nats::Client;
 use ::subscribe::PubSub;
 
 use ::errors::KeyChainResult;
@@ -27,7 +27,7 @@ pub struct KeyChain {
 }
 
 impl KeyChain {
-  pub async fn new(broker: &Context, db: Database) -> KeyChainResult<Self> {
+  pub async fn new(broker: &Client, db: Database) -> KeyChainResult<Self> {
     let col = db.collection("apiKeyChains");
     let ret = Self {
       pubsub: APIKeyPubSub::new(broker).await?,

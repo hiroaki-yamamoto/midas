@@ -22,7 +22,7 @@ use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::errors::{CreateStreamResult, EmptyError, ObserverResult};
-use ::subscribe::natsJS::context::Context as NatsJS;
+use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 use ::symbols::binance::entities::{Symbol, SymbolEvent};
 use ::symbols::binance::pubsub::SymbolEventPubSub;
@@ -54,7 +54,7 @@ pub struct TradeObserver {
 }
 
 impl TradeObserver {
-  pub async fn new(db: &Database, broker: &NatsJS) -> CreateStreamResult<Self> {
+  pub async fn new(db: &Database, broker: &Nats) -> CreateStreamResult<Self> {
     let (symbol_event, bookticker_pubsub) = join!(
       SymbolEventPubSub::new(&broker),
       BookTickerPubSub::new(&broker)
@@ -367,7 +367,7 @@ pub struct TradeSubscriber {
 }
 
 impl TradeSubscriber {
-  pub async fn new(broker: &NatsJS) -> CreateStreamResult<Self> {
+  pub async fn new(broker: &Nats) -> CreateStreamResult<Self> {
     let pubsub = BookTickerPubSub::new(&broker).await?;
     return Ok(Self { pubsub });
   }

@@ -2,7 +2,7 @@ use ::std::collections::HashSet;
 
 use ::errors::CreateStreamResult;
 use ::log::{as_error, error};
-use ::subscribe::natsJS::context::Context as NatsJS;
+use ::subscribe::nats::Client as Nats;
 
 use super::entities::{Symbol, SymbolEvent};
 use super::pubsub::SymbolEventPubSub;
@@ -17,7 +17,7 @@ pub struct SymbolUpdateEventManager {
 
 impl SymbolUpdateEventManager {
   pub async fn new<S, T>(
-    broker: &NatsJS,
+    broker: &Nats,
     new: S,
     old: T,
   ) -> CreateStreamResult<Self>

@@ -21,7 +21,7 @@ use ::entities::{APIKey, APIKeyEvent, APIKeyInner};
 use ::errors::{MaximumAttemptExceeded, NotificationResult, WebsocketError};
 use ::keychain::pubsub::APIKeyPubSub;
 use ::round::RestClient;
-use ::subscribe::natsJS::context::Context as NatsJS;
+use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 use ::types::TLSWebSocket;
 
@@ -42,7 +42,7 @@ pub struct UserStream {
 }
 
 impl UserStream {
-  pub async fn new(broker: &NatsJS) -> NotificationResult<Self> {
+  pub async fn new(broker: &Nats) -> NotificationResult<Self> {
     let (key_pubsub, notify_pubsub, reauth_pubsub, listen_key_pubsub) = join!(
       APIKeyPubSub::new(broker),
       NotifyPubSub::new(broker),

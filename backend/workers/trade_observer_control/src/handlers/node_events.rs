@@ -12,7 +12,7 @@ use ::log::{error, info};
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
-use ::subscribe::natsJS::context::Context;
+use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 
 use crate::balancer::SymbolBalancer;
@@ -25,7 +25,7 @@ pub(crate) struct FromNodeEventHandler<C>
 where
   C: Commands + Send + Sync,
 {
-  nats: Context,
+  nats: Nats,
   kvs_cmd: Connection<C>,
   control_event: NodeControlEventPubSub,
   node_kvs: ObserverNodeKVS<C>,
@@ -42,7 +42,7 @@ where
   pub async fn new(
     kvs_com: Connection<C>,
     db: Database,
-    nats: &Context,
+    nats: &Nats,
   ) -> ControlResult<Self> {
     let control_event = NodeControlEventPubSub::new(nats).await?;
     let node_kvs = ObserverNodeKVS::new(kvs_com.clone().into());

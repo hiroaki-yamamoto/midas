@@ -18,11 +18,11 @@ use ::observers::binance;
 use ::observers::traits::TradeSubscriber as TradeSubscriberTrait;
 use ::rpc::bookticker::BookTicker;
 use ::rpc::entities::Exchanges;
-use ::subscribe::natsJS::context::Context as NatsJS;
+use ::subscribe::nats::Client as Nats;
 
 async fn get_exchange(
   exchange: Exchanges,
-  broker: &NatsJS,
+  broker: &Nats,
 ) -> CreateStreamResult<Option<impl TradeSubscriberTrait>> {
   return Ok(match exchange {
     Exchanges::Binance => Some(binance::TradeSubscriber::new(broker).await?),
@@ -95,7 +95,7 @@ async fn main() {
         return (exchange, broker.clone());
       })
       .untuple_one()
-      .and_then(|exchange: String, broker: NatsJS| async move {
+      .and_then(|exchange: String, broker: Nats| async move {
         let exchange: Exchanges =
           exchange.parse().map_err(|_| ::warp::reject::not_found())?;
         let observer = match exchange {

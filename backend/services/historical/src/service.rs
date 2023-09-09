@@ -22,7 +22,7 @@ use ::rpc::entities::{Exchanges, Status};
 use ::rpc::historical::{
   HistoryFetchRequest as RPCHistFetchReq, Progress, StatusCheckRequest,
 };
-use ::subscribe::natsJS::context::Context as NatsJS;
+use ::subscribe::nats::Client as Nats;
 use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
 use ::symbols::traits::SymbolReader as SymbolReaderTrait;
 use ::symbols::types::ListSymbolStream;
@@ -37,7 +37,7 @@ pub struct Service {
 
 impl Service {
   pub async fn new(
-    nats: &NatsJS,
+    nats: &Nats,
     redis_cli: &redis::Client,
     db: &Database,
   ) -> CreateStreamResult<Self> {

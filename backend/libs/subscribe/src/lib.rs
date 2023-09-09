@@ -21,6 +21,7 @@ macro_rules! pubsub {
     $accessor struct $name {
       stream: ::subscribe::natsJS::stream::Stream,
       ctx: ::subscribe::natsJS::context::Context,
+      cli: ::subscribe::nats::client::Client
     }
 
     impl $name {
@@ -33,10 +34,11 @@ macro_rules! pubsub {
       }
 
       pub async fn new(
-        ctx: &::subscribe::natsJS::context::Context,
+        cli: &::subscribe::nats::client::Client,
       ) -> ::subscribe::errors::CreateStreamResult<Self> {
-        let stream = Self::add_stream(ctx).await?;
-        let mut me = Self { stream, ctx: ctx.clone() };
+        let ctx = ::subscribe::natsJS::new(cli.clone());
+        let stream = Self::add_stream(&ctx).await?;
+        let mut me = Self { stream, ctx, cli: cli.clone() };
         return Ok(me);
       }
     }

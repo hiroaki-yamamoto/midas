@@ -11,7 +11,7 @@ use ::entities::{
 };
 use ::errors::{ExecutionFailed, ExecutionResult};
 use ::observers::traits::TradeSubscriber as TradeSubscriberTrait;
-use ::subscribe::natsJS::context::Context as NatsJS;
+use ::subscribe::nats::Client as Nats;
 
 use crate::traits::{
   Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
@@ -30,7 +30,7 @@ pub struct Executor {
 
 impl Executor {
   pub async fn new(
-    broker: NatsJS,
+    broker: Nats,
     maker_fee: Float,
     taker_fee: Float,
   ) -> ExecutionResult<Self> {

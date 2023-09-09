@@ -11,7 +11,7 @@ use ::clients::binance::REST_ENDPOINTS;
 use ::errors::{SymbolFetchError, SymbolFetchResult};
 use ::round::RestClient;
 use ::rpc::symbols::SymbolInfo;
-use ::subscribe::natsJS::context::Context as NatsJS;
+use ::subscribe::nats::Client as Nats;
 
 use super::entities::{ExchangeInfo, Symbol};
 use super::manager::SymbolUpdateEventManager;
@@ -22,13 +22,13 @@ use ::errors::StatusFailure;
 
 #[derive(Debug, Clone)]
 pub struct SymbolFetcher {
-  broker: NatsJS,
+  broker: Nats,
   recorder: SymbolWriter,
   cli: RestClient,
 }
 
 impl SymbolFetcher {
-  pub async fn new(broker: NatsJS, db: &Database) -> ReqRes<Self> {
+  pub async fn new(broker: Nats, db: &Database) -> ReqRes<Self> {
     let recorder = SymbolWriter::new(&db).await;
     let urls: Vec<Url> = REST_ENDPOINTS
       .into_iter()

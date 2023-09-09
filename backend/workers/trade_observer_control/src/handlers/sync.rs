@@ -11,7 +11,7 @@ use ::observers::kvs::NodeFilter;
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
-use ::subscribe::natsJS::context::Context;
+use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
 use ::symbols::traits::SymbolReader as SymbolReaderTrait;
@@ -25,14 +25,14 @@ where
   db: Database,
   kvs: ObserverNodeKVS<T>,
   type_kvs: ONEXTypeKVS<T>,
-  nats: Context,
+  nats: Nats,
 }
 
 impl<T> SyncHandler<T>
 where
   T: Commands + Send + Sync,
 {
-  pub fn new(db: &Database, cmd: KVSConnection<T>, nats: &Context) -> Self {
+  pub fn new(db: &Database, cmd: KVSConnection<T>, nats: &Nats) -> Self {
     return Self {
       db: db.clone(),
       kvs: ObserverNodeKVS::new(cmd.clone().into()),

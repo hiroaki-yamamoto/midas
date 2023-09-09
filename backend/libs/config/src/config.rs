@@ -18,8 +18,7 @@ use ::kvs::redis::{Client as RedisClient, Connection as RedisConnection};
 use ::kvs::Connection as KVSConnection;
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::connect as nats_connect;
-use ::subscribe::natsJS::context::Context as NatsJS;
-use ::subscribe::natsJS::new as nats_js_new;
+use ::subscribe::nats::Client as Nats;
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -124,14 +123,11 @@ impl Config {
     return Ok(Client::builder().add_root_certificate(ca).build()?);
   }
 
-  pub async fn nats_cli(&self) -> ConfigResult<NatsJS> {
+  pub async fn nats_cli(&self) -> ConfigResult<Nats> {
     let mut err = None;
     for count in 1..=30 {
       match nats_connect(&self.broker_url).await {
-        Ok(broker) => {
-          let js = nats_js_new(broker);
-          return Ok(js);
-        }
+        Ok(broker) => return Ok(broker),
         Err(e) => {
           warn!(
             "Failed to establish the connection to nats: {}

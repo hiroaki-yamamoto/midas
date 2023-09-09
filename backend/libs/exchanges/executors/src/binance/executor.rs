@@ -22,7 +22,7 @@ use ::writers::DatabaseWriter;
 use ::clients::binance::{APIHeader, FindKey, REST_ENDPOINTS};
 use ::observers::binance::TradeSubscriber;
 use ::observers::traits::TradeSubscriber as TradeSubscriberTrait;
-use ::subscribe::natsJS::context::Context as NatsJS;
+use ::subscribe::nats::Client as Nats;
 
 use crate::traits::Executor as ExecutorTrait;
 
@@ -34,14 +34,14 @@ use super::entities::{
 #[derive(Debug, Clone)]
 pub struct Executor {
   keychain: KeyChain,
-  broker: NatsJS,
+  broker: Nats,
   db: Database,
   positions: Collection<OrderResponse<Float, DateTime>>,
   cli: RestClient,
 }
 
 impl Executor {
-  pub async fn new(broker: &NatsJS, db: Database) -> ExecutionResult<Self> {
+  pub async fn new(broker: &Nats, db: Database) -> ExecutionResult<Self> {
     let keychain = KeyChain::new(broker, db.clone()).await?;
     let positions = db.collection("binance.positions");
     let me = Self {
