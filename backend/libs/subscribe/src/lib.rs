@@ -44,6 +44,9 @@ macro_rules! pubsub {
     }
 
     impl ::subscribe::PubSub<$entity> for $name {
+      fn get_client(&self) -> &::subscribe::nats::client::Client {
+        return &self.cli;
+      }
       fn get_ctx(&self) -> &::subscribe::natsJS::context::Context {
         return &self.ctx;
       }

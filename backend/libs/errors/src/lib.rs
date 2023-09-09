@@ -37,7 +37,7 @@ pub use observers::{ObserverError, ObserverResult};
 pub use parse::{ParseError, ParseResult};
 pub use pubsub::{
   ConsumerError, ConsumerResult, CreateStreamResult, PublishError,
-  PublishResult,
+  PublishResult, RequestResult,
 };
 pub use status::{HTTPErrors, HTTPResult, StatusFailure};
 pub use symbols::{SymbolFetchError, SymbolFetchResult};

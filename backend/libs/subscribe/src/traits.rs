@@ -10,13 +10,14 @@ use ::rmp_serde::{
 use ::serde::de::DeserializeOwned;
 use ::serde::ser::Serialize;
 
-use ::errors::{ConsumerResult, PublishResult};
+use ::errors::{ConsumerResult, PublishResult, RequestResult};
 
 use crate::natsJS::consumer::{
   pull::Config, AckPolicy, Consumer, DeliverPolicy,
 };
 use crate::natsJS::stream::Stream as NatsJS;
 
+use crate::nats::{Client, RequestError};
 use crate::natsJS::context::{Context, PublishAckFuture};
 use crate::natsJS::message::Message;
 
@@ -25,6 +26,7 @@ pub trait PubSub<T>
 where
   T: DeserializeOwned + Serialize + Clone + Send + Sync + 'static,
 {
+  fn get_client(&self) -> &Client;
   fn get_subject(&self) -> &str;
   fn get_stream(&self) -> &NatsJS;
   fn get_ctx(&self) -> &Context;
@@ -80,6 +82,19 @@ where
     let msg = Self::serialize(entity.borrow())?;
     let res = self.get_ctx().publish(self.get_subject().into(), msg).await;
     return Ok(res?);
+  }
+
+  async fn request(
+    &self,
+    entity: impl Borrow<T> + Send + Sync,
+  ) -> RequestResult<T> {
+    let msg = Self::serialize(entity.borrow())?;
+    let res = self
+      .get_client()
+      .request(self.get_subject().into(), msg)
+      .await?;
+    let res: T = from_msgpack(&res.payload)?;
+    return Ok(res);
   }
 
   async fn pull_subscribe<C>(
