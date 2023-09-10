@@ -10,12 +10,14 @@ use ::rmp_serde::{
 use ::serde::de::DeserializeOwned;
 use ::serde::ser::Serialize;
 
-use ::errors::{ConsumerResult, PublishResult, RequestResult};
+use ::errors::{
+  ConsumerResult, CreateStreamResult, PublishResult, RequestResult,
+};
 
 use crate::natsJS::consumer::{
-  pull::Config, AckPolicy, Consumer, DeliverPolicy,
+  pull::Config as PullSubscribeConfig, AckPolicy, Consumer, DeliverPolicy,
 };
-use crate::natsJS::stream::Stream as NatsJS;
+use crate::natsJS::stream::{Config as StreamConfig, Stream as NatsJS};
 
 use crate::nats::Client;
 use crate::natsJS::context::{Context, PublishAckFuture};
@@ -31,34 +33,33 @@ where
   fn get_stream(&self) -> &NatsJS;
   fn get_ctx(&self) -> &Context;
 
+  async fn add_stream_with_suffix(
+    &self,
+    suffix: Option<String>,
+  ) -> CreateStreamResult<NatsJS> {
+    let subject = match suffix {
+      Some(suffix) => format!("{}.{}", self.get_subject(), suffix),
+      None => self.get_subject().into(),
+    };
+    let mut option: StreamConfig = subject.as_str().into();
+    option.max_consumers = -1;
+    return self.get_ctx().get_or_create_stream(option).await;
+  }
+
   async fn add_consumer<C>(
     &self,
     consumer_name: C,
-  ) -> ConsumerResult<Consumer<Config>>
+  ) -> ConsumerResult<Consumer<PullSubscribeConfig>>
   where
     C: AsRef<str> + Send + Sync,
   {
     let stream = self.get_stream();
-    let mut cfg = Config {
+    let mut cfg = PullSubscribeConfig {
       name: Some(consumer_name.as_ref().into()),
       max_deliver: 1024,
       memory_storage: true,
       ..Default::default()
     };
-    // let mut cfg = push::Config {
-    //   deliver_subject: format!(
-    //     "{}.{}.deliver",
-    //     self.get_subject(),
-    //     consumer_name.as_ref()
-    //   ),
-    //   deliver_group: Some(consumer_name.as_ref().into()),
-    //   name: Some(consumer_name.as_ref().into()),
-    //   flow_control: true,
-    //   idle_heartbeat: Duration::from_secs(1),
-    //   max_deliver: 1024,
-    //   memory_storage: true,
-    //   ..Default::default()
-    // };
     cfg.deliver_policy = DeliverPolicy::All;
     cfg.ack_policy = AckPolicy::Explicit;
     return Ok(
