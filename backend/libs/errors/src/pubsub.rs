@@ -19,6 +19,8 @@ pub enum PublishError {
 
 #[derive(Debug, Error)]
 pub enum ConsumerError {
+  #[error(display = "Stream Creation Error: {}", _0)]
+  CreateStreamError(#[source] CreateStreamError),
   #[error(display = "Consumer error: {}", _0)]
   ConsumerError(#[source] JSConsumerError),
   #[error(display = "Stream Error: {}", _0)]

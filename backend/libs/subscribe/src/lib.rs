@@ -19,26 +19,16 @@ macro_rules! pubsub {
   ) => {
     #[derive(Debug, Clone)]
     $accessor struct $name {
-      stream: ::subscribe::natsJS::stream::Stream,
       ctx: ::subscribe::natsJS::context::Context,
-      cli: ::subscribe::nats::client::Client
+      cli: ::subscribe::nats::client::Client,
     }
 
     impl $name {
-      async fn add_stream(
-        ctx: &::subscribe::natsJS::context::Context,
-      ) -> ::subscribe::errors::CreateStreamResult<::subscribe::natsJS::stream::Stream> {
-        let mut option: ::subscribe::natsJS::stream::Config = $id.into();
-        option.max_consumers = -1;
-        return ctx.get_or_create_stream(option).await;
-      }
-
       pub async fn new(
         cli: &::subscribe::nats::client::Client,
       ) -> ::subscribe::errors::CreateStreamResult<Self> {
         let ctx = ::subscribe::natsJS::new(cli.clone());
-        let stream = Self::add_stream(&ctx).await?;
-        let mut me = Self { stream, ctx, cli: cli.clone() };
+        let mut me = Self { ctx, cli: cli.clone() };
         return Ok(me);
       }
     }
@@ -49,9 +39,6 @@ macro_rules! pubsub {
       }
       fn get_ctx(&self) -> &::subscribe::natsJS::context::Context {
         return &self.ctx;
-      }
-      fn get_stream(&self) -> &::subscribe::natsJS::stream::Stream {
-        return &self.stream;
       }
       fn get_subject(&self) -> &str {
         return $id;

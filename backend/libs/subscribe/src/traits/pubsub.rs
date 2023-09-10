@@ -30,10 +30,9 @@ where
 {
   fn get_client(&self) -> &Client;
   fn get_subject(&self) -> &str;
-  fn get_stream(&self) -> &NatsJS;
   fn get_ctx(&self) -> &Context;
 
-  async fn add_stream_with_suffix(
+  async fn get_stream(
     &self,
     suffix: Option<String>,
   ) -> CreateStreamResult<NatsJS> {
@@ -49,11 +48,12 @@ where
   async fn add_consumer<C>(
     &self,
     consumer_name: C,
+    stream_suffix: Option<String>,
   ) -> ConsumerResult<Consumer<PullSubscribeConfig>>
   where
     C: AsRef<str> + Send + Sync,
   {
-    let stream = self.get_stream();
+    let stream = self.get_stream(stream_suffix).await?;
     let mut cfg = PullSubscribeConfig {
       name: Some(consumer_name.as_ref().into()),
       max_deliver: 1024,
@@ -105,7 +105,7 @@ where
   where
     C: AsRef<str> + Send + Sync,
   {
-    let consumer = self.add_consumer(consumer_name).await?;
+    let consumer = self.add_consumer(consumer_name, None).await?;
     let msg = consumer
       .messages()
       .await?

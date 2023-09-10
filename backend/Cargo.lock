@@ -3270,6 +3270,7 @@ dependencies = [
  "errors",
  "futures",
  "log",
+ "rand",
  "rmp-serde",
  "serde",
  "tokio",
