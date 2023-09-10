@@ -4,6 +4,8 @@ use ::std::borrow::Borrow;
 
 use ::futures::stream::{BoxStream, StreamExt};
 use ::log::warn;
+use ::rand::distributions::Alphanumeric;
+use ::rand::{thread_rng, Rng};
 use ::rmp_serde::{
   encode::Error as EncodeErr, from_slice as from_msgpack, to_vec as to_msgpack,
 };
@@ -11,7 +13,8 @@ use ::serde::de::DeserializeOwned;
 use ::serde::ser::Serialize;
 
 use ::errors::{
-  ConsumerResult, CreateStreamResult, PublishResult, RequestResult,
+  ConsumerResult, CreateStreamResult, PublishResult, RequestError,
+  RequestResult,
 };
 
 use crate::natsJS::consumer::{
@@ -20,6 +23,7 @@ use crate::natsJS::consumer::{
 use crate::natsJS::stream::{Config as StreamConfig, Stream as NatsJS};
 
 use crate::nats::Client;
+use crate::nats::HeaderMap;
 use crate::natsJS::context::{Context, PublishAckFuture};
 use crate::natsJS::message::Message;
 
@@ -90,12 +94,37 @@ where
     entity: impl Borrow<T> + Send + Sync,
   ) -> RequestResult<T> {
     let msg = Self::serialize(entity.borrow())?;
-    let res = self
-      .get_client()
-      .request(self.get_subject().into(), msg)
+    let respond_id: String = thread_rng()
+      .sample_iter(&Alphanumeric)
+      .take(128)
+      .map(char::from)
+      .collect();
+    let respond_suffix = format!("reply.{}", respond_id);
+    let respond_subject = format!("{}.{}", self.get_subject(), respond_suffix);
+
+    let mut header = HeaderMap::new();
+    header.insert("midas-respond-subject", respond_subject.as_str());
+
+    let _ = self
+      .get_ctx()
+      .publish_with_headers(self.get_subject().into(), header, msg)
+      .await?
       .await?;
-    let res: T = from_msgpack(&res.payload)?;
-    return Ok(res);
+    let consumer = self.add_consumer(respond_id, respond_suffix.into()).await?;
+    let message = consumer
+      .messages()
+      .await?
+      .next()
+      .await
+      .map(|msg_res| {
+        if let Err(ref e) = msg_res {
+          warn!("Msg Stream Failure: {:?}", e);
+        }
+        return msg_res.ok();
+      })
+      .flatten()
+      .ok_or(RequestError::NoResponse)?;
+    return Ok(from_msgpack(&message.payload)?);
   }
 
   async fn pull_subscribe<C>(
