@@ -17,7 +17,7 @@ use crate::natsJS::consumer::{
 };
 use crate::natsJS::stream::Stream as NatsJS;
 
-use crate::nats::{Client, RequestError};
+use crate::nats::Client;
 use crate::natsJS::context::{Context, PublishAckFuture};
 use crate::natsJS::message::Message;
 
@@ -120,7 +120,7 @@ where
         return Some(msg);
       })
       .map(|msg| {
-        return (from_msgpack::<T>(&msg.message.payload), msg);
+        return (from_msgpack::<T>(&msg.payload), msg);
       })
       .filter_map(|(res, msg)| async {
         if let Err(ref e) = res {

@@ -13,6 +13,8 @@ pub enum PublishError {
   PublishError(#[source] JSPublishError),
   #[error(display = "Msgpack encode error: {}", _0)]
   EncodeError(#[source] MsgPackEncErr),
+  #[error(display = "Respond Error: No Reply subject")]
+  NoReplySubject,
 }
 
 #[derive(Debug, Error)]

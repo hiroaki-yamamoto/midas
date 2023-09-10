@@ -13,7 +13,8 @@ use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
-use ::subscribe::PubSub;
+use ::subscribe::natsJS::message::Message;
+use ::subscribe::traits::Respond;
 
 use crate::balancer::SymbolBalancer;
 use crate::dlock::InitLock;
@@ -69,6 +70,7 @@ where
     &mut self,
     node_id: &Uuid,
     exchange: Exchanges,
+    msg: &Message,
   ) -> ControlResult<Uuid> {
     let mut fixed_node_id = node_id.clone();
     let redis_option: Option<WriteOption> = WriteOption::default()
@@ -95,9 +97,8 @@ where
       )
       .await?;
     if node_id != &fixed_node_id {
-      self
-        .control_event
-        .publish(TradeObserverControlEvent::NodeIDChanged(
+      msg
+        .respond(&TradeObserverControlEvent::NodeIDChanged(
           node_id.clone(),
           fixed_node_id.clone(),
         ))
@@ -108,6 +109,7 @@ where
 
   pub async fn handle(
     &mut self,
+    msg: &Message,
     event: TradeObserverNodeEvent,
     config: &ObserverConfig,
   ) -> ControlResult<()> {
@@ -119,7 +121,7 @@ where
           .await?;
       }
       TradeObserverNodeEvent::Regist(exchange, node_id) => {
-        if self.push_nodeid(&node_id, exchange).await.is_ok() {
+        if self.push_nodeid(&node_id, exchange, msg).await.is_ok() {
           info!(
             "Node Connected. NodeID: {}, Exchange: {}",
             node_id,
@@ -146,7 +148,7 @@ where
         } else if node_count > min_node_init {
           let _ = self
             .symbol_balancer
-            .broadcast_equalization(exchange, 1)
+            .broadcast_equalization(exchange, 0)
             .await;
         }
       }
