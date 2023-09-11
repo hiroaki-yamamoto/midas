@@ -12,8 +12,18 @@ pub enum PublishError {
   PublishError(#[source] JSPublishError),
   #[error(display = "Msgpack encode error: {}", _0)]
   EncodeError(#[source] MsgPackEncErr),
-  #[error(display = "Respond Error: No Reply subject")]
+}
+
+#[derive(Debug, Error)]
+pub enum RespondError {
+  #[error(display = "Nats Publish error: {}", _0)]
+  PublishError(#[source] JSPublishError),
+  #[error(display = "Msgpack encode error: {}", _0)]
+  EncodeError(#[source] MsgPackEncErr),
+  #[error(display = "No Reply subject")]
   NoReplySubject,
+  #[error(display = "No Header")]
+  NoHeaders,
 }
 
 #[derive(Debug, Error)]
@@ -48,3 +58,4 @@ pub type CreateStreamResult<T> = Result<T, CreateStreamError>;
 pub type ConsumerResult<T> = Result<T, ConsumerError>;
 pub type PublishResult<T> = Result<T, PublishError>;
 pub type RequestResult<T> = Result<T, RequestError>;
+pub type RespondResult<T> = Result<T, RespondError>;
