@@ -68,43 +68,36 @@ where
   /// Return Value: NodeID that pushed to KVS.
   async fn push_nodeid(
     &mut self,
-    node_id: &Uuid,
     exchange: Exchanges,
     msg: &Message,
   ) -> ControlResult<Uuid> {
-    let mut fixed_node_id = node_id.clone();
     let redis_option: Option<WriteOption> = WriteOption::default()
       .duration(Duration::from_secs(30).into())
       .non_existent_only(true)
       .into();
-    loop {
+    let mut node_id = Uuid::new_v4();
+    while {
       let push_result: KVSResult<usize> = self
         .node_kvs
         .lpush(node_id.to_string(), "".into(), redis_option.clone())
         .await;
-      if push_result.is_ok() {
-        self.node_kvs.lpop(node_id.to_string(), None).await?;
-        break;
-      }
-      fixed_node_id = Uuid::new_v4();
+      push_result.is_err()
+    } {
+      node_id = Uuid::new_v4();
     }
+    self.node_kvs.lpop(node_id.to_string(), None).await?;
     self
       .type_kvs
       .set(
-        fixed_node_id.to_string(),
+        node_id.to_string(),
         exchange.as_str_name().into(),
         redis_option,
       )
       .await?;
-    if node_id != &fixed_node_id {
-      msg
-        .respond(&TradeObserverControlEvent::NodeIDChanged(
-          node_id.clone(),
-          fixed_node_id.clone(),
-        ))
-        .await?;
-    }
-    return Ok(fixed_node_id);
+    msg
+      .respond(&TradeObserverControlEvent::NodeIDAssigned(node_id.clone()))
+      .await?;
+    return Ok(node_id);
   }
 
   pub async fn handle(
@@ -120,8 +113,8 @@ where
           .expire(&node_id.to_string(), Duration::from_secs(30))
           .await?;
       }
-      TradeObserverNodeEvent::Regist(exchange, node_id) => {
-        if self.push_nodeid(&node_id, exchange, msg).await.is_ok() {
+      TradeObserverNodeEvent::Regist(exchange) => {
+        if let Ok(node_id) = self.push_nodeid(exchange, msg).await {
           info!(
             "Node Connected. NodeID: {}, Exchange: {}",
             node_id,
