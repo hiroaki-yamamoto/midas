@@ -50,20 +50,6 @@ where
       join!(self.node_kvs.del(&node_id), self.type_kvs.del(&node_id));
   }
 
-  // async fn list_trading_symbols(
-  //   &self,
-  //   exchange: Exchanges,
-  // ) -> ControlResult<HashSet<String>> {
-  //   let symbol_reader = get_reader(&self.db, exchange).await;
-  //   let trading_symbols: HashSet<String> = symbol_reader
-  //     .list_trading()
-  //     .await?
-  //     .map(|sym| sym.symbol)
-  //     .collect()
-  //     .await;
-  //   return Ok(trading_symbols);
-  // }
-
   pub async fn handle(&self, node_id: Uuid) -> ControlResult<()> {
     let (symbols, exchange) = join!(
       self.node_kvs.lrange(node_id.to_string(), 0, -1),
