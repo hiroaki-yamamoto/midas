@@ -1,5 +1,6 @@
 use ::std::time::Duration;
 
+use ::futures::future::try_join;
 use ::uuid::Uuid;
 
 use ::config::{Database, ObserverConfig};
@@ -109,10 +110,15 @@ where
   ) -> ControlResult<()> {
     match event {
       TradeObserverNodeEvent::Ping(node_id) => {
-        self
-          .node_kvs
-          .expire(&node_id.to_string(), Duration::from_secs(30))
-          .await?;
+        try_join(
+          self
+            .node_kvs
+            .expire(&node_id.to_string(), Duration::from_secs(30)),
+          self
+            .type_kvs
+            .expire(&node_id.to_string(), Duration::from_secs(30)),
+        )
+        .await?;
       }
       TradeObserverNodeEvent::Regist(exchange) => {
         if let Ok(node_id) = self.push_nodeid(exchange, msg).await {
