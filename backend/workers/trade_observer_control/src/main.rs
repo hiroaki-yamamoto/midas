@@ -2,6 +2,7 @@ mod balancer;
 mod dlock;
 mod errors;
 mod handlers;
+mod remover;
 
 use ::futures::StreamExt;
 use ::log::{error, info};

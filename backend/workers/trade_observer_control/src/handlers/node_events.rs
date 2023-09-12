@@ -19,6 +19,7 @@ use ::subscribe::traits::Respond;
 use crate::balancer::SymbolBalancer;
 use crate::dlock::InitLock;
 use crate::errors::Result as ControlResult;
+use crate::remover::NodeRemover;
 
 use super::SyncHandler;
 
@@ -127,11 +128,17 @@ where
           let _ = self
             .init_lock
             .lock("observer_control_node_event_handler", || async {
-              let mut sync_handler: SyncHandler<_> = SyncHandler::new(
+              let sync_handler = SyncHandler::new(
                 &self.db,
                 self.kvs_cmd.clone().into(),
                 &self.nats,
-              );
+              )
+              .await;
+              if let Err(ref e) = sync_handler {
+                error!("Synchronization Handler Initalization Failed: {}", e);
+                return;
+              };
+              let mut sync_handler = sync_handler.unwrap();
               info!("Init Triggered");
               if let Err(e) = sync_handler.handle(&exchange).await {
                 error!("Synchronization Handling Filed: {}", e);
@@ -145,7 +152,15 @@ where
             .await;
         }
       }
-      TradeObserverNodeEvent::Unregist(node_id) => {}
+      TradeObserverNodeEvent::Unregist(node_id) => {
+        let remover = NodeRemover::new(
+          self.node_kvs.clone(),
+          self.type_kvs.clone(),
+          self.control_event.clone(),
+          self.db.clone(),
+        );
+        remover.handle(node_id).await?;
+      }
     }
     return Ok(());
   }

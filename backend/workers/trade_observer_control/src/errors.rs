@@ -1,7 +1,7 @@
 use ::std::time::SystemTimeError;
 
 use ::err_derive::Error;
-use ::errors::{KVSError, PublishError, RespondError};
+use ::errors::{KVSError, PublishError, RespondError, UnknownExchangeError};
 use ::kvs::redis::RedisError;
 use ::mongodb::error::Error as DBErr;
 use ::subscribe::natsJS::context::CreateStreamError as NatsCreateStreamError;
@@ -22,6 +22,8 @@ pub enum Error {
   NatsPublishError(#[source] PublishError),
   #[error(display = "Respond Error: {}", _0)]
   RespondError(#[source] RespondError),
+  #[error(display = "Unknown Exchange Error: {}", _0)]
+  UnknownExchangeError(#[source] UnknownExchangeError),
 }
 
 pub type Result<T> = ::std::result::Result<T, Error>;

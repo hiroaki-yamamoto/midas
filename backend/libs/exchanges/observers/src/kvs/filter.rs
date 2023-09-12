@@ -1,9 +1,8 @@
-use ::futures::stream::{iter, BoxStream, StreamExt};
-use ::kvs::traits::last_checked::ListOp;
 use ::std::collections::HashSet;
 
-use ::kvs::redis::Commands;
-use ::kvs::redis::RedisResult;
+use ::futures::stream::{iter, BoxStream, StreamExt};
+use ::kvs::redis::{Commands, RedisResult};
+use ::kvs::traits::last_checked::ListOp;
 use ::rpc::entities::Exchanges;
 
 use super::{ONEXTypeKVS, ObserverNodeKVS};

@@ -13,8 +13,7 @@ use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
-use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
-use ::symbols::traits::SymbolReader as SymbolReaderTrait;
+use ::symbols::get_reader;
 
 use crate::errors::Result as ObserverControlResult;
 
@@ -25,19 +24,37 @@ where
   db: Database,
   kvs: ObserverNodeKVS<T>,
   type_kvs: ONEXTypeKVS<T>,
-  nats: Nats,
+  publisher: NodeControlEventPubSub,
 }
 
 impl<T> SyncHandler<T>
 where
   T: Commands + Send + Sync,
 {
-  pub fn new(db: &Database, cmd: KVSConnection<T>, nats: &Nats) -> Self {
-    return Self {
+  pub async fn new(
+    db: &Database,
+    cmd: KVSConnection<T>,
+    nats: &Nats,
+  ) -> ObserverControlResult<Self> {
+    return Ok(Self {
       db: db.clone(),
       kvs: ObserverNodeKVS::new(cmd.clone().into()),
       type_kvs: ONEXTypeKVS::new(cmd.clone().into()),
-      nats: nats.clone(),
+      publisher: NodeControlEventPubSub::new(nats).await?,
+    });
+  }
+
+  pub fn from_raw(
+    db: Database,
+    kvs: ObserverNodeKVS<T>,
+    type_kvs: ONEXTypeKVS<T>,
+    publisher: NodeControlEventPubSub,
+  ) -> Self {
+    return Self {
+      db,
+      kvs,
+      type_kvs,
+      publisher,
     };
   }
 
@@ -45,10 +62,7 @@ where
     &mut self,
     exchange: &Exchanges,
   ) -> ObserverControlResult<Vec<Event>> {
-    let symbol_reader: Box<dyn SymbolReaderTrait + Send + Sync> = match exchange
-    {
-      Exchanges::Binance => Box::new(BinanceSymbolWriter::new(&self.db).await),
-    };
+    let symbol_reader = get_reader(&self.db, exchange.clone()).await; // TODO: fix this
     let trading_symbols_list = symbol_reader.list_trading().await?;
     let db_symbols: HashSet<String> =
       trading_symbols_list.map(|s| s.symbol).collect().await;
@@ -73,14 +87,13 @@ where
     &mut self,
     exchange: &Exchanges,
   ) -> ObserverControlResult<()> {
-    let publisher = NodeControlEventPubSub::new(&self.nats).await?;
     let publish_defer =
       self
         .get_symbol_diff(exchange)
         .await?
         .into_iter()
         .map(|diff| {
-          return publisher.publish(diff);
+          return self.publisher.publish(diff);
         });
     let _ = try_join_all(publish_defer).await?;
     return Ok(());
