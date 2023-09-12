@@ -28,11 +28,10 @@ where
     let channel_name = self.channel_name(&key);
     let opt: Option<WriteOption> = opt.into();
 
-    let key_exists = self.exists(&key).await;
     let cmds = self.commands();
     let mut cmds = cmds.lock().await;
     let res = if opt.non_existent_only() {
-      match key_exists {
+      match self.exists(&key).await {
         Ok(exists) => {
           if exists {
             return Err(KVSError::KeyExists(key.to_string()));
