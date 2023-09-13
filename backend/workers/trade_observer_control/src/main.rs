@@ -4,9 +4,12 @@ mod errors;
 mod handlers;
 mod remover;
 
+use ::std::time::Duration;
+
 use ::futures::StreamExt;
 use ::log::{error, info};
 use ::tokio::select;
+use ::tokio::time::interval;
 
 use ::observers::pubsub::NodeEventPubSub;
 use ::subscribe::PubSub;
@@ -26,6 +29,7 @@ async fn main() {
       .pull_subscribe("tradeObserverController")
       .await
       .unwrap();
+    let mut auto_unregist_check_interval = interval(Duration::from_secs(10));
     loop {
       select! {
         event = node_event.next() => if let Some((event, msg)) = event {
@@ -36,6 +40,9 @@ async fn main() {
         _ = sig.recv() => {
           break;
         },
+        _ = auto_unregist_check_interval.tick() => {
+          unimplemented!();
+        }
       };
     }
   })
