@@ -18,14 +18,7 @@ where
     return format!("last_check_timestamp:{}", self.channel_name(key));
   }
 
-  async fn get_last_checked(
-    &self,
-    key: impl AsRef<str> + Display + Send,
-  ) -> KVSResult<SystemTime> {
-    let key = self.get_timestamp_channel(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    let timestamp: i64 = cmd.get(key)?;
+  fn convert_timestamp(timestamp: i64) -> KVSResult<SystemTime> {
     let datetime: DateTime<Local> = match Local.timestamp_opt(timestamp, 0) {
       LocalResult::Single(dt) => dt,
       LocalResult::None => {
@@ -36,6 +29,17 @@ where
       }
     };
     return Ok(datetime.into());
+  }
+
+  async fn get_last_checked(
+    &self,
+    key: impl AsRef<str> + Display + Send,
+  ) -> KVSResult<SystemTime> {
+    let key = self.get_timestamp_channel(key);
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
+    let timestamp: i64 = cmd.get(key)?;
+    return Ok(Self::convert_timestamp(timestamp)?);
   }
 
   async fn flag_last_checked<R>(

@@ -1,5 +1,6 @@
 mod base;
 mod expiration;
+mod find_before;
 mod get;
 mod list_op;
 mod remove;
@@ -7,6 +8,7 @@ mod set;
 
 pub use self::base::Base;
 pub use self::expiration::Expiration;
+pub use self::find_before::FindBefore;
 pub use self::get::Get;
 pub use self::list_op::ListOp;
 pub use self::remove::Remove;

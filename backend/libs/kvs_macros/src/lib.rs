@@ -52,6 +52,7 @@ pub fn last_check_kvs(input: TokenStream) -> TokenStream {
       parse_quote!(::kvs::traits::last_checked::Base),
       parse_quote!(::kvs::traits::last_checked::Expiration),
       parse_quote!(::kvs::traits::last_checked::Remove),
+      parse_quote!(::kvs::traits::last_checked::FindBefore),
     ])
     .impl_trait_with_vtype(&[
       parse_quote!(::kvs::traits::normal::Get),
