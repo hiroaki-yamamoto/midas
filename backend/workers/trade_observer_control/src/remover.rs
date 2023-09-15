@@ -1,4 +1,5 @@
 use ::std::collections::HashSet;
+use ::std::sync::Arc;
 
 use ::futures::join;
 use ::mongodb::Database;
@@ -45,9 +46,11 @@ where
   }
 
   async fn remove_node(&self, node_id: &Uuid) {
-    let node_id = node_id.to_string();
-    let (_, _): (KVSResult<usize>, KVSResult<usize>) =
-      join!(self.node_kvs.del(&node_id), self.type_kvs.del(&node_id));
+    let node_id: Arc<str> = node_id.to_string().into();
+    let (_, _): (KVSResult<usize>, KVSResult<usize>) = join!(
+      async { self.node_kvs.del(&[node_id.clone()]).await },
+      async { self.type_kvs.del(&[node_id.clone()]).await }
+    );
   }
 
   pub async fn handle(&self, node_id: Uuid) -> ControlResult<()> {

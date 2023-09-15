@@ -1,3 +1,5 @@
+use ::std::sync::Arc;
+
 use ::async_trait::async_trait;
 use ::redis::{Commands, FromRedisValue};
 
@@ -11,12 +13,12 @@ pub trait Remove<T>: Base<T> + NormalRemove<T>
 where
   T: Commands + Send,
 {
-  async fn del<R>(&self, key: &str) -> KVSResult<R>
+  async fn del<R>(&self, keys: &[Arc<str>]) -> KVSResult<R>
   where
     R: FromRedisValue + Send,
   {
-    let ret = NormalRemove::del(self, key).await?;
-    let _ = self.del_last_checked(key).await?;
+    let ret = NormalRemove::del(self, keys).await?;
+    let _ = self.del_last_checked(keys).await?;
     return Ok(ret);
   }
 }

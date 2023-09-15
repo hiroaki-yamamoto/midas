@@ -1,3 +1,4 @@
+use ::std::sync::Arc;
 use ::std::time::SystemTime;
 
 use ::async_trait::async_trait;
@@ -59,13 +60,16 @@ where
     });
   }
 
-  async fn del_last_checked<R>(&self, key: &str) -> KVSResult<R>
+  async fn del_last_checked<R>(&self, keys: &[Arc<str>]) -> KVSResult<R>
   where
     R: FromRedisValue + Send,
   {
-    let key = self.get_timestamp_channel(key);
+    let keys: Vec<String> = keys
+      .into_iter()
+      .map(|key| self.get_timestamp_channel(key))
+      .collect();
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;
-    return Ok(cmd.del(key)?);
+    return Ok(cmd.del(keys)?);
   }
 }
