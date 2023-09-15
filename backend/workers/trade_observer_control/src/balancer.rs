@@ -74,7 +74,7 @@ where
     for node in overflowed_nodes {
       let symbols: Vec<String> = self
         .node_kvs
-        .lrange(node, num_average_symbols as isize, -1)
+        .lrange(&node, num_average_symbols as isize, -1)
         .await?;
       let mut remove_defer = symbols
         .clone()

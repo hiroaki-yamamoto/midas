@@ -116,7 +116,7 @@ async fn handle_supported_currencies(
   let symbols = recorder.list_all().await.map_err(|err| {
     reject::custom(Status::new(
       ::warp::http::StatusCode::SERVICE_UNAVAILABLE,
-      format!("{}", err),
+      &format!("{}", err),
     ))
   })?;
   let symbols: Vec<SymbolInfo> = symbols.map(|sym| sym.into()).collect().await;
@@ -129,7 +129,7 @@ async fn handle_base_currencies(
   return recorder.list_base_currencies().await.map_err(|err| {
     reject::custom(Status::new(
       ::warp::http::StatusCode::SERVICE_UNAVAILABLE,
-      format!("{}", err),
+      &format!("{}", err),
     ))
   });
 }
@@ -144,7 +144,7 @@ async fn handle_fetcher(
     .map_err(|err| {
       reject::custom(Status::new(
         ::warp::http::StatusCode::SERVICE_UNAVAILABLE,
-        format!("{}", err),
+        &format!("{}", err),
       ))
     });
 }

@@ -51,9 +51,10 @@ where
   }
 
   pub async fn handle(&self, node_id: Uuid) -> ControlResult<()> {
+    let node_id_string = node_id.to_string();
     let (symbols, exchange) = join!(
-      self.node_kvs.lrange(node_id.to_string(), 0, -1),
-      self.type_kvs.get(node_id.to_string())
+      self.node_kvs.lrange(&node_id_string, 0, -1),
+      self.type_kvs.get(&node_id_string)
     );
     let symbols: Vec<String> = symbols.unwrap_or(vec![]);
     let exchange: String = exchange.unwrap_or("".into());

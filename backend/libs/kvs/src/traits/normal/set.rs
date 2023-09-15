@@ -1,5 +1,3 @@
-use ::std::fmt::Display;
-
 use ::async_trait::async_trait;
 use ::redis::{Commands, FromRedisValue, SetOptions, ToRedisArgs};
 
@@ -16,7 +14,7 @@ where
 {
   async fn set<R>(
     &self,
-    key: impl AsRef<str> + Send + Display,
+    key: &str,
     value: V,
     opt: impl Into<Option<WriteOption>> + Send,
   ) -> KVSResult<R>

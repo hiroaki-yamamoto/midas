@@ -1,4 +1,3 @@
-use ::std::fmt::Display;
 use ::std::time::SystemTime;
 
 use ::async_trait::async_trait;
@@ -14,7 +13,7 @@ pub trait Base<T>: NormalBase<T> + ChannelName
 where
   T: Commands + Send,
 {
-  fn get_timestamp_channel(&self, key: impl AsRef<str> + Display) -> String {
+  fn get_timestamp_channel(&self, key: &str) -> String {
     return format!("last_check_timestamp:{}", self.channel_name(key));
   }
 
@@ -31,10 +30,7 @@ where
     return Ok(datetime.into());
   }
 
-  async fn get_last_checked(
-    &self,
-    key: impl AsRef<str> + Display + Send,
-  ) -> KVSResult<SystemTime> {
+  async fn get_last_checked(&self, key: &str) -> KVSResult<SystemTime> {
     let key = self.get_timestamp_channel(key);
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;
@@ -44,7 +40,7 @@ where
 
   async fn flag_last_checked<R>(
     &self,
-    key: impl AsRef<str> + Display + Send,
+    key: &str,
     opt: Option<WriteOption>,
   ) -> KVSResult<R>
   where
@@ -63,10 +59,7 @@ where
     });
   }
 
-  async fn del_last_checked<R>(
-    &self,
-    key: impl AsRef<str> + Display + Send,
-  ) -> KVSResult<R>
+  async fn del_last_checked<R>(&self, key: &str) -> KVSResult<R>
   where
     R: FromRedisValue + Send,
   {

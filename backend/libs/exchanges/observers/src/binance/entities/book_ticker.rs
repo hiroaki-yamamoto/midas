@@ -27,10 +27,10 @@ impl TryFrom<BookTicker<String>> for BookTicker<Float> {
   type Error = ParseError;
 
   fn try_from(value: BookTicker<String>) -> Result<Self, Self::Error> {
-    let bid_price = cast_f_from_txt("bid_price", value.bid_price)?;
-    let bid_qty = cast_f_from_txt("bid_qty", value.bid_qty)?;
-    let ask_price = cast_f_from_txt("ask_price", value.ask_price)?;
-    let ask_qty = cast_f_from_txt("ask_qty", value.ask_qty)?;
+    let bid_price = cast_f_from_txt("bid_price", &value.bid_price)?;
+    let bid_qty = cast_f_from_txt("bid_qty", &value.bid_qty)?;
+    let ask_price = cast_f_from_txt("ask_price", &value.ask_price)?;
+    let ask_qty = cast_f_from_txt("ask_qty", &value.ask_qty)?;
 
     return Ok(Self {
       id: value.id,

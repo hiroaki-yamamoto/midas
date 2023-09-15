@@ -24,12 +24,9 @@ impl APIKeyInner {
     return hmac::Key::new(hmac::HMAC_SHA256, self.prv_key.as_bytes());
   }
 
-  pub fn sign<T>(&self, body: T) -> String
-  where
-    T: AsRef<str>,
-  {
+  pub fn sign(&self, body: &str) -> String {
     let secret = self.get_secret_key();
-    let tag = hmac::sign(&secret, body.as_ref().as_bytes());
+    let tag = hmac::sign(&secret, body.as_bytes());
     let signature = Bytes::copy_from_slice(tag.as_ref());
     return format!("{:x}", signature);
   }

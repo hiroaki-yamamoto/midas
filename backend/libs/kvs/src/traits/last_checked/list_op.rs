@@ -1,4 +1,3 @@
-use ::std::fmt::Display;
 use ::std::num::NonZeroUsize;
 
 use ::async_trait::async_trait;
@@ -18,7 +17,7 @@ where
 {
   async fn lpush<R>(
     &self,
-    key: impl AsRef<str> + Display + Send + Sync,
+    key: &str,
     value: V,
     opt: Option<WriteOption>,
   ) -> KVSResult<R>
@@ -30,11 +29,7 @@ where
     return Ok(ret);
   }
 
-  async fn lpop(
-    &self,
-    key: impl AsRef<str> + Display + Send + Sync,
-    count: Option<NonZeroUsize>,
-  ) -> KVSResult<V> {
+  async fn lpop(&self, key: &str, count: Option<NonZeroUsize>) -> KVSResult<V> {
     let ret = NormalListOp::lpop(self, &key, count).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
@@ -42,7 +37,7 @@ where
 
   async fn lrange<R>(
     &self,
-    key: impl AsRef<str> + Display + Send + Sync,
+    key: &str,
     start: isize,
     stop: isize,
   ) -> KVSResult<R>
@@ -54,10 +49,7 @@ where
     return Ok(ret);
   }
 
-  async fn llen<R>(
-    &self,
-    key: impl AsRef<str> + Display + Send + Sync,
-  ) -> KVSResult<R>
+  async fn llen<R>(&self, key: &str) -> KVSResult<R>
   where
     R: FromRedisValue + Send,
   {

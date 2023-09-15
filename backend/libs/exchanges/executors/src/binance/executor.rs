@@ -163,7 +163,7 @@ impl ExecutorTrait for Executor {
         .into_iter()
         .map(|order| {
           let qs = to_qs(&order).unwrap();
-          let signature = api_key.sign(qs.clone());
+          let signature = api_key.sign(qs.as_str());
           return format!("{}&signature={}", qs, signature);
         })
         .map(|qs| {
@@ -231,7 +231,7 @@ impl ExecutorTrait for Executor {
           let req =
             CancelOrderRequest::<i64>::new(symbol).order_id(Some(order_id));
           let qs = to_qs(&req)?;
-          let qs = format!("{}&signature={}", qs.clone(), api_key.sign(qs));
+          let qs = format!("{}&signature={}", qs, api_key.sign(&qs));
           let resp = cli.delete(None, Some(qs)).await?;
           let status = resp.status();
           if !status.is_success() {
@@ -264,7 +264,7 @@ impl ExecutorTrait for Executor {
         )
         .quantity(Some(qty_to_reverse.to_string()));
         let qs = to_qs(&req)?;
-        let qs = format!("{}&signature={}", qs.clone(), api_key.sign(qs));
+        let qs = format!("{}&signature={}", qs, api_key.sign(&qs));
         let pos: Order = pos.clone().into();
         let pos_pur_price: OrderInner = pos.clone().sum();
         position_reverse_vec.push({

@@ -1,5 +1,3 @@
-use ::std::fmt::Display;
-
 use ::async_trait::async_trait;
 use ::redis::Commands;
 
@@ -12,10 +10,7 @@ pub trait Exist<T>: Base<T> + ChannelName
 where
   T: Commands + Send,
 {
-  async fn exists(
-    &self,
-    key: impl AsRef<str> + Display + Send,
-  ) -> KVSResult<bool> {
+  async fn exists(&self, key: &str) -> KVSResult<bool> {
     let channel_name = self.channel_name(key);
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;

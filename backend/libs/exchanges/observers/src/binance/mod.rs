@@ -83,7 +83,7 @@ impl TradeObserver {
     if !status.is_informational() {
       return Err(WebsocketError {
         status: Some(status.as_u16()),
-        msg: Some(status.as_str().to_string()),
+        msg: Some(status.to_string()),
       });
     }
     return Ok(websocket);

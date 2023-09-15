@@ -55,7 +55,8 @@ impl TryFrom<RPCBot> for Bot {
       return err;
     });
     let trading_amount = value.trading_amount;
-    let trading_amount = cast_f_from_txt("trading_amount", trading_amount)?;
+    let trading_amount =
+      cast_f_from_txt("trading_amount", trading_amount.as_str())?;
     return Ok(Self {
       id: bson::oid::ObjectId::from_str(value.id.as_str()).ok(),
       name: value.name,

@@ -17,36 +17,29 @@ pub struct ParseError {
 }
 
 impl ParseError {
-  pub fn new<S, T, U>(
-    field: Option<S>,
-    input: Option<T>,
-    desc: Option<U>,
-  ) -> Self
-  where
-    S: AsRef<str>,
-    T: AsRef<str>,
-    U: AsRef<str>,
-  {
+  pub fn new(
+    field: Option<&str>,
+    input: Option<&str>,
+    desc: Option<&str>,
+  ) -> Self {
     return Self {
-      field: field.map(|s| s.as_ref().to_string()),
-      input: input.map(|s| s.as_ref().to_string()),
-      desc: desc.map(|s| s.as_ref().into()),
+      field: field.map(|s| s.into()),
+      input: input.map(|s| s.into()),
+      desc: desc.map(|s| s.into()),
     };
   }
-  pub fn raise_parse_err<S, T, U>(
-    field: S,
-    input: T,
-  ) -> impl Fn(U) -> ParseError
+  pub fn raise_parse_err<'a, U>(
+    field: &'a str,
+    input: &'a str,
+  ) -> impl Fn(U) -> ParseError + 'a
   where
-    S: AsRef<str>,
-    T: AsRef<str>,
     U: Error,
   {
     return move |err: U| {
       return ParseError::new(
-        (&field).as_ref().into(),
-        (&input).as_ref().into(),
-        err.to_string().into(),
+        Some(field.into()),
+        Some(input.into()),
+        Some(&err.to_string()),
       );
     };
   }

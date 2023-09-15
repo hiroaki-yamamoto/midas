@@ -1,4 +1,3 @@
-use ::std::fmt::Display;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
@@ -13,11 +12,7 @@ pub trait Expiration<T>: Base<T> + ChannelName
 where
   T: Commands + Send,
 {
-  async fn expire(
-    &self,
-    key: impl AsRef<str> + Display + Send,
-    dur: Duration,
-  ) -> KVSResult<bool> {
+  async fn expire(&self, key: &str, dur: Duration) -> KVSResult<bool> {
     let dur_mils = dur.as_millis() as usize;
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;

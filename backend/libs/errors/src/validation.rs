@@ -9,14 +9,10 @@ pub struct ValidationErr {
 }
 
 impl ValidationErr {
-  pub fn new<S, T>(field: S, reason: T) -> Self
-  where
-    S: AsRef<str>,
-    T: AsRef<str>,
-  {
+  pub fn new(field: &str, reason: &str) -> Self {
     return Self {
-      field: field.as_ref().into(),
-      reason: reason.as_ref().into(),
+      field: field.into(),
+      reason: reason.into(),
     };
   }
 }

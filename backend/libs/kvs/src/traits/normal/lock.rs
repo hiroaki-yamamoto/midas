@@ -1,4 +1,3 @@
-use ::std::fmt::Display;
 use ::std::future::Future;
 use ::std::time::Duration;
 
@@ -32,14 +31,14 @@ where
 {
   async fn lock<Ft>(
     &mut self,
-    key: impl AsRef<str> + Display + Send + Sync,
+    key: &str,
     func_on_success: impl (Fn() -> Ft) + Send + Sync,
   ) -> DLockResult<()>
   where
     Ft: Future<Output = ()> + Send,
   {
     let (refresh_tx, mut refresh_rx) = channel::<()>(1);
-    let channel_name = self.channel_name(format!("{}:lock", key));
+    let channel_name = self.channel_name(&format!("{}:lock", key));
     let channel_name_2 = channel_name.clone();
     let dlock = self.commands();
     let dlock2 = self.commands();

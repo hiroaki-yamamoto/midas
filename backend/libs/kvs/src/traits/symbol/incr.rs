@@ -1,5 +1,3 @@
-use ::std::fmt::Display;
-
 use ::async_trait::async_trait;
 use ::redis::Commands;
 
@@ -17,8 +15,8 @@ where
 {
   async fn incr(
     &self,
-    exchange: impl AsRef<str> + Display + Send,
-    symbol: impl AsRef<str> + Display + Send,
+    exchange: &str,
+    symbol: &str,
     delta: i64,
     opt: Option<WriteOption>,
   ) -> KVSResult<()> {
@@ -30,11 +28,7 @@ where
     })?);
   }
 
-  async fn reset(
-    &self,
-    exchange: impl AsRef<str> + Display + Send,
-    symbol: impl AsRef<str> + Display + Send,
-  ) -> KVSResult<()> {
+  async fn reset(&self, exchange: &str, symbol: &str) -> KVSResult<()> {
     let channel_name = self.channel_name(exchange, symbol);
     return Ok(self.commands().lock().await.set(channel_name, 0)?);
   }

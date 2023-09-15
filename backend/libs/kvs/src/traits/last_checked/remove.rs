@@ -1,5 +1,3 @@
-use ::std::fmt::Display;
-
 use ::async_trait::async_trait;
 use ::redis::{Commands, FromRedisValue};
 
@@ -13,10 +11,7 @@ pub trait Remove<T>: Base<T> + NormalRemove<T>
 where
   T: Commands + Send,
 {
-  async fn del<R>(
-    &self,
-    key: &(impl AsRef<str> + Display + Send + Sync),
-  ) -> KVSResult<R>
+  async fn del<R>(&self, key: &str) -> KVSResult<R>
   where
     R: FromRedisValue + Send,
   {

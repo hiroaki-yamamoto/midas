@@ -1,5 +1,3 @@
-use ::std::fmt::Display;
-
 use ::async_trait::async_trait;
 use ::redis::Commands;
 
@@ -13,11 +11,7 @@ pub trait Remove<T>: Base<T> + ChannelName
 where
   T: Commands + Send,
 {
-  async fn del(
-    &self,
-    exchange: impl AsRef<str> + Display + Send,
-    symbol: impl AsRef<str> + Display + Send,
-  ) -> KVSResult<()> {
+  async fn del(&self, exchange: &str, symbol: &str) -> KVSResult<()> {
     let channel_name = self.channel_name(exchange, symbol);
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;

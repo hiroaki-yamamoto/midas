@@ -49,17 +49,14 @@ where
     return self.get_ctx().get_or_create_stream(option).await;
   }
 
-  async fn add_consumer<C>(
+  async fn add_consumer(
     &self,
-    consumer_name: C,
+    consumer_name: &str,
     stream_suffix: Option<String>,
-  ) -> ConsumerResult<Consumer<PullSubscribeConfig>>
-  where
-    C: AsRef<str> + Send + Sync,
-  {
+  ) -> ConsumerResult<Consumer<PullSubscribeConfig>> {
     let stream = self.get_stream(stream_suffix).await?;
     let mut cfg = PullSubscribeConfig {
-      name: Some(consumer_name.as_ref().into()),
+      name: Some(consumer_name.into()),
       max_deliver: 1024,
       memory_storage: true,
       ..Default::default()
@@ -110,7 +107,9 @@ where
       .publish_with_headers(self.get_subject().into(), header, msg)
       .await?
       .await?;
-    let consumer = self.add_consumer(respond_id, respond_suffix.into()).await?;
+    let consumer = self
+      .add_consumer(&respond_id, respond_suffix.into())
+      .await?;
     let message = consumer
       .messages()
       .await?
@@ -127,13 +126,10 @@ where
     return Ok(from_msgpack(&message.payload)?);
   }
 
-  async fn pull_subscribe<C>(
+  async fn pull_subscribe(
     &self,
-    consumer_name: C,
-  ) -> ConsumerResult<BoxStream<(T, Message)>>
-  where
-    C: AsRef<str> + Send + Sync,
-  {
+    consumer_name: &str,
+  ) -> ConsumerResult<BoxStream<(T, Message)>> {
     let consumer = self.add_consumer(consumer_name, None).await?;
     let msg = consumer
       .messages()

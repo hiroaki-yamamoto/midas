@@ -81,20 +81,17 @@ where
     while {
       let push_result: KVSResult<usize> = self
         .node_kvs
-        .lpush(node_id.to_string(), "".into(), redis_option.clone())
+        .lpush(&node_id.to_string(), "".into(), redis_option.clone())
         .await;
       push_result.is_err()
     } {
       node_id = Uuid::new_v4();
     }
-    self.node_kvs.lpop(node_id.to_string(), None).await?;
+    let node_id_txt = node_id.to_string();
+    self.node_kvs.lpop(&node_id_txt, None).await?;
     self
       .type_kvs
-      .set(
-        node_id.to_string(),
-        exchange.as_str_name().into(),
-        redis_option,
-      )
+      .set(&node_id_txt, exchange.as_str_name().into(), redis_option)
       .await?;
     msg
       .respond(&TradeObserverControlEvent::NodeIDAssigned(node_id.clone()))

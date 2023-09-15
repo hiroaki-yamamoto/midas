@@ -21,12 +21,9 @@ pub struct ExecutionFailed {
 }
 
 impl ExecutionFailed {
-  pub fn new<T>(reason: T) -> Self
-  where
-    T: AsRef<str>,
-  {
+  pub fn new(reason: &str) -> Self {
     return Self {
-      reason: String::from(reason.as_ref()),
+      reason: reason.into(),
     };
   }
 }

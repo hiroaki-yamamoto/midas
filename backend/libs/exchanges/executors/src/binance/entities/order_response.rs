@@ -46,7 +46,7 @@ pub struct OrderResponse<FT, DT> {
 
 fn opt_string_to_float(field: &str, v: Option<String>) -> Option<Float> {
   return v
-    .map(|v| cast_f_from_txt(field, v).map_err(|e| error!("{}", e)).ok())
+    .map(|v| cast_f_from_txt(field, &v).map_err(|e| error!("{}", e)).ok())
     .flatten();
 }
 

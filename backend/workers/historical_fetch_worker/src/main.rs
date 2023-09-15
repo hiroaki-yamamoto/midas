@@ -86,8 +86,8 @@ async fn main() {
             continue;
           }
           if let Err(e) = cur_prog_kvs.incr(
-            req.exchange.as_str_name().to_lowercase(),
-            req.symbol.clone(), 1,
+            &req.exchange.as_str_name().to_lowercase(),
+            &req.symbol, 1,
             WriteOption::default().duration(Duration::from_secs(180).into()).into()
           ).await {
             error!(error = as_error!(e); "Failed to report the progress");

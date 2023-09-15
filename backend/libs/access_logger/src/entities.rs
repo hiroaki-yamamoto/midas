@@ -23,7 +23,7 @@ impl From<Info<'_>> for Log {
   fn from(value: Info<'_>) -> Self {
     return Self {
       remote_addr: value.remote_addr().map(|addr| format!("{}", addr)),
-      method: value.method().as_str().to_string(),
+      method: value.method().to_string(),
       path: value.path().to_string(),
       version: format!("{:?}", value.version()),
       status: value.status().as_u16(),

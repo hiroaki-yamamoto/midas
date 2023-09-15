@@ -1,6 +1,5 @@
 use ::async_trait::async_trait;
 use ::redis::{Commands, FromRedisValue, ToRedisArgs};
-use ::std::fmt::Display;
 use ::std::num::NonZeroUsize;
 
 use ::errors::{KVSError, KVSResult};
@@ -18,7 +17,7 @@ where
 {
   async fn lpush<R>(
     &self,
-    key: impl AsRef<str> + Clone + Display + Send + Sync,
+    key: &str,
     value: V,
     opt: impl Into<Option<WriteOption>> + Send,
   ) -> KVSResult<R>
@@ -49,11 +48,7 @@ where
     return Ok(res);
   }
 
-  async fn lpop(
-    &self,
-    key: impl AsRef<str> + Display + Send,
-    count: Option<NonZeroUsize>,
-  ) -> KVSResult<V> {
+  async fn lpop(&self, key: &str, count: Option<NonZeroUsize>) -> KVSResult<V> {
     let channel_name = self.channel_name(key);
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;
@@ -62,7 +57,7 @@ where
 
   async fn lrange<R>(
     &self,
-    key: impl AsRef<str> + Display + Send,
+    key: &str,
     start: isize,
     stop: isize,
   ) -> KVSResult<R>
@@ -75,7 +70,7 @@ where
     return Ok(cmd.lrange(channel_name, start, stop)?);
   }
 
-  async fn llen<R>(&self, key: impl AsRef<str> + Display + Send) -> KVSResult<R>
+  async fn llen<R>(&self, key: &str) -> KVSResult<R>
   where
     R: FromRedisValue,
   {

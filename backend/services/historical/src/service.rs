@@ -69,7 +69,7 @@ impl Service {
         let symbols = writer.list_trading().await.map_err(|err| {
           return cus_rej(Status::new(
             StatusCode::SERVICE_UNAVAILABLE,
-            format!("(DB, Symbol): {}", err)
+            &format!("(DB, Symbol): {}", err)
           ));
         })?;
         let size = me.redis_cli
@@ -80,7 +80,7 @@ impl Service {
           .map_err(|err| {
             return cus_rej(Status::new(
               StatusCode::SERVICE_UNAVAILABLE,
-              format!("(Redis, Size) {}", err)
+              &format!("(Redis, Size) {}", err)
             ));
           })?;
         let cur = me.redis_cli
@@ -91,7 +91,7 @@ impl Service {
           .map_err(|err| {
             return cus_rej(Status::new(
               StatusCode::SERVICE_UNAVAILABLE,
-              format!("(Redis, Current) {}", err)
+              &format!("(Redis, Current) {}", err)
             ));
           })?;
         return Ok::<_, Rejection>((me, size, cur, symbols));
@@ -106,8 +106,9 @@ impl Service {
         let prog = symbol.map(move |symbol| {
           return (symbol.symbol, clos_size.clone(), clos_cur.clone());
         }).filter_map(|(sym, size, cur)| async move {
-          let size = size.get(Exchanges::Binance.as_str_name().to_lowercase(), &sym);
-          let cur = cur.get(Exchanges::Binance.as_str_name().to_lowercase(), &sym);
+          let exchange_name = Exchanges::Binance.as_str_name().to_lowercase();
+          let size = size.get(&exchange_name, &sym);
+          let cur = cur.get(&exchange_name, &sym);
           let (size, cur) = join!(size, cur);
           if let Some(size) = size.ok() {
             if let Some(cur) = cur.ok() {
@@ -158,13 +159,13 @@ impl Service {
                 Some((item, _)) = resp.next() => {
                   let size = async {
                     size.get(
-                      item.exchange.as_str_name().to_lowercase(),
+                      &item.exchange.as_str_name().to_lowercase(),
                       &item.symbol
                     ).await.unwrap_or(0)
                   }.await;
                   let cur = async {
                     cur.get(
-                      item.exchange.as_str_name().to_lowercase(), &item.symbol
+                      &item.exchange.as_str_name().to_lowercase(), &item.symbol
                     ).await.unwrap_or(0)
                   }.await;
                   let prog = Progress {

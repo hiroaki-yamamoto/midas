@@ -99,10 +99,10 @@ impl TryFrom<ExecutionReport<i64, String>>
   type Error = NotificationError;
   fn try_from(v: ExecutionReport<i64, String>) -> Result<Self, Self::Error> {
     let (executed_qty, acc_qty, price, commission_amount) = (
-      cast_f_from_txt("executed_qty", v.executed_qty)?,
-      cast_f_from_txt("acc_qty", v.acc_qty)?,
-      cast_f_from_txt("price", v.price)?,
-      cast_f_from_txt("commission_amount", v.commission_amount)?,
+      cast_f_from_txt("executed_qty", &v.executed_qty)?,
+      cast_f_from_txt("acc_qty", &v.acc_qty)?,
+      cast_f_from_txt("price", &v.price)?,
+      cast_f_from_txt("commission_amount", &v.commission_amount)?,
     );
     return Ok(ExecutionReport::<DateTime, Float> {
       symbol: v.symbol,

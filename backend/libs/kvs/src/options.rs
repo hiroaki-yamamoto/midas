@@ -1,5 +1,4 @@
 use ::std::convert::From;
-use ::std::fmt::Display;
 use ::std::time::Duration;
 
 use ::redis::{Commands, ExistenceCheck, RedisResult, SetExpiry, SetOptions};
@@ -15,12 +14,7 @@ pub struct WriteOption {
 pub trait WriteOptionTrait {
   fn duration(&self) -> Option<Duration>;
   fn non_existent_only(&self) -> bool;
-  fn execute<S, T>(&self, cmds: &mut T, key: S) -> RedisResult<()>
-  where
-    S: AsRef<str> + Display,
-    T: Commands,
-  {
-    let key = key.as_ref();
+  fn execute(&self, cmds: &mut impl Commands, key: &str) -> RedisResult<()> {
     let mut res: RedisResult<()> = Ok(());
     if let Some(duration) = self.duration() {
       res = res.and(cmds.pexpire(key, duration.as_millis() as usize));
@@ -66,11 +60,7 @@ impl WriteOptionTrait for Option<WriteOption> {
       .map(|opt| opt.non_existent_only())
       .unwrap_or(false);
   }
-  fn execute<S, T>(&self, cmds: &mut T, key: S) -> RedisResult<()>
-  where
-    S: AsRef<str> + Display,
-    T: Commands,
-  {
+  fn execute(&self, cmds: &mut impl Commands, key: &str) -> RedisResult<()> {
     if let Some(opt) = self {
       return opt.execute(cmds, key);
     }

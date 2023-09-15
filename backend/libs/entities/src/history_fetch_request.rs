@@ -16,20 +16,17 @@ pub struct HistoryFetchRequest {
 }
 
 impl HistoryFetchRequest {
-  pub fn new<T>(
+  pub fn new(
     exchange: Exchanges,
-    symbol: T,
+    symbol: &str,
     start: Option<DateTime<Utc>>,
     end: Option<DateTime<Utc>>,
-  ) -> Self
-  where
-    T: AsRef<str>,
-  {
+  ) -> Self {
     return Self {
       exchange,
       start,
       end,
-      symbol: symbol.as_ref().to_string(),
+      symbol: symbol.into(),
     };
   }
 

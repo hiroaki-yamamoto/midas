@@ -20,7 +20,7 @@ macro_rules! declare_reject_func {
     |e| {
       ::warp::reject::custom(Status::new(
         StatusCode::SERVICE_UNAVAILABLE,
-        format!("{}", e),
+        &format!("{}", e),
       ))
     }
   };

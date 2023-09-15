@@ -51,8 +51,8 @@ impl Expanded {
       {
         fn channel_name(
           &self,
-          exchange: impl AsRef<str> + ::std::fmt::Display,
-          symbol: impl AsRef<str> + ::std::fmt::Display
+          exchange: &str,
+          symbol: &str
         ) -> String
         {
           return format!(#ch_name, exchange, symbol);
@@ -78,7 +78,7 @@ impl Expanded {
       {
         fn channel_name(
           &self,
-          key: impl AsRef<str> + ::std::fmt::Display
+          key: &str
         ) -> String where
         {
           return format!(#ch_name, key);

@@ -57,7 +57,7 @@ fn handle_websocket(
         _ = publish_interval.tick() => {
           if needs_flush {
             let msg: String = to_string(&book_tickers).unwrap_or_else(|e| {
-              return to_string(&Status::new_int(0, format!("{}", e).as_str()))
+              return to_string(&Status::new_int(0, &format!("{}", e)))
                 .unwrap_or_else(
                   |e| format!("Failed to encode the bookticker data: {}", e)
                 );
@@ -96,8 +96,8 @@ async fn main() {
       })
       .untuple_one()
       .and_then(|exchange: String, broker: Nats| async move {
-        let exchange: Exchanges =
-          exchange.parse().map_err(|_| ::warp::reject::not_found())?;
+        let exchange: Exchanges = Exchanges::from_str_name(&exchange)
+          .ok_or(::warp::reject::not_found())?;
         let observer = match exchange {
           Exchanges::Binance => get_exchange(exchange, &broker).await,
         }

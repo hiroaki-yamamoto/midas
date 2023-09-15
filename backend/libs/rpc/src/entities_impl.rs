@@ -42,20 +42,17 @@ impl TryFrom<i32> for Exchanges {
   fn try_from(value: i32) -> Result<Self, Self::Error> {
     return FromPrimitive::from_i32(value).ok_or(ParseError::new(
       None::<&str>,
-      Some(value.to_string()),
+      Some(value.to_string().as_str()),
       None::<&str>,
     ));
   }
 }
 
 impl Status {
-  pub fn new<T>(code: StatusCode, msg: T) -> Self
-  where
-    T: AsRef<str>,
-  {
+  pub fn new(code: StatusCode, msg: &str) -> Self {
     return Self {
       code: code.as_u16() as u32,
-      message: msg.as_ref().to_string(),
+      message: msg.to_string(),
     };
   }
   pub fn new_int(code: u32, msg: &str) -> Self {

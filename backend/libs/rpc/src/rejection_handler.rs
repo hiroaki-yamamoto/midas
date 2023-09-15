@@ -17,7 +17,7 @@ pub async fn handle_rejection(
   } else if let Some(e) = err.find::<reject::InvalidHeader>() {
     status = Status::new(
       StatusCode::EXPECTATION_FAILED,
-      format!("Invalid Header: {}", e.name()),
+      &format!("Invalid Header: {}", e.name()),
     );
   } else if let Some(_) = err.find::<reject::InvalidQuery>() {
     status = Status::new(StatusCode::EXPECTATION_FAILED, "Invalid Query");
@@ -28,12 +28,12 @@ pub async fn handle_rejection(
   } else if let Some(e) = err.find::<reject::MissingCookie>() {
     status = Status::new(
       StatusCode::EXPECTATION_FAILED,
-      format!("Missing Cookie: {}", e.name()),
+      &format!("Missing Cookie: {}", e.name()),
     );
   } else if let Some(e) = err.find::<reject::MissingHeader>() {
     status = Status::new(
       StatusCode::EXPECTATION_FAILED,
-      format!("Missing header: {}", e.name()),
+      &format!("Missing header: {}", e.name()),
     );
   } else if let Some(_) = err.find::<reject::PayloadTooLarge>() {
     status = Status::new(StatusCode::PAYLOAD_TOO_LARGE, "Payload is too large");
@@ -45,12 +45,12 @@ pub async fn handle_rejection(
   } else if let Some(rej) = err.find::<CSRFCheckFailed>() {
     status = Status::new(
       StatusCode::FORBIDDEN,
-      format!("CSRF Token Mismatch: {}", rej),
+      &format!("CSRF Token Mismatch: {}", rej),
     );
   } else {
     status = Status::new(
       StatusCode::SERVICE_UNAVAILABLE,
-      format!("Unhandled Rejection: {:?}", err),
+      &format!("Unhandled Rejection: {:?}", err),
     );
   }
   return Ok(reply::with_status(

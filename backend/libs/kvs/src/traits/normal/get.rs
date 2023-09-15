@@ -1,6 +1,5 @@
 use ::async_trait::async_trait;
 use ::redis::{Commands, FromRedisValue};
-use ::std::fmt::Display;
 
 use ::errors::KVSResult;
 
@@ -12,7 +11,7 @@ where
   T: Commands + Send,
   V: FromRedisValue,
 {
-  async fn get(&self, key: impl AsRef<str> + Display + Send) -> KVSResult<V> {
+  async fn get(&self, key: &str) -> KVSResult<V> {
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;
     let channel_name = self.channel_name(key);

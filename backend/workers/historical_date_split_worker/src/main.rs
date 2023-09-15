@@ -44,6 +44,7 @@ async fn main() {
     loop {
       select! {
         Some((req, _)) = req_sub.next() => {
+          let exchange_name = req.exchange.as_str_name().to_lowercase();
           let mut start = req.start.map(|start| start.into()).unwrap_or(UNIX_EPOCH);
           let end = req.end.map(|end| end.into()).unwrap_or(UNIX_EPOCH);
           info!(
@@ -81,12 +82,12 @@ async fn main() {
             },
             Ok(v) => v
           };
-          if let Err(e) = cur_prog_kvs.reset(req.exchange.as_str_name().to_lowercase(), &req.symbol).await {
+          if let Err(e) = cur_prog_kvs.reset(&exchange_name, &req.symbol).await {
             error!(error = as_error!(e); "Failed to reset the progress");
             continue;
           }
           if let Err(e) = num_prg_kvs.set::<()>(
-            req.exchange.as_str_name().to_lowercase(),
+            &exchange_name,
             &req.symbol,
             splitter.len().unwrap_or(0) as i64,
             WriteOption::default().duration(Duration::from_secs(180).into()).into(),
