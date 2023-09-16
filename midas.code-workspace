@@ -15,8 +15,14 @@
 	],
 	"settings": {
 		"protoc": {
-			"options": ["-I", "."]
+			"options": [
+				"-I",
+				"."
+			]
 		},
-		"rust-analyzer.cargo.target": "x86_64-unknown-linux-musl"
+		"rust-analyzer.cargo.target": "x86_64-unknown-linux-musl",
+		"conventionalCommits.scopes": [
+			"trade_observer_control"
+		]
 	}
 }
