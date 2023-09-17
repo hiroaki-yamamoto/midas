@@ -16,7 +16,7 @@ dependencies:
     version: 4.1.0
   typescript:
     specifier: ^4.4.3
-    version: 4.4.3
+    version: 4.9.5
 
 packages:
 
@@ -36,8 +36,8 @@ packages:
       argparse: 2.0.1
     dev: false
 
-  /typescript@4.4.3:
-    resolution: {integrity: sha512-4xfscpisVgqqDfPaJo5vkd+Qd/ItkoagnHpufr+i2QCHBsNYp+G7UAoyFl8aPtx879u38wPV65rZ8qbGZijalA==}
+  /typescript@4.9.5:
+    resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: false
