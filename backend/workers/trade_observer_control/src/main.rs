@@ -28,12 +28,13 @@ async fn main() {
     let kvs = cfg.redis().unwrap();
     let node_event_pubsub = NodeEventPubSub::new(&broker).await.unwrap();
 
-    let observer_node_kvs = ObserverNodeKVS::new(kvs.clone().into());
-    let type_kvs = ONEXTypeKVS::new(kvs.clone().into());
-
+    let rotted_node_removal_handler = handlers::RemoveRotHandler::new(
+      kvs.clone().into(), broker.clone()
+    );
     let mut node_event_handler = handlers::FromNodeEventHandler::new(
       kvs, db, &broker
     ).await.unwrap();
+
     let mut node_event = node_event_pubsub
       .pull_subscribe("tradeObserverController")
       .await
@@ -45,26 +46,19 @@ async fn main() {
         event = node_event.next() => if let Some((event, msg)) = event {
           if let Err(e) = node_event_handler.handle(&msg, event, &cfg.observer).await {
             error!("Error handling node event: {}", e);
+            continue;
           }
         },
         _ = sig.recv() => {
           break;
         },
         _ = auto_unregist_check_interval.tick() => {
-          let rotted: Vec<Arc<str>> = observer_node_kvs
-            .find_before(rot_dur).await.unwrap_or(vec![])
-            .into_iter()
-            .map(|s| s.into())
-            .collect();
-          let type_rotted: Vec<Arc<str>> = type_kvs
-            .find_before(rot_dur).await.unwrap_or(vec![])
-            .into_iter()
-            .map(|s| s.into())
-            .collect();
-          let _: KVSResult<usize> = observer_node_kvs.del(rotted.as_slice()).await;
-          let _: KVSResult<usize> = type_kvs.del(type_rotted.as_slice()).await;
+          if let Err(e) = rotted_node_removal_handler.handle(rot_dur).await {
+            error!("Error handling rotted node removal event: {}", e);
+            continue;
+          }
         }
-      };
+      }
     }
   })
   .await;
