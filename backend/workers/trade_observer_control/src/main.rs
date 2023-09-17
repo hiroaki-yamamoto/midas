@@ -24,8 +24,8 @@ async fn main() {
     let node_event_pubsub = NodeEventPubSub::new(&broker).await.unwrap();
 
     let rotted_node_removal_handler = handlers::RemoveRotHandler::new(
-      kvs.clone().into(), broker.clone()
-    );
+      kvs.clone().into(), &broker
+    ).await.unwrap();
     let mut node_event_handler = handlers::FromNodeEventHandler::new(
       kvs, db, &broker
     ).await.unwrap();
