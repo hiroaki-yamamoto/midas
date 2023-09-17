@@ -4,7 +4,6 @@ mod errors;
 mod handlers;
 mod remover;
 
-use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::futures::StreamExt;
@@ -12,12 +11,8 @@ use ::log::{error, info};
 use ::tokio::select;
 use ::tokio::time::interval;
 
-use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeEventPubSub;
 use ::subscribe::PubSub;
-
-use ::kvs::traits::last_checked::{FindBefore, Remove};
-use ::kvs::KVSResult;
 
 use ::config;
 
