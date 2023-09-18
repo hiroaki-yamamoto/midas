@@ -4,8 +4,9 @@ use ::errors::CreateStreamResult;
 use ::log::{as_error, error};
 use ::subscribe::nats::Client as Nats;
 
-use super::entities::{Symbol, SymbolEvent};
-use super::pubsub::SymbolEventPubSub;
+use super::entities::Symbol;
+use crate::entities::SymbolEvent;
+use crate::pubsub::SymbolEventPubSub;
 use ::subscribe::PubSub;
 
 #[derive(Debug, Clone)]
@@ -50,10 +51,8 @@ impl SymbolUpdateEventManager {
 
   pub async fn publish_changes(&self) {
     for add_item in &self.to_add[..] {
-      if let Err(e) = self
-        .event
-        .publish(&SymbolEvent::Add(add_item.clone()))
-        .await
+      if let Err(e) =
+        self.event.publish(&SymbolEvent::Add(add_item.into())).await
       {
         error!(
           symbol = add_item.symbol.to_owned(),
@@ -65,7 +64,7 @@ impl SymbolUpdateEventManager {
     for del_item in &self.to_remove[..] {
       if let Err(e) = self
         .event
-        .publish(&SymbolEvent::Remove(del_item.clone()))
+        .publish(&SymbolEvent::Remove(del_item.into()))
         .await
       {
         error!(

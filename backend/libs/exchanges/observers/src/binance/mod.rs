@@ -22,11 +22,12 @@ use ::tokio_tungstenite::{connect_async, tungstenite as wsocket};
 
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::errors::{CreateStreamResult, EmptyError, ObserverResult};
+use ::rpc::symbols::SymbolInfo;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
-use ::symbols::binance::entities::{Symbol, SymbolEvent};
-use ::symbols::binance::pubsub::SymbolEventPubSub;
 use ::symbols::binance::recorder::SymbolWriter;
+use ::symbols::entities::SymbolEvent;
+use ::symbols::pubsub::SymbolEventPubSub;
 use ::symbols::types::ListSymbolStream;
 use ::types::TLSWebSocket;
 
@@ -250,9 +251,9 @@ impl TradeObserver {
   fn is_symbol_fit(
     &self,
     symbol_indices: &HashMap<String, (usize, usize)>,
-    symbol: &Symbol,
+    symbol: &SymbolInfo,
   ) -> bool {
-    return symbol.status == "TRADING"
+    return symbol.status.to_lowercase() == "trading"
       && symbol_indices.get(&symbol.symbol).is_none();
   }
 
