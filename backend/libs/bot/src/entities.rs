@@ -50,10 +50,12 @@ impl TryFrom<RPCBot> for Bot {
   type Error = ParseError;
   fn try_from(value: RPCBot) -> Result<Self, Self::Error> {
     let exchange = Exchanges::try_from(value.exchange).map_err(|err| {
-      let mut err = err.clone();
-      err.field = Some(String::from("exchange"));
-      return err;
-    });
+      return ParseError::new(
+        "exchange".into(),
+        Some(value.exchange.to_string().as_str()),
+        Some(format!("{}", err).as_str()),
+      );
+    })?;
     let trading_amount = value.trading_amount;
     let trading_amount =
       cast_f_from_txt("trading_amount", trading_amount.as_str())?;
@@ -61,7 +63,7 @@ impl TryFrom<RPCBot> for Bot {
       id: bson::oid::ObjectId::from_str(value.id.as_str()).ok(),
       name: value.name,
       base_currency: value.base_currency,
-      exchange: exchange?,
+      exchange: exchange,
       created_at: None,
       cond_ts: value.condition,
       cond_js: None,

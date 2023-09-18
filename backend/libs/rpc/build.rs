@@ -12,15 +12,9 @@ fn main() {
     .out_dir("./src")
     .type_attribute(".", "#[derive(::serde::Serialize, ::serde::Deserialize)]")
     .type_attribute(".", "#[serde(rename_all = \"camelCase\")]")
-    .type_attribute(
-      "entities.Exchanges",
-      "#[derive(::num_derive::FromPrimitive, ::clap::Parser)]",
-    )
+    .type_attribute("entities.Exchanges", "#[derive(::clap::Parser)]")
     .type_attribute("entities.Exchanges", "#[serde(tag = \"exchange\")]")
-    .type_attribute(
-      "entities.BackTestPriceBase",
-      "#[derive(::num_derive::FromPrimitive, ::clap::Parser)]",
-    )
+    .type_attribute("entities.BackTestPriceBase", "#[derive(::clap::Parser)]")
     .type_attribute("historical.HistChartProg", "#[derive(Eq)]")
     .field_attribute(
       "historical.HistChartFetchReq.symbols",
