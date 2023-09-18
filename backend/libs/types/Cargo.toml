@@ -17,5 +17,5 @@ mongodb = { version = "2.4.0", default-features = false, features = [
 ] }
 tokio-tungstenite = { version = "0.20.0", features = ["native-tls"] }
 serde_json = "1.0.93"
-rug = { version = "1.20.1", features = ["serde"] }
+rug = { version = "1.22.0", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.0", features = ["force-cross"] }
