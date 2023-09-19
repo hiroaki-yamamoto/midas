@@ -24,7 +24,7 @@ use crate::remover::NodeRemover;
 
 use super::SyncHandler;
 
-pub(crate) struct FromNodeEventHandler<C>
+pub struct FromNodeEventHandler<C>
 where
   C: Commands + Send + Sync,
 {

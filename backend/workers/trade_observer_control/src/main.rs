@@ -13,6 +13,7 @@ use ::tokio::time::interval;
 
 use ::observers::pubsub::NodeEventPubSub;
 use ::subscribe::PubSub;
+use ::symbols::pubsub::SymbolEventPubSub;
 
 use ::config;
 
@@ -22,6 +23,7 @@ async fn main() {
   config::init(|cfg, mut sig, db, broker, _| async move {
     let kvs = cfg.redis().unwrap();
     let node_event_pubsub = NodeEventPubSub::new(&broker).await.unwrap();
+    let symbol_event_pubsub = SymbolEventPubSub::new(&broker).await.unwrap();
 
     let rotted_node_removal_handler = handlers::RemoveRotHandler::new(
       kvs.clone().into(), &broker
@@ -29,8 +31,15 @@ async fn main() {
     let mut node_event_handler = handlers::FromNodeEventHandler::new(
       kvs, db, &broker
     ).await.unwrap();
+    let symbol_event_handler = handlers::SymbolEventHandler::new(
+      &broker
+    ).await.unwrap();
 
     let mut node_event = node_event_pubsub
+      .pull_subscribe("tradeObserverController")
+      .await
+      .unwrap();
+    let mut symbol_event = symbol_event_pubsub
       .pull_subscribe("tradeObserverController")
       .await
       .unwrap();
@@ -38,9 +47,15 @@ async fn main() {
     let mut auto_unregist_check_interval = interval(rot_dur);
     loop {
       select! {
-        event = node_event.next() => if let Some((event, msg)) = event {
+        Some((event, msg)) = node_event.next() => {
           if let Err(e) = node_event_handler.handle(&msg, event, &cfg.observer).await {
             error!("Error handling node event: {}", e);
+            continue;
+          }
+        },
+        Some((event, _)) = symbol_event.next() => {
+          if let Err(e) = symbol_event_handler.handle(event).await {
+            error!("Error handling symbol event: {}", e);
             continue;
           }
         },

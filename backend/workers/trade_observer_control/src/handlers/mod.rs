@@ -1,7 +1,9 @@
 mod node_events;
 mod rotted_node_removal;
+mod symbol_event;
 mod sync;
 
-pub(crate) use node_events::FromNodeEventHandler;
-pub(crate) use rotted_node_removal::RemoveRotHandler;
-pub(crate) use sync::SyncHandler;
+pub use node_events::FromNodeEventHandler;
+pub use rotted_node_removal::RemoveRotHandler;
+pub use symbol_event::SymbolEventHandler;
+pub use sync::SyncHandler;
