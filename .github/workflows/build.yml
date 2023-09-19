@@ -1,6 +1,8 @@
 name: "Build Backend"
 on:
-  push
+  push:
+    branches:
+      - master
 jobs:
   build-libs:
     runs-on: ubuntu-latest
