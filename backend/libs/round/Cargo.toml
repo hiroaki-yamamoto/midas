@@ -7,8 +7,16 @@ edition = "2021"
 
 [dependencies]
 errors = { path = "../errors" }
+types = { path = "../types" }
 
 log = "0.4.17"
-reqwest = { version = "0.11.13", features = ["gzip", "brotli", "json", "rustls-tls"]}
+reqwest = { version = "0.11.13", features = [
+  "gzip",
+  "brotli",
+  "json",
+  "rustls-tls",
+] }
 serde = "1.0.152"
 tokio = { version = "1.26.0", features = ["time"] }
+tokio-tungstenite = { version = "0.20.0", features = ["native-tls"] }
+rand = "0.8.5"
