@@ -1,7 +1,6 @@
 use ::err_derive::Error;
 use ::reqwest::header::{InvalidHeaderName, InvalidHeaderValue};
 use ::reqwest::Error as RequestError;
-use ::url::Url;
 use ::warp::reject::Reject;
 
 use crate::MaximumAttemptExceeded;
