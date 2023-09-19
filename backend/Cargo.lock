@@ -643,8 +643,10 @@ dependencies = [
  "errors",
  "keychain",
  "mongodb",
+ "rand",
  "reqwest",
  "rpc",
+ "tokio-tungstenite 0.20.0",
  "types",
 ]
 
@@ -1084,6 +1086,7 @@ dependencies = [
  "serde_json",
  "serde_qs",
  "serde_yaml",
+ "tokio-tungstenite 0.20.0",
  "url",
  "warp",
 ]

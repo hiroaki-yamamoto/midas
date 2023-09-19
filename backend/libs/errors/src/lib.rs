@@ -45,4 +45,4 @@ pub use unknown::UnknownExchangeError;
 pub use user_stream::{UserStreamError, UserStreamResult};
 pub use validation::ValidationErr;
 pub use vec_elem::{RawVecElemErrs, VecElementErr, VecElementErrs};
-pub use websocket::WebsocketError;
+pub use websocket::{WebSocketInitResult, WebsocketError, WebsocketInitError};

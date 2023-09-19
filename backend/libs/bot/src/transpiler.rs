@@ -37,7 +37,8 @@ impl Transpiler {
       let status = resp.status().as_u16();
       let text = resp.text().await.unwrap_or(String::default());
       return Err(
-        StatusFailure::new(Some(resp_url), status, String::from(text)).into(),
+        StatusFailure::new(Some(resp_url.into()), status, String::from(text))
+          .into(),
       );
     }
     let mut bot_js = bot.clone();
