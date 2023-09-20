@@ -1,5 +1,6 @@
 use ::err_derive::Error;
 use ::serde::Serialize;
+use ::std::io::Error as IoError;
 use ::tokio_tungstenite::tungstenite::Error as SocketError;
 
 use super::MaximumAttemptExceeded;
@@ -17,6 +18,17 @@ pub enum WebsocketInitError {
   SocketError(#[source] SocketError),
   #[error(display = "Maximum Attempt Exceeded: {:?}", _0)]
   MaximumAttemptExceeded(#[source] MaximumAttemptExceeded),
+  #[error(display = "IO Error: {:?}", _0)]
+  IoError(#[source] IoError),
+}
+
+#[derive(Debug, Error)]
+pub enum WebsocketHandleError {
+  #[error(display = "Socket Error: {:?}", _0)]
+  SocketError(#[source] SocketError),
+  #[error(display = "Socket Init Error: {:?}", _0)]
+  SocketInitError(#[source] WebsocketInitError),
 }
 
 pub type WebSocketInitResult<T> = Result<T, WebsocketInitError>;
+pub type WebsocketHandleResult<T> = Result<T, WebsocketHandleError>;
