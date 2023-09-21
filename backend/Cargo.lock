@@ -2746,6 +2746,7 @@ dependencies = [
  "rand",
  "reqwest",
  "serde",
+ "serde_json",
  "tokio",
  "tokio-tungstenite 0.20.0",
  "types",

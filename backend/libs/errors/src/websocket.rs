@@ -1,6 +1,8 @@
 use ::err_derive::Error;
 use ::serde::Serialize;
+use ::serde_json::Error as JsonError;
 use ::std::io::Error as IoError;
+use ::std::string::FromUtf8Error;
 use ::tokio_tungstenite::tungstenite::Error as SocketError;
 
 use super::MaximumAttemptExceeded;
@@ -30,5 +32,18 @@ pub enum WebsocketHandleError {
   SocketInitError(#[source] WebsocketInitError),
 }
 
+#[derive(Debug, Error)]
+pub enum WebsocketMessageError {
+  #[error(display = "WebSocket Error: {:?}", _0)]
+  WebSocketError(#[source] SocketError),
+  #[error(display = "Socket Init Error: {:?}", _0)]
+  SocketInitError(#[source] WebsocketInitError),
+  #[error(display = "JSON decode/encode Error: {:?}", _0)]
+  JsonError(#[source] JsonError),
+  #[error(display = "UTF8 Decode error: {:?}", _0)]
+  UTF8Error(#[source] FromUtf8Error),
+}
+
 pub type WebSocketInitResult<T> = Result<T, WebsocketInitError>;
 pub type WebsocketHandleResult<T> = Result<T, WebsocketHandleError>;
+pub type WebsocketMessageResult<T> = Result<T, WebsocketMessageError>;
