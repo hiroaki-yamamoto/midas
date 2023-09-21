@@ -48,5 +48,5 @@ pub use vec_elem::{RawVecElemErrs, VecElementErr, VecElementErrs};
 pub use websocket::{
   WebSocketInitResult, WebsocketError, WebsocketHandleError,
   WebsocketHandleResult, WebsocketInitError, WebsocketMessageError,
-  WebsocketMessageResult,
+  WebsocketMessageResult, WebsocketSinkError, WebsocketSinkResult,
 };

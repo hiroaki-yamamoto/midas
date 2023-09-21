@@ -38,12 +38,21 @@ pub enum WebsocketMessageError {
   WebSocketError(#[source] SocketError),
   #[error(display = "Socket Init Error: {:?}", _0)]
   SocketInitError(#[source] WebsocketInitError),
-  #[error(display = "JSON decode/encode Error: {:?}", _0)]
+  #[error(display = "JSON decode Error: {:?}", _0)]
   JsonError(#[source] JsonError),
   #[error(display = "UTF8 Decode error: {:?}", _0)]
   UTF8Error(#[source] FromUtf8Error),
 }
 
+#[derive(Debug, Error)]
+pub enum WebsocketSinkError {
+  #[error(display = "WebSocket Error: {:?}", _0)]
+  WebSocketError(#[source] SocketError),
+  #[error(display = "JSON Encode Error: {:?}", _0)]
+  JsonError(#[source] JsonError),
+}
+
 pub type WebSocketInitResult<T> = Result<T, WebsocketInitError>;
 pub type WebsocketHandleResult<T> = Result<T, WebsocketHandleError>;
 pub type WebsocketMessageResult<T> = Result<T, WebsocketMessageError>;
+pub type WebsocketSinkResult<T> = Result<T, WebsocketSinkError>;

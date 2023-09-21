@@ -3,13 +3,14 @@ use ::std::pin::Pin;
 use ::std::task::{Context, Poll};
 use ::std::time::Duration;
 
+use ::futures::sink::Sink;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{Stream, StreamExt};
 use ::log::{as_display, as_error, error, info, warn};
 use ::rand::thread_rng;
 use ::rand::Rng;
 use ::serde::{de::DeserializeOwned, ser::Serialize};
-use ::serde_json::from_str as json_parse;
+use ::serde_json::{from_str as json_parse, to_string as jsonify};
 use ::tokio::runtime::Runtime;
 use ::tokio::time::interval;
 use ::tokio_tungstenite::connect_async;
@@ -19,7 +20,7 @@ use ::tokio_tungstenite::tungstenite::{Message, Result as WSResult};
 
 use ::errors::{
   MaximumAttemptExceeded, WebSocketInitResult, WebsocketHandleResult,
-  WebsocketMessageResult,
+  WebsocketMessageResult, WebsocketSinkError,
 };
 use ::types::TLSWebSocket;
 
@@ -213,5 +214,53 @@ where
         return Poll::Pending;
       }
     }
+  }
+}
+
+impl<R, W> Sink<W> for WebSocket<R, W>
+where
+  R: DeserializeOwned + Unpin,
+  W: Serialize + Unpin,
+{
+  type Error = WebsocketSinkError;
+
+  fn poll_ready(
+    self: Pin<&mut Self>,
+    cx: &mut Context<'_>,
+  ) -> Poll<Result<(), Self::Error>> {
+    let me = self.get_mut();
+    return me
+      .socket
+      .poll_ready_unpin(cx)
+      .map(|res| res.map_err(|err| err.into()));
+  }
+
+  fn poll_close(
+    self: Pin<&mut Self>,
+    cx: &mut Context<'_>,
+  ) -> Poll<Result<(), Self::Error>> {
+    let me = self.get_mut();
+    return me
+      .socket
+      .poll_close_unpin(cx)
+      .map(|res| res.map_err(|err| err.into()));
+  }
+
+  fn poll_flush(
+    self: Pin<&mut Self>,
+    cx: &mut Context<'_>,
+  ) -> Poll<Result<(), Self::Error>> {
+    let me = self.get_mut();
+    return me
+      .socket
+      .poll_flush_unpin(cx)
+      .map(|res| res.map_err(|err| err.into()));
+  }
+
+  fn start_send(self: Pin<&mut Self>, item: W) -> Result<(), Self::Error> {
+    let me = self.get_mut();
+    let payload = jsonify(&item)?;
+    let msg = Message::Text(payload);
+    return me.send(msg).map_err(|err| err.into());
   }
 }
