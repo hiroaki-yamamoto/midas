@@ -29,7 +29,7 @@ where
     return Ok(
       self
         .context
-        .publish(reply_subject.into(), serialized)
+        .publish(reply_subject.as_str().into(), serialized)
         .await?,
     );
   }
