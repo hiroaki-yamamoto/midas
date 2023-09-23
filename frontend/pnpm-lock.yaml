@@ -27,8 +27,8 @@ dependencies:
     specifier: ~16.2.0
     version: 16.2.5(@angular/common@16.2.5)(@angular/core@16.2.5)(@angular/platform-browser@16.2.5)(rxjs@7.8.1)
   '@angular/material':
-    specifier: 16.2.4
-    version: 16.2.4(@angular/animations@16.2.5)(@angular/cdk@16.2.4)(@angular/common@16.2.5)(@angular/core@16.2.5)(@angular/forms@16.2.5)(@angular/platform-browser@16.2.5)(rxjs@7.8.1)
+    specifier: 16.2.5
+    version: 16.2.5(@angular/animations@16.2.5)(@angular/cdk@16.2.4)(@angular/common@16.2.5)(@angular/core@16.2.5)(@angular/forms@16.2.5)(@angular/platform-browser@16.2.5)(rxjs@7.8.1)
   '@angular/platform-browser':
     specifier: ~16.2.0
     version: 16.2.5(@angular/animations@16.2.5)(@angular/common@16.2.5)(@angular/core@16.2.5)
@@ -631,11 +631,11 @@ packages:
       - supports-color
     dev: true
 
-  /@angular/material@16.2.4(@angular/animations@16.2.5)(@angular/cdk@16.2.4)(@angular/common@16.2.5)(@angular/core@16.2.5)(@angular/forms@16.2.5)(@angular/platform-browser@16.2.5)(rxjs@7.8.1):
-    resolution: {integrity: sha512-TIZ/0MKObn5YU9n/VReghJJKqgkqyzrWVNEJ8UgOP6MV5o+kAbqLSmlDJEyjLIwJF0vPnJ3UP6qbEOfEi1OLaA==}
+  /@angular/material@16.2.5(@angular/animations@16.2.5)(@angular/cdk@16.2.4)(@angular/common@16.2.5)(@angular/core@16.2.5)(@angular/forms@16.2.5)(@angular/platform-browser@16.2.5)(rxjs@7.8.1):
+    resolution: {integrity: sha512-IK+Xs0IYnPUMzbUKzKzL59uDu0LVxwqyNOKj3ZU1MaZrbKIY/KCgjK2TcShYB0nLjuQhuz8Zr5AJW0m2pLZ+0g==}
     peerDependencies:
       '@angular/animations': ^16.0.0 || ^17.0.0
-      '@angular/cdk': 16.2.4
+      '@angular/cdk': 16.2.5
       '@angular/common': ^16.0.0 || ^17.0.0
       '@angular/core': ^16.0.0 || ^17.0.0
       '@angular/forms': ^16.0.0 || ^17.0.0
