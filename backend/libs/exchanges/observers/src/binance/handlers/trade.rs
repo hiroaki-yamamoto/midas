@@ -1,8 +1,12 @@
-use ::futures::sink::SinkExt;
 use ::std::collections::HashMap;
+use ::std::sync::Arc;
+
+use ::futures::future::try_join_all;
+use ::futures::sink::SinkExt;
+use ::tokio::sync::Mutex;
 
 use ::clients::binance::WS_ENDPOINT;
-use ::errors::{ObserverResult, WebSocketInitResult};
+use ::errors::{ObserverResult, WebSocketInitResult, WebsocketSinkError};
 use ::round::WebSocket;
 
 use crate::binance::entities::{
@@ -65,6 +69,61 @@ impl BookTickerHandler {
       self.symbol_index.insert(symbol.into(), self.cur.clone());
     });
     self.cur.param += 1;
+    return Ok(());
+  }
+
+  fn build_params(
+    &mut self,
+    symbols: &[&str],
+  ) -> HashMap<Cursor, SubscribeRequestInner> {
+    let mut params_dict: HashMap<Cursor, SubscribeRequestInner> =
+      HashMap::new();
+    for symbol in symbols {
+      let cursor = self.symbol_index.remove(*symbol);
+      if cursor.is_none() {
+        continue;
+      }
+
+      let cursor = cursor.unwrap();
+      match params_dict.get_mut(&cursor) {
+        Some(req_inner) => {
+          req_inner.params.push(format!("{}@bookTicker", symbol));
+        }
+        None => {
+          params_dict.insert(
+            cursor.clone(),
+            SubscribeRequestInner {
+              id: cursor.param,
+              params: vec![format!("{}@bookTicker", symbol)],
+            },
+          );
+        }
+      };
+    }
+    return params_dict;
+  }
+
+  pub async fn unsubscribe(&mut self, symbols: &[&str]) -> ObserverResult<()> {
+    let requests: HashMap<usize, SubscribeRequest> = self
+      .build_params(symbols)
+      .into_iter()
+      .map(|(cur, inner)| (cur.socket, inner.into_unsubscribe()))
+      .collect();
+    let sockets = Arc::new(Mutex::new(&mut self.sockets));
+    let mut defer = vec![];
+    for (socket_id, req) in requests {
+      let sockets = sockets.clone();
+      defer.push(async move {
+        let mut sockets = sockets.lock().await;
+        let socket_id = socket_id.clone();
+        if let Some(socket) = sockets.get_mut(socket_id) {
+          socket.send(req).await?;
+          socket.flush().await?;
+        }
+        Ok::<_, WebsocketSinkError>(())
+      })
+    }
+    try_join_all(defer).await?;
     return Ok(());
   }
 }
