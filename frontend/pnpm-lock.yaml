@@ -3535,8 +3535,8 @@ packages:
       '@types/d3-selection': 3.0.7
     dev: false
 
-  /@types/d3-dsv@3.0.3:
-    resolution: {integrity: sha512-kEHH4lY2Oem/LpGg6Y5wFaFOpiEa1CaQUIpuiFC3SJ59OW8jQSlCPV43ooLzxUPCO6CoEo0oQAZzwnr8IyXVbQ==}
+  /@types/d3-dsv@3.0.4:
+    resolution: {integrity: sha512-YxfUVJ55HxR8oq88136w09mBMPNhgH7PZjteq72onWXWOohGif/cLQnQv8V4A5lEGjXF04LhwSTpmzpY9wyVyA==}
     dev: false
 
   /@types/d3-ease@3.0.0:
@@ -3546,7 +3546,7 @@ packages:
   /@types/d3-fetch@3.0.4:
     resolution: {integrity: sha512-RleYajubALkGjrvatxWhlygfvB1KNF0Uzz9guRUeeA+M/2B7l8rxObYdktaX9zU1st04lMCHjZWe4vbl+msH2Q==}
     dependencies:
-      '@types/d3-dsv': 3.0.3
+      '@types/d3-dsv': 3.0.4
     dev: false
 
   /@types/d3-force@3.0.6:
@@ -3662,7 +3662,7 @@ packages:
       '@types/d3-delaunay': 6.0.2
       '@types/d3-dispatch': 3.0.4
       '@types/d3-drag': 3.0.4
-      '@types/d3-dsv': 3.0.3
+      '@types/d3-dsv': 3.0.4
       '@types/d3-ease': 3.0.0
       '@types/d3-fetch': 3.0.4
       '@types/d3-force': 3.0.6
