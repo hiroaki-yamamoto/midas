@@ -1,4 +1,5 @@
 pub mod entities;
+pub(crate) mod handlers;
 mod pubsub;
 
 use ::std::collections::{HashMap, HashSet};

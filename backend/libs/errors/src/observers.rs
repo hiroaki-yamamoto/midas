@@ -6,12 +6,18 @@ use ::mongodb::error::Error as DBErr;
 use ::serde_json::Error as JSONErr;
 
 use crate::pubsub::ConsumerError;
+use crate::websocket::{WebsocketInitError, WebsocketSinkError};
 use crate::EmptyError;
 use crate::InitError;
 use crate::MaximumAttemptExceeded;
 
 #[derive(Debug, Error)]
 pub enum ObserverError {
+  #[error(display = "Websocket Initialization Error: {}", _0)]
+  WebsocketInitErr(#[source] WebsocketInitError),
+  #[error(display = "Websocket Sink Error: {}", _0)]
+  WebsocketSinkErr(#[source] WebsocketSinkError),
+
   #[error(display = "Maximum Attempt Exceeded")]
   MaximumAttemptExceeded(#[source] MaximumAttemptExceeded),
   #[error(display = "JSONify Failure: {}", _0)]

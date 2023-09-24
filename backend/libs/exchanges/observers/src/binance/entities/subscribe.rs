@@ -6,6 +6,16 @@ pub struct SubscribeRequestInner {
   pub params: Vec<String>,
 }
 
+impl SubscribeRequestInner {
+  pub fn into_subscribe(&self) -> SubscribeRequest {
+    return SubscribeRequest::Subscribe(self.clone());
+  }
+
+  pub fn into_unsubscribe(&self) -> SubscribeRequest {
+    return SubscribeRequest::Unsubscribe(self.clone());
+  }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(tag = "method")]
 pub enum SubscribeRequest {
