@@ -18,7 +18,8 @@ use crate::binance::pubsub::BookTickerPubSub;
 
 const MAX_NUM_PARAMS: u64 = 5;
 
-pub type BookTickerSocket = WebSocket<WebsocketPayload, SubscribeRequest>;
+pub type BookTickerSocket =
+  Arc<Mutex<WebSocket<WebsocketPayload, SubscribeRequest>>>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
 struct Cursor {
@@ -51,7 +52,9 @@ impl BookTickerHandler {
       || self.cur.param >= MAX_NUM_PARAMS
     {
       let socket = WebSocket::new(&[WS_ENDPOINT.to_string()]).await?;
-      self.sockets.insert(self.sockets.len(), socket);
+      self
+        .sockets
+        .insert(self.sockets.len(), Arc::new(Mutex::new(socket)));
       self.cur.socket = self.sockets.len() - 1;
       self.cur.param = 0;
       return Ok(&mut self.sockets.iter_mut().last().unwrap().1);
@@ -71,8 +74,11 @@ impl BookTickerHandler {
         .collect(),
     }
     .into_subscribe();
-    socket.send(payload).await?;
-    socket.flush().await?;
+    {
+      let mut socket = socket.lock().await;
+      socket.send(payload).await?;
+      socket.flush().await?;
+    };
     symbols.into_iter().for_each(|&symbol| {
       self.symbol_index.insert(symbol.into(), self.cur.clone());
     });
@@ -117,19 +123,17 @@ impl BookTickerHandler {
       .into_iter()
       .map(|(cur, inner)| (cur.socket, inner.into_unsubscribe()))
       .collect();
-    let sockets = Arc::new(Mutex::new(&mut self.sockets));
     let mut defer = vec![];
+    let mut sockets = self.sockets.iter_mut();
     for (socket_id, req) in requests {
-      let sockets = sockets.clone();
-      defer.push(async move {
-        let mut sockets = sockets.lock().await;
-        let socket_id = socket_id.clone();
-        if let Some((_, socket)) = sockets.iter_mut().nth(socket_id) {
+      if let Some((_, socket)) = sockets.find(|&&mut (id, _)| id == socket_id) {
+        defer.push(async {
+          let mut socket = socket.lock().await;
           socket.send(req).await?;
           socket.flush().await?;
-        }
-        Ok::<_, WebsocketSinkError>(())
-      })
+          Ok::<_, WebsocketSinkError>(())
+        });
+      }
     }
     try_join_all(defer).await?;
     return Ok(());
