@@ -4,6 +4,7 @@ use ::std::sync::Arc;
 use ::futures::future::try_join_all;
 use ::futures::sink::SinkExt;
 use ::tokio::sync::Mutex;
+use ::tokio_stream::StreamMap;
 
 use ::clients::binance::WS_ENDPOINT;
 use ::errors::{ObserverResult, WebSocketInitResult, WebsocketSinkError};
@@ -25,7 +26,7 @@ struct Cursor {
 
 #[derive(Default)]
 pub struct BookTickerHandler {
-  sockets: Vec<BookTickerSocket>,
+  sockets: StreamMap<usize, BookTickerSocket>,
   symbol_index: HashMap<String, Cursor>,
   cur: Cursor,
 }
@@ -43,12 +44,12 @@ impl BookTickerHandler {
       || self.cur.param >= MAX_NUM_PARAMS
     {
       let socket = WebSocket::new(&[WS_ENDPOINT.to_string()]).await?;
-      self.sockets.push(socket);
+      self.sockets.insert(self.sockets.len(), socket);
       self.cur.socket = self.sockets.len() - 1;
       self.cur.param = 0;
-      return Ok(self.sockets.get_mut(self.cur.socket).unwrap());
+      return Ok(&mut self.sockets.iter_mut().last().unwrap().1);
     }
-    return Ok(&mut self.sockets[self.cur.socket]);
+    return Ok(&mut self.sockets.iter_mut().nth(self.cur.socket).unwrap().1);
   }
 
   /// Reference: https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-book-ticker-streams
@@ -116,7 +117,7 @@ impl BookTickerHandler {
       defer.push(async move {
         let mut sockets = sockets.lock().await;
         let socket_id = socket_id.clone();
-        if let Some(socket) = sockets.get_mut(socket_id) {
+        if let Some((_, socket)) = sockets.iter_mut().nth(socket_id) {
           socket.send(req).await?;
           socket.flush().await?;
         }
