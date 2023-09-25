@@ -9,10 +9,12 @@ use ::tokio_stream::StreamMap;
 use ::clients::binance::WS_ENDPOINT;
 use ::errors::{ObserverResult, WebSocketInitResult, WebsocketSinkError};
 use ::round::WebSocket;
+use ::subscribe::nats::Client as Nats;
 
 use crate::binance::entities::{
   SubscribeRequest, SubscribeRequestInner, WebsocketPayload,
 };
+use crate::binance::pubsub::BookTickerPubSub;
 
 const MAX_NUM_PARAMS: u64 = 5;
 
@@ -24,16 +26,21 @@ struct Cursor {
   pub param: u64,
 }
 
-#[derive(Default)]
 pub struct BookTickerHandler {
   sockets: StreamMap<usize, BookTickerSocket>,
   symbol_index: HashMap<String, Cursor>,
   cur: Cursor,
+  pubsub: BookTickerPubSub,
 }
 
 impl BookTickerHandler {
-  pub fn new() -> Self {
-    return Self::default();
+  pub async fn new(pubsub: &Nats) -> ObserverResult<Self> {
+    return Ok(Self {
+      sockets: StreamMap::new(),
+      symbol_index: HashMap::new(),
+      cur: Cursor::default(),
+      pubsub: BookTickerPubSub::new(pubsub).await?,
+    });
   }
 
   async fn get_or_new_socket(

@@ -1,6 +1,7 @@
 use ::std::io::Error as IOErr;
 use ::std::string::FromUtf8Error;
 
+use ::async_nats::jetstream::context::CreateStreamError as NatsCreateStreamError;
 use ::err_derive::Error;
 use ::mongodb::error::Error as DBErr;
 use ::serde_json::Error as JSONErr;
@@ -17,6 +18,8 @@ pub enum ObserverError {
   WebsocketInitErr(#[source] WebsocketInitError),
   #[error(display = "Websocket Sink Error: {}", _0)]
   WebsocketSinkErr(#[source] WebsocketSinkError),
+  #[error(display = "Nats Stream Creation Error: {}", _0)]
+  NatsCreateStreamError(#[source] NatsCreateStreamError),
 
   #[error(display = "Maximum Attempt Exceeded")]
   MaximumAttemptExceeded(#[source] MaximumAttemptExceeded),
