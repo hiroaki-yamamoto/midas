@@ -55,7 +55,7 @@ where
     for jitter in 0..endpoints.len() {
       let url = endpoints[(url_index + jitter) % endpoints.len()].to_string();
       let (socket, resp) = connect_async(&url).await?;
-      if resp.status().is_client_error() || resp.status().is_server_error() {
+      if !resp.status().is_informational() {
         let message = resp.body();
         let message = message
           .as_ref()
