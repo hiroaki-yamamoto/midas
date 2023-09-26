@@ -1,19 +1,20 @@
 use ::std::collections::HashMap;
-use ::std::sync::Arc;
 
 use ::futures::future::try_join_all;
 use ::futures::sink::SinkExt;
 use ::futures::stream::StreamExt;
-use ::tokio::sync::Mutex;
+use ::log::{as_error, as_serde, error, info};
+use ::rug::Float;
 use ::tokio_stream::StreamMap;
 
 use ::clients::binance::WS_ENDPOINT;
 use ::errors::{ObserverResult, WebSocketInitResult, WebsocketSinkError};
 use ::round::WebSocket;
 use ::subscribe::nats::Client as Nats;
+use ::subscribe::PubSub;
 
 use crate::binance::entities::{
-  SubscribeRequest, SubscribeRequestInner, WebsocketPayload,
+  BookTicker, SubscribeRequest, SubscribeRequestInner, WebsocketPayload,
 };
 use crate::binance::pubsub::BookTickerPubSub;
 
@@ -130,6 +131,33 @@ impl BookTickerHandler {
       }
     }
     try_join_all(defer).await?;
+    return Ok(());
+  }
+
+  pub async fn start(&mut self) -> ObserverResult<()> {
+    while let Some((_, payload)) = self.sockets.next().await {
+      match payload {
+        WebsocketPayload::Result(result) => {
+          info!(id = result.id; "Request accepted");
+        }
+        WebsocketPayload::Error(error) => {
+          error!(error = as_serde!(error); "Request rejected");
+        }
+        WebsocketPayload::BookTicker(ticker) => {
+          let ticker = match BookTicker::<Float>::try_from(ticker) {
+            Ok(ticker) => ticker,
+            Err(e) => {
+              error!(error = as_error!(e); "Failed to parse book ticker");
+              continue;
+            }
+          };
+          if let Err(e) = self.pubsub.publish(&ticker).await {
+            error!(error = as_error!(e); "Failed to publish book ticker");
+            continue;
+          }
+        }
+      }
+    }
     return Ok(());
   }
 }
