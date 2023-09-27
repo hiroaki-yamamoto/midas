@@ -139,6 +139,12 @@ where
     }
   }
 
+  async fn is_to_del_empty(me: Arc<RwLock<&mut Self>>) -> bool {
+    let me = me.read().await;
+    let to_del = me.symbol_to_del.lock().await;
+    return to_del.is_empty();
+  }
+
   async fn handle_unsubscribe(&mut self) {
     let mut interval = interval(SUBSCRIBE_DELAY);
     let me = Arc::new(RwLock::new(self));
@@ -150,16 +156,20 @@ where
           continue;
         }
       }
-      let to_del = me.read().await;
-      let mut to_del = to_del.symbol_to_del.lock().await;
       let mut lrem_defer = vec![];
-      while !to_del.is_empty() {
-        let to_del: Vec<String> = if to_del.len() > 10 {
-          to_del.drain(..10)
-        } else {
-          to_del.drain(..)
+      while !Self::is_to_del_empty(me.clone()).await {
+        let to_del = me.clone();
+        let to_del = to_del.read().await;
+        let mut to_del = to_del.symbol_to_del.lock().await;
+        let to_del: Vec<String> = {
+          if to_del.len() > 10 {
+            to_del.drain(..10)
+          } else {
+            to_del.drain(..)
+          }
         }
         .collect();
+
         {
           let mut me = me.write().await;
           if let Err(e) = me.trade_handler.unsubscribe(to_del.as_slice()).await
@@ -167,6 +177,7 @@ where
             warn!(error = as_error!(e); "Failed to unsubscribe");
           };
         }
+
         lrem_defer.extend(to_del.into_iter().map(|sym| {
           let me = me.clone();
           return async move {
