@@ -6,10 +6,11 @@ use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
+use ::futures::future::try_join_all;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::log::{as_error, warn};
 use ::tokio::join;
-use ::tokio::sync::Mutex;
+use ::tokio::sync::{Mutex, RwLock};
 use ::tokio::time::interval;
 use ::uuid::Uuid;
 
@@ -140,12 +141,18 @@ where
 
   async fn handle_unsubscribe(&mut self) {
     let mut interval = interval(SUBSCRIBE_DELAY);
+    let me = Arc::new(RwLock::new(self));
     loop {
       let _ = interval.tick().await;
-      if self.node_id.is_none() {
-        continue;
+      {
+        let me = me.read().await;
+        if me.node_id.is_none() {
+          continue;
+        }
       }
-      let mut to_del = self.symbol_to_del.lock().await;
+      let to_del = me.read().await;
+      let mut to_del = to_del.symbol_to_del.lock().await;
+      let mut lrem_defer = vec![];
       while !to_del.is_empty() {
         let to_del: Vec<String> = if to_del.len() > 10 {
           to_del.drain(..10)
@@ -153,10 +160,29 @@ where
           to_del.drain(..)
         }
         .collect();
-        if let Err(e) = self.trade_handler.unsubscribe(to_del.as_slice()).await
         {
-          warn!(error = as_error!(e); "Failed to subscribe");
-        };
+          let mut me = me.write().await;
+          if let Err(e) = me.trade_handler.unsubscribe(to_del.as_slice()).await
+          {
+            warn!(error = as_error!(e); "Failed to unsubscribe");
+          };
+        }
+        lrem_defer.extend(to_del.into_iter().map(|sym| {
+          let me = me.clone();
+          return async move {
+            let me = me.read().await;
+            me.kvs
+              .lrem::<usize>(me.node_id.unwrap().to_string().as_str(), 0, sym)
+              .await
+          };
+        }));
+      }
+      if let Err(e) = try_join_all(lrem_defer).await {
+        warn!(
+          error = as_error!(e);
+          "Failed to unregister the symbols from the node KVS"
+        );
+        continue;
       }
     }
   }
