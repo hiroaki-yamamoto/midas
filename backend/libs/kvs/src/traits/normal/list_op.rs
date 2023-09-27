@@ -55,6 +55,16 @@ where
     return Ok(cmd.lpop(channel_name, count)?);
   }
 
+  async fn lrem<R>(&self, key: &str, count: isize, elem: V) -> KVSResult<R>
+  where
+    R: FromRedisValue,
+  {
+    let channel_name = self.channel_name(key);
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
+    return Ok(cmd.lrem(channel_name, count, elem)?);
+  }
+
   async fn lrange<R>(
     &self,
     key: &str,

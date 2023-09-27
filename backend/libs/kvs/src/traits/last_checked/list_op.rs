@@ -35,6 +35,12 @@ where
     return Ok(ret);
   }
 
+  async fn lrem(&self, key: &str, count: isize, elem: V) -> KVSResult<V> {
+    let ret = NormalListOp::lrem(self, &key, count, elem).await?;
+    self.flag_last_checked(key, None).await?;
+    return Ok(ret);
+  }
+
   async fn lrange<R>(
     &self,
     key: &str,
