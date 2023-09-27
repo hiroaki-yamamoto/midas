@@ -62,7 +62,7 @@ impl BookTickerHandler {
   }
 
   /// Reference: https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-book-ticker-streams
-  pub async fn subscribe(&mut self, symbols: &[&str]) -> ObserverResult<()> {
+  pub async fn subscribe(&mut self, symbols: &[String]) -> ObserverResult<()> {
     let id = self.cur.param.clone();
     let socket = self.get_or_new_socket().await?;
     let payload = SubscribeRequestInner {
@@ -75,7 +75,7 @@ impl BookTickerHandler {
     .into_subscribe();
     socket.send(payload).await?;
     socket.flush().await?;
-    symbols.into_iter().for_each(|&symbol| {
+    symbols.into_iter().for_each(|symbol| {
       self.symbol_index.insert(symbol.into(), self.cur.clone());
     });
     self.cur.param += 1;
@@ -84,12 +84,12 @@ impl BookTickerHandler {
 
   fn build_params(
     &mut self,
-    symbols: &[&str],
+    symbols: &[String],
   ) -> HashMap<Cursor, SubscribeRequestInner> {
     let mut params_dict: HashMap<Cursor, SubscribeRequestInner> =
       HashMap::new();
     for symbol in symbols {
-      let cursor = self.symbol_index.remove(*symbol);
+      let cursor = self.symbol_index.remove(symbol);
       if cursor.is_none() {
         continue;
       }
@@ -113,7 +113,10 @@ impl BookTickerHandler {
     return params_dict;
   }
 
-  pub async fn unsubscribe(&mut self, symbols: &[&str]) -> ObserverResult<()> {
+  pub async fn unsubscribe(
+    &mut self,
+    symbols: &[String],
+  ) -> ObserverResult<()> {
     let requests: HashMap<usize, SubscribeRequest> = self
       .build_params(symbols)
       .into_iter()

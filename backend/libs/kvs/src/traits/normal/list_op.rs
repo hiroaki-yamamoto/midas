@@ -18,7 +18,7 @@ where
   async fn lpush<R>(
     &self,
     key: &str,
-    value: V,
+    value: Vec<V>,
     opt: impl Into<Option<WriteOption>> + Send,
   ) -> KVSResult<R>
   where
