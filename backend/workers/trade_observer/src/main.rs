@@ -32,7 +32,7 @@ async fn main() {
   };
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
-  if let Err(e) = exchange.start(&mut sig).await {
+  if let Err(e) = exchange.start(sig.into()).await {
     error!(error = as_error!(e); "An Error Occurred.");
   }
 }

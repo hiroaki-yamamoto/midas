@@ -10,15 +10,15 @@ use ::futures::future::try_join_all;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::futures::FutureExt;
 use ::log::{as_error, warn};
+use ::tokio::select;
 use ::tokio::signal::unix::Signal;
 use ::tokio::sync::watch::{channel, Receiver};
 use ::tokio::sync::RwLock;
 use ::tokio::time::interval;
-use ::tokio::{join, select, spawn};
 use ::uuid::Uuid;
 
 use ::entities::{BookTicker as CommonBookTicker, TradeObserverControlEvent};
-use ::errors::{CreateStreamResult, ObserverResult};
+use ::errors::{CreateStreamResult, ObserverError, ObserverResult};
 use ::kvs::redis::Commands as RedisCommands;
 use ::kvs::traits::last_checked::ListOp;
 use ::kvs::Connection;
@@ -238,26 +238,24 @@ impl<T> TradeObserverTrait for TradeObserver<T>
 where
   T: RedisCommands + Send + Sync + 'static,
 {
-  async fn start(self: Box<Self>, signal: &mut Signal) -> ObserverResult<()> {
+  async fn start(self: Box<Self>, signal: Box<Signal>) -> ObserverResult<()> {
     let me = Arc::new(RwLock::new(*self));
+    let mut signal = signal;
     let (signal_tx, signal_rx) = channel::<Option<()>>(None);
     let signal_defer = signal
       .recv()
       .then(|_| async {
         let _ = signal_tx.send(Some(()));
+        return Ok::<(), ObserverError>(());
       })
       .boxed();
-    let (control_handler, subscribe_handler, unsubscribe_handler) = (
-      spawn(Self::handle_control_event(me.clone(), signal_rx.clone())),
-      spawn(Self::handle_subscribe(me.clone(), signal_rx.clone())),
-      spawn(Self::handle_unsubscribe(me.clone(), signal_rx.clone())),
-    );
-    let _ = join!(
+    let _ = try_join_all([
       signal_defer,
-      control_handler,
-      subscribe_handler,
-      unsubscribe_handler
-    );
+      Self::handle_control_event(me.clone(), signal_rx.clone()).boxed(),
+      Self::handle_subscribe(me.clone(), signal_rx.clone()).boxed(),
+      Self::handle_unsubscribe(me.clone(), signal_rx.clone()).boxed(),
+    ])
+    .await;
     return Ok(());
   }
 }
