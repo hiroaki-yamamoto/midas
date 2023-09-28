@@ -1,6 +1,6 @@
 use ::clap::Parser;
-use ::futures::future::{select, Either};
 use ::libc::{SIGINT, SIGTERM};
+use ::log::{as_error, error};
 use ::tokio::signal::unix as signal;
 
 use ::config::{Config, DEFAULT_CONFIG_PATH};
@@ -32,10 +32,7 @@ async fn main() {
   };
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
-  let sig = Box::pin(sig.recv());
-  match select(exchange.start(), sig).await {
-    Either::Left((v, _)) => v,
-    Either::Right(_) => Ok(()),
+  if let Err(e) = exchange.start(&mut sig).await {
+    error!(error = as_error!(e); "An Error Occurred.");
   }
-  .unwrap();
 }
