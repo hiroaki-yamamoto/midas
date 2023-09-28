@@ -10,6 +10,9 @@ use ::futures::future::try_join_all;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::log::{as_error, warn};
 use ::tokio::join;
+use ::tokio::select;
+use ::tokio::signal::unix::Signal;
+use ::tokio::sync::watch::{channel, Receiver};
 use ::tokio::sync::{Mutex, RwLock};
 use ::tokio::time::interval;
 use ::uuid::Uuid;
@@ -76,124 +79,140 @@ where
     return Ok(me);
   }
 
-  async fn handle_control_event(&mut self) -> ObserverResult<()> {
+  async fn handle_control_event(
+    &mut self,
+    signal: &mut Signal,
+  ) -> ObserverResult<()> {
     let mut control_event = self
       .control_event
       .pull_subscribe("biannceTradeObserver")
       .await?;
-    while let Some((event, _)) = control_event.next().await {
-      match event {
-        TradeObserverControlEvent::NodeIDAssigned(node_id) => {
-          self.node_id = Some(node_id);
+    loop {
+      select! {
+        _ = signal.recv() => {
+          break;
         }
-        TradeObserverControlEvent::SymbolAdd(exchange, symbol) => {
-          if exchange != Exchanges::Binance {
-            continue;
+        Some((event, _)) = control_event.next() => {
+          match event {
+            TradeObserverControlEvent::NodeIDAssigned(node_id) => {
+              warn!(
+                req_node_id = node_id.to_string(),
+                node_id = self.node_id.map(|id| id.to_string());
+                "Received Node ID Assigned event that is not recognized.",
+              );
+              continue;
+            }
+            TradeObserverControlEvent::SymbolAdd(exchange, symbol) => {
+              if exchange != Exchanges::Binance {
+                continue;
+              }
+              let mut symbol_add = self.symbol_to_add.lock().await;
+              symbol_add.push(symbol);
+            }
+            TradeObserverControlEvent::SymbolDel(exchange, symbol) => {
+              if exchange != Exchanges::Binance {
+                continue;
+              }
+              let mut symbol_del = self.symbol_to_del.lock().await;
+              symbol_del.push(symbol);
+            }
           }
-          let mut symbol_add = self.symbol_to_add.lock().await;
-          symbol_add.push(symbol);
-        }
-        TradeObserverControlEvent::SymbolDel(exchange, symbol) => {
-          if exchange != Exchanges::Binance {
-            continue;
-          }
-          let mut symbol_del = self.symbol_to_del.lock().await;
-          symbol_del.push(symbol);
         }
       }
     }
     return Ok(());
   }
 
-  async fn handle_subscribe(&mut self) {
+  async fn handle_subscribe(&mut self, signal: &mut Signal) {
     let mut interval = interval(SUBSCRIBE_DELAY);
     loop {
-      let _ = interval.tick().await;
-      if self.node_id.is_none() {
-        continue;
-      }
-      let mut to_add = self.symbol_to_add.lock().await;
-      while !to_add.is_empty() {
-        let to_add: Vec<String> = if to_add.len() > 10 {
-          to_add.drain(..10)
-        } else {
-          to_add.drain(..)
-        }
-        .collect();
-        if let Err(e) = self.trade_handler.subscribe(to_add.as_slice()).await {
-          warn!(error = as_error!(e); "Failed to subscribe");
-          continue;
-        };
-        if let Err(e) = self
-          .kvs
-          .lpush::<usize>(&self.node_id.unwrap().to_string(), to_add, None)
-          .await
-        {
-          warn!(
-            error = as_error!(e);
-            "Failed to register the symbols to the node KVS"
-          );
-          continue;
-        };
-      }
+      select! {
+        _ = signal.recv() => {
+          break;
+        },
+        _ = interval.tick() => {
+          if self.node_id.is_none() {
+            continue;
+          }
+          let mut to_add = self.symbol_to_add.lock().await;
+          while !to_add.is_empty() {
+            let to_add: Vec<String> = if to_add.len() > 10 {
+              to_add.drain(..10)
+            } else {
+              to_add.drain(..)
+            }
+            .collect();
+            if let Err(e) = self.trade_handler.subscribe(
+              to_add.as_slice()
+            ).await {
+              warn!(error = as_error!(e); "Failed to subscribe");
+              continue;
+            }
+            if let Err(e) = self
+              .kvs
+              .lpush::<usize>(&self.node_id.unwrap().to_string(), to_add, None)
+              .await
+            {
+              warn!(
+                error = as_error!(e);
+                "Failed to register the symbols to the node KVS"
+              );
+              continue;
+            }
+          }
+        },
+      };
     }
   }
 
-  async fn is_to_del_empty(me: Arc<RwLock<&mut Self>>) -> bool {
-    let me = me.read().await;
-    let to_del = me.symbol_to_del.lock().await;
-    return to_del.is_empty();
-  }
-
-  async fn handle_unsubscribe(&mut self) {
+  async fn handle_unsubscribe(&mut self, signal: &mut Signal) {
     let mut interval = interval(SUBSCRIBE_DELAY);
     let me = Arc::new(RwLock::new(self));
     loop {
-      let _ = interval.tick().await;
-      {
-        let me = me.read().await;
-        if me.node_id.is_none() {
-          continue;
-        }
-      }
-      let mut lrem_defer = vec![];
-      while !Self::is_to_del_empty(me.clone()).await {
-        let to_del = me.clone();
-        let to_del = to_del.read().await;
-        let mut to_del = to_del.symbol_to_del.lock().await;
-        let to_del: Vec<String> = {
-          if to_del.len() > 10 {
-            to_del.drain(..10)
-          } else {
-            to_del.drain(..)
-          }
-        }
-        .collect();
-
-        {
-          let mut me = me.write().await;
-          if let Err(e) = me.trade_handler.unsubscribe(to_del.as_slice()).await
+      select! {
+        _ = signal.recv() => {
+          break;
+        },
+        _ = interval.tick() => {
           {
-            warn!(error = as_error!(e); "Failed to unsubscribe");
-          };
-        }
-
-        lrem_defer.extend(to_del.into_iter().map(|sym| {
-          let me = me.clone();
-          return async move {
             let me = me.read().await;
-            me.kvs
-              .lrem::<usize>(me.node_id.unwrap().to_string().as_str(), 0, sym)
-              .await
-          };
-        }));
-      }
-      if let Err(e) = try_join_all(lrem_defer).await {
-        warn!(
-          error = as_error!(e);
-          "Failed to unregister the symbols from the node KVS"
-        );
-        continue;
+            if me.node_id.is_none() {
+              continue;
+            }
+          }
+          let mut lrem_defer = vec![];
+          let to_del: Vec<String> = async {
+            let to_del = me.clone();
+            let to_del = to_del.read().await;
+            let mut to_del = to_del.symbol_to_del.lock().await;
+            to_del.drain(..).collect()
+          }.await;
+
+          {
+            let mut me = me.write().await;
+            if let Err(e) = me.trade_handler.unsubscribe(to_del.as_slice()).await
+            {
+              warn!(error = as_error!(e); "Failed to unsubscribe");
+            };
+          }
+
+          lrem_defer.extend(to_del.into_iter().map(|sym| {
+            let me = me.clone();
+            return async move {
+              let me = me.read().await;
+              me.kvs
+                .lrem::<usize>(me.node_id.unwrap().to_string().as_str(), 0, sym)
+                .await
+            };
+          }));
+          if let Err(e) = try_join_all(lrem_defer).await {
+            warn!(
+              error = as_error!(e);
+              "Failed to unregister the symbols from the node KVS"
+            );
+            continue;
+          }
+        },
       }
     }
   }
