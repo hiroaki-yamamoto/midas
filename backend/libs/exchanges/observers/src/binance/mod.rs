@@ -9,7 +9,7 @@ use ::async_trait::async_trait;
 use ::futures::future::try_join_all;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::futures::FutureExt;
-use ::log::{as_error, warn};
+use ::log::{as_error, info, warn};
 use ::tokio::select;
 use ::tokio::signal::unix::Signal;
 use ::tokio::sync::watch::{channel, Receiver};
@@ -17,7 +17,10 @@ use ::tokio::sync::{Mutex, RwLock};
 use ::tokio::time::interval;
 use ::uuid::Uuid;
 
-use ::entities::{BookTicker as CommonBookTicker, TradeObserverControlEvent};
+use ::entities::{
+  BookTicker as CommonBookTicker, TradeObserverControlEvent,
+  TradeObserverNodeEvent,
+};
 use ::errors::{CreateStreamResult, ObserverError, ObserverResult};
 use ::kvs::redis::Commands as RedisCommands;
 use ::kvs::traits::last_checked::ListOp;
@@ -235,6 +238,27 @@ where
     }
     return Ok(());
   }
+
+  async fn request_node_id(me: Arc<RwLock<Self>>) -> ObserverResult<()> {
+    let response: TradeObserverControlEvent = async {
+      let me = me.read().await;
+      me.node_event
+        .request(TradeObserverNodeEvent::Regist(Exchanges::Binance))
+        .await
+    }
+    .await?;
+    if let TradeObserverControlEvent::NodeIDAssigned(id) = response {
+      let mut me = me.write().await;
+      me.node_id = Some(id);
+      info!("Assigned node id: {}", id);
+    } else {
+      warn!(
+        "Received unexpected response while waiting for Node ID: {:?}",
+        response
+      );
+    }
+    return Ok(());
+  }
 }
 
 #[async_trait]
@@ -243,17 +267,24 @@ where
   T: RedisCommands + Send + Sync + 'static,
 {
   async fn start(self: Box<Self>, signal: Box<Signal>) -> ObserverResult<()> {
+    let me = Arc::new(RwLock::new(*self));
     let mut signal = signal;
     let (signal_tx, signal_rx) = channel::<Option<()>>(None);
     let signal_defer = signal
       .recv()
       .then(|_| async {
+        let me = me.read().await;
+        if let Some(node_id) = me.node_id {
+          let _ = me
+            .node_event
+            .publish(TradeObserverNodeEvent::Unregist(node_id))
+            .await;
+          info!("Unregistered node id: {}", node_id);
+        }
         let _ = signal_tx.send(Some(()));
         return Ok::<(), ObserverError>(());
       })
       .boxed();
-
-    let me = Arc::new(RwLock::new(*self));
     let trade_handler = async {
       let me = me.read().await;
       me.trade_handler.clone()
@@ -268,6 +299,7 @@ where
     let _ = try_join_all([
       signal_defer,
       handle_trade,
+      Self::request_node_id(me.clone()).boxed(),
       Self::handle_control_event(me.clone(), signal_rx.clone()).boxed(),
       Self::handle_subscribe(me.clone(), signal_rx.clone()).boxed(),
       Self::handle_unsubscribe(me.clone(), signal_rx.clone()).boxed(),
