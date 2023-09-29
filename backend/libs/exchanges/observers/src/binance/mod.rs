@@ -13,7 +13,7 @@ use ::log::{as_error, warn};
 use ::tokio::select;
 use ::tokio::signal::unix::Signal;
 use ::tokio::sync::watch::{channel, Receiver};
-use ::tokio::sync::RwLock;
+use ::tokio::sync::{Mutex, RwLock};
 use ::tokio::time::interval;
 use ::uuid::Uuid;
 
@@ -45,7 +45,7 @@ where
   kvs: ObserverNodeKVS<T>,
   control_event: NodeControlEventPubSub,
   node_event: NodeEventPubSub,
-  trade_handler: BookTickerHandler,
+  trade_handler: Arc<Mutex<BookTickerHandler>>,
   symbol_to_add: Vec<String>,
   symbol_to_del: Vec<String>,
 }
@@ -65,7 +65,7 @@ where
     let kvs = ObserverNodeKVS::new(redis_cmd.into());
     let me = Self {
       node_id: None,
-      trade_handler,
+      trade_handler: Arc::new(Mutex::new(trade_handler)),
       kvs,
       control_event,
       node_event,
@@ -152,17 +152,20 @@ where
                 to_add.drain(..).collect()
               }
             }.await;
-            let mut me = me.write().await;
-            if let Err(e) = me.trade_handler.subscribe(
-              to_add.as_slice()
-            ).await {
-              warn!(error = as_error!(e); "Failed to subscribe");
-              continue;
+            {
+              let me = me.read().await;
+              let mut trade_handler = me.trade_handler.lock().await;
+              if let Err(e) = trade_handler.subscribe(
+                to_add.as_slice()
+              ).await {
+                warn!(error = as_error!(e); "Failed to subscribe");
+                continue;
+              }
             }
-            if let Err(e) = me
-              .kvs
-              .lpush::<usize>(&me.node_id.unwrap().to_string(), to_add, None)
-              .await
+            if let Err(e) = async {
+              let me = me.read().await;
+              me.kvs.lpush::<usize>(&me.node_id.unwrap().to_string(), to_add, None).await
+            }.await
             {
               warn!(
                 error = as_error!(e);
@@ -203,8 +206,9 @@ where
           }.await;
 
           {
-            let mut me = me.write().await;
-            if let Err(e) = me.trade_handler.unsubscribe(to_del.as_slice()).await
+            let me = me.read().await;
+            let mut trade_handler = me.trade_handler.lock().await;
+            if let Err(e) = trade_handler.unsubscribe(to_del.as_slice()).await
             {
               warn!(error = as_error!(e); "Failed to unsubscribe");
             };
@@ -239,7 +243,6 @@ where
   T: RedisCommands + Send + Sync + 'static,
 {
   async fn start(self: Box<Self>, signal: Box<Signal>) -> ObserverResult<()> {
-    let me = Arc::new(RwLock::new(*self));
     let mut signal = signal;
     let (signal_tx, signal_rx) = channel::<Option<()>>(None);
     let signal_defer = signal
@@ -249,8 +252,22 @@ where
         return Ok::<(), ObserverError>(());
       })
       .boxed();
+
+    let me = Arc::new(RwLock::new(*self));
+    let trade_handler = async {
+      let me = me.read().await;
+      me.trade_handler.clone()
+    }
+    .await;
+    let handle_trade = async {
+      let mut trade_handler = trade_handler.lock().await;
+      trade_handler.start(signal_rx.clone()).await
+    }
+    .boxed();
+
     let _ = try_join_all([
       signal_defer,
+      handle_trade,
       Self::handle_control_event(me.clone(), signal_rx.clone()).boxed(),
       Self::handle_subscribe(me.clone(), signal_rx.clone()).boxed(),
       Self::handle_unsubscribe(me.clone(), signal_rx.clone()).boxed(),

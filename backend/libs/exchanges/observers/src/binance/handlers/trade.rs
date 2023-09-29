@@ -5,6 +5,8 @@ use ::futures::sink::SinkExt;
 use ::futures::stream::StreamExt;
 use ::log::{as_error, as_serde, error, info};
 use ::rug::Float;
+use ::tokio::select;
+use ::tokio::sync::watch::Receiver;
 use ::tokio_stream::StreamMap;
 
 use ::clients::binance::WS_ENDPOINT;
@@ -137,28 +139,38 @@ impl BookTickerHandler {
     return Ok(());
   }
 
-  pub async fn start(&mut self) -> ObserverResult<()> {
-    while let Some((_, payload)) = self.sockets.next().await {
-      match payload {
-        WebsocketPayload::Result(result) => {
-          info!(id = result.id; "Request accepted");
-        }
-        WebsocketPayload::Error(error) => {
-          error!(error = as_serde!(error); "Request rejected");
-        }
-        WebsocketPayload::BookTicker(ticker) => {
-          let ticker = match BookTicker::<Float>::try_from(ticker) {
-            Ok(ticker) => ticker,
-            Err(e) => {
-              error!(error = as_error!(e); "Failed to parse book ticker");
-              continue;
+  pub async fn start(
+    &mut self,
+    mut sig: Receiver<Option<()>>,
+  ) -> ObserverResult<()> {
+    loop {
+      select! {
+        _ = sig.changed() => {
+          break;
+        },
+        Some((_, payload)) = self.sockets.next() => {
+          match payload {
+            WebsocketPayload::Result(result) => {
+              info!(id = result.id; "Request accepted");
             }
-          };
-          if let Err(e) = self.pubsub.publish(&ticker).await {
-            error!(error = as_error!(e); "Failed to publish book ticker");
-            continue;
+            WebsocketPayload::Error(error) => {
+              error!(error = as_serde!(error); "Request rejected");
+            }
+            WebsocketPayload::BookTicker(ticker) => {
+              let ticker = match BookTicker::<Float>::try_from(ticker) {
+                Ok(ticker) => ticker,
+                Err(e) => {
+                  error!(error = as_error!(e); "Failed to parse book ticker");
+                  continue;
+                }
+              };
+              if let Err(e) = self.pubsub.publish(&ticker).await {
+                error!(error = as_error!(e); "Failed to publish book ticker");
+                continue;
+              }
+            }
           }
-        }
+        },
       }
     }
     return Ok(());
