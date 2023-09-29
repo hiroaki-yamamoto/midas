@@ -259,6 +259,8 @@ where
     }
     return Ok(());
   }
+
+  async fn ping(me: Arc<RwLock<Self>>) -> ObserverResult<()> {}
 }
 
 #[async_trait]
