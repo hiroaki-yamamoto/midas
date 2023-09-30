@@ -1,7 +1,6 @@
 use ::err_derive::Error;
 use ::reqwest::header::{InvalidHeaderName, InvalidHeaderValue};
 use ::reqwest::Error as RequestError;
-use ::url::Url;
 use ::warp::reject::Reject;
 
 use crate::MaximumAttemptExceeded;
@@ -14,13 +13,13 @@ use crate::MaximumAttemptExceeded;
   url
 )]
 pub struct StatusFailure {
-  pub url: Option<Url>,
+  pub url: Option<String>,
   pub code: u16,
   pub text: String,
 }
 
 impl StatusFailure {
-  pub fn new(url: Option<Url>, code: u16, text: String) -> Self {
+  pub fn new(url: Option<String>, code: u16, text: String) -> Self {
     return Self { url, code, text };
   }
 }

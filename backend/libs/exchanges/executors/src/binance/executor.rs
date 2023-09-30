@@ -237,7 +237,7 @@ impl ExecutorTrait for Executor {
           if !status.is_success() {
             return Err(
               StatusFailure {
-                url: Some(resp.url().clone()),
+                url: Some(resp.url().to_string()),
                 code: status.as_u16(),
                 text: resp
                   .text()
@@ -275,7 +275,7 @@ impl ExecutorTrait for Executor {
             if !status.is_success() {
               return Err(
                 StatusFailure {
-                  url: Some(resp.url().clone()),
+                  url: Some(resp.url().to_string()),
                   code: status.as_u16(),
                   text: resp
                     .text()

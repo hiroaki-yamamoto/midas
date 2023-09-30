@@ -1,7 +1,6 @@
 use ::clap::Parser;
-use ::futures::future::{select, Either};
 use ::libc::{SIGINT, SIGTERM};
-use ::tokio::join;
+use ::log::{as_error, error};
 use ::tokio::signal::unix as signal;
 
 use ::config::{Config, DEFAULT_CONFIG_PATH};
@@ -24,20 +23,16 @@ async fn main() {
   let config = Config::from_fpath(Some(cmd_args.config)).unwrap();
   config.init_logger();
 
-  let (broker, db) = join!(config.nats_cli(), config.db());
-  let broker = broker.unwrap();
-  let db = db.unwrap();
+  let broker = config.nats_cli().await.unwrap();
+  let redis = config.redis().unwrap();
   let exchange: Box<dyn TradeObserverTrait> = match cmd_args.exchange {
     Exchanges::Binance => {
-      Box::new(binance::TradeObserver::new(&db, &broker).await.unwrap())
+      Box::new(binance::TradeObserver::new(&broker, redis).await.unwrap())
     }
   };
-  let mut sig =
+  let sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
-  let sig = Box::pin(sig.recv());
-  match select(exchange.start(), sig).await {
-    Either::Left((v, _)) => v,
-    Either::Right(_) => Ok(()),
+  if let Err(e) = exchange.start(sig.into()).await {
+    error!(error = as_error!(e); "An Error Occurred.");
   }
-  .unwrap();
 }

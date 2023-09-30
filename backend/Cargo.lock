@@ -1085,6 +1085,7 @@ dependencies = [
  "serde_json",
  "serde_qs",
  "serde_yaml",
+ "tokio-tungstenite 0.20.0",
  "url",
  "warp",
 ]
@@ -2210,6 +2211,7 @@ dependencies = [
  "log",
  "mongodb",
  "rmp-serde",
+ "round",
  "rpc",
  "rug",
  "serde",
@@ -2753,10 +2755,15 @@ name = "round"
 version = "0.1.0"
 dependencies = [
  "errors",
+ "futures",
  "log",
+ "rand",
  "reqwest",
  "serde",
+ "serde_json",
  "tokio",
+ "tokio-tungstenite 0.20.0",
+ "types",
 ]
 
 [[package]]

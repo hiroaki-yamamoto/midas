@@ -81,7 +81,7 @@ where
     while {
       let push_result: KVSResult<usize> = self
         .node_kvs
-        .lpush(&node_id.to_string(), "".into(), redis_option.clone())
+        .lpush(&node_id.to_string(), vec!["".into()], redis_option.clone())
         .await;
       push_result.is_err()
     } {

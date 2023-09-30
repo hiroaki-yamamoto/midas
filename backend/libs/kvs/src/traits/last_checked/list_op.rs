@@ -18,7 +18,7 @@ where
   async fn lpush<R>(
     &self,
     key: &str,
-    value: V,
+    value: Vec<V>,
     opt: Option<WriteOption>,
   ) -> KVSResult<R>
   where
@@ -31,6 +31,15 @@ where
 
   async fn lpop(&self, key: &str, count: Option<NonZeroUsize>) -> KVSResult<V> {
     let ret = NormalListOp::lpop(self, &key, count).await?;
+    self.flag_last_checked(key, None).await?;
+    return Ok(ret);
+  }
+
+  async fn lrem<R>(&self, key: &str, count: isize, elem: V) -> KVSResult<R>
+  where
+    R: FromRedisValue + Send,
+  {
+    let ret = NormalListOp::lrem(self, &key, count, elem).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }

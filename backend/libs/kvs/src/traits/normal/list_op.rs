@@ -18,7 +18,7 @@ where
   async fn lpush<R>(
     &self,
     key: &str,
-    value: V,
+    value: Vec<V>,
     opt: impl Into<Option<WriteOption>> + Send,
   ) -> KVSResult<R>
   where
@@ -53,6 +53,16 @@ where
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;
     return Ok(cmd.lpop(channel_name, count)?);
+  }
+
+  async fn lrem<R>(&self, key: &str, count: isize, elem: V) -> KVSResult<R>
+  where
+    R: FromRedisValue,
+  {
+    let channel_name = self.channel_name(key);
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
+    return Ok(cmd.lrem(channel_name, count, elem)?);
   }
 
   async fn lrange<R>(

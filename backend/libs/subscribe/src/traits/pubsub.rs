@@ -86,10 +86,13 @@ where
     return Ok(res?);
   }
 
-  async fn request(
+  async fn request<R>(
     &self,
     entity: impl Borrow<T> + Send + Sync,
-  ) -> RequestResult<T> {
+  ) -> RequestResult<R>
+  where
+    R: DeserializeOwned,
+  {
     let msg = Self::serialize(entity.borrow())?;
     let respond_id: String = thread_rng()
       .sample_iter(&Alphanumeric)

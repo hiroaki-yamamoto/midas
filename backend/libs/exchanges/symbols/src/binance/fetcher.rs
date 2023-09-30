@@ -79,7 +79,7 @@ impl SymbolFetcherTrait for SymbolFetcher {
     } else {
       return Err(SymbolFetchError::HTTPErr(
         StatusFailure {
-          url: Some(self.cli.get_current_url()).cloned(),
+          url: Some(self.cli.get_current_url().to_string()),
           code: resp_status.as_u16(),
           text: resp.text().await?,
         }
