@@ -260,7 +260,30 @@ where
     return Ok(());
   }
 
-  async fn ping(me: Arc<RwLock<Self>>) -> ObserverResult<()> {}
+  async fn ping(
+    me: Arc<RwLock<Self>>,
+    mut signal: Receiver<Option<()>>,
+  ) -> ObserverResult<()> {
+    let mut interval = interval(Duration::from_secs(1));
+    loop {
+      select! {
+        _ = signal.changed() => {
+          break;
+        },
+        _ = interval.tick() => {
+          let me = me.read().await;
+          if let Some(node_id) = me.node_id {
+            let _ = me
+              .node_event
+              .publish(TradeObserverNodeEvent::Ping(node_id))
+              .await;
+          }
+          continue;
+        },
+      }
+    }
+    return Ok(());
+  }
 }
 
 #[async_trait]
@@ -301,6 +324,7 @@ where
     let _ = try_join_all([
       signal_defer,
       handle_trade,
+      Self::ping(me.clone(), signal_rx.clone()).boxed(),
       Self::request_node_id(me.clone()).boxed(),
       Self::handle_control_event(me.clone(), signal_rx.clone()).boxed(),
       Self::handle_subscribe(me.clone(), signal_rx.clone()).boxed(),
