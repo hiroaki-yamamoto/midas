@@ -75,7 +75,7 @@ dependencies:
 devDependencies:
   '@angular-devkit/build-angular':
     specifier: ~16.2.0
-    version: 16.2.3(@angular/compiler-cli@16.2.6)(@angular/localize@16.2.6)(@types/node@18.17.19)(karma@6.4.2)(typescript@4.9.5)
+    version: 16.2.3(@angular/compiler-cli@16.2.6)(@angular/localize@16.2.7)(@types/node@18.17.19)(karma@6.4.2)(typescript@4.9.5)
   '@angular-eslint/builder':
     specifier: 16.2.0
     version: 16.2.0(eslint@8.50.0)(typescript@4.9.5)
@@ -98,8 +98,8 @@ devDependencies:
     specifier: ~16.2.0
     version: 16.2.6(@angular/compiler@16.2.6)(typescript@4.9.5)
   '@angular/localize':
-    specifier: 16.2.6
-    version: 16.2.6(@angular/compiler-cli@16.2.6)(@angular/compiler@16.2.6)
+    specifier: 16.2.7
+    version: 16.2.7(@angular/compiler-cli@16.2.6)(@angular/compiler@16.2.6)
   '@cypress/schematic':
     specifier: 2.5.1
     version: 2.5.1(@angular/cli@16.2.3)(@angular/core@16.2.6)
@@ -217,7 +217,7 @@ packages:
       - chokidar
     dev: true
 
-  /@angular-devkit/build-angular@16.2.3(@angular/compiler-cli@16.2.6)(@angular/localize@16.2.6)(@types/node@18.17.19)(karma@6.4.2)(typescript@4.9.5):
+  /@angular-devkit/build-angular@16.2.3(@angular/compiler-cli@16.2.6)(@angular/localize@16.2.7)(@types/node@18.17.19)(karma@6.4.2)(typescript@4.9.5):
     resolution: {integrity: sha512-GQo14ui3jGBa3ORslO9AcNLCmLuV6EohFk7KbHMTpTY1267z3kdkJfUXhwPKTYQX4ZvQZK2lHLMrSjpFQ5vtOQ==}
     engines: {node: ^16.14.0 || >=18.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
     peerDependencies:
@@ -257,7 +257,7 @@ packages:
       '@angular-devkit/build-webpack': 0.1602.3(chokidar@3.5.3)(webpack-dev-server@4.15.1)(webpack@5.88.2)
       '@angular-devkit/core': 16.2.3(chokidar@3.5.3)
       '@angular/compiler-cli': 16.2.6(@angular/compiler@16.2.6)(typescript@4.9.5)
-      '@angular/localize': 16.2.6(@angular/compiler-cli@16.2.6)(@angular/compiler@16.2.6)
+      '@angular/localize': 16.2.7(@angular/compiler-cli@16.2.6)(@angular/compiler@16.2.6)
       '@babel/core': 7.22.9
       '@babel/generator': 7.22.9
       '@babel/helper-annotate-as-pure': 7.22.5
@@ -614,13 +614,13 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /@angular/localize@16.2.6(@angular/compiler-cli@16.2.6)(@angular/compiler@16.2.6):
-    resolution: {integrity: sha512-sOkZcamHIpiklnbBXCplH7VhPV/aV1c0Cl62Q4lOa+pEnD1oPxE/oAQtFe+AHdf2rTnJhqCutvQDr5yGrIT+SQ==}
+  /@angular/localize@16.2.7(@angular/compiler-cli@16.2.6)(@angular/compiler@16.2.6):
+    resolution: {integrity: sha512-8j7DgtrXTjzO7g1W8cm4Ewh1BKN7PkrpoxT+mXCkrbLup4krqNhlUZEM2N72mjyX4kN+qPJ3sOhw6rYLjRQP6Q==}
     engines: {node: ^16.14.0 || >=18.10.0}
     hasBin: true
     peerDependencies:
-      '@angular/compiler': 16.2.6
-      '@angular/compiler-cli': 16.2.6
+      '@angular/compiler': 16.2.7
+      '@angular/compiler-cli': 16.2.7
     dependencies:
       '@angular/compiler': 16.2.6(@angular/core@16.2.6)
       '@angular/compiler-cli': 16.2.6(@angular/compiler@16.2.6)(typescript@4.9.5)
@@ -794,12 +794,12 @@ packages:
     dependencies:
       '@ampproject/remapping': 2.2.1
       '@babel/code-frame': 7.22.13
-      '@babel/generator': 7.22.9
+      '@babel/generator': 7.22.15
       '@babel/helper-compilation-targets': 7.22.15
       '@babel/helper-module-transforms': 7.22.20(@babel/core@7.22.9)
       '@babel/helpers': 7.22.15
       '@babel/parser': 7.22.16
-      '@babel/template': 7.22.5
+      '@babel/template': 7.22.15
       '@babel/traverse': 7.22.20
       '@babel/types': 7.22.19
       convert-source-map: 1.9.0
@@ -910,7 +910,7 @@ packages:
     resolution: {integrity: sha512-wtHSq6jMRE3uF2otvfuD3DIvVhOsSNshQl0Qrd7qC9oQJzHvOL4qQXlQn2916+CXGywIjpGuIkoyZRRxHPiNQQ==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/template': 7.22.5
+      '@babel/template': 7.22.15
       '@babel/types': 7.22.19
     dev: true
 
@@ -1402,7 +1402,7 @@ packages:
     dependencies:
       '@babel/core': 7.22.9
       '@babel/helper-plugin-utils': 7.22.5
-      '@babel/template': 7.22.5
+      '@babel/template': 7.22.15
     dev: true
 
   /@babel/plugin-transform-destructuring@7.22.15(@babel/core@7.22.9):
