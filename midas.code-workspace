@@ -24,7 +24,8 @@
 		"conventionalCommits.scopes": [
 			"trade_observer_control",
 			"trade_observer",
-			"ci"
+			"ci",
+			"k8s"
 		]
 	}
 }
