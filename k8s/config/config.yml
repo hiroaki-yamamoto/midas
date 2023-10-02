@@ -6,7 +6,7 @@ host: "[::]:50000"
 debug: true
 observer:
   initTriggerNodeNumbers:
-    binance: 5
+    binance: 1
 tls:
   privateKey: /etc/midas/certs/tls.key
   cert: /etc/midas/certs/tls.crt

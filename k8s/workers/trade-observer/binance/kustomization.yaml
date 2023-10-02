@@ -20,9 +20,6 @@ patches:
       - op: replace
         path: /spec/template/spec/containers/0/name
         value: binance-trade-observer
-      - op: replace
-        path: /spec/replicas
-        value: 6
   - target:
       kind: Deployment
     patch: |-

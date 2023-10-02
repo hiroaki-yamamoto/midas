@@ -92,6 +92,7 @@ where
     loop {
       select! {
         _ = signal.changed() => {
+          warn!("Received signal to stop handle_control_event");
           break;
         }
         Some((event, _)) = control_event.next() => {
@@ -134,6 +135,7 @@ where
     loop {
       select! {
         _ = signal.changed() => {
+          warn!("Received signal to stop handle_subscribe");
           break;
         },
         _ = interval.tick() => {
@@ -191,6 +193,7 @@ where
     loop {
       select! {
         _ = signal.changed() => {
+          warn!("Received signal to stop handle_unsubscribe");
           break;
         },
         _ = interval.tick() => {
@@ -268,6 +271,7 @@ where
     loop {
       select! {
         _ = signal.changed() => {
+          warn!("Received signal to stop ping");
           break;
         },
         _ = interval.tick() => {
@@ -321,7 +325,7 @@ where
     }
     .boxed();
 
-    let _ = try_join_all([
+    if let Err(e) = try_join_all([
       signal_defer,
       handle_trade,
       Self::ping(me.clone(), signal_rx.clone()).boxed(),
@@ -330,7 +334,10 @@ where
       Self::handle_subscribe(me.clone(), signal_rx.clone()).boxed(),
       Self::handle_unsubscribe(me.clone(), signal_rx.clone()).boxed(),
     ])
-    .await;
+    .await
+    {
+      return Err(e);
+    };
     return Ok(());
   }
 }

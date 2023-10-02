@@ -46,6 +46,7 @@ where
     };
     let mut option: StreamConfig = subject.as_str().into();
     option.max_consumers = -1;
+    log::debug!(stream_name = option.name;"Reached pre-stream creation.");
     return self.get_ctx().get_or_create_stream(option).await;
   }
 
@@ -63,6 +64,7 @@ where
     };
     cfg.deliver_policy = DeliverPolicy::All;
     cfg.ack_policy = AckPolicy::Explicit;
+    log::debug!(consumer_name = cfg.name;"Reached pre-consumer creation.");
     return Ok(
       stream
         .get_or_create_consumer(self.get_subject(), cfg)
@@ -113,6 +115,7 @@ where
     let consumer = self
       .add_consumer(&respond_id, respond_suffix.into())
       .await?;
+    ::log::debug!(consumer_id = respond_id; "Reached repond consumer creation.");
     let message = consumer
       .messages()
       .await?

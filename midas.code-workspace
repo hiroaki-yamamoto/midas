@@ -25,7 +25,8 @@
 			"trade_observer_control",
 			"trade_observer",
 			"ci",
-			"k8s"
+			"k8s",
+			"pubsub"
 		]
 	}
 }
