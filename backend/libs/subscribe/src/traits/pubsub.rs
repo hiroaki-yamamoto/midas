@@ -41,7 +41,7 @@ where
     suffix: Option<String>,
   ) -> CreateStreamResult<NatsJS> {
     let subject = match suffix {
-      Some(suffix) => format!("{}.{}", self.get_subject(), suffix),
+      Some(suffix) => format!("{}-{}", self.get_subject(), suffix),
       None => self.get_subject().into(),
     };
     let mut option: StreamConfig = subject.as_str().into();
@@ -101,8 +101,8 @@ where
       .take(128)
       .map(char::from)
       .collect();
-    let respond_suffix = format!("reply.{}", respond_id);
-    let respond_subject = format!("{}.{}", self.get_subject(), respond_suffix);
+    let respond_suffix = format!("reply-{}", respond_id);
+    let respond_subject = format!("{}-{}", self.get_subject(), respond_suffix);
 
     let mut header = HeaderMap::new();
     header.insert("midas-respond-subject", respond_subject.as_str());
