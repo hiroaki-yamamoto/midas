@@ -111,11 +111,13 @@ where
     let mut header = HeaderMap::new();
     header.insert("midas-respond-subject", respond_subject.as_str());
 
+    ::log::debug!(respond_subject = respond_subject; "Prepare to create a request.");
     let _ = self
       .get_ctx()
       .publish_with_headers(self.get_subject().into(), header, msg)
       .await?
       .await?;
+    ::log::debug!("Done");
     let consumer = self
       .add_consumer(&respond_id, respond_suffix.into())
       .await?;
