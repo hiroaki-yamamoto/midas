@@ -46,7 +46,11 @@ where
     };
     let mut option: StreamConfig = subject.as_str().into();
     option.max_consumers = -1;
-    log::debug!(stream_name = option.name;"Reached pre-stream creation.");
+    log::debug!(
+      stream_name = option.name,
+      subject = subject;
+      "Reached pre-stream creation."
+    );
     return self.get_ctx().get_or_create_stream(option).await;
   }
 
