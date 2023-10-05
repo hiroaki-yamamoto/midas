@@ -2,7 +2,6 @@ use ::async_nats::jetstream::context::CreateStreamError as NatsCreateStreamError
 use ::err_derive::Error;
 
 use crate::pubsub::{ConsumerError, RequestError};
-use crate::timeout::TimeoutError;
 use crate::websocket::{WebsocketInitError, WebsocketSinkError};
 
 #[derive(Debug, Error)]
@@ -17,8 +16,6 @@ pub enum ObserverError {
   ConsumerError(#[source] ConsumerError),
   #[error(display = "NATS request error: {}", _0)]
   PublishError(#[source] RequestError),
-  #[error(display = "Request Timeout")]
-  TimeoutError(#[source] TimeoutError),
 }
 
 pub type ObserverResult<T> = Result<T, ObserverError>;

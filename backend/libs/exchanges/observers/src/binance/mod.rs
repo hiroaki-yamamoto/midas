@@ -245,6 +245,7 @@ where
   async fn _request_node_id(
     &self,
   ) -> ObserverResult<TradeObserverControlEvent> {
+    self.node_event.get_or_create_stream(None).await?;
     return Ok(
       self
         .node_event
