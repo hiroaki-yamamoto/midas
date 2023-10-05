@@ -1,7 +1,6 @@
 use ::async_trait::async_trait;
 use ::bytes::Bytes;
 use ::std::borrow::Borrow;
-use ::std::time::Duration;
 
 use ::futures::stream::{BoxStream, StreamExt};
 use ::log::warn;
@@ -12,12 +11,10 @@ use ::rmp_serde::{
 };
 use ::serde::de::DeserializeOwned;
 use ::serde::ser::Serialize;
-use ::tokio::select;
-use ::tokio::time::interval;
 
 use ::errors::{
   ConsumerResult, CreateStreamResult, PublishResult, RequestError,
-  RequestResult, TimeoutError, TimeoutResult,
+  RequestResult,
 };
 
 use crate::natsJS::consumer::{
@@ -55,36 +52,6 @@ where
       "Reached pre-stream creation."
     );
     return self.get_ctx().get_or_create_stream(option).await;
-  }
-
-  /// Wait for a stream to be created
-  async fn wait_stream(
-    &self,
-    suffix: Option<String>,
-    timeout: Duration,
-  ) -> TimeoutResult<()> {
-    let subject = match suffix {
-      Some(suffix) => format!("{}-{}", self.get_subject(), suffix),
-      None => self.get_subject().into(),
-    };
-    let mut option: StreamConfig = subject.as_str().into();
-    option.max_consumers = -1;
-
-    let mut tick = interval(Duration::from_millis(100));
-    let mut timeout_tick = interval(timeout);
-    let _ = timeout_tick.tick().await;
-    loop {
-      select! {
-        _ = tick.tick() => {
-          if let Ok(_) = self.get_ctx().get_stream(&subject).await {
-            return Ok(());
-          }
-        },
-        _ = timeout_tick.tick() => {
-          return Err(TimeoutError);
-        }
-      }
-    }
   }
 
   async fn add_consumer(

@@ -245,10 +245,6 @@ where
   async fn _request_node_id(
     &self,
   ) -> ObserverResult<TradeObserverControlEvent> {
-    let _ = self
-      .node_event
-      .wait_stream(None, Duration::from_secs(30))
-      .await?;
     return Ok(
       self
         .node_event
