@@ -6,7 +6,6 @@ use ::kvs::redis::{Commands, RedisError, RedisResult};
 use ::kvs::traits::normal::Base;
 use ::kvs::traits::normal::ChannelName;
 use ::kvs_macros::last_check_kvs;
-use ::log::info;
 use ::rpc::entities::Exchanges;
 
 pub use self::filter::NodeFilter;

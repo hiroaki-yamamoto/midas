@@ -5,17 +5,17 @@ use ::uuid::Uuid;
 
 use ::config::{Database, ObserverConfig};
 use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
-use ::errors::KVSError;
 use ::kvs::redis::Commands;
 use ::kvs::traits::normal::{Expiration, ListOp, Lock, Set};
 use ::kvs::{Connection, WriteOption};
-use ::log::{as_error, error, info, warn};
+use ::log::{as_error, error, info};
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::natsJS::message::Message;
 use ::subscribe::traits::Respond;
+use ::tokio::time::sleep;
 
 use crate::balancer::SymbolBalancer;
 use crate::dlock::InitLock;
@@ -79,42 +79,41 @@ where
       .into();
     let mut node_id = Uuid::new_v4();
     info!(node_id = node_id.to_string().as_str(); "NodeID Generated");
-    while let Err(e) = self
-      .node_kvs
-      .lpush::<usize>(
-        &node_id.to_string(),
-        vec!["".into()],
-        redis_option.clone(),
-      )
-      .await
-    {
-      match e {
-        KVSError::KeyExists(_) => {
-          node_id = Uuid::new_v4();
-          info!(node_id = node_id.to_string().as_str(); "NodeID Revised");
+    loop {
+      let node_id_txt = node_id.to_string();
+      match self.node_kvs.index_node(node_id_txt.clone()).await {
+        Ok(num) => {
+          if num > 0 {
+            info!(node_id = node_id.to_string(); "Node indexed");
+            break;
+          } else {
+            node_id = Uuid::new_v4();
+            continue;
+          }
         }
-        _ => {
-          return Err(e.into());
+        Err(e) => {
+          error!(error = as_error!(e); "Failed to index node");
+          sleep(Duration::from_secs(1)).await;
+          continue;
         }
       }
     }
-    info!(node_id = node_id.to_string().as_str(); "Acquired NodeID");
     let node_id_txt = node_id.to_string();
+    self
+      .node_kvs
+      .lpush::<usize>(&node_id_txt, vec!["".into()], redis_option.clone())
+      .await?;
     self.node_kvs.lpop(&node_id_txt, None).await?;
-    if self.node_kvs.index_node(node_id_txt.clone()).await? < 1 {
-      warn!(node_id = node_id.to_string(); "Failed to index node");
-    } else {
-      info!(node_id = node_id.to_string(); "Node indexed");
-    };
     self
       .type_kvs
       .set(&node_id_txt, exchange.as_str_name().into(), redis_option)
       .await?;
-    info!(node_id = node_id.to_string().as_str(); "Sending NodeID to Node");
+    info!(node_id = node_id_txt; "Acquired NodeID");
+    info!(node_id = node_id_txt; "Sending NodeID to Node");
     msg
       .respond(&TradeObserverControlEvent::NodeIDAssigned(node_id.clone()))
       .await?;
-    info!(node_id = node_id.to_string().as_str(); "NodeID Sent");
+    info!(node_id = node_id_txt; "NodeID Sent");
     return Ok(node_id);
   }
 
