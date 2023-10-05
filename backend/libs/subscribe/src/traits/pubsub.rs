@@ -1,6 +1,7 @@
 use ::async_trait::async_trait;
 use ::bytes::Bytes;
 use ::std::borrow::Borrow;
+use ::std::time::Duration;
 
 use ::futures::stream::{BoxStream, StreamExt};
 use ::log::warn;
@@ -11,10 +12,12 @@ use ::rmp_serde::{
 };
 use ::serde::de::DeserializeOwned;
 use ::serde::ser::Serialize;
+use ::tokio::select;
+use ::tokio::time::interval;
 
 use ::errors::{
   ConsumerResult, CreateStreamResult, PublishResult, RequestError,
-  RequestResult,
+  RequestResult, TimeoutError, TimeoutResult,
 };
 
 use crate::natsJS::consumer::{
@@ -36,7 +39,7 @@ where
   fn get_subject(&self) -> &str;
   fn get_ctx(&self) -> &Context;
 
-  async fn get_stream(
+  async fn get_or_create_stream(
     &self,
     suffix: Option<String>,
   ) -> CreateStreamResult<NatsJS> {
@@ -54,12 +57,42 @@ where
     return self.get_ctx().get_or_create_stream(option).await;
   }
 
+  /// Wait for a stream to be created
+  async fn wait_stream(
+    &self,
+    suffix: Option<String>,
+    timeout: Duration,
+  ) -> TimeoutResult<()> {
+    let subject = match suffix {
+      Some(suffix) => format!("{}-{}", self.get_subject(), suffix),
+      None => self.get_subject().into(),
+    };
+    let mut option: StreamConfig = subject.as_str().into();
+    option.max_consumers = -1;
+
+    let mut tick = interval(Duration::from_millis(100));
+    let mut timeout_tick = interval(timeout);
+    let _ = timeout_tick.tick().await;
+    loop {
+      select! {
+        _ = tick.tick() => {
+          if let Ok(_) = self.get_ctx().get_stream(&subject).await {
+            return Ok(());
+          }
+        },
+        _ = timeout_tick.tick() => {
+          return Err(TimeoutError);
+        }
+      }
+    }
+  }
+
   async fn add_consumer(
     &self,
     consumer_name: &str,
     stream_suffix: Option<String>,
   ) -> ConsumerResult<Consumer<PullSubscribeConfig>> {
-    let stream = self.get_stream(stream_suffix).await?;
+    let stream = self.get_or_create_stream(stream_suffix).await?;
     let mut cfg = PullSubscribeConfig {
       name: Some(consumer_name.into()),
       max_deliver: 1024,

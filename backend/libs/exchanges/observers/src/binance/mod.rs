@@ -242,12 +242,27 @@ where
     return Ok(());
   }
 
+  async fn _request_node_id(
+    &self,
+  ) -> ObserverResult<TradeObserverControlEvent> {
+    let _ = self
+      .node_event
+      .wait_stream(None, Duration::from_secs(30))
+      .await?;
+    return Ok(
+      self
+        .node_event
+        .request::<TradeObserverControlEvent>(TradeObserverNodeEvent::Regist(
+          Exchanges::Binance,
+        ))
+        .await?,
+    );
+  }
+
   async fn request_node_id(me: Arc<RwLock<Self>>) -> ObserverResult<()> {
     let response: TradeObserverControlEvent = async {
       let me = me.read().await;
-      me.node_event
-        .request(TradeObserverNodeEvent::Regist(Exchanges::Binance))
-        .await
+      me._request_node_id().await
     }
     .await?;
     if let TradeObserverControlEvent::NodeIDAssigned(id) = response {

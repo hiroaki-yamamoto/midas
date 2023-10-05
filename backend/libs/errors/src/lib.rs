@@ -15,6 +15,7 @@ mod parse;
 mod pubsub;
 mod status;
 mod symbols;
+mod timeout;
 mod unknown;
 mod user_stream;
 mod validation;
@@ -41,6 +42,7 @@ pub use pubsub::{
 };
 pub use status::{HTTPErrors, HTTPResult, StatusFailure};
 pub use symbols::{SymbolFetchError, SymbolFetchResult};
+pub use timeout::{TimeoutError, TimeoutResult};
 pub use unknown::UnknownExchangeError;
 pub use user_stream::{UserStreamError, UserStreamResult};
 pub use validation::ValidationErr;
