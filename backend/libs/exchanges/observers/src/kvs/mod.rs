@@ -6,6 +6,7 @@ use ::kvs::redis::{Commands, RedisError, RedisResult};
 use ::kvs::traits::normal::Base;
 use ::kvs_macros::last_check_kvs;
 use ::rpc::entities::Exchanges;
+use kvs::traits::normal::ChannelName;
 
 pub use self::filter::NodeFilter;
 
@@ -62,15 +63,25 @@ impl<T> ObserverNodeKVS<T>
 where
   T: Commands + Send + Sync,
 {
-  pub async fn get_node_names(&self) -> RedisResult<Vec<String>> {
-    let cmd_lock = self.commands();
-    let mut cmds = cmd_lock.lock().await;
-    return Ok(cmds.scan_match("observer_node:*")?.collect());
-  }
-
-  pub async fn count_nodes(&self) -> RedisResult<usize> {
+  /// Index node ids to KVS
+  pub async fn index_node(&self, nodes: String) -> RedisResult<usize> {
+    let channel_name = self.channel_name("node_index");
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;
-    return Ok(cmd.scan_match::<_, String>("observer_node:*")?.count());
+    return cmd.sadd(channel_name, nodes);
+  }
+  pub async fn count_nodes(&self) -> RedisResult<usize> {
+    let channel_name = self.channel_name("node_index");
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
+    let node_count: usize = cmd
+      .smembers::<_, String>(channel_name)
+      .into_iter()
+      .filter(|node_id| {
+        let node_id = self.channel_name(node_id);
+        return cmd.exists::<_, usize>(node_id).unwrap_or(0) > 0;
+      })
+      .count();
+    return Ok(node_count);
   }
 }

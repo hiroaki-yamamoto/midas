@@ -101,6 +101,7 @@ where
     info!(node_id = node_id.to_string().as_str(); "Acquired NodeID");
     let node_id_txt = node_id.to_string();
     self.node_kvs.lpop(&node_id_txt, None).await?;
+    self.node_kvs.index_node(node_id_txt.clone()).await?;
     self
       .type_kvs
       .set(&node_id_txt, exchange.as_str_name().into(), redis_option)
