@@ -46,10 +46,10 @@ where
     let expire_refresh = async move {
       let _ = refresh_rx.recv().await;
       let mut refresh_timer = interval(Duration::from_secs(1));
-      let mut dlock = dlock2.lock().await;
       loop {
         select! {
           _ = refresh_timer.tick() => {
+            let mut dlock = dlock2.lock().await;
             let _ = dlock.expire::<_, i64>(channel_name_2.clone(), 3);
           },
           _ = refresh_rx.recv() => {

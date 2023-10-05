@@ -5,11 +5,11 @@ use ::uuid::Uuid;
 
 use ::config::{Database, ObserverConfig};
 use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
-use ::errors::KVSResult;
+use ::errors::KVSError;
 use ::kvs::redis::Commands;
 use ::kvs::traits::normal::{Expiration, ListOp, Lock, Set};
 use ::kvs::{Connection, WriteOption};
-use ::log::{error, info};
+use ::log::{as_error, error, info};
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
@@ -78,24 +78,38 @@ where
       .non_existent_only(true)
       .into();
     let mut node_id = Uuid::new_v4();
-    while {
-      let push_result: KVSResult<usize> = self
-        .node_kvs
-        .lpush(&node_id.to_string(), vec!["".into()], redis_option.clone())
-        .await;
-      push_result.is_err()
-    } {
-      node_id = Uuid::new_v4();
+    info!(node_id = node_id.to_string().as_str(); "NodeID Generated");
+    while let Err(e) = self
+      .node_kvs
+      .lpush::<usize>(
+        &node_id.to_string(),
+        vec!["".into()],
+        redis_option.clone(),
+      )
+      .await
+    {
+      match e {
+        KVSError::KeyExists(_) => {
+          node_id = Uuid::new_v4();
+          info!(node_id = node_id.to_string().as_str(); "NodeID Revised");
+        }
+        _ => {
+          return Err(e.into());
+        }
+      }
     }
+    info!(node_id = node_id.to_string().as_str(); "Acquired NodeID");
     let node_id_txt = node_id.to_string();
     self.node_kvs.lpop(&node_id_txt, None).await?;
     self
       .type_kvs
       .set(&node_id_txt, exchange.as_str_name().into(), redis_option)
       .await?;
+    info!(node_id = node_id.to_string().as_str(); "Sending NodeID to Node");
     msg
       .respond(&TradeObserverControlEvent::NodeIDAssigned(node_id.clone()))
       .await?;
+    info!(node_id = node_id.to_string().as_str(); "NodeID Sent");
     return Ok(node_id);
   }
 
@@ -118,15 +132,26 @@ where
         .await?;
       }
       TradeObserverNodeEvent::Regist(exchange) => {
-        if let Ok(node_id) = self.push_nodeid(exchange, msg).await {
-          info!(
-            "Node Connected. NodeID: {}, Exchange: {}",
-            node_id,
-            exchange.as_str_name()
-          );
+        info!("Prepare for node id assignment");
+        match self.push_nodeid(exchange, msg).await {
+          Ok(node_id) => {
+            info!(
+              "Node Connected. NodeID: {}, Exchange: {}",
+              node_id,
+              exchange.as_str_name()
+            );
+          }
+          Err(e) => {
+            error!(error = as_error!(e); "NodeID assignment failed");
+          }
         }
         let node_count = self.node_kvs.count_nodes().await?;
         let min_node_init = config.min_node_init(exchange);
+        info!(
+          node_count = node_count,
+          min_node_init = min_node_init;
+          "Retrive number of nodes"
+        );
         if node_count == min_node_init {
           let _ = self
             .init_lock

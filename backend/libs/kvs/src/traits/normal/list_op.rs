@@ -22,29 +22,30 @@ where
     opt: impl Into<Option<WriteOption>> + Send,
   ) -> KVSResult<R>
   where
-    R: FromRedisValue,
+    R: FromRedisValue + Send,
   {
     let channel_name = self.channel_name(&key);
     let opt: Option<WriteOption> = opt.into();
 
     let cmds = self.commands();
-    let mut cmds = cmds.lock().await;
     let res = if opt.non_existent_only() {
       match self.exists(&key).await {
         Ok(exists) => {
           if exists {
             return Err(KVSError::KeyExists(key.to_string()));
           } else {
-            cmds.lpush(&channel_name, value)?
+            let mut cmds = cmds.lock().await;
+            cmds.lpush(&channel_name, value)
           }
         }
         Err(e) => return Err(e),
       }
     } else {
-      cmds.lpush(&channel_name, value)?
-    };
+      let mut cmds = cmds.lock().await;
+      cmds.lpush(&channel_name, value)
+    }?;
 
-    opt.execute(&mut cmds, &channel_name)?;
+    opt.execute(&mut cmds.lock().await, &channel_name)?;
     return Ok(res);
   }
 

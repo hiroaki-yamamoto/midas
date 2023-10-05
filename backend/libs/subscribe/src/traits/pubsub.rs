@@ -13,8 +13,7 @@ use ::serde::de::DeserializeOwned;
 use ::serde::ser::Serialize;
 
 use ::errors::{
-  ConsumerResult, CreateStreamResult, PublishResult, RequestError,
-  RequestResult,
+  ConsumerResult, CreateStreamResult, PublishResult, RequestResult,
 };
 
 use crate::natsJS::consumer::{
@@ -38,28 +37,21 @@ where
 
   async fn get_or_create_stream(
     &self,
-    suffix: Option<String>,
+    stream_name: Option<&str>,
   ) -> CreateStreamResult<NatsJS> {
-    let subject = match suffix {
-      Some(suffix) => format!("{}-{}", self.get_subject(), suffix),
-      None => self.get_subject().into(),
-    };
-    let mut option: StreamConfig = subject.as_str().into();
+    let mut option: StreamConfig =
+      stream_name.unwrap_or(self.get_subject()).into();
     option.max_consumers = -1;
-    log::debug!(
-      stream_name = option.name,
-      subject = subject;
-      "Reached pre-stream creation."
-    );
+    log::debug!(stream_name = option.name; "Reached pre-stream creation.");
     return self.get_ctx().get_or_create_stream(option).await;
   }
 
   async fn add_consumer(
     &self,
     durable_name: &str,
-    stream_suffix: Option<String>,
+    stream_name: Option<&str>,
   ) -> ConsumerResult<Consumer<PullSubscribeConfig>> {
-    let stream = self.get_or_create_stream(stream_suffix).await?;
+    let stream = self.get_or_create_stream(stream_name).await?;
     let mut cfg = PullSubscribeConfig {
       durable_name: Some(durable_name.into()),
       max_deliver: 1024,
@@ -68,12 +60,8 @@ where
     };
     cfg.deliver_policy = DeliverPolicy::All;
     cfg.ack_policy = AckPolicy::Explicit;
-    log::debug!(durable_name = cfg.name;"Reached pre-consumer creation.");
-    return Ok(
-      stream
-        .get_or_create_consumer(self.get_subject(), cfg)
-        .await?,
-    );
+    log::debug!(durable_name = cfg.durable_name;"Reached pre-consumer creation.");
+    return Ok(stream.get_or_create_consumer(durable_name, cfg).await?);
   }
 
   fn serialize<S>(entity: &S) -> Result<Bytes, EncodeErr>
@@ -95,9 +83,9 @@ where
   async fn request<R>(
     &self,
     entity: impl Borrow<T> + Send + Sync,
-  ) -> RequestResult<R>
+  ) -> RequestResult<BoxStream<(R, Message)>>
   where
-    R: DeserializeOwned,
+    R: DeserializeOwned + Send + 'life0,
   {
     let msg = Self::serialize(entity.borrow())?;
     let respond_id: String = thread_rng()
@@ -111,6 +99,10 @@ where
     let mut header = HeaderMap::new();
     header.insert("midas-respond-subject", respond_subject.as_str());
 
+    let subscriber = self
+      .raw_pull_subscribe(&respond_subject, Some(&respond_subject))
+      .await?;
+    ::log::debug!(consumer_id = respond_id; "Subscriber created.");
     ::log::debug!(respond_subject = respond_subject; "Prepare to create a request.");
     let _ = self
       .get_ctx()
@@ -118,31 +110,18 @@ where
       .await?
       .await?;
     ::log::debug!("Done");
-    let consumer = self
-      .add_consumer(&respond_id, respond_suffix.into())
-      .await?;
-    ::log::debug!(consumer_id = respond_id; "Reached repond consumer creation.");
-    let message = consumer
-      .messages()
-      .await?
-      .next()
-      .await
-      .map(|msg_res| {
-        if let Err(ref e) = msg_res {
-          warn!("Msg Stream Failure: {:?}", e);
-        }
-        return msg_res.ok();
-      })
-      .flatten()
-      .ok_or(RequestError::NoResponse)?;
-    return Ok(from_msgpack(&message.payload)?);
+    return Ok(subscriber);
   }
 
-  async fn pull_subscribe(
+  async fn raw_pull_subscribe<R>(
     &self,
-    consumer_name: &str,
-  ) -> ConsumerResult<BoxStream<(T, Message)>> {
-    let consumer = self.add_consumer(consumer_name, None).await?;
+    durable_name: &str,
+    stream_name: Option<&str>,
+  ) -> ConsumerResult<BoxStream<(R, Message)>>
+  where
+    R: DeserializeOwned + Send + 'life0,
+  {
+    let consumer = self.add_consumer(durable_name, stream_name).await?;
     let msg = consumer
       .messages()
       .await?
@@ -158,7 +137,7 @@ where
         return Some(msg);
       })
       .map(|msg| {
-        return (from_msgpack::<T>(&msg.payload), msg);
+        return (from_msgpack::<R>(&msg.payload), msg);
       })
       .filter_map(|(res, msg)| async {
         if let Err(ref e) = res {
@@ -169,5 +148,13 @@ where
       })
       .boxed();
     return Ok(msg);
+  }
+
+  async fn pull_subscribe(
+    &self,
+    durable_name: &str,
+  ) -> ConsumerResult<BoxStream<(T, Message)>> {
+    let stream = self.raw_pull_subscribe(durable_name, None).await?;
+    return Ok(stream);
   }
 }

@@ -242,35 +242,33 @@ where
     return Ok(());
   }
 
-  async fn _request_node_id(
-    &self,
-  ) -> ObserverResult<TradeObserverControlEvent> {
-    self.node_event.get_or_create_stream(None).await?;
-    return Ok(
-      self
-        .node_event
-        .request::<TradeObserverControlEvent>(TradeObserverNodeEvent::Regist(
-          Exchanges::Binance,
-        ))
-        .await?,
-    );
-  }
-
   async fn request_node_id(me: Arc<RwLock<Self>>) -> ObserverResult<()> {
-    let response: TradeObserverControlEvent = async {
+    async {
       let me = me.read().await;
-      me._request_node_id().await
+      me.node_event.get_or_create_stream(None).await
     }
     .await?;
-    if let TradeObserverControlEvent::NodeIDAssigned(id) = response {
-      let mut me = me.write().await;
-      me.node_id = Some(id);
-      info!("Assigned node id: {}", id);
-    } else {
-      warn!(
-        "Received unexpected response while waiting for Node ID: {:?}",
-        response
-      );
+    let node_event = async {
+      let me = me.read().await;
+      me.node_event.clone()
+    }
+    .await;
+    let mut response_stream = node_event
+      .request::<TradeObserverControlEvent>(TradeObserverNodeEvent::Regist(
+        Exchanges::Binance,
+      ))
+      .await?;
+    while let Some((event, _)) = response_stream.next().await {
+      if let TradeObserverControlEvent::NodeIDAssigned(id) = event {
+        let mut me = me.write().await;
+        me.node_id = Some(id);
+        info!("Assigned node id: {}", id);
+      } else {
+        warn!(
+          "Received unexpected response while waiting for Node ID: {:?}",
+          event
+        );
+      }
     }
     return Ok(());
   }
