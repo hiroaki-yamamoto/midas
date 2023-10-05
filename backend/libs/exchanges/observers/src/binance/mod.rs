@@ -243,11 +243,6 @@ where
   }
 
   async fn request_node_id(me: Arc<RwLock<Self>>) -> ObserverResult<()> {
-    async {
-      let me = me.read().await;
-      me.node_event.get_or_create_stream(None).await
-    }
-    .await?;
     let node_event = async {
       let me = me.read().await;
       me.node_event.clone()

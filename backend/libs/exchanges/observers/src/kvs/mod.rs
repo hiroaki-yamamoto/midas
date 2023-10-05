@@ -4,9 +4,10 @@ use ::futures::stream::{iter, BoxStream, StreamExt};
 
 use ::kvs::redis::{Commands, RedisError, RedisResult};
 use ::kvs::traits::normal::Base;
+use ::kvs::traits::normal::ChannelName;
 use ::kvs_macros::last_check_kvs;
+use ::log::info;
 use ::rpc::entities::Exchanges;
-use kvs::traits::normal::ChannelName;
 
 pub use self::filter::NodeFilter;
 
@@ -79,10 +80,11 @@ where
       .into_iter()
       .filter_map(|node_id| {
         let node_id = self.channel_name(&node_id);
-        return cmd
+        let ret = cmd
           .lindex::<_, usize>(&node_id, 0)
           .map(move |_| node_id)
           .ok();
+        return ret;
       })
       .count();
     return Ok(node_count);
