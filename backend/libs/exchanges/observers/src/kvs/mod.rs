@@ -77,9 +77,12 @@ where
     let node_count: usize = cmd
       .smembers::<_, String>(channel_name)
       .into_iter()
-      .filter(|node_id| {
-        let node_id = self.channel_name(node_id);
-        return cmd.exists::<_, usize>(node_id).unwrap_or(0) > 0;
+      .filter_map(|node_id| {
+        let node_id = self.channel_name(&node_id);
+        return cmd
+          .lindex::<_, usize>(&node_id, 0)
+          .map(move |_| node_id)
+          .ok();
       })
       .count();
     return Ok(node_count);

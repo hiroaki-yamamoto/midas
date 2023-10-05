@@ -9,7 +9,7 @@ use ::errors::KVSError;
 use ::kvs::redis::Commands;
 use ::kvs::traits::normal::{Expiration, ListOp, Lock, Set};
 use ::kvs::{Connection, WriteOption};
-use ::log::{as_error, error, info};
+use ::log::{as_error, error, info, warn};
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
@@ -101,7 +101,11 @@ where
     info!(node_id = node_id.to_string().as_str(); "Acquired NodeID");
     let node_id_txt = node_id.to_string();
     self.node_kvs.lpop(&node_id_txt, None).await?;
-    self.node_kvs.index_node(node_id_txt.clone()).await?;
+    if self.node_kvs.index_node(node_id_txt.clone()).await? < 1 {
+      warn!(node_id = node_id.to_string(); "Failed to index node");
+    } else {
+      info!(node_id = node_id.to_string(); "Node indexed");
+    };
     self
       .type_kvs
       .set(&node_id_txt, exchange.as_str_name().into(), redis_option)
