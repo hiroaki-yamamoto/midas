@@ -56,19 +56,19 @@ where
 
   async fn add_consumer(
     &self,
-    consumer_name: &str,
+    durable_name: &str,
     stream_suffix: Option<String>,
   ) -> ConsumerResult<Consumer<PullSubscribeConfig>> {
     let stream = self.get_or_create_stream(stream_suffix).await?;
     let mut cfg = PullSubscribeConfig {
-      name: Some(consumer_name.into()),
+      durable_name: Some(durable_name.into()),
       max_deliver: 1024,
       memory_storage: true,
       ..Default::default()
     };
     cfg.deliver_policy = DeliverPolicy::All;
     cfg.ack_policy = AckPolicy::Explicit;
-    log::debug!(consumer_name = cfg.name;"Reached pre-consumer creation.");
+    log::debug!(durable_name = cfg.name;"Reached pre-consumer creation.");
     return Ok(
       stream
         .get_or_create_consumer(self.get_subject(), cfg)

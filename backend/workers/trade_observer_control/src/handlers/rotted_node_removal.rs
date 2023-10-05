@@ -1,8 +1,8 @@
 use ::std::sync::Arc;
 use ::std::time::Duration;
 
-use ::futures::future::{try_join_all, BoxFuture, FutureExt};
-use ::futures::{join, try_join};
+use ::futures::future::{try_join, try_join_all, BoxFuture, FutureExt};
+use ::futures::join;
 use ::kvs::redis::Commands;
 use ::kvs::traits::last_checked::{FindBefore, Get, ListOp, Remove};
 use ::kvs::Connection;
@@ -79,11 +79,15 @@ where
       .into_iter()
       .map(|s| s.into())
       .collect();
+    if rotted.is_empty() || rotted_type.is_empty() {
+      return Ok(());
+    }
     let _ = try_join_all(self.publish_freed_symbols(rotted.as_slice())).await?;
-    let _: (usize, usize) = try_join!(
+    let _: (usize, usize) = try_join(
       self.node_kvs.del(rotted.as_slice()),
-      self.type_kvs.del(rotted_type.as_slice())
-    )?;
+      self.type_kvs.del(rotted_type.as_slice()),
+    )
+    .await?;
     return Ok(());
   }
 }
