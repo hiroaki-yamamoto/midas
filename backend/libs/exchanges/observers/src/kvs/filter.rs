@@ -37,16 +37,14 @@ where
       .exchange_type_kvs
       .get_nodes_by_exchange(exchange)
       .await?
-      .map(move |node_id| {
+      .filter_map(move |node_id| async move {
         let node_id_cloned = node_id.clone();
-        return async move {
-          self
-            .node_kvs
-            .lrange::<HashSet<String>>(&node_id_cloned, 0, -1)
-            .await
-        };
+        return self
+          .node_kvs
+          .lrange::<HashSet<String>>(&node_id_cloned, 0, -1)
+          .await
+          .ok();
       })
-      .filter_map(|lrange_fut| async { lrange_fut.await.ok() })
       .flat_map(|symbols| iter(symbols));
     return Ok(nodes.boxed());
   }

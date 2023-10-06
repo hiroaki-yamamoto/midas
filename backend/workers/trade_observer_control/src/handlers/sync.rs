@@ -2,6 +2,7 @@ use ::std::collections::HashSet;
 
 use ::futures::future::try_join_all;
 use ::futures::StreamExt;
+use ::log::info;
 use ::mongodb::Database;
 
 use ::entities::TradeObserverControlEvent as Event;
@@ -64,18 +65,22 @@ where
   ) -> ObserverControlResult<Vec<Event>> {
     let symbol_reader = get_reader(&self.db, exchange.clone()).await; // TODO: fix this
     let trading_symbols_list = symbol_reader.list_trading().await?;
+    info!("Fetching symbols from DB");
     let db_symbols: HashSet<String> =
       trading_symbols_list.map(|s| s.symbol).collect().await;
 
+    info!("Fetching symbols from KVS");
     let node_filter = NodeFilter::new(&self.kvs, &self.type_kvs);
     let nodes_symbols: HashSet<String> = node_filter
       .get_handling_symbol_at_exchange(exchange.clone())
       .await?
       .collect()
       .await;
+    info!("Taking symbols to add");
     let to_add = (&db_symbols - &nodes_symbols)
       .into_iter()
       .map(|s| Event::SymbolAdd(exchange.clone(), s));
+    info!("Taking symbols to remove");
     let to_remove = (&nodes_symbols - &db_symbols)
       .into_iter()
       .map(|s| Event::SymbolDel(exchange.clone(), s));
@@ -93,6 +98,7 @@ where
         .await?
         .into_iter()
         .map(|diff| {
+          info!("Publishing symbol {:?}", diff);
           return self.publisher.publish(diff);
         });
     let _ = try_join_all(publish_defer).await?;

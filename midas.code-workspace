@@ -27,7 +27,8 @@
 			"ci",
 			"k8s",
 			"pubsub",
-			"kvs"
+			"kvs",
+			"debug"
 		]
 	}
 }

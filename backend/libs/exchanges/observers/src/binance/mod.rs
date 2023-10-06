@@ -248,6 +248,7 @@ where
       me.node_event.clone()
     }
     .await;
+    let _ = node_event.get_or_create_stream(None).await?;
     let mut response_stream = node_event
       .request::<TradeObserverControlEvent>(TradeObserverNodeEvent::Regist(
         Exchanges::Binance,

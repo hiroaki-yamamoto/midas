@@ -7,7 +7,7 @@ use ::uuid::Uuid;
 use ::config::{Database, ObserverConfig};
 use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 use ::kvs::redis::Commands;
-use ::kvs::traits::normal::{Expiration, ListOp, Lock, Set};
+use ::kvs::traits::normal::{Expiration, Lock, Set};
 use ::kvs::{Connection, WriteOption};
 use ::log::{as_error, error, info};
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
@@ -108,11 +108,6 @@ where
         redis_option.clone(),
       )
       .await?;
-    self
-      .node_kvs
-      .lpush::<usize>(&node_id_txt, vec!["".into()], redis_option.clone())
-      .await?;
-    self.node_kvs.lpop(&node_id_txt, None).await?;
     info!(node_id = node_id_txt; "Acquired NodeID");
     info!(node_id = node_id_txt; "Sending NodeID to Node");
     msg
