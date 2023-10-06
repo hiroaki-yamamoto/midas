@@ -1,6 +1,7 @@
 use ::std::time::Duration;
 
 use ::futures::future::try_join;
+use ::futures::stream::StreamExt;
 use ::uuid::Uuid;
 
 use ::config::{Database, ObserverConfig};
@@ -81,7 +82,7 @@ where
     info!(node_id = node_id.to_string().as_str(); "NodeID Generated");
     loop {
       let node_id_txt = node_id.to_string();
-      match self.node_kvs.index_node(node_id_txt.clone()).await {
+      match self.type_kvs.index_node(node_id_txt.clone()).await {
         Ok(num) => {
           if num > 0 {
             info!(node_id = node_id.to_string(); "Node indexed");
@@ -100,14 +101,18 @@ where
     }
     let node_id_txt = node_id.to_string();
     self
+      .type_kvs
+      .set(
+        &node_id_txt,
+        exchange.as_str_name().into(),
+        redis_option.clone(),
+      )
+      .await?;
+    self
       .node_kvs
       .lpush::<usize>(&node_id_txt, vec!["".into()], redis_option.clone())
       .await?;
     self.node_kvs.lpop(&node_id_txt, None).await?;
-    self
-      .type_kvs
-      .set(&node_id_txt, exchange.as_str_name().into(), redis_option)
-      .await?;
     info!(node_id = node_id_txt; "Acquired NodeID");
     info!(node_id = node_id_txt; "Sending NodeID to Node");
     msg
@@ -149,7 +154,12 @@ where
             error!(error = as_error!(e); "NodeID assignment failed");
           }
         }
-        let node_count = self.node_kvs.count_nodes().await?;
+        let node_count = self
+          .type_kvs
+          .get_nodes_by_exchange(exchange)
+          .await?
+          .count()
+          .await;
         let min_node_init = config.min_node_init(exchange);
         info!(
           node_count = node_count,
