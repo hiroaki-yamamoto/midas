@@ -61,20 +61,27 @@ where
     };
     let acquire_process = async move {
       let random = rand_txt(32);
-      let mut dlock = dlock.lock().await;
-      let lock: String = dlock.set_options(
-        channel_name,
-        random.to_string(),
-        WriteOption::default()
-          .duration(Duration::from_secs(3).into())
-          .non_existent_only(true)
-          .into(),
-      )?;
+      let lock: String = async {
+        let mut dlock = dlock.lock().await;
+        dlock.set_options(
+          channel_name,
+          random.to_string(),
+          WriteOption::default()
+            .duration(Duration::from_secs(3).into())
+            .non_existent_only(true)
+            .into(),
+        )
+      }
+      .await?;
       if lock == "OK" {
         let _ = refresh_tx.send(());
         let _ = func_on_success().await;
         let _ = refresh_tx.send(());
-        let _ = dlock.del::<_, usize>("lock");
+        let _ = async {
+          let mut dlock = dlock.lock().await;
+          dlock.del::<_, usize>("lock")
+        }
+        .await;
         Ok::<(), DLockError>(())
       } else {
         Err(DLockError::CastFailure("Failed to acquire lock"))
