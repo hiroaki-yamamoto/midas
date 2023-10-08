@@ -9,11 +9,11 @@ use ::async_trait::async_trait;
 use ::futures::future::try_join_all;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::futures::FutureExt;
-use ::log::{as_error, info, warn};
+use ::log::{as_error, as_serde, info, warn};
 use ::tokio::select;
 use ::tokio::signal::unix::Signal;
 use ::tokio::sync::watch::{channel, Receiver};
-use ::tokio::sync::{Mutex, RwLock};
+use ::tokio::sync::RwLock;
 use ::tokio::time::interval;
 use ::uuid::Uuid;
 
@@ -48,9 +48,9 @@ where
   kvs: ObserverNodeKVS<T>,
   control_event: NodeControlEventPubSub,
   node_event: NodeEventPubSub,
-  trade_handler: Arc<Mutex<BookTickerHandler>>,
-  symbol_to_add: Vec<String>,
-  symbol_to_del: Vec<String>,
+  trade_handler: BookTickerHandler,
+  symbols_to_add: Vec<String>,
+  symbols_to_del: Vec<String>,
 }
 
 impl<T> TradeObserver<T>
@@ -68,12 +68,12 @@ where
     let kvs = ObserverNodeKVS::new(redis_cmd.into());
     let me = Self {
       node_id: None,
-      trade_handler: Arc::new(Mutex::new(trade_handler)),
+      trade_handler: trade_handler,
       kvs,
       control_event,
       node_event,
-      symbol_to_add: Vec::new(),
-      symbol_to_del: Vec::new(),
+      symbols_to_add: Vec::new(),
+      symbols_to_del: Vec::new(),
     };
     return Ok(me);
   }
@@ -111,14 +111,14 @@ where
                 continue;
               }
               let mut me = me.write().await;
-              me.symbol_to_add.push(symbol);
+              me.symbols_to_add.push(symbol);
             }
             TradeObserverControlEvent::SymbolDel(exchange, symbol) => {
               if exchange != Exchanges::Binance {
                 continue;
               }
               let mut me = me.write().await;
-              me.symbol_to_del.push(symbol);
+              me.symbols_to_del.push(symbol);
             }
           }
         }
@@ -139,18 +139,19 @@ where
           break;
         },
         _ = interval.tick() => {
-          if async {
-            me.read().await.node_id.is_none()
-          }.await {
-            continue;
+          {
+            if me.read().await.node_id.is_none() {
+              continue;
+            }
           }
-          while async {
-            let me = me.read().await;
-            !me.symbol_to_add.is_empty()
-          }.await {
+          let mut symbols_to_add: Vec<String> = {
+            let mut me = me.write().await;
+            me.symbols_to_add.drain(..).collect()
+          };
+          info!(symbols = as_serde!(symbols_to_add); "Start subscription");
+          while !symbols_to_add.is_empty() {
             let to_add: Vec<String> = async {
-              let mut me = me.write().await;
-              let to_add = &mut me.symbol_to_add;
+              let to_add = &mut symbols_to_add;
               if to_add.len() > 10 {
                 to_add.drain(..10).collect()
               } else {
@@ -158,8 +159,8 @@ where
               }
             }.await;
             {
-              let me = me.read().await;
-              let mut trade_handler = me.trade_handler.lock().await;
+              let mut me = me.write().await;
+              let trade_handler = &mut me.trade_handler;
               if let Err(e) = trade_handler.subscribe(
                 to_add.as_slice()
               ).await {
@@ -207,13 +208,13 @@ where
           let to_del: Vec<String> = async {
             let to_del = me.clone();
             let mut to_del = to_del.write().await;
-            let to_del = &mut to_del.symbol_to_del;
+            let to_del = &mut to_del.symbols_to_del;
             to_del.drain(..).collect()
           }.await;
 
           {
-            let me = me.read().await;
-            let mut trade_handler = me.trade_handler.lock().await;
+            let mut me = me.write().await;
+            let trade_handler = &mut me.trade_handler;
             if let Err(e) = trade_handler.unsubscribe(to_del.as_slice()).await
             {
               warn!(error = as_error!(e); "Failed to unsubscribe");
@@ -320,14 +321,9 @@ where
         return Ok::<(), ObserverError>(());
       })
       .boxed();
-    let trade_handler = async {
-      let me = me.read().await;
-      me.trade_handler.clone()
-    }
-    .await;
     let handle_trade = async {
-      let mut trade_handler = trade_handler.lock().await;
-      trade_handler.start(signal_rx.clone()).await
+      let mut me = me.write().await;
+      me.trade_handler.start(signal_rx.clone()).await
     }
     .boxed();
 
