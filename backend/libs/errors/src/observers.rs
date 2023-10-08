@@ -1,11 +1,14 @@
 use ::async_nats::jetstream::context::CreateStreamError as NatsCreateStreamError;
 use ::err_derive::Error;
+use ::tokio::sync::mpsc::error::SendError;
 
 use crate::pubsub::{ConsumerError, RequestError};
 use crate::websocket::{WebsocketInitError, WebsocketSinkError};
 
 #[derive(Debug, Error)]
 pub enum ObserverError {
+  #[error(display = "(Un)Subscribe Event Signaling Error: {}", _0)]
+  SubscribeError(#[source] SendError<Vec<String>>),
   #[error(display = "Websocket Initialization Error: {}", _0)]
   WebsocketInitErr(#[source] WebsocketInitError),
   #[error(display = "Websocket Sink Error: {}", _0)]

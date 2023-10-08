@@ -12,7 +12,7 @@ use ::futures::FutureExt;
 use ::log::{as_error, as_serde, info, warn};
 use ::tokio::select;
 use ::tokio::signal::unix::Signal;
-use ::tokio::sync::{watch, Mutex, RwLock};
+use ::tokio::sync::{watch, RwLock};
 use ::tokio::time::interval;
 use ::uuid::Uuid;
 
@@ -47,7 +47,7 @@ where
   kvs: ObserverNodeKVS<T>,
   control_event: NodeControlEventPubSub,
   node_event: NodeEventPubSub,
-  trade_handler: Arc<BookTickerHandler>,
+  trade_handler: Arc<RwLock<BookTickerHandler>>,
   symbols_to_add: Vec<String>,
   symbols_to_del: Vec<String>,
   signal_tx: watch::Sender<bool>,
@@ -70,7 +70,7 @@ where
     let kvs = ObserverNodeKVS::new(redis_cmd.into());
     let me = Self {
       node_id: None,
-      trade_handler: Arc::new(trade_handler),
+      trade_handler: Arc::new(RwLock::new(trade_handler)),
       kvs,
       control_event,
       node_event,
@@ -165,12 +165,12 @@ where
               }
             }.await;
             {
-              let mut me = me.write().await;
-              let trade_handler = &mut me.trade_handler;
+              let me = me.read().await;
+              let trade_handler = me.trade_handler.read().await;
               if let Err(e) = trade_handler.subscribe(
                 to_add.as_slice()
-              ).await {
-                warn!(error = as_error!(e); "Failed to subscribe");
+              ) {
+                warn!(error = as_error!(e); "Failed to send subscription signal");
                 continue;
               }
             }
@@ -219,9 +219,9 @@ where
           }.await;
 
           {
-            let mut me = me.write().await;
-            let trade_handler = &mut me.trade_handler;
-            if let Err(e) = trade_handler.unsubscribe(to_del.as_slice()).await
+            let me = me.read().await;
+            let trade_handler = me.trade_handler.read().await;
+            if let Err(e) = trade_handler.unsubscribe(to_del.clone())
             {
               warn!(error = as_error!(e); "Failed to unsubscribe");
             };
@@ -332,8 +332,7 @@ where
       .boxed();
     let trade_handler = {
       let me = me.read().await;
-      let trade_handler = Box::new(*me.trade_handler.clone());
-      trade_handler.start(me.signal_rx.clone())
+      BookTickerHandler::start(me.trade_handler.clone(), me.signal_rx.clone())
     };
 
     if let Err(e) = try_join_all([

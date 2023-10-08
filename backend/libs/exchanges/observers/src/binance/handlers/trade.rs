@@ -8,8 +8,8 @@ use ::futures::stream::StreamExt;
 use ::log::{as_error, as_serde, error, info};
 use ::rug::Float;
 use ::tokio::select;
-use ::tokio::sync::watch::Receiver;
-use ::tokio::sync::Mutex;
+use ::tokio::sync::{mpsc, watch};
+use ::tokio::sync::{Mutex, RwLock};
 use ::tokio_stream::StreamMap;
 
 use ::clients::binance::WS_ENDPOINT;
@@ -36,15 +36,25 @@ struct Cursor {
 pub struct BookTickerHandler {
   sockets: StreamMap<usize, BookTickerSocket>,
   symbol_index: HashMap<String, Cursor>,
+  subscribe_rx: Arc<Mutex<mpsc::UnboundedReceiver<Vec<String>>>>,
+  subscribe_tx: mpsc::UnboundedSender<Vec<String>>,
+  unsub_rx: Arc<Mutex<mpsc::UnboundedReceiver<Vec<String>>>>,
+  unsub_tx: mpsc::UnboundedSender<Vec<String>>,
   cur: Cursor,
   pubsub: BookTickerPubSub,
 }
 
 impl BookTickerHandler {
   pub async fn new(pubsub: &Nats) -> ObserverResult<Self> {
+    let (subscribe_tx, subscribe_rx) = mpsc::unbounded_channel();
+    let (unsub_tx, unsub_rx) = mpsc::unbounded_channel();
     let me = Self {
       sockets: StreamMap::new(),
       symbol_index: HashMap::new(),
+      subscribe_rx: Arc::new(Mutex::new(subscribe_rx)),
+      subscribe_tx,
+      unsub_rx: Arc::new(Mutex::new(unsub_rx)),
+      unsub_tx,
       cur: Cursor::default(),
       pubsub: BookTickerPubSub::new(pubsub).await?,
     };
@@ -53,10 +63,10 @@ impl BookTickerHandler {
   }
 
   pub fn start(
-    self: Box<Self>,
-    sig: Receiver<bool>,
+    me: Arc<RwLock<Self>>,
+    sig: watch::Receiver<bool>,
   ) -> impl Future<Output = ObserverResult<()>> {
-    let me = Arc::new(Mutex::new(*self));
+    // let me = Arc::new(RwLock::new(*self));
     return Self::event_loop(me, sig);
   }
 
@@ -77,7 +87,10 @@ impl BookTickerHandler {
   }
 
   /// Reference: https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-book-ticker-streams
-  pub async fn subscribe(&mut self, symbols: &[String]) -> ObserverResult<()> {
+  async fn handle_subscribe(
+    &mut self,
+    symbols: Vec<String>,
+  ) -> ObserverResult<()> {
     let id = self.cur.param.clone();
     let socket = self.get_or_new_socket().await?;
     let payload = SubscribeRequestInner {
@@ -97,14 +110,18 @@ impl BookTickerHandler {
     return Ok(());
   }
 
+  pub fn subscribe(&self, symbols: &[String]) -> ObserverResult<()> {
+    return Ok(self.subscribe_tx.send(symbols.into())?);
+  }
+
   fn build_params(
     &mut self,
-    symbols: &[String],
+    symbols: Vec<String>,
   ) -> HashMap<Cursor, SubscribeRequestInner> {
     let mut params_dict: HashMap<Cursor, SubscribeRequestInner> =
       HashMap::new();
     for symbol in symbols {
-      let cursor = self.symbol_index.remove(symbol);
+      let cursor = self.symbol_index.remove(&symbol);
       if cursor.is_none() {
         continue;
       }
@@ -128,9 +145,9 @@ impl BookTickerHandler {
     return params_dict;
   }
 
-  pub async fn unsubscribe(
+  pub async fn handle_unsubscribe(
     &mut self,
-    symbols: &[String],
+    symbols: Vec<String>,
   ) -> ObserverResult<()> {
     let requests: HashMap<usize, SubscribeRequest> = self
       .build_params(symbols)
@@ -152,15 +169,39 @@ impl BookTickerHandler {
     return Ok(());
   }
 
+  pub fn unsubscribe(&self, symbols: Vec<String>) -> ObserverResult<()> {
+    return Ok(self.unsub_tx.send(symbols)?);
+  }
+
   async fn event_loop(
-    me: Arc<Mutex<Self>>,
-    mut sig: Receiver<bool>,
+    me: Arc<RwLock<Self>>,
+    mut sig: watch::Receiver<bool>,
   ) -> ObserverResult<()> {
+    let subscribe_rx = {
+      let me = me.read().await;
+      me.subscribe_rx.clone()
+    };
+    let unsub_rx = {
+      let me = me.read().await;
+      me.unsub_rx.clone()
+    };
     loop {
-      let mut me = me.lock().await;
+      let mut subscribe_rx = subscribe_rx.lock().await;
+      let mut unsub_rx = unsub_rx.lock().await;
+      let mut me = me.write().await;
       select! {
         _ = sig.changed() => {
           break;
+        },
+        Some(symbols) = subscribe_rx.recv() => {
+          if let Err(e) = me.handle_subscribe(symbols).await {
+            error!(error = as_error!(e); "Failed to subscribe");
+          };
+        },
+        Some(symbols) = unsub_rx.recv() => {
+          if let Err(e) = me.handle_unsubscribe(symbols).await {
+            error!(error = as_error!(e); "Failed to unsubscribe");
+          };
         },
         Some((_, payload)) = me.sockets.next() => {
           match payload {
