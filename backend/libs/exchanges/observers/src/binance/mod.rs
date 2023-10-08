@@ -12,8 +12,7 @@ use ::futures::FutureExt;
 use ::log::{as_error, as_serde, info, warn};
 use ::tokio::select;
 use ::tokio::signal::unix::Signal;
-use ::tokio::sync::watch::{channel, Receiver};
-use ::tokio::sync::RwLock;
+use ::tokio::sync::{watch, Mutex, RwLock};
 use ::tokio::time::interval;
 use ::uuid::Uuid;
 
@@ -48,9 +47,11 @@ where
   kvs: ObserverNodeKVS<T>,
   control_event: NodeControlEventPubSub,
   node_event: NodeEventPubSub,
-  trade_handler: BookTickerHandler,
+  trade_handler: Arc<BookTickerHandler>,
   symbols_to_add: Vec<String>,
   symbols_to_del: Vec<String>,
+  signal_tx: watch::Sender<bool>,
+  signal_rx: watch::Receiver<bool>,
 }
 
 impl<T> TradeObserver<T>
@@ -63,25 +64,25 @@ where
   ) -> ObserverResult<Self> {
     let control_event = NodeControlEventPubSub::new(broker).await?;
     let node_event = NodeEventPubSub::new(broker).await?;
+    let (signal_tx, signal_rx) = watch::channel::<bool>(false);
     let trade_handler = BookTickerHandler::new(broker).await?;
 
     let kvs = ObserverNodeKVS::new(redis_cmd.into());
     let me = Self {
       node_id: None,
-      trade_handler: trade_handler,
+      trade_handler: Arc::new(trade_handler),
       kvs,
       control_event,
       node_event,
+      signal_tx,
+      signal_rx,
       symbols_to_add: Vec::new(),
       symbols_to_del: Vec::new(),
     };
     return Ok(me);
   }
 
-  async fn handle_control_event(
-    me: Arc<RwLock<Self>>,
-    mut signal: Receiver<Option<()>>,
-  ) -> ObserverResult<()> {
+  async fn handle_control_event(me: Arc<RwLock<Self>>) -> ObserverResult<()> {
     let control_event = async {
       let me = me.read().await;
       me.control_event.clone()
@@ -89,6 +90,10 @@ where
     .await;
     let mut control_event =
       control_event.pull_subscribe("biannceTradeObserver").await?;
+    let mut signal = {
+      let me = me.read().await;
+      me.signal_rx.clone()
+    };
     loop {
       select! {
         _ = signal.changed() => {
@@ -127,11 +132,12 @@ where
     return Ok(());
   }
 
-  async fn handle_subscribe(
-    me: Arc<RwLock<Self>>,
-    mut signal: Receiver<Option<()>>,
-  ) -> ObserverResult<()> {
+  async fn handle_subscribe(me: Arc<RwLock<Self>>) -> ObserverResult<()> {
     let mut interval = interval(SUBSCRIBE_DELAY);
+    let mut signal = {
+      let me = me.read().await;
+      me.signal_rx.clone()
+    };
     loop {
       select! {
         _ = signal.changed() => {
@@ -186,11 +192,12 @@ where
     return Ok(());
   }
 
-  async fn handle_unsubscribe(
-    me: Arc<RwLock<Self>>,
-    mut signal: Receiver<Option<()>>,
-  ) -> ObserverResult<()> {
+  async fn handle_unsubscribe(me: Arc<RwLock<Self>>) -> ObserverResult<()> {
     let mut interval = interval(SUBSCRIBE_DELAY);
+    let mut signal = {
+      let me = me.read().await;
+      me.signal_rx.clone()
+    };
     loop {
       select! {
         _ = signal.changed() => {
@@ -272,11 +279,12 @@ where
     return Ok(());
   }
 
-  async fn ping(
-    me: Arc<RwLock<Self>>,
-    mut signal: Receiver<Option<()>>,
-  ) -> ObserverResult<()> {
+  async fn ping(me: Arc<RwLock<Self>>) -> ObserverResult<()> {
     let mut interval = interval(Duration::from_secs(1));
+    let mut signal = {
+      let me = me.read().await;
+      me.signal_rx.clone()
+    };
     loop {
       select! {
         _ = signal.changed() => {
@@ -307,7 +315,6 @@ where
   async fn start(self: Box<Self>, signal: Box<Signal>) -> ObserverResult<()> {
     let me = Arc::new(RwLock::new(*self));
     let mut signal = signal;
-    let (signal_tx, signal_rx) = channel::<Option<()>>(None);
     let signal_defer = signal
       .recv()
       .then(|_| async {
@@ -319,24 +326,24 @@ where
             .await;
           info!("Unregistered node id: {}", node_id);
         }
-        let _ = signal_tx.send(Some(()));
+        let _ = me.signal_tx.send(true);
         return Ok::<(), ObserverError>(());
       })
       .boxed();
-    let handle_trade = async {
-      let mut me = me.write().await;
-      me.trade_handler.start(signal_rx.clone()).await
-    }
-    .boxed();
+    let trade_handler = {
+      let me = me.read().await;
+      let trade_handler = Box::new(*me.trade_handler.clone());
+      trade_handler.start(me.signal_rx.clone())
+    };
 
     if let Err(e) = try_join_all([
       signal_defer,
-      handle_trade,
-      Self::ping(me.clone(), signal_rx.clone()).boxed(),
+      trade_handler.boxed(),
+      Self::ping(me.clone()).boxed(),
       Self::request_node_id(me.clone()).boxed(),
-      Self::handle_control_event(me.clone(), signal_rx.clone()).boxed(),
-      Self::handle_subscribe(me.clone(), signal_rx.clone()).boxed(),
-      Self::handle_unsubscribe(me.clone(), signal_rx.clone()).boxed(),
+      Self::handle_control_event(me.clone()).boxed(),
+      Self::handle_subscribe(me.clone()).boxed(),
+      Self::handle_unsubscribe(me.clone()).boxed(),
     ])
     .await
     {

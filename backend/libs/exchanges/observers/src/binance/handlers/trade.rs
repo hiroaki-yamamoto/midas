@@ -1,4 +1,6 @@
 use ::std::collections::HashMap;
+use ::std::future::Future;
+use ::std::sync::Arc;
 
 use ::futures::future::try_join_all;
 use ::futures::sink::SinkExt;
@@ -7,6 +9,7 @@ use ::log::{as_error, as_serde, error, info};
 use ::rug::Float;
 use ::tokio::select;
 use ::tokio::sync::watch::Receiver;
+use ::tokio::sync::Mutex;
 use ::tokio_stream::StreamMap;
 
 use ::clients::binance::WS_ENDPOINT;
@@ -39,12 +42,22 @@ pub struct BookTickerHandler {
 
 impl BookTickerHandler {
   pub async fn new(pubsub: &Nats) -> ObserverResult<Self> {
-    return Ok(Self {
+    let me = Self {
       sockets: StreamMap::new(),
       symbol_index: HashMap::new(),
       cur: Cursor::default(),
       pubsub: BookTickerPubSub::new(pubsub).await?,
-    });
+    };
+
+    return Ok(me);
+  }
+
+  pub fn start(
+    self: Box<Self>,
+    sig: Receiver<bool>,
+  ) -> impl Future<Output = ObserverResult<()>> {
+    let me = Arc::new(Mutex::new(*self));
+    return Self::event_loop(me, sig);
   }
 
   async fn get_or_new_socket(
@@ -139,16 +152,17 @@ impl BookTickerHandler {
     return Ok(());
   }
 
-  pub async fn start(
-    &mut self,
-    mut sig: Receiver<Option<()>>,
+  async fn event_loop(
+    me: Arc<Mutex<Self>>,
+    mut sig: Receiver<bool>,
   ) -> ObserverResult<()> {
     loop {
+      let mut me = me.lock().await;
       select! {
         _ = sig.changed() => {
           break;
         },
-        Some((_, payload)) = self.sockets.next() => {
+        Some((_, payload)) = me.sockets.next() => {
           match payload {
             WebsocketPayload::Result(result) => {
               info!(id = result.id; "Request accepted");
@@ -164,7 +178,7 @@ impl BookTickerHandler {
                   continue;
                 }
               };
-              if let Err(e) = self.pubsub.publish(&ticker).await {
+              if let Err(e) = me.pubsub.publish(&ticker).await {
                 error!(error = as_error!(e); "Failed to publish book ticker");
                 continue;
               }
