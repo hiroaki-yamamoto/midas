@@ -206,8 +206,7 @@ where
           }
           let mut lrem_defer = vec![];
           let to_del: Vec<String> = async {
-            let to_del = me.clone();
-            let mut to_del = to_del.write().await;
+            let mut to_del = me.write().await;
             let to_del = &mut to_del.symbols_to_del;
             to_del.drain(..).collect()
           }.await;
@@ -249,17 +248,20 @@ where
       me.node_event.clone()
     }
     .await;
+    info!("Creating empty stream to store node id request payload.");
     let _ = node_event.get_or_create_stream(None).await?;
+    info!("Empty Stream created. Requesting node id.");
     let mut response_stream = node_event
       .request::<TradeObserverControlEvent>(TradeObserverNodeEvent::Regist(
         Exchanges::Binance,
       ))
       .await?;
+    info!("Node ID request sent. Waiting for response.");
     while let Some((event, _)) = response_stream.next().await {
       if let TradeObserverControlEvent::NodeIDAssigned(id) = event {
         let mut me = me.write().await;
         me.node_id = Some(id);
-        info!("Assigned node id: {}", id);
+        info!(node_id = id.to_string(); "Assigned node id.");
       } else {
         warn!(
           "Received unexpected response while waiting for Node ID: {:?}",
