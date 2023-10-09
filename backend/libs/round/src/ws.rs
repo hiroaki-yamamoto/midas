@@ -103,7 +103,7 @@ where
     return Ok(());
   }
 
-  fn send(&mut self, msg: Message) -> WSResult<()> {
+  fn send_msg(&mut self, msg: Message) -> WSResult<()> {
     return self.runtime.block_on(async {
       let send_result = self.socket.send(msg).await;
       let flush_result = self.socket.flush().await;
@@ -154,7 +154,7 @@ where
         return Ok(payload.into());
       }
       Message::Ping(payload) => {
-        let _ = self.send(Message::Pong(payload))?;
+        let _ = self.send_msg(Message::Pong(payload))?;
         return Ok(None);
       }
       Message::Pong(msg) => {
@@ -225,33 +225,30 @@ where
   type Error = WebsocketSinkError;
 
   fn poll_ready(
-    self: Pin<&mut Self>,
+    mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Result<(), Self::Error>> {
-    let me = self.get_mut();
-    return me
+    return self
       .socket
       .poll_ready_unpin(cx)
       .map(|res| res.map_err(|err| err.into()));
   }
 
   fn poll_close(
-    self: Pin<&mut Self>,
+    mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Result<(), Self::Error>> {
-    let me = self.get_mut();
-    return me
+    return self
       .socket
       .poll_close_unpin(cx)
       .map(|res| res.map_err(|err| err.into()));
   }
 
   fn poll_flush(
-    self: Pin<&mut Self>,
+    mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Result<(), Self::Error>> {
-    let me = self.get_mut();
-    return me
+    return self
       .socket
       .poll_flush_unpin(cx)
       .map(|res| res.map_err(|err| err.into()));
@@ -261,6 +258,6 @@ where
     let me = self.get_mut();
     let payload = jsonify(&item)?;
     let msg = Message::Text(payload);
-    return me.send(msg).map_err(|err| err.into());
+    return me.send_msg(msg).map_err(|err| err.into());
   }
 }

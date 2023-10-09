@@ -1091,6 +1091,7 @@ dependencies = [
  "serde_json",
  "serde_qs",
  "serde_yaml",
+ "tokio",
  "tokio-tungstenite",
  "url",
  "warp",
