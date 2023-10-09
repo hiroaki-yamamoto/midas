@@ -332,14 +332,33 @@ where
         return Ok::<(), ObserverError>(());
       })
       .boxed();
-    let trade_handler = {
+    let (
+      trade_handler_socket,
+      trade_handler_subscribe,
+      trahde_handler_unsubscribe,
+    ) = {
       let me = me.read().await;
-      BookTickerHandler::start(me.trade_handler.clone(), me.signal_rx.clone())
+      (
+        BookTickerHandler::start_socket_event_loop(
+          me.trade_handler.clone(),
+          me.signal_rx.clone(),
+        ),
+        BookTickerHandler::start_subscribe_event_loop(
+          me.trade_handler.clone(),
+          me.signal_rx.clone(),
+        ),
+        BookTickerHandler::start_unsubscribe_event_loop(
+          me.trade_handler.clone(),
+          me.signal_rx.clone(),
+        ),
+      )
     };
 
     if let Err(e) = try_join_all([
       signal_defer,
-      trade_handler.boxed(),
+      trade_handler_socket.boxed(),
+      trade_handler_subscribe.boxed(),
+      trahde_handler_unsubscribe.boxed(),
       Self::ping(me.clone()).boxed(),
       Self::request_node_id(me.clone()).boxed(),
       Self::handle_control_event(me.clone()).boxed(),

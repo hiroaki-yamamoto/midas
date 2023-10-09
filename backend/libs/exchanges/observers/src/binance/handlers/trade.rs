@@ -1,5 +1,4 @@
 use ::std::collections::HashMap;
-use ::std::future::Future;
 use ::std::sync::Arc;
 
 use ::futures::future::try_join_all;
@@ -60,14 +59,6 @@ impl BookTickerHandler {
     };
 
     return Ok(me);
-  }
-
-  pub fn start(
-    me: Arc<RwLock<Self>>,
-    sig: watch::Receiver<bool>,
-  ) -> impl Future<Output = ObserverResult<()>> {
-    // let me = Arc::new(RwLock::new(*self));
-    return Self::event_loop(me, sig);
   }
 
   async fn get_or_new_socket(
@@ -172,7 +163,7 @@ impl BookTickerHandler {
     return Ok(self.unsub_tx.send(symbols)?);
   }
 
-  async fn event_loop(
+  pub async fn start_subscribe_event_loop(
     me: Arc<RwLock<Self>>,
     mut sig: watch::Receiver<bool>,
   ) -> ObserverResult<()> {
@@ -181,28 +172,62 @@ impl BookTickerHandler {
       me.subscribe_rx.clone()
     };
     let mut subscribe_rx = subscribe_rx.lock().await;
-    let unsub_rx = {
-      let me = me.read().await;
-      me.unsub_rx.clone()
-    };
-    let mut unsub_rx = unsub_rx.lock().await;
     loop {
-      let mut me = me.write().await;
       select! {
         _ = sig.changed() => {
           break;
         },
         Some(symbols) = subscribe_rx.recv() => {
           info!(symbols = as_serde!(symbols); "Received subscribe event");
-          if let Err(e) = me.handle_subscribe(symbols).await {
+          if let Err(e) = {
+            let mut me = me.write().await;
+            me.handle_subscribe(symbols).await
+          } {
             error!(error = as_error!(e); "Failed to subscribe");
           };
         },
+      }
+    }
+    return Ok(());
+  }
+
+  pub async fn start_unsubscribe_event_loop(
+    me: Arc<RwLock<Self>>,
+    mut sig: watch::Receiver<bool>,
+  ) -> ObserverResult<()> {
+    let unsub_rx = {
+      let me = me.read().await;
+      me.unsub_rx.clone()
+    };
+    let mut unsub_rx = unsub_rx.lock().await;
+    loop {
+      select! {
+        _ = sig.changed() => {
+          break;
+        },
         Some(symbols) = unsub_rx.recv() => {
           info!(symbols = as_serde!(symbols); "Received unsubscribe event");
-          if let Err(e) = me.handle_unsubscribe(symbols).await {
+          if let Err(e) = {
+            let mut me = me.write().await;
+            me.handle_unsubscribe(symbols).await
+          } {
             error!(error = as_error!(e); "Failed to unsubscribe");
           };
+        }
+      }
+    }
+    return Ok(());
+  }
+
+  pub async fn start_socket_event_loop(
+    me: Arc<RwLock<Self>>,
+    mut sig: watch::Receiver<bool>,
+  ) -> ObserverResult<()> {
+    loop {
+      let mut me = me.write().await;
+      select! {
+        _ = sig.changed() => {
+          break;
         },
         Some((_, payload)) = me.sockets.next() => {
           match payload {
