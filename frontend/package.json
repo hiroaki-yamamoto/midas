@@ -49,7 +49,7 @@
     "@angular/localize": "16.2.8",
     "@cypress/schematic": "2.5.1",
     "@types/google-protobuf": "^3.15.5",
-    "@types/jasmine": "~4.6.0",
+    "@types/jasmine": "~5.1.0",
     "@types/jasminewd2": "~2.0.10",
     "@types/node": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "6.7.4",
