@@ -1,7 +1,6 @@
 use ::std::collections::HashMap;
 use ::std::sync::Arc;
 
-use ::futures::future::try_join_all;
 use ::futures::sink::SinkExt;
 use ::futures::stream::StreamExt;
 use ::log::{as_error, as_serde, error, info};
@@ -12,9 +11,7 @@ use ::tokio::sync::{Mutex, RwLock};
 use ::tokio_stream::StreamMap;
 
 use ::clients::binance::WS_ENDPOINT;
-use ::errors::{
-  ObserverError, ObserverResult, WebSocketInitResult, WebsocketSinkError,
-};
+use ::errors::{ObserverError, ObserverResult, WebSocketInitResult};
 use ::round::WebSocket;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
@@ -96,7 +93,12 @@ impl BookTickerHandler {
     symbols: Vec<String>,
   ) -> ObserverResult<()> {
     let (socket_id_tx, socket_id_rx) = oneshot::channel();
-    self.regist_socket_tx.send(socket_id_tx);
+    if let Err(e) = self.regist_socket_tx.send(socket_id_tx) {
+      return Err(ObserverError::Other(format!(
+        "Failed to request socket id: {:?}",
+        e
+      )));
+    };
     let socket_id = match socket_id_rx.await {
       Ok(socket_id) => socket_id,
       Err(e) => {
@@ -114,7 +116,12 @@ impl BookTickerHandler {
         .collect(),
     }
     .into_subscribe();
-    self.send_payload_tx.send((payload, socket_id));
+    if let Err(e) = self.send_payload_tx.send((payload, socket_id)) {
+      return Err(ObserverError::Other(format!(
+        "Failed to send payload: {:?}",
+        e
+      )));
+    }
     let cur = { self.cur.read().await };
     symbols.into_iter().for_each(|symbol| {
       self.symbol_index.insert(symbol.into(), cur.clone());
@@ -166,22 +173,14 @@ impl BookTickerHandler {
     &mut self,
     symbols: Vec<String>,
   ) -> ObserverResult<()> {
-    let requests: HashMap<usize, SubscribeRequest> = self
+    let requests: HashMap<Cursor, SubscribeRequest> = self
       .build_params(symbols)
       .into_iter()
-      .map(|(cur, inner)| (cur.socket, inner.into_unsubscribe()))
+      .map(|(cur, payload)| (cur, payload.into_unsubscribe()))
       .collect();
-    let mut defer = vec![];
-    let mut sockets = self.sockets.iter_mut();
-    for (socket_id, req) in requests {
-      if let Some((_, socket)) = sockets.find(|&&mut (id, _)| id == socket_id) {
-        defer.push(async {
-          socket.send(req).await?;
-          Ok::<_, WebsocketSinkError>(())
-        });
-      }
+    for (cursor, req) in requests {
+      let _ = self.send_payload_tx.send((req, cursor));
     }
-    try_join_all(defer).await?;
     return Ok(());
   }
 
@@ -207,9 +206,7 @@ impl BookTickerHandler {
           info!(symbols = as_serde!(symbols); "Received subscribe event");
           if let Err(e) = {
             let mut me = me.write().await;
-            if let Err(e) = me.handle_subscribe(symbols).await {
-              error!(error = as_error!(e); "Failed to handle subscribe");
-            }
+            me.handle_subscribe(symbols).await
           } {
             error!(error = as_error!(e); "Failed to subscribe");
           };
@@ -279,7 +276,9 @@ impl BookTickerHandler {
             },
             Ok(socket_id) => {
               info!(id = socket_id; "Socket registered");
-              socket_id_tx.send(cur);
+              if let Err(_) = socket_id_tx.send(cur.clone()) {
+                error!("Failed to send socket id");
+              };
             }
           }
         },

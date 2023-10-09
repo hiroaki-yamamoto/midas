@@ -332,17 +332,22 @@ where
         return Ok::<(), ObserverError>(());
       })
       .boxed();
+    let trade_handler_socket = async {
+      let me = me.read().await;
+      let trade_handler = me.trade_handler.read().await;
+      trade_handler.socket_event_loop(me.signal_rx.clone()).await
+    };
     let (
-      trade_handler_socket,
+      // trade_handler_socket,
       trade_handler_subscribe,
       trahde_handler_unsubscribe,
     ) = {
       let me = me.read().await;
       (
-        BookTickerHandler::start_socket_event_loop(
-          me.trade_handler.clone(),
-          me.signal_rx.clone(),
-        ),
+        // BookTickerHandler::start_socket_event_loop(
+        //   me.trade_handler.clone(),
+        //   me.signal_rx.clone(),
+        // ),
         BookTickerHandler::start_subscribe_event_loop(
           me.trade_handler.clone(),
           me.signal_rx.clone(),
