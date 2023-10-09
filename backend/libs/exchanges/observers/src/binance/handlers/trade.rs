@@ -251,7 +251,7 @@ impl BookTickerHandler {
     &self,
     mut sig: watch::Receiver<bool>,
   ) -> ObserverResult<()> {
-    let mut sockets = StreamMap::new();
+    let mut sockets: StreamMap<usize, BookTickerSocket> = StreamMap::new();
     let mut regist_socket_rx = self.regist_socket_rx.lock().await;
     let mut send_payload_rx = self.send_payload_rx.lock().await;
     loop {
