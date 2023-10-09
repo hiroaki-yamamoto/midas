@@ -83,11 +83,10 @@ where
   }
 
   async fn handle_control_event(me: Arc<RwLock<Self>>) -> ObserverResult<()> {
-    let control_event = async {
+    let control_event = {
       let me = me.read().await;
       me.control_event.clone()
-    }
-    .await;
+    };
     let mut control_event =
       control_event.pull_subscribe("biannceTradeObserver").await?;
     let mut signal = {
@@ -115,6 +114,7 @@ where
               if exchange != Exchanges::Binance {
                 continue;
               }
+              info!(symbol = symbol.as_str(); "Received symbol add event.");
               let mut me = me.write().await;
               me.symbols_to_add.push(symbol);
             }
@@ -122,6 +122,7 @@ where
               if exchange != Exchanges::Binance {
                 continue;
               }
+              info!(symbol = symbol.as_str(); "Received symbol del event.");
               let mut me = me.write().await;
               me.symbols_to_del.push(symbol);
             }
@@ -154,19 +155,20 @@ where
             let mut me = me.write().await;
             me.symbols_to_add.drain(..).collect()
           };
-          info!(symbols = as_serde!(symbols_to_add); "Start subscription");
+          info!(symbols = as_serde!(symbols_to_add); "Start subscription process");
           while !symbols_to_add.is_empty() {
-            let to_add: Vec<String> = async {
+            let to_add: Vec<String> = {
               let to_add = &mut symbols_to_add;
               if to_add.len() > 10 {
                 to_add.drain(..10).collect()
               } else {
                 to_add.drain(..).collect()
               }
-            }.await;
+            };
             {
               let me = me.read().await;
               let trade_handler = me.trade_handler.read().await;
+              info!(symbols = as_serde!(to_add); "Calling subscribe function");
               if let Err(e) = trade_handler.subscribe(
                 to_add.as_slice()
               ) {
@@ -174,10 +176,10 @@ where
                 continue;
               }
             }
-            if let Err(e) = async {
+            if let Err(e) = {
               let me = me.read().await;
               me.kvs.lpush::<usize>(&me.node_id.unwrap().to_string(), to_add, None).await
-            }.await
+            }
             {
               warn!(
                 error = as_error!(e);
@@ -212,11 +214,11 @@ where
             }
           }
           let mut lrem_defer = vec![];
-          let to_del: Vec<String> = async {
+          let to_del: Vec<String> = {
             let mut to_del = me.write().await;
             let to_del = &mut to_del.symbols_to_del;
             to_del.drain(..).collect()
-          }.await;
+          };
 
           {
             let me = me.read().await;

@@ -102,7 +102,6 @@ impl BookTickerHandler {
     }
     .into_subscribe();
     socket.send(payload).await?;
-    socket.flush().await?;
     symbols.into_iter().for_each(|symbol| {
       self.symbol_index.insert(symbol.into(), self.cur.clone());
     });
@@ -111,6 +110,7 @@ impl BookTickerHandler {
   }
 
   pub fn subscribe(&self, symbols: &[String]) -> ObserverResult<()> {
+    info!(symbols = as_serde!(symbols); "Signaling subscribe event");
     return Ok(self.subscribe_tx.send(symbols.into())?);
   }
 
@@ -160,7 +160,6 @@ impl BookTickerHandler {
       if let Some((_, socket)) = sockets.find(|&&mut (id, _)| id == socket_id) {
         defer.push(async {
           socket.send(req).await?;
-          socket.flush().await?;
           Ok::<_, WebsocketSinkError>(())
         });
       }
@@ -181,24 +180,26 @@ impl BookTickerHandler {
       let me = me.read().await;
       me.subscribe_rx.clone()
     };
+    let mut subscribe_rx = subscribe_rx.lock().await;
     let unsub_rx = {
       let me = me.read().await;
       me.unsub_rx.clone()
     };
+    let mut unsub_rx = unsub_rx.lock().await;
     loop {
-      let mut subscribe_rx = subscribe_rx.lock().await;
-      let mut unsub_rx = unsub_rx.lock().await;
       let mut me = me.write().await;
       select! {
         _ = sig.changed() => {
           break;
         },
         Some(symbols) = subscribe_rx.recv() => {
+          info!(symbols = as_serde!(symbols); "Received subscribe event");
           if let Err(e) = me.handle_subscribe(symbols).await {
             error!(error = as_error!(e); "Failed to subscribe");
           };
         },
         Some(symbols) = unsub_rx.recv() => {
+          info!(symbols = as_serde!(symbols); "Received unsubscribe event");
           if let Err(e) = me.handle_unsubscribe(symbols).await {
             error!(error = as_error!(e); "Failed to unsubscribe");
           };
