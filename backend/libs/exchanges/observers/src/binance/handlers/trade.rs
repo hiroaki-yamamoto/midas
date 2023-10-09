@@ -1,6 +1,7 @@
 use ::std::collections::HashMap;
 use ::std::sync::Arc;
 
+use ::futures::future::{try_join_all, FutureExt};
 use ::futures::sink::SinkExt;
 use ::futures::stream::StreamExt;
 use ::log::{as_error, as_serde, error, info};
@@ -32,7 +33,7 @@ struct Cursor {
 }
 
 pub struct BookTickerHandler {
-  symbol_index: HashMap<String, Cursor>,
+  symbol_index: Mutex<HashMap<String, Cursor>>,
   subscribe_rx: Arc<Mutex<mpsc::UnboundedReceiver<Vec<String>>>>,
   subscribe_tx: mpsc::UnboundedSender<Vec<String>>,
   unsub_rx: Arc<Mutex<mpsc::UnboundedReceiver<Vec<String>>>>,
@@ -54,7 +55,7 @@ impl BookTickerHandler {
     let (regist_socket_tx, regist_socket_rx) = mpsc::unbounded_channel();
     let (send_payload_tx, send_payload_rx) = mpsc::unbounded_channel();
     let me = Self {
-      symbol_index: HashMap::new(),
+      symbol_index: Mutex::new(HashMap::new()),
       subscribe_rx: Arc::new(Mutex::new(subscribe_rx)),
       subscribe_tx,
       unsub_rx: Arc::new(Mutex::new(unsub_rx)),
@@ -68,6 +69,16 @@ impl BookTickerHandler {
     };
 
     return Ok(me);
+  }
+
+  pub async fn start(&self, sig: watch::Receiver<bool>) -> ObserverResult<()> {
+    let _ = try_join_all([
+      self.subscribe_event_loop(sig.clone()).boxed(),
+      self.unsubscribe_event_loop(sig.clone()).boxed(),
+      self.socket_event_loop(sig.clone()).boxed(),
+    ])
+    .await?;
+    return Ok(());
   }
 
   async fn get_or_new_socket(
@@ -88,10 +99,7 @@ impl BookTickerHandler {
   }
 
   /// Reference: https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-book-ticker-streams
-  async fn handle_subscribe(
-    &mut self,
-    symbols: Vec<String>,
-  ) -> ObserverResult<()> {
+  async fn handle_subscribe(&self, symbols: Vec<String>) -> ObserverResult<()> {
     let (socket_id_tx, socket_id_rx) = oneshot::channel();
     if let Err(e) = self.regist_socket_tx.send(socket_id_tx) {
       return Err(ObserverError::Other(format!(
@@ -123,9 +131,12 @@ impl BookTickerHandler {
       )));
     }
     let cur = { self.cur.read().await };
-    symbols.into_iter().for_each(|symbol| {
-      self.symbol_index.insert(symbol.into(), cur.clone());
-    });
+    {
+      let mut symbol_index = self.symbol_index.lock().await;
+      symbols.into_iter().for_each(|symbol| {
+        symbol_index.insert(symbol.into(), cur.clone());
+      });
+    }
     {
       let mut cur = self.cur.write().await;
       cur.param += 1;
@@ -138,14 +149,17 @@ impl BookTickerHandler {
     return Ok(self.subscribe_tx.send(symbols.into())?);
   }
 
-  fn build_params(
-    &mut self,
+  async fn build_params(
+    &self,
     symbols: Vec<String>,
   ) -> HashMap<Cursor, SubscribeRequestInner> {
     let mut params_dict: HashMap<Cursor, SubscribeRequestInner> =
       HashMap::new();
     for symbol in symbols {
-      let cursor = self.symbol_index.remove(&symbol);
+      let cursor = {
+        let mut symbol_index = self.symbol_index.lock().await;
+        symbol_index.remove(&symbol)
+      };
       if cursor.is_none() {
         continue;
       }
@@ -170,11 +184,12 @@ impl BookTickerHandler {
   }
 
   pub async fn handle_unsubscribe(
-    &mut self,
+    &self,
     symbols: Vec<String>,
   ) -> ObserverResult<()> {
     let requests: HashMap<Cursor, SubscribeRequest> = self
       .build_params(symbols)
+      .await
       .into_iter()
       .map(|(cur, payload)| (cur, payload.into_unsubscribe()))
       .collect();
@@ -188,14 +203,11 @@ impl BookTickerHandler {
     return Ok(self.unsub_tx.send(symbols)?);
   }
 
-  pub async fn start_subscribe_event_loop(
-    me: Arc<RwLock<Self>>,
+  async fn subscribe_event_loop(
+    &self,
     mut sig: watch::Receiver<bool>,
   ) -> ObserverResult<()> {
-    let subscribe_rx = {
-      let me = me.read().await;
-      me.subscribe_rx.clone()
-    };
+    let subscribe_rx = self.subscribe_rx.clone();
     let mut subscribe_rx = subscribe_rx.lock().await;
     loop {
       select! {
@@ -205,8 +217,7 @@ impl BookTickerHandler {
         Some(symbols) = subscribe_rx.recv() => {
           info!(symbols = as_serde!(symbols); "Received subscribe event");
           if let Err(e) = {
-            let mut me = me.write().await;
-            me.handle_subscribe(symbols).await
+            self.handle_subscribe(symbols).await
           } {
             error!(error = as_error!(e); "Failed to subscribe");
           };
@@ -216,14 +227,11 @@ impl BookTickerHandler {
     return Ok(());
   }
 
-  pub async fn start_unsubscribe_event_loop(
-    me: Arc<RwLock<Self>>,
+  async fn unsubscribe_event_loop(
+    &self,
     mut sig: watch::Receiver<bool>,
   ) -> ObserverResult<()> {
-    let unsub_rx = {
-      let me = me.read().await;
-      me.unsub_rx.clone()
-    };
+    let unsub_rx = self.unsub_rx.clone();
     let mut unsub_rx = unsub_rx.lock().await;
     loop {
       select! {
@@ -233,8 +241,7 @@ impl BookTickerHandler {
         Some(symbols) = unsub_rx.recv() => {
           info!(symbols = as_serde!(symbols); "Received unsubscribe event");
           if let Err(e) = {
-            let mut me = me.write().await;
-            me.handle_unsubscribe(symbols).await
+            self.handle_unsubscribe(symbols).await
           } {
             error!(error = as_error!(e); "Failed to unsubscribe");
           };
@@ -244,7 +251,7 @@ impl BookTickerHandler {
     return Ok(());
   }
 
-  pub async fn socket_event_loop(
+  async fn socket_event_loop(
     &self,
     mut sig: watch::Receiver<bool>,
   ) -> ObserverResult<()> {
