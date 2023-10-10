@@ -80,39 +80,6 @@ where
     return Ok(res?);
   }
 
-  async fn request<R>(
-    &self,
-    entity: impl Borrow<T> + Send + Sync,
-  ) -> RequestResult<BoxStream<(R, Message)>>
-  where
-    R: DeserializeOwned + Send + 'life0,
-  {
-    let msg = Self::serialize(entity.borrow())?;
-    let respond_id: String = thread_rng()
-      .sample_iter(&Alphanumeric)
-      .take(128)
-      .map(char::from)
-      .collect();
-    let respond_suffix = format!("reply-{}", respond_id);
-    let respond_subject = format!("{}-{}", self.get_subject(), respond_suffix);
-
-    let mut header = HeaderMap::new();
-    header.insert("midas-respond-subject", respond_subject.as_str());
-
-    let subscriber = self
-      .raw_pull_subscribe(&respond_subject, Some(&respond_subject))
-      .await?;
-    ::log::debug!(consumer_id = respond_id; "Subscriber created.");
-    ::log::debug!(respond_subject = respond_subject; "Prepare to create a request.");
-    let _ = self
-      .get_ctx()
-      .publish_with_headers(self.get_subject().into(), header, msg)
-      .await?
-      .await?;
-    ::log::debug!("Done");
-    return Ok(subscriber);
-  }
-
   async fn raw_pull_subscribe<R>(
     &self,
     durable_name: &str,
