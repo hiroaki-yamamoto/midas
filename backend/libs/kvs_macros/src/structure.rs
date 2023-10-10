@@ -127,6 +127,7 @@ impl Expanded {
     };
 
     let implement = TokenStream::from(quote! {
+      #[derive(Debug)]
       #vis struct #name #generics #cmd_constraint,
       {
         con: ::kvs::Connection #generics,

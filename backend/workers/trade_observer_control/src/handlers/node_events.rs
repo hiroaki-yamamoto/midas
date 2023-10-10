@@ -15,7 +15,6 @@ use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::natsJS::message::Message;
-use ::subscribe::traits::Respond;
 use ::tokio::time::sleep;
 
 use crate::balancer::SymbolBalancer;
@@ -65,58 +64,6 @@ where
     });
   }
 
-  /// Push NodeID to KVS
-  /// Note that the return ID is not always the same as the input ID.
-  /// E.g. When the id is duplicated, the new ID is generated and returned.
-  /// Return Value: NodeID that pushed to KVS.
-  async fn push_nodeid(
-    &mut self,
-    exchange: Exchanges,
-    msg: &Message,
-  ) -> ControlResult<Uuid> {
-    let redis_option: Option<WriteOption> = WriteOption::default()
-      .duration(Duration::from_secs(30).into())
-      .non_existent_only(true)
-      .into();
-    let mut node_id = Uuid::new_v4();
-    info!(node_id = node_id.to_string().as_str(); "NodeID Generated");
-    loop {
-      let node_id_txt = node_id.to_string();
-      match self.type_kvs.index_node(node_id_txt.clone()).await {
-        Ok(num) => {
-          if num > 0 {
-            info!(node_id = node_id.to_string(); "Node indexed");
-            break;
-          } else {
-            node_id = Uuid::new_v4();
-            continue;
-          }
-        }
-        Err(e) => {
-          error!(error = as_error!(e); "Failed to index node");
-          sleep(Duration::from_secs(1)).await;
-          continue;
-        }
-      }
-    }
-    let node_id_txt = node_id.to_string();
-    self
-      .type_kvs
-      .set(
-        &node_id_txt,
-        exchange.as_str_name().into(),
-        redis_option.clone(),
-      )
-      .await?;
-    info!(node_id = node_id_txt; "Acquired NodeID");
-    info!(node_id = node_id_txt; "Sending NodeID to Node");
-    msg
-      .respond(&TradeObserverControlEvent::NodeIDAssigned(node_id.clone()))
-      .await?;
-    info!(node_id = node_id_txt; "NodeID Sent");
-    return Ok(node_id);
-  }
-
   pub async fn handle(
     &mut self,
     msg: &Message,
@@ -137,18 +84,6 @@ where
       }
       TradeObserverNodeEvent::Regist(exchange) => {
         info!("Prepare for node id assignment");
-        match self.push_nodeid(exchange, msg).await {
-          Ok(node_id) => {
-            info!(
-              "Node Connected. NodeID: {}, Exchange: {}",
-              node_id,
-              exchange.as_str_name()
-            );
-          }
-          Err(e) => {
-            error!(error = as_error!(e); "NodeID assignment failed");
-          }
-        }
         let node_count = self
           .type_kvs
           .get_nodes_by_exchange(exchange)

@@ -45,7 +45,7 @@ where
     };
   }
 
-  async fn remove_node(&self, node_id: &Uuid) {
+  async fn remove_node(&self, node_id: &str) {
     let node_id: Arc<str> = node_id.to_string().into();
     let (_, _): (KVSResult<usize>, KVSResult<usize>) = join!(
       async { self.node_kvs.del(&[node_id.clone()]).await },
@@ -53,11 +53,10 @@ where
     );
   }
 
-  pub async fn handle(&self, node_id: Uuid) -> ControlResult<()> {
-    let node_id_string = node_id.to_string();
+  pub async fn handle(&self, node_id: String) -> ControlResult<()> {
     let (symbols, exchange) = join!(
-      self.node_kvs.lrange(&node_id_string, 0, -1),
-      self.type_kvs.get(&node_id_string)
+      self.node_kvs.lrange(&node_id, 0, -1),
+      self.type_kvs.get(&node_id)
     );
     let symbols: Vec<String> = symbols.unwrap_or(vec![]);
     let exchange: String = exchange.unwrap_or("".into());

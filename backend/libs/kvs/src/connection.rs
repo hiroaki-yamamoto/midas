@@ -5,7 +5,7 @@ use ::tokio::sync::Mutex;
 
 pub use ::redis::Commands as RedisCommands;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Connection<T>
 where
   T: RedisCommands,

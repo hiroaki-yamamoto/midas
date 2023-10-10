@@ -13,7 +13,6 @@ use ::tokio::select;
 use ::tokio::signal::unix::Signal;
 use ::tokio::sync::{watch, Mutex, RwLock};
 use ::tokio::time::interval;
-use ::uuid::Uuid;
 
 use ::entities::{
   BookTicker as CommonBookTicker, TradeObserverControlEvent,
@@ -42,7 +41,7 @@ pub struct TradeObserver<T>
 where
   T: RedisCommands + Send + Sync + 'static,
 {
-  node_id: RwLock<Option<Uuid>>,
+  node_id: RwLock<Option<String>>,
   kvs: ObserverNodeKVS<T>,
   control_event: NodeControlEventPubSub,
   node_event: NodeEventPubSub,
@@ -81,7 +80,7 @@ where
     return Ok(me);
   }
 
-  async fn get_node_id(&self) -> Option<Uuid> {
+  async fn get_node_id(&self) -> Option<String> {
     let node_id = self.node_id.read().await;
     return node_id.clone();
   }
@@ -99,18 +98,6 @@ where
         }
         Some((event, _)) = control_event.next() => {
           match event {
-            TradeObserverControlEvent::NodeIDAssigned(node_id) => {
-              let local_node_id = {
-                let node_id = self.node_id.read().await;
-                node_id.map(|id| id.to_string())
-              };
-              warn!(
-                req_node_id = node_id.to_string(),
-                local_node_id = local_node_id;
-                "Received Node ID Assigned event that is not recognized.",
-              );
-              continue;
-            }
             TradeObserverControlEvent::SymbolAdd(exchange, symbol) => {
               if exchange != Exchanges::Binance {
                 continue;
@@ -173,9 +160,8 @@ where
               warn!(error = as_error!(e); "Failed to send subscription signal");
               continue;
             }
-            if let Err(e) = {
-              self.kvs.lpush::<usize>(&node_id.unwrap().to_string(), to_add, None).await
-            }
+            if let Err(e) =
+              self.kvs.lpush::<usize>(node_id.clone().unwrap().as_str(), to_add, None).await
             {
               warn!(
                 error = as_error!(e);
@@ -217,11 +203,10 @@ where
 
           lrem_defer.extend(to_del.into_iter().map(|sym| {
             let kvs = self.kvs.clone();
-            return async move {
-              kvs
-                .lrem::<usize>(node_id.unwrap().to_string().as_str(), 0, sym)
-                .await
-            };
+            let node_id = node_id.clone();
+            let node_id = node_id.unwrap();
+            return async move {kvs
+                .lrem::<usize>(node_id.as_str(), 0, sym).await};
           }));
           if let Err(e) = try_join_all(lrem_defer).await {
             warn!(
@@ -237,29 +222,7 @@ where
   }
 
   async fn request_node_id(&self) -> ObserverResult<()> {
-    let node_event = self.node_event.clone();
-    info!("Creating empty stream to store node id request payload.");
-    let _ = node_event.get_or_create_stream(None).await?;
-    info!("Empty Stream created. Requesting node id.");
-    let mut response_stream = node_event
-      .request::<TradeObserverControlEvent>(TradeObserverNodeEvent::Regist(
-        Exchanges::Binance,
-      ))
-      .await?;
-    info!("Node ID request sent. Waiting for response.");
-    while let Some((event, _)) = response_stream.next().await {
-      if let TradeObserverControlEvent::NodeIDAssigned(id) = event {
-        let mut node_id = self.node_id.write().await;
-        *node_id = Some(id);
-        info!(node_id = id.to_string(); "Assigned node id.");
-      } else {
-        warn!(
-          "Received unexpected response while waiting for Node ID: {:?}",
-          event
-        );
-      }
-    }
-    return Ok(());
+    unimplemented!("Unimplemented request_node_id");
   }
 
   async fn ping(&self) -> ObserverResult<()> {
@@ -299,7 +262,7 @@ where
         if let Some(node_id) = self.get_node_id().await {
           let _ = self
             .node_event
-            .publish(TradeObserverNodeEvent::Unregist(node_id))
+            .publish(TradeObserverNodeEvent::Unregist(node_id.clone()))
             .await;
           info!("Unregistered node id: {}", node_id);
         }

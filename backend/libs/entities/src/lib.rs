@@ -7,8 +7,6 @@ mod order_option;
 mod trade_observer_control_events;
 mod trade_time;
 
-pub use ::uuid;
-
 pub use self::apikey::APIKeyEvent;
 pub use self::apikey::{APIKey, APIKeyInner};
 pub use self::book_ticker::BookTicker;

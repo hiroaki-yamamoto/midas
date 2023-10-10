@@ -15,6 +15,7 @@ subscribe = { path = "../../subscribe" }
 kvs = { path = "../../kvs" }
 kvs_macros = { path = "../../kvs_macros" }
 round = { path = "../../round" }
+random = { path = "../../random" }
 
 entities = { path = "../../entities" }
 
@@ -35,4 +36,3 @@ serde = { version = "1.0.152", features = ["derive"] }
 tokio-stream = "0.1.12"
 rug = { version = "1.22.0", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.0", features = ["force-cross"] }
-uuid = { version = "1.4.1", features = ["v4"] }

@@ -3,8 +3,7 @@ use ::std::time::Duration;
 
 use ::async_trait::async_trait;
 use ::futures::future::join;
-use ::rand::distributions::Alphanumeric;
-use ::rand::{thread_rng, Rng};
+use ::random::generate_random_txt;
 use ::tokio::select;
 use ::tokio::sync::mpsc::channel;
 use ::tokio::time::interval;
@@ -14,15 +13,6 @@ use ::redis::{Commands, RedisError};
 
 use super::{Base, ChannelName};
 use crate::options::WriteOption;
-
-fn rand_txt(len: usize) -> String {
-  let rand_string: String = thread_rng()
-    .sample_iter(&Alphanumeric)
-    .take(len)
-    .map(char::from)
-    .collect();
-  return rand_string;
-}
 
 #[async_trait]
 pub trait Lock<S>: Base<S> + ChannelName
@@ -60,7 +50,7 @@ where
       Ok::<(), RedisError>(())
     };
     let acquire_process = async move {
-      let random = rand_txt(32);
+      let random = generate_random_txt(32);
       let lock: String = async {
         let mut dlock = dlock.lock().await;
         dlock.set_options(

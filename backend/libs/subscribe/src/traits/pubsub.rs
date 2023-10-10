@@ -4,8 +4,6 @@ use ::std::borrow::Borrow;
 
 use ::futures::stream::{BoxStream, StreamExt};
 use ::log::warn;
-use ::rand::distributions::Alphanumeric;
-use ::rand::{thread_rng, Rng};
 use ::rmp_serde::{
   encode::Error as EncodeErr, from_slice as from_msgpack, to_vec as to_msgpack,
 };
