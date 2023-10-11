@@ -5,6 +5,7 @@ use ::tokio::sync::oneshot::error::RecvError;
 
 use crate::kvs::KVSError;
 use crate::pubsub::{ConsumerError, RequestError};
+use crate::unknown::UnknownExchangeError;
 use crate::websocket::{WebsocketInitError, WebsocketSinkError};
 
 #[derive(Debug, Error)]
@@ -25,6 +26,8 @@ pub enum ObserverError {
   PublishError(#[source] RequestError),
   #[error(display = "KVS Error: {}", _0)]
   KVSError(#[source] KVSError),
+  #[error(display = "Unknown Exchange: {}", _0)]
+  UnknownExchangeError(#[source] UnknownExchangeError),
   #[error(display = "Unhandled Error: {}", _0)]
   Other(String),
 }
