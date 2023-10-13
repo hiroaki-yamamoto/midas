@@ -1,27 +1,24 @@
 use ::std::time::Duration;
 
-use ::futures::future::try_join;
+use ::futures::future::{try_join, try_join_all};
 use ::futures::stream::StreamExt;
-use ::uuid::Uuid;
 
 use ::config::{Database, ObserverConfig};
-use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 use ::kvs::redis::Commands;
-use ::kvs::traits::normal::{Expiration, Lock, Set};
-use ::kvs::{Connection, WriteOption};
-use ::log::{as_error, error, info};
+use ::kvs::traits::normal::{Expiration, Lock};
+use ::kvs::Connection;
+use ::log::{error, info};
+use ::observers::entities::{
+  TradeObserverControlEvent, TradeObserverNodeEvent,
+};
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
-use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
-use ::subscribe::natsJS::message::Message;
-use ::subscribe::traits::Respond;
-use ::tokio::time::sleep;
+use ::subscribe::traits::PubSub;
 
 use crate::balancer::SymbolBalancer;
 use crate::dlock::InitLock;
 use crate::errors::Result as ControlResult;
-use crate::remover::NodeRemover;
 
 use super::SyncHandler;
 
@@ -65,61 +62,8 @@ where
     });
   }
 
-  /// Push NodeID to KVS
-  /// Note that the return ID is not always the same as the input ID.
-  /// E.g. When the id is duplicated, the new ID is generated and returned.
-  /// Return Value: NodeID that pushed to KVS.
-  async fn push_nodeid(
-    &mut self,
-    exchange: Exchanges,
-    msg: &Message,
-  ) -> ControlResult<Uuid> {
-    let redis_option: Option<WriteOption> = WriteOption::default()
-      .duration(Duration::from_secs(30).into())
-      .non_existent_only(true)
-      .into();
-    let mut node_id = Uuid::new_v4();
-    info!(node_id = node_id.to_string().as_str(); "NodeID Generated");
-    loop {
-      let node_id_txt = node_id.to_string();
-      match self.type_kvs.index_node(node_id_txt.clone()).await {
-        Ok(num) => {
-          if num > 0 {
-            info!(node_id = node_id.to_string(); "Node indexed");
-            break;
-          } else {
-            node_id = Uuid::new_v4();
-            continue;
-          }
-        }
-        Err(e) => {
-          error!(error = as_error!(e); "Failed to index node");
-          sleep(Duration::from_secs(1)).await;
-          continue;
-        }
-      }
-    }
-    let node_id_txt = node_id.to_string();
-    self
-      .type_kvs
-      .set(
-        &node_id_txt,
-        exchange.as_str_name().into(),
-        redis_option.clone(),
-      )
-      .await?;
-    info!(node_id = node_id_txt; "Acquired NodeID");
-    info!(node_id = node_id_txt; "Sending NodeID to Node");
-    msg
-      .respond(&TradeObserverControlEvent::NodeIDAssigned(node_id.clone()))
-      .await?;
-    info!(node_id = node_id_txt; "NodeID Sent");
-    return Ok(node_id);
-  }
-
   pub async fn handle(
     &mut self,
-    msg: &Message,
     event: TradeObserverNodeEvent,
     config: &ObserverConfig,
   ) -> ControlResult<()> {
@@ -137,18 +81,6 @@ where
       }
       TradeObserverNodeEvent::Regist(exchange) => {
         info!("Prepare for node id assignment");
-        match self.push_nodeid(exchange, msg).await {
-          Ok(node_id) => {
-            info!(
-              "Node Connected. NodeID: {}, Exchange: {}",
-              node_id,
-              exchange.as_str_name()
-            );
-          }
-          Err(e) => {
-            error!(error = as_error!(e); "NodeID assignment failed");
-          }
-        }
         let node_count = self
           .type_kvs
           .get_nodes_by_exchange(exchange)
@@ -189,14 +121,16 @@ where
             .await;
         }
       }
-      TradeObserverNodeEvent::Unregist(node_id) => {
-        let remover = NodeRemover::new(
-          self.node_kvs.clone(),
-          self.type_kvs.clone(),
-          self.control_event.clone(),
-          self.db.clone(),
-        );
-        remover.handle(node_id).await?;
+      TradeObserverNodeEvent::Unregist(exchange, symbols) => {
+        let publish_defer = symbols.into_iter().map(|symbol| {
+          self
+            .control_event
+            .publish(TradeObserverControlEvent::SymbolAdd(
+              exchange,
+              symbol.clone(),
+            ))
+        });
+        let _ = try_join_all(publish_defer).await?;
       }
     }
     return Ok(());

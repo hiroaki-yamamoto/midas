@@ -8,8 +8,8 @@ use ::kvs::traits::last_checked::{FindBefore, Get, ListOp, Remove};
 use ::kvs::Connection;
 use ::subscribe::nats::Client as Nats;
 
-use ::entities::TradeObserverControlEvent;
 use ::errors::UnknownExchangeError;
+use ::observers::entities::TradeObserverControlEvent;
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;

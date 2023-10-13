@@ -3,8 +3,7 @@ mod errors;
 use ::cookie::time::Duration as TimeDuration;
 use ::cookie::CookieBuilder;
 use ::hyper::header::SET_COOKIE;
-use ::rand::distributions::Alphanumeric;
-use ::rand::{thread_rng, Rng};
+use ::random::generate_random_txt;
 use ::warp::http::Method;
 use ::warp::reply;
 use ::warp::{Filter, Rejection, Reply};
@@ -119,8 +118,7 @@ impl CSRF {
     let cookie_name = self.opt.cookie_name;
     return filter.and(::warp::cookie::optional(&cookie_name)).map(
       move |resp: Resp, req_cookie: Option<String>| {
-        let value: Vec<u8> =
-          thread_rng().sample_iter(&Alphanumeric).take(50).collect();
+        let value: Vec<u8> = generate_random_txt(50).into();
         let cookie = CookieBuilder::new(
           cookie_name,
           String::from_utf8_lossy(value.as_ref()),

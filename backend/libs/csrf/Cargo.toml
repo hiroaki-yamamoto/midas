@@ -7,9 +7,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+random = { path = "../random" }
+
 cookie = "0.17.0"
 hyper = "0.14.24"
-rand = "0.8.5"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.93"
 

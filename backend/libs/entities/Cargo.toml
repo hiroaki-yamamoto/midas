@@ -24,9 +24,3 @@ mongodb = { version = "2.4.0", default-features = false, features = [
 chrono = { version = "0.4.23", features = ["serde"] }
 rug = { version = "1.22.0", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.0", features = ["force-cross"] }
-uuid = { version = "1.4.1", features = [
-  "v4",
-  "macro-diagnostics",
-  "serde",
-  "fast-rng",
-] }

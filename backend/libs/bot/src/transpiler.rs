@@ -1,6 +1,4 @@
-use ::rand::distributions::Alphanumeric;
-use ::rand::thread_rng;
-use ::rand::Rng;
+use ::random::generate_random_txt;
 use ::reqwest::header;
 use ::reqwest::Client;
 
@@ -19,11 +17,7 @@ impl Transpiler {
   }
 
   pub async fn transpile(&self, bot: &Bot) -> HTTPResult<Bot> {
-    let token: String = thread_rng()
-      .sample_iter(&Alphanumeric)
-      .take(32)
-      .map(char::from)
-      .collect();
+    let token: String = generate_random_txt(32);
     let resp = self
       .cli
       .post(self.location.to_owned())

@@ -1,9 +1,9 @@
 use ::futures::future::try_join_all;
 use ::futures::StreamExt;
 
-use ::entities::TradeObserverControlEvent;
 use ::kvs::redis::{Commands, RedisResult};
 use ::kvs::traits::last_checked::ListOp;
+use ::observers::entities::TradeObserverControlEvent;
 use ::observers::kvs::{NodeFilter, ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;

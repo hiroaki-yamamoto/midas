@@ -38,24 +38,7 @@ pub enum ConsumerError {
   DecodeError(#[source] MsgPackDecErr),
 }
 
-#[derive(Debug, Error)]
-pub enum RequestError {
-  #[error(display = "Nats Publish error: {}", _0)]
-  RequestError(#[source] JSPublishError),
-  #[error(display = "Consumer Error: {}", _0)]
-  ConsumerError(#[source] ConsumerError),
-  #[error(display = "Stream Error: {}", _0)]
-  StreamErrror(#[source] StreamError),
-  #[error(display = "Msgpack decode error: {}", _0)]
-  DecodeError(#[source] MsgPackDecErr),
-  #[error(display = "Msgpack encode error: {}", _0)]
-  EncodeError(#[source] MsgPackEncErr),
-  #[error(display = "No Response")]
-  NoResponse,
-}
-
 pub type CreateStreamResult<T> = Result<T, CreateStreamError>;
 pub type ConsumerResult<T> = Result<T, ConsumerError>;
 pub type PublishResult<T> = Result<T, PublishError>;
-pub type RequestResult<T> = Result<T, RequestError>;
 pub type RespondResult<T> = Result<T, RespondError>;

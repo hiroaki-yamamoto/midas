@@ -4,17 +4,13 @@ use ::std::borrow::Borrow;
 
 use ::futures::stream::{BoxStream, StreamExt};
 use ::log::warn;
-use ::rand::distributions::Alphanumeric;
-use ::rand::{thread_rng, Rng};
 use ::rmp_serde::{
   encode::Error as EncodeErr, from_slice as from_msgpack, to_vec as to_msgpack,
 };
 use ::serde::de::DeserializeOwned;
 use ::serde::ser::Serialize;
 
-use ::errors::{
-  ConsumerResult, CreateStreamResult, PublishResult, RequestResult,
-};
+use ::errors::{ConsumerResult, CreateStreamResult, PublishResult};
 
 use crate::natsJS::consumer::{
   pull::Config as PullSubscribeConfig, AckPolicy, Consumer, DeliverPolicy,
@@ -22,7 +18,6 @@ use crate::natsJS::consumer::{
 use crate::natsJS::stream::{Config as StreamConfig, Stream as NatsJS};
 
 use crate::nats::Client;
-use crate::nats::HeaderMap;
 use crate::natsJS::context::{Context, PublishAckFuture};
 use crate::natsJS::message::Message;
 
@@ -78,39 +73,6 @@ where
     let msg = Self::serialize(entity.borrow())?;
     let res = self.get_ctx().publish(self.get_subject().into(), msg).await;
     return Ok(res?);
-  }
-
-  async fn request<R>(
-    &self,
-    entity: impl Borrow<T> + Send + Sync,
-  ) -> RequestResult<BoxStream<(R, Message)>>
-  where
-    R: DeserializeOwned + Send + 'life0,
-  {
-    let msg = Self::serialize(entity.borrow())?;
-    let respond_id: String = thread_rng()
-      .sample_iter(&Alphanumeric)
-      .take(128)
-      .map(char::from)
-      .collect();
-    let respond_suffix = format!("reply-{}", respond_id);
-    let respond_subject = format!("{}-{}", self.get_subject(), respond_suffix);
-
-    let mut header = HeaderMap::new();
-    header.insert("midas-respond-subject", respond_subject.as_str());
-
-    let subscriber = self
-      .raw_pull_subscribe(&respond_subject, Some(&respond_subject))
-      .await?;
-    ::log::debug!(consumer_id = respond_id; "Subscriber created.");
-    ::log::debug!(respond_subject = respond_subject; "Prepare to create a request.");
-    let _ = self
-      .get_ctx()
-      .publish_with_headers(self.get_subject().into(), header, msg)
-      .await?
-      .await?;
-    ::log::debug!("Done");
-    return Ok(subscriber);
   }
 
   async fn raw_pull_subscribe<R>(

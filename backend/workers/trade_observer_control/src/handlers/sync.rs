@@ -5,9 +5,9 @@ use ::futures::StreamExt;
 use ::log::info;
 use ::mongodb::Database;
 
-use ::entities::TradeObserverControlEvent as Event;
 use ::kvs::redis::Commands;
 use ::kvs::Connection as KVSConnection;
+use ::observers::entities::TradeObserverControlEvent as Event;
 use ::observers::kvs::NodeFilter;
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
@@ -43,20 +43,6 @@ where
       type_kvs: ONEXTypeKVS::new(cmd.clone().into()),
       publisher: NodeControlEventPubSub::new(nats).await?,
     });
-  }
-
-  pub fn from_raw(
-    db: Database,
-    kvs: ObserverNodeKVS<T>,
-    type_kvs: ONEXTypeKVS<T>,
-    publisher: NodeControlEventPubSub,
-  ) -> Self {
-    return Self {
-      db,
-      kvs,
-      type_kvs,
-      publisher,
-    };
   }
 
   pub async fn get_symbol_diff(

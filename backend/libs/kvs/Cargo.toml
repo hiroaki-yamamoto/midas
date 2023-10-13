@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 errors = { path = "../errors" }
 types = { path = "../types" }
+random = { path = "../random" }
 
 redis = "0.23.1"
 serde = "1.0.185"
@@ -20,5 +21,4 @@ tokio = { version = "1.30.0", features = [
   "sync",
 ] }
 futures = "0.3.28"
-rand = "0.8.5"
 chrono = "0.4.28"
