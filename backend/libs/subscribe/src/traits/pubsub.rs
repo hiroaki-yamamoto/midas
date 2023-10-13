@@ -10,9 +10,7 @@ use ::rmp_serde::{
 use ::serde::de::DeserializeOwned;
 use ::serde::ser::Serialize;
 
-use ::errors::{
-  ConsumerResult, CreateStreamResult, PublishResult, RequestResult,
-};
+use ::errors::{ConsumerResult, CreateStreamResult, PublishResult};
 
 use crate::natsJS::consumer::{
   pull::Config as PullSubscribeConfig, AckPolicy, Consumer, DeliverPolicy,

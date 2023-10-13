@@ -14,10 +14,7 @@ use ::tokio::signal::unix::Signal;
 use ::tokio::sync::{watch, Mutex, RwLock};
 use ::tokio::time::interval;
 
-use ::entities::{
-  BookTicker as CommonBookTicker, TradeObserverControlEvent,
-  TradeObserverNodeEvent,
-};
+use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{CreateStreamResult, ObserverError, ObserverResult};
 use ::kvs::redis::Commands as RedisCommands;
 use ::kvs::traits::last_checked::ListOp;
@@ -26,8 +23,10 @@ use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 
+use crate::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 use crate::kvs::ObserverNodeKVS;
 use crate::pubsub::{NodeControlEventPubSub, NodeEventPubSub};
+use crate::services::NodeIDManager;
 use crate::traits::{
   TradeObserver as TradeObserverTrait, TradeSubscriber as TradeSubscriberTrait,
 };
@@ -50,6 +49,7 @@ where
   symbols_to_del: Mutex<Vec<String>>,
   signal_tx: watch::Sender<bool>,
   signal_rx: watch::Receiver<bool>,
+  node_id_manager: NodeIDManager<T>,
 }
 
 impl<T> TradeObserver<T>
@@ -64,6 +64,7 @@ where
     let node_event = NodeEventPubSub::new(broker).await?;
     let (signal_tx, signal_rx) = watch::channel::<bool>(false);
     let trade_handler = BookTickerHandler::new(broker).await?;
+    let node_id_manager = NodeIDManager::new(redis_cmd.clone().into());
 
     let kvs = ObserverNodeKVS::new(redis_cmd.into());
     let me = Self {
@@ -76,6 +77,7 @@ where
       signal_rx,
       symbols_to_add: Mutex::new(Vec::new()),
       symbols_to_del: Mutex::new(Vec::new()),
+      node_id_manager,
     };
     return Ok(me);
   }
@@ -222,7 +224,16 @@ where
   }
 
   async fn request_node_id(&self) -> ObserverResult<()> {
-    unimplemented!("Unimplemented request_node_id");
+    let node_id = self.node_id_manager.register(Exchanges::Binance).await?;
+    {
+      *self.node_id.write().await = Some(node_id.clone());
+    };
+    info!(node_id = node_id; "Registered node id");
+    let _ = self
+      .node_event
+      .publish(TradeObserverNodeEvent::Regist(Exchanges::Binance))
+      .await?;
+    return Ok(());
   }
 
   async fn ping(&self) -> ObserverResult<()> {
@@ -270,13 +281,13 @@ where
         return Ok::<(), ObserverError>(());
       })
       .boxed();
+    self.request_node_id().await?;
     let handle_trade = self.trade_handler.start(self.signal_rx.clone());
 
     if let Err(e) = try_join_all([
       signal_defer,
       handle_trade.boxed(),
       self.ping().boxed(),
-      self.request_node_id().boxed(),
       self.handle_control_event().boxed(),
       self.handle_subscribe().boxed(),
       self.handle_unsubscribe().boxed(),

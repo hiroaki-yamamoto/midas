@@ -5,10 +5,10 @@ use ::futures::join;
 use ::mongodb::Database;
 use ::uuid::Uuid;
 
-use ::entities::TradeObserverControlEvent;
 use ::errors::{KVSResult, UnknownExchangeError};
 use ::kvs::redis::Commands;
 use ::kvs::traits::last_checked::{Get, ListOp, Remove};
+use ::observers::entities::TradeObserverControlEvent;
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;

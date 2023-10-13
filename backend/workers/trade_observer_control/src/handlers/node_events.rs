@@ -5,11 +5,13 @@ use ::futures::stream::StreamExt;
 use ::uuid::Uuid;
 
 use ::config::{Database, ObserverConfig};
-use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 use ::kvs::redis::Commands;
 use ::kvs::traits::normal::{Expiration, Lock, Set};
 use ::kvs::{Connection, WriteOption};
 use ::log::{as_error, error, info};
+use ::observers::entities::{
+  TradeObserverControlEvent, TradeObserverNodeEvent,
+};
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;

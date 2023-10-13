@@ -5,9 +5,9 @@ use ::futures::StreamExt;
 use ::log::info;
 use ::mongodb::Database;
 
-use ::entities::TradeObserverControlEvent as Event;
 use ::kvs::redis::Commands;
 use ::kvs::Connection as KVSConnection;
+use ::observers::entities::TradeObserverControlEvent as Event;
 use ::observers::kvs::NodeFilter;
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;

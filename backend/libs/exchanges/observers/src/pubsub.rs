@@ -1,4 +1,4 @@
-use ::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
+use crate::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 
 use ::subscribe::pubsub;
 

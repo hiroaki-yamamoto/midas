@@ -4,7 +4,7 @@ use ::tokio::sync::mpsc::error::SendError;
 use ::tokio::sync::oneshot::error::RecvError;
 
 use crate::kvs::KVSError;
-use crate::pubsub::{ConsumerError, RequestError};
+use crate::pubsub::{ConsumerError, PublishError};
 use crate::unknown::UnknownExchangeError;
 use crate::websocket::{WebsocketInitError, WebsocketSinkError};
 
@@ -22,8 +22,8 @@ pub enum ObserverError {
   NatsCreateStreamError(#[source] NatsCreateStreamError),
   #[error(display = "NATS consumer error: {}", _0)]
   ConsumerError(#[source] ConsumerError),
-  #[error(display = "NATS request error: {}", _0)]
-  PublishError(#[source] RequestError),
+  #[error(display = "NATS publish error: {}", _0)]
+  PublishError(#[source] PublishError),
   #[error(display = "KVS Error: {}", _0)]
   KVSError(#[source] KVSError),
   #[error(display = "Unknown Exchange: {}", _0)]

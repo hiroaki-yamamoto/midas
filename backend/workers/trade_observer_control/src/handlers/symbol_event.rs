@@ -1,7 +1,7 @@
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 
-use ::entities::TradeObserverControlEvent;
+use ::observers::entities::TradeObserverControlEvent;
 use ::observers::pubsub::NodeControlEventPubSub;
 use ::symbols::entities::SymbolEvent;
 
