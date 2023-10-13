@@ -1,28 +1,24 @@
 use ::std::time::Duration;
 
-use ::futures::future::try_join;
+use ::futures::future::{try_join, try_join_all};
 use ::futures::stream::StreamExt;
-use ::uuid::Uuid;
 
 use ::config::{Database, ObserverConfig};
 use ::kvs::redis::Commands;
-use ::kvs::traits::normal::{Expiration, Lock, Set};
-use ::kvs::{Connection, WriteOption};
-use ::log::{as_error, error, info};
+use ::kvs::traits::normal::{Expiration, Lock};
+use ::kvs::Connection;
+use ::log::{error, info};
 use ::observers::entities::{
   TradeObserverControlEvent, TradeObserverNodeEvent,
 };
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
-use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
-use ::subscribe::natsJS::message::Message;
-use ::tokio::time::sleep;
+use ::subscribe::traits::PubSub;
 
 use crate::balancer::SymbolBalancer;
 use crate::dlock::InitLock;
 use crate::errors::Result as ControlResult;
-use crate::remover::NodeRemover;
 
 use super::SyncHandler;
 
@@ -68,7 +64,6 @@ where
 
   pub async fn handle(
     &mut self,
-    msg: &Message,
     event: TradeObserverNodeEvent,
     config: &ObserverConfig,
   ) -> ControlResult<()> {
@@ -127,13 +122,15 @@ where
         }
       }
       TradeObserverNodeEvent::Unregist(exchange, symbols) => {
-        let remover = NodeRemover::new(
-          self.node_kvs.clone(),
-          self.type_kvs.clone(),
-          self.control_event.clone(),
-          self.db.clone(),
-        );
-        remover.handle(node_id).await?;
+        let publish_defer = symbols.into_iter().map(|symbol| {
+          self
+            .control_event
+            .publish(TradeObserverControlEvent::SymbolAdd(
+              exchange,
+              symbol.clone(),
+            ))
+        });
+        let _ = try_join_all(publish_defer).await?;
       }
     }
     return Ok(());

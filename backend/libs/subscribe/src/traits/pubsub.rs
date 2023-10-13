@@ -18,7 +18,6 @@ use crate::natsJS::consumer::{
 use crate::natsJS::stream::{Config as StreamConfig, Stream as NatsJS};
 
 use crate::nats::Client;
-use crate::nats::HeaderMap;
 use crate::natsJS::context::{Context, PublishAckFuture};
 use crate::natsJS::message::Message;
 

@@ -45,20 +45,6 @@ where
     });
   }
 
-  pub fn from_raw(
-    db: Database,
-    kvs: ObserverNodeKVS<T>,
-    type_kvs: ONEXTypeKVS<T>,
-    publisher: NodeControlEventPubSub,
-  ) -> Self {
-    return Self {
-      db,
-      kvs,
-      type_kvs,
-      publisher,
-    };
-  }
-
   pub async fn get_symbol_diff(
     &mut self,
     exchange: &Exchanges,

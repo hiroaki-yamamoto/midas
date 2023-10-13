@@ -2,7 +2,6 @@ mod balancer;
 mod dlock;
 mod errors;
 mod handlers;
-mod remover;
 
 use ::std::time::Duration;
 
@@ -47,8 +46,8 @@ async fn main() {
     let mut auto_unregist_check_interval = interval(rot_dur);
     loop {
       select! {
-        Some((event, msg)) = node_event.next() => {
-          if let Err(e) = node_event_handler.handle(&msg, event, &cfg.observer).await {
+        Some((event, _)) = node_event.next() => {
+          if let Err(e) = node_event_handler.handle(event, &cfg.observer).await {
             error!("Error handling node event: {}", e);
             continue;
           }
