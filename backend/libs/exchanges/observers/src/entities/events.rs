@@ -5,8 +5,16 @@ use ::symbols::entities::SymbolEvent;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TradeObserverNodeEvent {
+  /// Regist notifies a node is registered/
   Regist(Exchanges),
-  Unregist(String),
+  /// Unregist notifies a node is unregistered.
+  ///
+  /// ### Values
+  ///
+  /// Exchanges: the exchanges the node was registered.
+  ///
+  /// Vec<String>: the symbols the node was registered.
+  Unregist(Exchanges, Vec<String>),
   Ping(String),
 }
 

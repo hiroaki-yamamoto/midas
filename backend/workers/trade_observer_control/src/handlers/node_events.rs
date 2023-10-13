@@ -126,7 +126,7 @@ where
             .await;
         }
       }
-      TradeObserverNodeEvent::Unregist(node_id) => {
+      TradeObserverNodeEvent::Unregist(exchange, symbols) => {
         let remover = NodeRemover::new(
           self.node_kvs.clone(),
           self.type_kvs.clone(),

@@ -271,9 +271,11 @@ where
       .recv()
       .then(|_| async {
         if let Some(node_id) = self.get_node_id().await {
+          let (exchange, symbols) =
+            self.node_id_manager.unregist(&node_id).await?;
           let _ = self
             .node_event
-            .publish(TradeObserverNodeEvent::Unregist(node_id.clone()))
+            .publish(TradeObserverNodeEvent::Unregist(exchange, symbols))
             .await;
           info!("Unregistered node id: {}", node_id);
         }
