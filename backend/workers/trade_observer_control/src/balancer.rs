@@ -1,7 +1,8 @@
 use ::futures::future::try_join_all;
 use ::futures::StreamExt;
 
-use ::kvs::redis::{Commands, RedisResult};
+use ::errors::KVSResult;
+use ::kvs::redis::Commands;
 use ::kvs::traits::last_checked::ListOp;
 use ::observers::entities::TradeObserverControlEvent;
 use ::observers::kvs::{NodeFilter, ONEXTypeKVS, ObserverNodeKVS};
@@ -43,7 +44,7 @@ where
     &self,
     exchange: Exchanges,
     num_added_nodes: usize,
-  ) -> RedisResult<usize> {
+  ) -> KVSResult<usize> {
     let nodes = self
       .exchange_type_kvs
       .get_nodes_by_exchange(exchange)

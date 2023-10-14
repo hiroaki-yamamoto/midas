@@ -13,14 +13,13 @@ use ::observers::entities::{
 };
 use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::observers::pubsub::NodeControlEventPubSub;
+use ::observers::services::SymbolSyncService as SyncHandler;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::traits::PubSub;
 
 use crate::balancer::SymbolBalancer;
 use crate::dlock::InitLock;
 use crate::errors::Result as ControlResult;
-
-use super::SyncHandler;
 
 pub struct FromNodeEventHandler<C>
 where

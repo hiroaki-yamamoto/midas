@@ -1,5 +1,6 @@
 use ::async_nats::jetstream::context::CreateStreamError as NatsCreateStreamError;
 use ::err_derive::Error;
+use ::mongodb::error::Error as DBErr;
 use ::tokio::sync::mpsc::error::SendError;
 use ::tokio::sync::oneshot::error::RecvError;
 
@@ -10,6 +11,8 @@ use crate::websocket::{WebsocketInitError, WebsocketSinkError};
 
 #[derive(Debug, Error)]
 pub enum ObserverError {
+  #[error(display = "DB Error: {}", _0)]
+  DB(#[source] DBErr),
   #[error(display = "(Un)Subscribe Event Signaling Send Error: {}", _0)]
   SubscribeSendError(#[source] SendError<Vec<String>>),
   #[error(display = "(Un)subscribe Event Signaling Receive Error: {}", _0)]

@@ -5,20 +5,20 @@ use ::futures::StreamExt;
 use ::log::info;
 use ::mongodb::Database;
 
+use crate::entities::TradeObserverControlEvent as Event;
+use crate::kvs::NodeFilter;
+use crate::kvs::{ONEXTypeKVS, ObserverNodeKVS};
+use crate::pubsub::NodeControlEventPubSub;
 use ::kvs::redis::Commands;
 use ::kvs::Connection as KVSConnection;
-use ::observers::entities::TradeObserverControlEvent as Event;
-use ::observers::kvs::NodeFilter;
-use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
-use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 use ::symbols::get_reader;
 
-use crate::errors::Result as ObserverControlResult;
+use ::errors::ObserverResult;
 
-pub struct SyncHandler<T>
+pub struct SymbolSyncService<T>
 where
   T: Commands + Send + Sync,
 {
@@ -28,7 +28,7 @@ where
   publisher: NodeControlEventPubSub,
 }
 
-impl<T> SyncHandler<T>
+impl<T> SymbolSyncService<T>
 where
   T: Commands + Send + Sync,
 {
@@ -36,7 +36,7 @@ where
     db: &Database,
     cmd: KVSConnection<T>,
     nats: &Nats,
-  ) -> ObserverControlResult<Self> {
+  ) -> ObserverResult<Self> {
     return Ok(Self {
       db: db.clone(),
       kvs: ObserverNodeKVS::new(cmd.clone().into()),
@@ -48,7 +48,7 @@ where
   pub async fn get_symbol_diff(
     &mut self,
     exchange: &Exchanges,
-  ) -> ObserverControlResult<Vec<Event>> {
+  ) -> ObserverResult<Vec<Event>> {
     let symbol_reader = get_reader(&self.db, exchange.clone()).await; // TODO: fix this
     let trading_symbols_list = symbol_reader.list_trading().await?;
     info!("Fetching symbols from DB");
@@ -74,10 +74,7 @@ where
     return Ok(merged);
   }
 
-  pub async fn handle(
-    &mut self,
-    exchange: &Exchanges,
-  ) -> ObserverControlResult<()> {
+  pub async fn handle(&mut self, exchange: &Exchanges) -> ObserverResult<()> {
     let publish_defer =
       self
         .get_symbol_diff(exchange)
