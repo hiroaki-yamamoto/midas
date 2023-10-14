@@ -11,7 +11,7 @@ use ::futures::FutureExt;
 use ::log::{as_error, as_serde, info, warn};
 use ::tokio::select;
 use ::tokio::signal::unix::Signal;
-use ::tokio::sync::{watch, Mutex, RwLock};
+use ::tokio::sync::{oneshot, watch, Mutex, RwLock};
 use ::tokio::time::interval;
 
 use ::config::Database;
@@ -94,11 +94,15 @@ where
     return node_id.clone();
   }
 
-  async fn handle_control_event(&self) -> ObserverResult<()> {
+  async fn handle_control_event(
+    &self,
+    ready: oneshot::Sender<()>,
+  ) -> ObserverResult<()> {
     let control_event = self.control_event.clone();
     let mut control_event =
       control_event.pull_subscribe("biannceTradeObserver").await?;
     let mut signal = self.signal_rx.clone();
+    let _ = ready.send(());
     loop {
       select! {
         _ = signal.changed() => {
@@ -230,11 +234,15 @@ where
     return Ok(());
   }
 
-  async fn request_node_id(&self) -> ObserverResult<()> {
+  async fn request_node_id(
+    &self,
+    ready: oneshot::Receiver<()>,
+  ) -> ObserverResult<()> {
     let node_id = self.node_id_manager.register(Exchanges::Binance).await?;
     {
       *self.node_id.write().await = Some(node_id.clone());
     };
+    let _ = ready.await?;
     info!(node_id = node_id; "Registered node id");
     return self.initer.init(Exchanges::Binance).await;
   }
@@ -269,6 +277,7 @@ where
   T: RedisCommands + Send + Sync + 'static,
 {
   async fn start(&self, signal: Box<Signal>) -> ObserverResult<()> {
+    let (ready_evloop_tx, ready_evloop_rx) = oneshot::channel();
     let mut signal = signal;
     let signal_defer = signal
       .recv()
@@ -286,14 +295,14 @@ where
         return Ok::<(), ObserverError>(());
       })
       .boxed();
-    self.request_node_id().await?;
     let handle_trade = self.trade_handler.start(self.signal_rx.clone());
 
     if let Err(e) = try_join_all([
       signal_defer,
       handle_trade.boxed(),
       self.ping().boxed(),
-      self.handle_control_event().boxed(),
+      self.request_node_id(ready_evloop_rx).boxed(),
+      self.handle_control_event(ready_evloop_tx).boxed(),
       self.handle_subscribe().boxed(),
       self.handle_unsubscribe().boxed(),
     ])
