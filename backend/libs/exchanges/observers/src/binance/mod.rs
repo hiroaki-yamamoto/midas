@@ -15,7 +15,6 @@ use ::tokio::sync::{oneshot, watch, Mutex, RwLock};
 use ::tokio::time::interval;
 
 use ::config::Database;
-use ::config::ObserverConfig;
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{CreateStreamResult, ObserverError, ObserverResult};
 use ::kvs::redis::Commands as RedisCommands;
@@ -60,7 +59,6 @@ where
   T: RedisCommands + Send + Sync,
 {
   pub async fn new(
-    cfg: ObserverConfig,
     broker: &Nats,
     redis_cmd: Connection<T>,
     db: Database,
@@ -70,7 +68,7 @@ where
     let (signal_tx, signal_rx) = watch::channel::<bool>(false);
     let trade_handler = BookTickerHandler::new(broker).await?;
     let node_id_manager = NodeIDManager::new(redis_cmd.clone().into());
-    let initer = Init::new(cfg, redis_cmd.clone().into(), db, broker).await?;
+    let initer = Init::new(redis_cmd.clone().into(), db, broker).await?;
 
     let kvs = ObserverNodeKVS::new(redis_cmd.into());
     let me = Self {
@@ -244,7 +242,8 @@ where
     };
     let _ = ready.await?;
     info!(node_id = node_id; "Registered node id");
-    return self.initer.init(Exchanges::Binance).await;
+    let _ = self.initer.init(Exchanges::Binance).await;
+    return Ok(());
   }
 
   async fn ping(&self) -> ObserverResult<()> {

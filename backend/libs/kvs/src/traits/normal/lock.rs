@@ -26,7 +26,7 @@ where
   ) -> DLockResult<Fr>
   where
     Ft: Future<Output = Fr> + Send,
-    Fr: Send + Sync,
+    Fr: Send,
   {
     let (refresh_tx, mut refresh_rx) = channel::<()>(1);
     let channel_name = self.channel_name(&format!("{}:lock", key));

@@ -1,30 +1,29 @@
-use ::futures::StreamExt;
-use ::log::info;
+use ::futures::future::try_join_all;
 
 use ::config::Database;
-use ::config::ObserverConfig;
-use ::errors::ObserverResult;
+use ::errors::{ObserverError, ObserverResult};
 use ::kvs::redis::Commands;
 use ::kvs::traits::normal::Lock;
 use ::kvs::Connection;
+use ::log::{as_serde, info};
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
+use ::subscribe::PubSub;
 
 use crate::kvs::InitLock;
-use crate::kvs::ONEXTypeKVS;
+use crate::pubsub::NodeControlEventPubSub;
 
+use super::NodeDIffTaker;
 use super::ObservationBalancer;
-use super::SymbolSyncService;
 
 pub struct Init<C>
 where
   C: Commands + Sync + Send,
 {
-  type_kvs: ONEXTypeKVS<C>,
-  init_lock: InitLock<C>,
-  cfg: ObserverConfig,
-  sync: SymbolSyncService<C>,
+  diff_taker: NodeDIffTaker<C>,
   balancer: ObservationBalancer<C>,
+  control_pubsub: NodeControlEventPubSub,
+  dlock: InitLock<C>,
 }
 
 impl<C> Init<C>
@@ -32,55 +31,39 @@ where
   C: Commands + Sync + Send,
 {
   pub async fn new(
-    cfg: ObserverConfig,
     kvs: Connection<C>,
     db: Database,
     nats: &Nats,
   ) -> ObserverResult<Self> {
-    let type_kvs = ONEXTypeKVS::new(kvs.clone().into());
-    let init_lock = InitLock::new(kvs.clone().into());
-    let sync = SymbolSyncService::new(&db, kvs.clone().into(), nats).await?;
-    let balancer =
-      ObservationBalancer::new(kvs.clone().into(), nats.clone()).await?;
+    let diff_taker = NodeDIffTaker::new(&db, kvs.clone().into()).await?;
+    let balancer = ObservationBalancer::new(kvs.clone().into()).await?;
+    let control_pubsub = NodeControlEventPubSub::new(nats).await?;
+    let dlock = InitLock::new(kvs.into());
+
     return Ok(Self {
-      cfg,
-      type_kvs,
-      init_lock,
-      sync,
+      diff_taker,
       balancer,
+      control_pubsub,
+      dlock,
     });
   }
 
-  async fn count_nodes(&self, exchange: Exchanges) -> ObserverResult<usize> {
-    return Ok(
-      self
-        .type_kvs
-        .get_nodes_by_exchange(exchange)
-        .await?
-        .count()
-        .await,
-    );
-  }
-
   pub async fn init(&self, exchange: Exchanges) -> ObserverResult<()> {
-    let node_count = self.count_nodes(exchange).await?;
-    let min_node_init = self.cfg.min_node_init(exchange);
-    info!(
-      node_count = node_count,
-      min_node_init = min_node_init;
-      "Retrive number of nodes"
-    );
-    if node_count == min_node_init {
-      let _ = self
-        .init_lock
-        .lock("observer_control_node_event_handler", || async {
-          info!("Init Triggered");
-          return self.sync.handle(&exchange).await;
-        })
-        .await?;
-    } else if node_count > min_node_init {
-      let _ = self.balancer.broadcast_equalization(exchange, 0).await;
-    }
+    let _ = self
+      .dlock
+      .lock(exchange.as_str_name(), || async move {
+        let diff = self.diff_taker.get_symbol_diff(&exchange).await?;
+        let balanced = self.balancer.get_event_to_balancing(exchange).await?;
+        let controls_to_publish = &diff | &balanced;
+        info!(events = as_serde!(controls_to_publish); "Publishing symbol control events.");
+        let defer: Vec<_> = controls_to_publish
+          .into_iter()
+          .map(|event| self.control_pubsub.publish(event))
+          .collect();
+        let _ = try_join_all(defer).await?;
+        return Ok::<(), ObserverError>(());
+      })
+      .await?;
     return Ok(());
   }
 }

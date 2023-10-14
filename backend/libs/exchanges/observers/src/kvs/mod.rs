@@ -13,6 +13,7 @@ pub use self::filter::NodeFilter;
 
 last_check_kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");
 last_check_kvs!(pub, ONEXTypeKVS, String, "observer_node_exchange_type:{}");
+
 kvs!(pub, InitLock, String, "init_lock:{}");
 
 impl<T> ONEXTypeKVS<T>

@@ -92,7 +92,7 @@ impl BookTickerHandler {
     {
       let socket = WebSocket::new(&[WS_ENDPOINT.to_string()]).await?;
       sockets.insert(sockets_size, socket);
-      current.socket = sockets_size - 1;
+      current.socket = sockets_size;
       current.param = 0;
     }
     return Ok(current.socket);

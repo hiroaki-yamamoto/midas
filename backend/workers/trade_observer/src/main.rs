@@ -28,7 +28,7 @@ async fn main() {
   let db = config.db().await.unwrap();
   let exchange: Box<dyn TradeObserverTrait> = match cmd_args.exchange {
     Exchanges::Binance => Box::new(
-      binance::TradeObserver::new(config.observer, &broker, redis, db)
+      binance::TradeObserver::new(&broker, redis, db)
         .await
         .unwrap(),
     ),

@@ -1,9 +1,9 @@
 mod balancer;
 mod init;
+mod node_diff;
 mod nodeid;
-mod sync;
 
 pub use balancer::ObservationBalancer;
 pub use init::Init;
+pub use node_diff::NodeDIffTaker;
 pub use nodeid::NodeIDManager;
-pub use sync::SymbolSyncService;

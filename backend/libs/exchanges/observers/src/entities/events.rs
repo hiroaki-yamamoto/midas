@@ -18,7 +18,7 @@ pub enum TradeObserverNodeEvent {
   Ping(String),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum TradeObserverControlEvent {
   /// Triggered when the controller instructs the observer to add a symbol.
   SymbolAdd(Exchanges, String),
