@@ -77,7 +77,7 @@ where
           info!("Init Triggered");
           return self.sync.handle(&exchange).await;
         })
-        .await;
+        .await?;
     } else if node_count > min_node_init {
       let _ = self.balancer.broadcast_equalization(exchange, 0).await;
     }

@@ -51,6 +51,7 @@ where
   ) -> ControlResult<()> {
     match event {
       TradeObserverNodeEvent::Ping(node_id) => {
+        log::debug!("Ping from {}", node_id);
         try_join(
           self
             .node_kvs

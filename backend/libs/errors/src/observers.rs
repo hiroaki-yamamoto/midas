@@ -4,6 +4,7 @@ use ::mongodb::error::Error as DBErr;
 use ::tokio::sync::mpsc::error::SendError;
 use ::tokio::sync::oneshot::error::RecvError;
 
+use crate::dlock::DLockError;
 use crate::kvs::KVSError;
 use crate::pubsub::{ConsumerError, PublishError};
 use crate::unknown::UnknownExchangeError;
@@ -13,6 +14,8 @@ use crate::websocket::{WebsocketInitError, WebsocketSinkError};
 pub enum ObserverError {
   #[error(display = "DB Error: {}", _0)]
   DB(#[source] DBErr),
+  #[error(display = "DLock Error: {}", _0)]
+  DLockError(#[source] DLockError),
   #[error(display = "(Un)Subscribe Event Signaling Send Error: {}", _0)]
   SubscribeSendError(#[source] SendError<Vec<String>>),
   #[error(display = "(Un)subscribe Event Signaling Receive Error: {}", _0)]

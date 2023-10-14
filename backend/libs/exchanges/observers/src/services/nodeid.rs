@@ -1,8 +1,8 @@
 use ::std::sync::Arc;
 use ::std::time::Duration;
 
-use ::futures::future::try_join;
-use ::log::{as_error, error, info};
+use ::futures::future::{try_join_all, FutureExt};
+use ::log::{as_error, error, info, warn};
 use ::tokio::time::sleep;
 
 use ::errors::{ObserverError, UnknownExchangeError};
@@ -57,6 +57,10 @@ where
             info!(node_id = node_id.to_string(); "Node indexed");
             break;
           } else {
+            warn!(
+              node_id = node_id.to_string();
+              "Node ID already exists. Regenerating..."
+            );
             node_id = generate_random_txt(NODE_ID_TXT_SIZE);
             continue;
           }
@@ -95,10 +99,18 @@ where
     let exchange = Exchanges::from_str_name(&exchange)
       .ok_or::<ObserverError>(UnknownExchangeError::new(exchange).into())?;
     let node_id: Arc<str> = node_id.to_string().into();
-    let (_, _): (usize, usize) = try_join(
+    let _: Vec<()> = try_join_all([
       self.node_kvs.del(&[node_id.clone()]),
-      self.exchange_type_kvs.del(&[node_id]),
-    )
+      self.exchange_type_kvs.del(&[node_id.clone()]),
+      async move {
+        self
+          .exchange_type_kvs
+          .unindex_node(node_id.clone().to_string())
+          .await?;
+        Ok(())
+      }
+      .boxed(),
+    ])
     .await?;
     return Ok((exchange, symbols));
   }

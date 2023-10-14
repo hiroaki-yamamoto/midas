@@ -8,7 +8,7 @@ use ::async_trait::async_trait;
 use ::futures::future::try_join_all;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::futures::FutureExt;
-use ::log::{as_error, as_serde, info, warn};
+use ::log::{as_error, as_serde, debug, info, warn};
 use ::tokio::select;
 use ::tokio::signal::unix::Signal;
 use ::tokio::sync::{oneshot, watch, Mutex, RwLock};
@@ -260,8 +260,9 @@ where
           if let Some(node_id) = self.get_node_id().await {
             let _ = self
               .node_event
-              .publish(TradeObserverNodeEvent::Ping(node_id))
+              .publish(TradeObserverNodeEvent::Ping(node_id.clone()))
               .await;
+            debug!(node_id = node_id; "Ping sent");
           }
           continue;
         },
@@ -290,6 +291,9 @@ where
             .publish(TradeObserverNodeEvent::Unregist(exchange, symbols))
             .await;
           info!("Unregistered node id: {}", node_id);
+          {
+            *self.node_id.write().await = None;
+          };
         }
         let _ = self.signal_tx.send(true);
         return Ok::<(), ObserverError>(());

@@ -20,11 +20,19 @@ where
   T: Commands + Send + Sync,
 {
   /// Index node ids to KVS
-  pub async fn index_node(&self, nodes: String) -> KVSResult<usize> {
+  pub async fn index_node(&self, node: String) -> KVSResult<usize> {
     let channel_name = self.channel_name("node_index");
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;
-    return Ok(cmd.sadd(channel_name, nodes)?);
+    return Ok(cmd.sadd(channel_name, node)?);
+  }
+
+  /// Unindex node ids to KVS
+  pub async fn unindex_node(&self, node: String) -> KVSResult<usize> {
+    let channel_name = self.channel_name("node_index");
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
+    return Ok(cmd.srem(channel_name, node)?);
   }
 
   pub async fn get_nodes_by_exchange(
