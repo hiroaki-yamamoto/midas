@@ -46,7 +46,7 @@ where
   }
 
   pub async fn get_symbol_diff(
-    &mut self,
+    &self,
     exchange: &Exchanges,
   ) -> ObserverResult<Vec<Event>> {
     let symbol_reader = get_reader(&self.db, exchange.clone()).await; // TODO: fix this
@@ -74,7 +74,7 @@ where
     return Ok(merged);
   }
 
-  pub async fn handle(&mut self, exchange: &Exchanges) -> ObserverResult<()> {
+  pub async fn handle(&self, exchange: &Exchanges) -> ObserverResult<()> {
     let publish_defer =
       self
         .get_symbol_diff(exchange)

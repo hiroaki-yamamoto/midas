@@ -1,14 +1,17 @@
 use ::futures::future::try_join_all;
 use ::futures::StreamExt;
 
-use crate::entities::TradeObserverControlEvent;
-use crate::kvs::{NodeFilter, ONEXTypeKVS, ObserverNodeKVS};
-use crate::pubsub::NodeControlEventPubSub;
 use ::errors::{KVSResult, ObserverResult};
 use ::kvs::redis::Commands;
 use ::kvs::traits::last_checked::ListOp;
+use ::kvs::Connection;
 use ::rpc::entities::Exchanges;
+use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
+
+use crate::entities::TradeObserverControlEvent;
+use crate::kvs::{NodeFilter, ONEXTypeKVS, ObserverNodeKVS};
+use crate::pubsub::NodeControlEventPubSub;
 
 pub struct ObservationBalancer<T>
 where
@@ -24,18 +27,17 @@ impl<T> ObservationBalancer<T>
 where
   T: Commands + Send + Sync,
 {
-  pub fn new(
-    control_pubsub: &NodeControlEventPubSub,
-    node_kvs: &ObserverNodeKVS<T>,
-    exchange_type_kvs: &ONEXTypeKVS<T>,
-  ) -> Self {
-    let filter = NodeFilter::new(node_kvs, exchange_type_kvs);
-    Self {
-      control_pubsub: control_pubsub.clone(),
-      node_kvs: node_kvs.clone(),
-      exchange_type_kvs: exchange_type_kvs.clone(),
+  pub async fn new(kvs: Connection<T>, nats: Nats) -> ObserverResult<Self> {
+    let control_pubsub = NodeControlEventPubSub::new(&nats).await?;
+    let node_kvs = ObserverNodeKVS::new(kvs.clone().into());
+    let exchange_type_kvs = ONEXTypeKVS::new(kvs.clone().into());
+    let filter = NodeFilter::new(&node_kvs, &exchange_type_kvs);
+    return Ok(Self {
+      control_pubsub: control_pubsub,
+      node_kvs: node_kvs,
+      exchange_type_kvs: exchange_type_kvs,
       node_filter: filter,
-    }
+    });
   }
 
   async fn calc_num_average_symbols(

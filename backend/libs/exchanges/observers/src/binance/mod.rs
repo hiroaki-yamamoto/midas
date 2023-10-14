@@ -14,6 +14,8 @@ use ::tokio::signal::unix::Signal;
 use ::tokio::sync::{watch, Mutex, RwLock};
 use ::tokio::time::interval;
 
+use ::config::Database;
+use ::config::ObserverConfig;
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{CreateStreamResult, ObserverError, ObserverResult};
 use ::kvs::redis::Commands as RedisCommands;
@@ -26,7 +28,7 @@ use ::subscribe::PubSub;
 use crate::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
 use crate::kvs::ObserverNodeKVS;
 use crate::pubsub::{NodeControlEventPubSub, NodeEventPubSub};
-use crate::services::NodeIDManager;
+use crate::services::{Init, NodeIDManager};
 use crate::traits::{
   TradeObserver as TradeObserverTrait, TradeSubscriber as TradeSubscriberTrait,
 };
@@ -50,6 +52,7 @@ where
   signal_tx: watch::Sender<bool>,
   signal_rx: watch::Receiver<bool>,
   node_id_manager: NodeIDManager<T>,
+  initer: Init<T>,
 }
 
 impl<T> TradeObserver<T>
@@ -57,14 +60,17 @@ where
   T: RedisCommands + Send + Sync,
 {
   pub async fn new(
+    cfg: ObserverConfig,
     broker: &Nats,
     redis_cmd: Connection<T>,
+    db: Database,
   ) -> ObserverResult<Self> {
     let control_event = NodeControlEventPubSub::new(broker).await?;
     let node_event = NodeEventPubSub::new(broker).await?;
     let (signal_tx, signal_rx) = watch::channel::<bool>(false);
     let trade_handler = BookTickerHandler::new(broker).await?;
     let node_id_manager = NodeIDManager::new(redis_cmd.clone().into());
+    let initer = Init::new(cfg, redis_cmd.clone().into(), db, broker).await?;
 
     let kvs = ObserverNodeKVS::new(redis_cmd.into());
     let me = Self {
@@ -78,6 +84,7 @@ where
       symbols_to_add: Mutex::new(Vec::new()),
       symbols_to_del: Mutex::new(Vec::new()),
       node_id_manager,
+      initer,
     };
     return Ok(me);
   }
@@ -229,11 +236,7 @@ where
       *self.node_id.write().await = Some(node_id.clone());
     };
     info!(node_id = node_id; "Registered node id");
-    let _ = self
-      .node_event
-      .publish(TradeObserverNodeEvent::Regist(Exchanges::Binance))
-      .await?;
-    return Ok(());
+    return self.initer.init(Exchanges::Binance).await;
   }
 
   async fn ping(&self) -> ObserverResult<()> {
