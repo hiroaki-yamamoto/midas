@@ -1,4 +1,3 @@
-mod balancer;
 mod dlock;
 mod errors;
 mod handlers;

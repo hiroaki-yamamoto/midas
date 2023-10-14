@@ -1,18 +1,16 @@
 use ::futures::future::try_join_all;
 use ::futures::StreamExt;
 
-use ::errors::KVSResult;
+use crate::entities::TradeObserverControlEvent;
+use crate::kvs::{NodeFilter, ONEXTypeKVS, ObserverNodeKVS};
+use crate::pubsub::NodeControlEventPubSub;
+use ::errors::{KVSResult, ObserverResult};
 use ::kvs::redis::Commands;
 use ::kvs::traits::last_checked::ListOp;
-use ::observers::entities::TradeObserverControlEvent;
-use ::observers::kvs::{NodeFilter, ONEXTypeKVS, ObserverNodeKVS};
-use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
 use ::subscribe::PubSub;
 
-use crate::errors::Result as ControlResult;
-
-pub struct SymbolBalancer<T>
+pub struct ObservationBalancer<T>
 where
   T: Commands + Send + Sync,
 {
@@ -22,7 +20,7 @@ where
   node_filter: NodeFilter<T>,
 }
 
-impl<T> SymbolBalancer<T>
+impl<T> ObservationBalancer<T>
 where
   T: Commands + Send + Sync,
 {
@@ -63,7 +61,7 @@ where
     &self,
     exchange: Exchanges,
     num_added_nodes: usize,
-  ) -> ControlResult<()> {
+  ) -> ObserverResult<()> {
     let num_average_symbols = self
       .calc_num_average_symbols(exchange, num_added_nodes)
       .await?;
