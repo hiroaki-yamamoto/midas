@@ -6,67 +6,73 @@ settings:
 
 dependencies:
   '@amcharts/amcharts5':
-    specifier: ^5.1.13
+    specifier: ^5.4.11
     version: 5.4.11
   '@angular/animations':
-    specifier: ~16.2.0
+    specifier: ~16.2.9
     version: 16.2.9(@angular/core@16.2.9)
   '@angular/cdk':
-    specifier: ^16.0.0
+    specifier: ^16.2.8
     version: 16.2.8(@angular/common@16.2.9)(@angular/core@16.2.9)(rxjs@7.8.1)
   '@angular/common':
-    specifier: ~16.2.0
+    specifier: ~16.2.9
     version: 16.2.9(@angular/core@16.2.9)(rxjs@7.8.1)
   '@angular/compiler':
-    specifier: ~16.2.0
+    specifier: ~16.2.9
     version: 16.2.9(@angular/core@16.2.9)
   '@angular/core':
-    specifier: ~16.2.0
+    specifier: ~16.2.9
     version: 16.2.9(rxjs@7.8.1)(zone.js@0.14.0)
   '@angular/forms':
-    specifier: ~16.2.0
+    specifier: ~16.2.9
     version: 16.2.9(@angular/common@16.2.9)(@angular/core@16.2.9)(@angular/platform-browser@16.2.9)(rxjs@7.8.1)
   '@angular/material':
     specifier: 16.2.8
     version: 16.2.8(@angular/animations@16.2.9)(@angular/cdk@16.2.8)(@angular/common@16.2.9)(@angular/core@16.2.9)(@angular/forms@16.2.9)(@angular/platform-browser@16.2.9)(rxjs@7.8.1)
   '@angular/platform-browser':
-    specifier: ~16.2.0
+    specifier: ~16.2.9
     version: 16.2.9(@angular/animations@16.2.9)(@angular/common@16.2.9)(@angular/core@16.2.9)
   '@angular/platform-browser-dynamic':
-    specifier: ~16.2.0
+    specifier: ~16.2.9
     version: 16.2.9(@angular/common@16.2.9)(@angular/compiler@16.2.9)(@angular/core@16.2.9)(@angular/platform-browser@16.2.9)
   '@angular/router':
-    specifier: ~16.2.0
+    specifier: ~16.2.9
     version: 16.2.9(@angular/common@16.2.9)(@angular/core@16.2.9)(@angular/platform-browser@16.2.9)(rxjs@7.8.1)
   '@fortawesome/angular-fontawesome':
     specifier: ^0.13.0
     version: 0.13.0(@angular/core@16.2.9)(@fortawesome/fontawesome-svg-core@6.4.2)
+  '@fortawesome/fontawesome-common-types':
+    specifier: ^6.4.2
+    version: 6.4.2
   '@fortawesome/fontawesome-svg-core':
-    specifier: ^6.1.1
+    specifier: ^6.4.2
     version: 6.4.2
   '@fortawesome/free-brands-svg-icons':
-    specifier: ^6.1.1
+    specifier: ^6.4.2
     version: 6.4.2
   '@fortawesome/free-regular-svg-icons':
-    specifier: ^6.1.1
+    specifier: ^6.4.2
     version: 6.4.2
   '@fortawesome/free-solid-svg-icons':
-    specifier: ^6.1.1
+    specifier: ^6.4.2
     version: 6.4.2
+  '@types/amcharts':
+    specifier: ^3.21.9
+    version: 3.21.9
   google-protobuf:
-    specifier: ^3.20.0
+    specifier: ^3.21.2
     version: 3.21.2
   grpc-web:
-    specifier: ^1.3.1
+    specifier: ^1.4.2
     version: 1.4.2
   monaco-editor:
     specifier: ^0.44.0
     version: 0.44.0
   rxjs:
-    specifier: ~7.8.0
+    specifier: ~7.8.1
     version: 7.8.1
   tslib:
-    specifier: ^2.3.1
+    specifier: ^2.6.2
     version: 2.6.2
   zone.js:
     specifier: ~0.14.0
@@ -74,7 +80,7 @@ dependencies:
 
 devDependencies:
   '@angular-devkit/build-angular':
-    specifier: ~16.2.0
+    specifier: ~16.2.6
     version: 16.2.6(@angular/compiler-cli@16.2.9)(@angular/localize@16.2.9)(@types/node@18.18.5)(karma@6.4.2)(typescript@4.9.5)
   '@angular-eslint/builder':
     specifier: 16.2.0
@@ -86,16 +92,16 @@ devDependencies:
     specifier: 16.2.0
     version: 16.2.0(eslint@8.51.0)(typescript@4.9.5)
   '@angular-eslint/schematics':
-    specifier: ^16.0.0
+    specifier: ^16.2.0
     version: 16.2.0(@angular/cli@16.2.6)(eslint@8.51.0)(typescript@4.9.5)
   '@angular-eslint/template-parser':
     specifier: 16.2.0
     version: 16.2.0(eslint@8.51.0)(typescript@4.9.5)
   '@angular/cli':
-    specifier: ~16.2.0
+    specifier: ~16.2.6
     version: 16.2.6
   '@angular/compiler-cli':
-    specifier: ~16.2.0
+    specifier: ~16.2.9
     version: 16.2.9(@angular/compiler@16.2.9)(typescript@4.9.5)
   '@angular/localize':
     specifier: 16.2.9
@@ -103,17 +109,35 @@ devDependencies:
   '@cypress/schematic':
     specifier: 2.5.1
     version: 2.5.1(@angular/cli@16.2.6)(@angular/core@16.2.9)
+  '@types/d3-chord':
+    specifier: ^3.0.4
+    version: 3.0.4
+  '@types/d3-force':
+    specifier: ^3.0.6
+    version: 3.0.6
+  '@types/d3-geo':
+    specifier: ^3.0.5
+    version: 3.0.5
+  '@types/d3-hierarchy':
+    specifier: ^3.1.4
+    version: 3.1.4
+  '@types/d3-sankey':
+    specifier: ^0.12.2
+    version: 0.12.2
+  '@types/geojson':
+    specifier: ^7946.0.11
+    version: 7946.0.11
   '@types/google-protobuf':
-    specifier: ^3.15.5
+    specifier: ^3.15.7
     version: 3.15.7
   '@types/jasmine':
     specifier: ~5.1.0
     version: 5.1.0
   '@types/jasminewd2':
-    specifier: ~2.0.10
+    specifier: ~2.0.11
     version: 2.0.11
   '@types/node':
-    specifier: ^18.0.0
+    specifier: ^18.18.5
     version: 18.18.5
   '@typescript-eslint/eslint-plugin':
     specifier: 6.7.5
@@ -125,22 +149,22 @@ devDependencies:
     specifier: latest
     version: 13.3.1
   d3-path:
-    specifier: ^3.0.1
+    specifier: ^3.1.0
     version: 3.1.0
   d3-shape:
-    specifier: ^3.1.0
+    specifier: ^3.2.0
     version: 3.2.0
   eslint:
-    specifier: ^8.13.0
+    specifier: ^8.51.0
     version: 8.51.0
   jasmine-core:
-    specifier: ~5.1.0
+    specifier: ~5.1.1
     version: 5.1.1
   jasmine-spec-reporter:
     specifier: ~7.0.0
     version: 7.0.0
   karma:
-    specifier: ~6.4.0
+    specifier: ~6.4.2
     version: 6.4.2
   karma-chrome-launcher:
     specifier: ~3.2.0
@@ -152,16 +176,16 @@ devDependencies:
     specifier: ~5.1.0
     version: 5.1.0(karma@6.4.2)
   karma-jasmine-html-reporter:
-    specifier: ^2.0.0
+    specifier: ^2.1.0
     version: 2.1.0(jasmine-core@5.1.1)(karma-jasmine@5.1.0)(karma@6.4.2)
   svg-arc-to-cubic-bezier:
     specifier: ^3.2.0
     version: 3.2.0
   ts-node:
-    specifier: ~10.9.0
+    specifier: ~10.9.1
     version: 10.9.1(@types/node@18.18.5)(typescript@4.9.5)
   typescript:
-    specifier: ^4.5.5
+    specifier: ^4.9.5
     version: 4.9.5
 
 packages:
@@ -3454,6 +3478,10 @@ packages:
       minimatch: 9.0.3
     dev: true
 
+  /@types/amcharts@3.21.9:
+    resolution: {integrity: sha512-z2FIveDxQHm0CYiVeR6RegvDVzb64x9Hdhr/cwmNXn85F7EPMHkJxfpCTc8tNES7v6DQRzelAcOItQ7GQNByyQ==}
+    dev: false
+
   /@types/body-parser@1.19.3:
     resolution: {integrity: sha512-oyl4jvAfTGX9Bt6Or4H9ni1Z447/tQuxnZsytsCaExKlmJiU8sFgnIBRzJUpKwB5eWn9HuBYlUlVA74q/yN0eQ==}
     dependencies:
@@ -3508,7 +3536,6 @@ packages:
 
   /@types/d3-chord@3.0.4:
     resolution: {integrity: sha512-p4PvN1N+7GL3Y/NI9Ug1TKwowUV6h664kmxL79ctp1HRYCk1mhP0+SXhjRsoWXCdnJfbLLLmpV99rt8dMrHrzg==}
-    dev: false
 
   /@types/d3-color@3.1.1:
     resolution: {integrity: sha512-CSAVrHAtM9wfuLJ2tpvvwCU/F22sm7rMHNN+yh9D6O6hyAms3+O0cgMpC1pm6UEUMOntuZC8bMt74PteiDUdCg==}
@@ -3551,7 +3578,6 @@ packages:
 
   /@types/d3-force@3.0.6:
     resolution: {integrity: sha512-G9wbOvCxkNlLrppoHLZ6oFpbm3z7ibfkXwLD8g5/4Aa7iTEV0Z7TQ0OL8UxAtvdOhCa2VZcSuqn1NQqyCEqmiw==}
-    dev: false
 
   /@types/d3-format@3.0.2:
     resolution: {integrity: sha512-9oQWvKk2qVBo49FQq8yD/et8Lx0W5Ac2FdGSOUecqOFKqh0wkpyHqf9Qc7A06ftTR+Lz13Pi3jHIQis0aCueOA==}
@@ -3561,11 +3587,13 @@ packages:
     resolution: {integrity: sha512-ysEEU93Wv9p2UZBxTK3kUP7veHgyhTA0qYtI7bxK5EMXb3JxGv0D4IH54PxprAF26n+uHci24McVmzwIdLgvgQ==}
     dependencies:
       '@types/geojson': 7946.0.11
-    dev: false
 
   /@types/d3-hierarchy@3.1.1:
     resolution: {integrity: sha512-QwjxA3+YCKH3N1Rs3uSiSy1bdxlLB1uUiENXeJudBoAFvtDuswUxLcanoOaR2JYn1melDTuIXR8VhnVyI3yG/A==}
     dev: false
+
+  /@types/d3-hierarchy@3.1.4:
+    resolution: {integrity: sha512-wrvjpRFdmEu6yAqgjGy8MSud9ggxJj+I9XLuztLeSf/E0j0j6RQYtxH2J8U0Cfbgiw9ZDHyhpmaVuWhxscYaAQ==}
 
   /@types/d3-interpolate@3.0.2:
     resolution: {integrity: sha512-zAbCj9lTqW9J9PlF4FwnvEjXZUy75NQqPm7DMHZXuxCFTpuTrdK2NMYGQekf4hlasL78fCYOLu4EE3/tXElwow==}
@@ -3575,7 +3603,6 @@ packages:
 
   /@types/d3-path@1.0.9:
     resolution: {integrity: sha512-NaIeSIBiFgSC6IGUBjZWcscUJEq7vpVu7KthHN8eieTV9d9MqkSOZLH4chq1PmcKy06PNe3axLeKmRIyxJ+PZQ==}
-    dev: false
 
   /@types/d3-path@3.0.0:
     resolution: {integrity: sha512-0g/A+mZXgFkQxN3HniRDbXMN79K3CdTpLsevj+PXiTcb2hVyvkZUBg37StmgCQkaD84cUJ4uaDAWq7UJOQy2Tg==}
@@ -3599,6 +3626,12 @@ packages:
       '@types/d3-shape': 1.3.9
     dev: false
 
+  /@types/d3-sankey@0.12.2:
+    resolution: {integrity: sha512-gOikQBgTsnV2vGTD+RqdF6r3hGSunkkj57YNqGWdwKg+f7DwTK9ynNahatpQ5rhJbXxhld/1lomR/DnnGyqrPA==}
+    dependencies:
+      '@types/d3-shape': 1.3.9
+    dev: true
+
   /@types/d3-scale-chromatic@3.0.0:
     resolution: {integrity: sha512-dsoJGEIShosKVRBZB0Vo3C8nqSDqVGujJU6tPznsBJxNJNwMF8utmS83nvCBKQYPpjCzaaHcrf66iTRpZosLPw==}
     dev: false
@@ -3617,7 +3650,6 @@ packages:
     resolution: {integrity: sha512-NX8FSlYqN4MPjiOwJAu5a3y6iEj7lS8nb8zP5dQpHOWh24vMJLTXno7c7wm72SfTFNAalfvZVsatMUrEa686gg==}
     dependencies:
       '@types/d3-path': 1.0.9
-    dev: false
 
   /@types/d3-shape@3.1.3:
     resolution: {integrity: sha512-cHMdIq+rhF5IVwAV7t61pcEXfEHsEsrbBUPkFGBwTXuxtTAkBBrnrNA8++6OWm3jwVsXoZYQM8NEekg6CPJ3zw==}
@@ -3668,7 +3700,7 @@ packages:
       '@types/d3-force': 3.0.6
       '@types/d3-format': 3.0.2
       '@types/d3-geo': 3.0.5
-      '@types/d3-hierarchy': 3.1.1
+      '@types/d3-hierarchy': 3.1.4
       '@types/d3-interpolate': 3.0.2
       '@types/d3-path': 3.0.0
       '@types/d3-polygon': 3.0.0
@@ -3723,7 +3755,6 @@ packages:
 
   /@types/geojson@7946.0.11:
     resolution: {integrity: sha512-L7A0AINMXQpVwxHJ4jxD6/XjZ4NDufaRlUJHjNIFKYUFBH1SvOW+neaqb0VTRSLW5suSrSu19ObFEFnfNcr+qg==}
-    dev: false
 
   /@types/google-protobuf@3.15.7:
     resolution: {integrity: sha512-pIEMnb04J60c5eExVLUY/R4eWT5QEQ5cC792JOSfDI3kLjaKC4TjdgMp3xIrN1vxbi2Zk8LcscTm0VaNrIdniA==}
@@ -10522,7 +10553,7 @@ packages:
     dev: true
 
   /verror@1.10.0:
-    resolution: {integrity: sha512-ZZKSmDAEFOijERBLkmYfJ+vmk3w+7hOLYDNkRCuRuMJGEmqYNCNLyBBFwWKVMhfwaEF3WOd0Zlw86U/WC/+nYw==}
+    resolution: {integrity: sha1-OhBcoXBTr1XW4nDB+CiGguGNpAA=}
     engines: {'0': node >=0.6.0}
     dependencies:
       assert-plus: 1.0.0
