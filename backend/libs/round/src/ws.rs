@@ -291,7 +291,6 @@ where
   }
 
   fn start_send(self: Pin<&mut Self>, item: W) -> Result<(), Self::Error> {
-    let me = self.get_mut();
     let payload = jsonify(&item)?;
     let msg = Message::Text(payload);
     return me
