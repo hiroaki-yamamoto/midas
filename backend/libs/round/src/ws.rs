@@ -3,6 +3,7 @@ use ::std::pin::Pin;
 use ::std::task::{Context, Poll};
 use ::std::time::Duration;
 
+use ::futures::future::FutureExt;
 use ::futures::sink::Sink;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{Stream, StreamExt};
@@ -12,6 +13,7 @@ use ::rand::Rng;
 use ::serde::{de::DeserializeOwned, ser::Serialize};
 use ::serde_json::{from_str as json_parse, to_string as jsonify};
 use ::tokio::runtime::Runtime;
+use ::tokio::sync::Mutex;
 use ::tokio::time::interval;
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
@@ -32,7 +34,7 @@ where
   R: DeserializeOwned + Unpin,
   W: Serialize + Unpin,
 {
-  socket: TLSWebSocket,
+  socket: Mutex<TLSWebSocket>,
   endpoints: Vec<String>,
   runtime: Runtime,
   _r: PhantomData<R>,
@@ -76,7 +78,7 @@ where
   pub async fn new(endpoints: &[String]) -> WebSocketInitResult<Self> {
     let socket = Self::connect(endpoints).await?;
     return Ok(Self {
-      socket,
+      socket: socket.into(),
       endpoints: endpoints.into_iter().map(|s| s.to_string()).collect(),
       runtime: Runtime::new()?,
       _r: PhantomData,
@@ -84,35 +86,34 @@ where
     });
   }
 
-  fn close(&mut self, code: CloseCode, reason: &str) -> WSResult<()> {
-    return self.runtime.block_on(
-      self.socket.close(
+  async fn close(&self, code: CloseCode, reason: &str) -> WSResult<()> {
+    let mut socket = self.socket.lock().await;
+    return socket
+      .close(
         CloseFrame {
           code,
           reason: reason.to_string().into(),
         }
         .into(),
-      ),
-    );
+      )
+      .await;
   }
 
-  fn reconnect(&mut self) -> WebSocketInitResult<()> {
-    self.socket = self
-      .runtime
-      .block_on(Self::connect(self.endpoints.as_slice()))?;
+  async fn reconnect(&self) -> WebSocketInitResult<()> {
+    let mut socket = self.socket.lock().await;
+    *socket = Self::connect(self.endpoints.as_slice()).await?;
     return Ok(());
   }
 
-  fn send_msg(&mut self, msg: Message) -> WSResult<()> {
-    return self.runtime.block_on(async {
-      let send_result = self.socket.send(msg).await;
-      let flush_result = self.socket.flush().await;
-      send_result.and(flush_result)
-    });
+  async fn send_msg(&self, msg: Message) -> WSResult<()> {
+    let mut socket = self.socket.lock().await;
+    let send_result = socket.send(msg).await;
+    let flush_result = socket.flush().await;
+    return send_result.and(flush_result);
   }
 
-  fn reconnect_on_error(
-    &mut self,
+  async fn reconnect_on_error(
+    &self,
     payload: Option<WSResult<Message>>,
   ) -> WebsocketHandleResult<Option<Message>> {
     match payload {
@@ -121,26 +122,29 @@ where
           error = as_error!(e);
           "Error while receiving payload from server. Re-Connecting..."
         );
-        let _ = self.close(
-          CloseCode::Abnormal,
-          "Error while receiving payload from server.",
-        );
-        self.reconnect()?;
+        let _ = self
+          .close(
+            CloseCode::Abnormal,
+            "Error while receiving payload from server.",
+          )
+          .await;
+        self.reconnect().await?;
         return Ok(None);
       }
       None => {
         error!("Received close payload from stream. Re-Connecting...");
         let _ = self
-          .close(CloseCode::Abnormal, "Received close payload from stream.");
-        self.reconnect()?;
+          .close(CloseCode::Abnormal, "Received close payload from stream.")
+          .await;
+        self.reconnect().await?;
         return Ok(None);
       }
       Some(Ok(msg)) => return Ok(Some(msg)),
     }
   }
 
-  fn handle_message(
-    &mut self,
+  async fn handle_message(
+    self,
     msg: Message,
   ) -> WebsocketMessageResult<Option<R>> {
     match msg {
@@ -154,7 +158,7 @@ where
         return Ok(payload.into());
       }
       Message::Ping(payload) => {
-        let _ = self.send_msg(Message::Pong(payload))?;
+        let _ = self.send_msg(Message::Pong(payload)).await?;
         return Ok(None);
       }
       Message::Pong(msg) => {
@@ -163,7 +167,7 @@ where
       }
       Message::Close(_) => {
         error!("Disconnected. Re-Connecting...");
-        let _ = self.reconnect()?;
+        let _ = self.reconnect().await?;
         return Ok(None);
       }
       Message::Frame(frame) => {
@@ -184,32 +188,55 @@ where
     self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Option<Self::Item>> {
-    let me = self.get_mut();
-    match me.socket.poll_next_unpin(cx) {
-      Poll::Ready(payload) => match me.reconnect_on_error(payload) {
-        Err(e) => {
-          error!(
-            error = as_error!(e);
-            "Un-recoverable Error while handling server payload."
-          );
-          return Poll::Ready(None);
-        }
-        Ok(None) => {
+    match {
+      let mut socket = match self.socket.lock().boxed().poll_unpin(cx) {
+        Poll::Ready(socket) => socket,
+        Poll::Pending => return Poll::Pending,
+      };
+      socket.poll_next_unpin(cx)
+    } {
+      Poll::Ready(payload) => {
+        if let Poll::Ready(r) = self
+          .reconnect_on_error(payload)
+          .boxed_local()
+          .poll_unpin(cx)
+        {
+          match r {
+            Err(e) => {
+              error!(
+                error = as_error!(e);
+                "Un-recoverable Error while handling server payload."
+              );
+              return Poll::Ready(None);
+            }
+            Ok(None) => {
+              return Poll::Pending;
+            }
+            Ok(Some(msg)) => {
+              if let Poll::Ready(msg) =
+                self.handle_message(msg).boxed_local().poll_unpin(cx)
+              {
+                match msg {
+                  Err(e) => {
+                    error!(error = as_error!(e); "Failed to decoding the payload.");
+                    return Poll::Pending;
+                  }
+                  Ok(None) => {
+                    return Poll::Pending;
+                  }
+                  Ok(Some(payload)) => {
+                    return Poll::Ready(Some(payload));
+                  }
+                }
+              } else {
+                return Poll::Pending;
+              }
+            }
+          }
+        } else {
           return Poll::Pending;
         }
-        Ok(Some(msg)) => match me.handle_message(msg) {
-          Err(e) => {
-            error!(error = as_error!(e); "Failed to decoding the payload.");
-            return Poll::Pending;
-          }
-          Ok(None) => {
-            return Poll::Pending;
-          }
-          Ok(Some(payload)) => {
-            return Poll::Ready(Some(payload));
-          }
-        },
-      },
+      }
       Poll::Pending => {
         return Poll::Pending;
       }
@@ -228,8 +255,11 @@ where
     mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Result<(), Self::Error>> {
-    return self
-      .socket
+    let mut socket = match self.socket.lock().boxed().poll_unpin(cx) {
+      Poll::Ready(socket) => socket,
+      Poll::Pending => return Poll::Pending,
+    };
+    return socket
       .poll_ready_unpin(cx)
       .map(|res| res.map_err(|err| err.into()));
   }
@@ -238,8 +268,11 @@ where
     mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Result<(), Self::Error>> {
-    return self
-      .socket
+    let mut socket = match self.socket.lock().boxed().poll_unpin(cx) {
+      Poll::Ready(socket) => socket,
+      Poll::Pending => return Poll::Pending,
+    };
+    return socket
       .poll_close_unpin(cx)
       .map(|res| res.map_err(|err| err.into()));
   }
@@ -248,8 +281,11 @@ where
     mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Result<(), Self::Error>> {
-    return self
-      .socket
+    let mut socket = match self.socket.lock().boxed().poll_unpin(cx) {
+      Poll::Ready(socket) => socket,
+      Poll::Pending => return Poll::Pending,
+    };
+    return socket
       .poll_flush_unpin(cx)
       .map(|res| res.map_err(|err| err.into()));
   }
@@ -258,6 +294,10 @@ where
     let me = self.get_mut();
     let payload = jsonify(&item)?;
     let msg = Message::Text(payload);
-    return me.send_msg(msg).map_err(|err| err.into());
+    return me
+      .send_msg(msg)
+      .boxed()
+      .poll_unpin(cx)
+      .map_err(|err| err.into());
   }
 }
