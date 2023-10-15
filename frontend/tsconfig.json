@@ -16,7 +16,6 @@
       "dom"
     ],
     "types": [
-      "vite/client",
       "@angular/localize",
     ]
   },
