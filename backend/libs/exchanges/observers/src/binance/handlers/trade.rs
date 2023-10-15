@@ -122,8 +122,8 @@ impl BookTickerHandler {
         e
       )));
     }
-    let cur = { self.cur.read().await };
     {
+      let cur = self.cur.read().await;
       let mut symbol_index = self.symbol_index.lock().await;
       symbols.into_iter().for_each(|symbol| {
         symbol_index.insert(symbol.into(), cur.clone());
