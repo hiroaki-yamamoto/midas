@@ -159,20 +159,21 @@ where
             let to_add: Vec<String> = {
               let to_add = &mut symbols_to_add;
               if to_add.len() > 10 {
-                to_add.drain(..10).collect()
+                to_add.drain(..10)
               } else {
-                to_add.drain(..).collect()
+                to_add.drain(..)
               }
-            };
+            }.collect();
             info!(symbols = as_serde!(to_add); "Calling subscribe function");
             if let Err(e) = self.trade_handler.subscribe(
               to_add.as_slice()
-            ) {
+            ).await {
               warn!(error = as_error!(e); "Failed to send subscription signal");
               continue;
             }
+            info!(symbols = as_serde!(to_add); "Registered symbols to Websocket");
             if let Err(e) =
-              self.kvs.lpush::<usize>(node_id.clone().unwrap().as_str(), to_add, None).await
+              self.kvs.lpush::<usize>(node_id.clone().unwrap().as_str(), to_add.clone(), None).await
             {
               warn!(
                 error = as_error!(e);
@@ -180,6 +181,7 @@ where
               );
               continue;
             }
+            info!(symbols = as_serde!(to_add); "Registered symbol info to kvs");
           }
         },
       };
@@ -207,7 +209,7 @@ where
             to_del.drain(..).collect()
           };
 
-          if let Err(e) = self.trade_handler.unsubscribe(to_del.clone())
+          if let Err(e) = self.trade_handler.unsubscribe(to_del.clone()).await
           {
             warn!(error = as_error!(e); "Failed to unsubscribe");
           };
@@ -298,11 +300,9 @@ where
         return Ok::<(), ObserverError>(());
       })
       .boxed();
-    let handle_trade = self.trade_handler.start(self.signal_rx.clone());
 
     if let Err(e) = try_join_all([
       signal_defer,
-      handle_trade.boxed(),
       self.ping().boxed(),
       self.request_node_id(ready_evloop_rx).boxed(),
       self.handle_control_event(ready_evloop_tx).boxed(),
