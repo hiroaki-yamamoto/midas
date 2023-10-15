@@ -280,29 +280,31 @@ where
 {
   async fn start(&self, signal: Box<Signal>) -> ObserverResult<()> {
     let (ready_evloop_tx, ready_evloop_rx) = oneshot::channel();
-    let mut signal = signal;
-    let signal_defer = signal
-      .recv()
-      .then(|_| async {
-        if let Some(node_id) = self.get_node_id().await {
-          let (exchange, symbols) =
-            self.node_id_manager.unregist(&node_id).await?;
-          let _ = self
-            .node_event
-            .publish(TradeObserverNodeEvent::Unregist(exchange, symbols))
-            .await;
-          info!("Unregistered node id: {}", node_id);
-          {
-            *self.node_id.write().await = None;
-          };
-        }
-        let _ = self.signal_tx.send(true);
-        return Ok::<(), ObserverError>(());
-      })
-      .boxed();
+    let signal_defer = async {
+      let mut signal = signal;
+      signal
+        .recv()
+        .then(|_| async {
+          if let Some(node_id) = self.get_node_id().await {
+            let (exchange, symbols) =
+              self.node_id_manager.unregist(&node_id).await?;
+            let _ = self
+              .node_event
+              .publish(TradeObserverNodeEvent::Unregist(exchange, symbols))
+              .await;
+            info!("Unregistered node id: {}", node_id);
+            {
+              *self.node_id.write().await = None;
+            };
+          }
+          let _ = self.signal_tx.send(true);
+          return Ok::<(), ObserverError>(());
+        })
+        .await
+    };
 
-    if let Err(e) = try_join_all([
-      signal_defer,
+    match try_join_all([
+      signal_defer.boxed(),
       self.ping().boxed(),
       self.request_node_id(ready_evloop_rx).boxed(),
       self.handle_control_event(ready_evloop_tx).boxed(),
@@ -311,7 +313,13 @@ where
     ])
     .await
     {
-      return Err(e);
+      Err(e) => return Err(e.into()),
+      Ok(res) => {
+        // let res: Result<Vec<()>, ObserverError> = res.into_iter().collect();
+        // if let Err(e) = res {
+        //   return Err(e.into());
+        // }
+      }
     };
     return Ok(());
   }

@@ -255,6 +255,7 @@ impl BookTickerHandler {
                   continue;
                 }
               };
+              info!(ticker = as_serde!(ticker); "Publishing bookticker info...");
               if let Err(e) = pubsub.publish(&ticker).await {
                 error!(error = as_error!(e); "Failed to publish book ticker");
                 continue;
