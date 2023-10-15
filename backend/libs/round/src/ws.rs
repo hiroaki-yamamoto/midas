@@ -3,7 +3,7 @@ use ::std::pin::Pin;
 use ::std::task::{Context, Poll};
 use ::std::time::Duration;
 
-use ::futures::future::FutureExt;
+use ::futures::executor::block_on;
 use ::futures::sink::Sink;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{Stream, StreamExt};
@@ -12,8 +12,6 @@ use ::rand::thread_rng;
 use ::rand::Rng;
 use ::serde::{de::DeserializeOwned, ser::Serialize};
 use ::serde_json::{from_str as json_parse, to_string as jsonify};
-use ::tokio::runtime::Runtime;
-use ::tokio::sync::Mutex;
 use ::tokio::time::interval;
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
@@ -34,9 +32,8 @@ where
   R: DeserializeOwned + Unpin,
   W: Serialize + Unpin,
 {
-  socket: Mutex<TLSWebSocket>,
+  socket: TLSWebSocket,
   endpoints: Vec<String>,
-  runtime: Runtime,
   _r: PhantomData<R>,
   _w: PhantomData<W>,
 }
@@ -80,15 +77,14 @@ where
     return Ok(Self {
       socket: socket.into(),
       endpoints: endpoints.into_iter().map(|s| s.to_string()).collect(),
-      runtime: Runtime::new()?,
       _r: PhantomData,
       _w: PhantomData,
     });
   }
 
-  async fn close(&self, code: CloseCode, reason: &str) -> WSResult<()> {
-    let mut socket = self.socket.lock().await;
-    return socket
+  async fn close(&mut self, code: CloseCode, reason: &str) -> WSResult<()> {
+    return self
+      .socket
       .close(
         CloseFrame {
           code,
@@ -99,21 +95,19 @@ where
       .await;
   }
 
-  async fn reconnect(&self) -> WebSocketInitResult<()> {
-    let mut socket = self.socket.lock().await;
-    *socket = Self::connect(self.endpoints.as_slice()).await?;
+  async fn reconnect(&mut self) -> WebSocketInitResult<()> {
+    self.socket = Self::connect(self.endpoints.as_slice()).await?;
     return Ok(());
   }
 
-  async fn send_msg(&self, msg: Message) -> WSResult<()> {
-    let mut socket = self.socket.lock().await;
-    let send_result = socket.send(msg).await;
-    let flush_result = socket.flush().await;
+  async fn send_msg(&mut self, msg: Message) -> WSResult<()> {
+    let send_result = self.socket.send(msg).await;
+    let flush_result = self.socket.flush().await;
     return send_result.and(flush_result);
   }
 
   async fn reconnect_on_error(
-    &self,
+    &mut self,
     payload: Option<WSResult<Message>>,
   ) -> WebsocketHandleResult<Option<Message>> {
     match payload {
@@ -144,7 +138,7 @@ where
   }
 
   async fn handle_message(
-    self,
+    &mut self,
     msg: Message,
   ) -> WebsocketMessageResult<Option<R>> {
     match msg {
@@ -188,55 +182,32 @@ where
     self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Option<Self::Item>> {
-    match {
-      let mut socket = match self.socket.lock().boxed().poll_unpin(cx) {
-        Poll::Ready(socket) => socket,
-        Poll::Pending => return Poll::Pending,
-      };
-      socket.poll_next_unpin(cx)
-    } {
-      Poll::Ready(payload) => {
-        if let Poll::Ready(r) = self
-          .reconnect_on_error(payload)
-          .boxed_local()
-          .poll_unpin(cx)
-        {
-          match r {
-            Err(e) => {
-              error!(
-                error = as_error!(e);
-                "Un-recoverable Error while handling server payload."
-              );
-              return Poll::Ready(None);
-            }
-            Ok(None) => {
-              return Poll::Pending;
-            }
-            Ok(Some(msg)) => {
-              if let Poll::Ready(msg) =
-                self.handle_message(msg).boxed_local().poll_unpin(cx)
-              {
-                match msg {
-                  Err(e) => {
-                    error!(error = as_error!(e); "Failed to decoding the payload.");
-                    return Poll::Pending;
-                  }
-                  Ok(None) => {
-                    return Poll::Pending;
-                  }
-                  Ok(Some(payload)) => {
-                    return Poll::Ready(Some(payload));
-                  }
-                }
-              } else {
-                return Poll::Pending;
-              }
-            }
-          }
-        } else {
+    let me = self.get_mut();
+    match me.socket.poll_next_unpin(cx) {
+      Poll::Ready(payload) => match block_on(me.reconnect_on_error(payload)) {
+        Err(e) => {
+          error!(
+            error = as_error!(e);
+            "Un-recoverable Error while handling server payload."
+          );
+          return Poll::Ready(None);
+        }
+        Ok(None) => {
           return Poll::Pending;
         }
-      }
+        Ok(Some(msg)) => match block_on(me.handle_message(msg)) {
+          Err(e) => {
+            error!(error = as_error!(e); "Failed to decoding the payload.");
+            return Poll::Pending;
+          }
+          Ok(None) => {
+            return Poll::Pending;
+          }
+          Ok(Some(payload)) => {
+            return Poll::Ready(Some(payload));
+          }
+        },
+      },
       Poll::Pending => {
         return Poll::Pending;
       }
@@ -255,11 +226,8 @@ where
     mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Result<(), Self::Error>> {
-    let mut socket = match self.socket.lock().boxed().poll_unpin(cx) {
-      Poll::Ready(socket) => socket,
-      Poll::Pending => return Poll::Pending,
-    };
-    return socket
+    return self
+      .socket
       .poll_ready_unpin(cx)
       .map(|res| res.map_err(|err| err.into()));
   }
@@ -268,11 +236,8 @@ where
     mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Result<(), Self::Error>> {
-    let mut socket = match self.socket.lock().boxed().poll_unpin(cx) {
-      Poll::Ready(socket) => socket,
-      Poll::Pending => return Poll::Pending,
-    };
-    return socket
+    return self
+      .socket
       .poll_close_unpin(cx)
       .map(|res| res.map_err(|err| err.into()));
   }
@@ -281,11 +246,8 @@ where
     mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Result<(), Self::Error>> {
-    let mut socket = match self.socket.lock().boxed().poll_unpin(cx) {
-      Poll::Ready(socket) => socket,
-      Poll::Pending => return Poll::Pending,
-    };
-    return socket
+    return self
+      .socket
       .poll_flush_unpin(cx)
       .map(|res| res.map_err(|err| err.into()));
   }
@@ -293,10 +255,8 @@ where
   fn start_send(self: Pin<&mut Self>, item: W) -> Result<(), Self::Error> {
     let payload = jsonify(&item)?;
     let msg = Message::Text(payload);
-    return me
-      .send_msg(msg)
-      .boxed()
-      .poll_unpin(cx)
-      .map_err(|err| err.into());
+    let me = self.get_mut();
+
+    return block_on(me.send_msg(msg)).map_err(|err| err.into());
   }
 }
