@@ -12,7 +12,9 @@ use ::rand::thread_rng;
 use ::rand::Rng;
 use ::serde::{de::DeserializeOwned, ser::Serialize};
 use ::serde_json::{from_str as json_parse, to_string as jsonify};
+use ::tokio::select;
 use ::tokio::sync::mpsc;
+use ::tokio::task::JoinHandle;
 use ::tokio::time::interval;
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
@@ -35,21 +37,30 @@ enum Command {
 
 /// WebSocket Client.
 pub struct WebSocket<R, W> {
+  ev_handle: JoinHandle<WebsocketHandleResult<()>>,
   command: mpsc::UnboundedSender<Command>,
+  payload: mpsc::UnboundedReceiver<Message>,
   _r: PhantomData<R>,
   _w: PhantomData<W>,
 }
 
 impl<R, W> WebSocket<R, W>
 where
-  R: DeserializeOwned + Send + 'static,
-  W: Serialize + Send + 'static,
+  R: DeserializeOwned + Unpin + Send + 'static,
+  W: Serialize + Unpin + Send + 'static,
 {
   pub async fn new(endpoints: &[String]) -> WebSocketInitResult<Self> {
     let (cmd_tx, cmd_rx) = mpsc::unbounded_channel::<Command>();
-    let handle = ::tokio::spawn(Self::event_loop(cmd_rx, endpoints.to_owned()));
+    let (payload_tx, payload_rx) = mpsc::unbounded_channel::<Message>();
+    let handle = ::tokio::spawn(Self::event_loop(
+      cmd_rx,
+      payload_tx,
+      endpoints.to_owned(),
+    ));
     return Ok(Self {
+      ev_handle: handle,
       command: cmd_tx,
+      payload: payload_rx,
       _r: PhantomData,
       _w: PhantomData,
     });
@@ -57,58 +68,76 @@ where
 
   async fn event_loop(
     mut cmd: mpsc::UnboundedReceiver<Command>,
+    payload_tx: mpsc::UnboundedSender<Message>,
     endpoints: Vec<String>,
   ) -> WebsocketHandleResult<()> {
     let mut socket = Self::connect(endpoints.as_slice()).await?;
     loop {
-      match cmd.recv().await {
-        Some(Command::Terminate) => {
-          break;
-        }
-        None => {
-          break;
-        }
-        Some(Command::Reconnect(code, reason)) => {
-          if let Err(e) = socket
-            .close(
-              CloseFrame {
-                code,
-                reason: reason.into(),
+      select! {
+        cmd_payload = cmd.recv() => {
+          match cmd_payload {
+            Some(Command::Terminate) => {
+              break;
+            }
+            None => {
+              break;
+            }
+            Some(Command::Reconnect(code, reason)) => {
+              if let Err(e) = socket
+                .close(
+                  CloseFrame {
+                    code,
+                    reason: reason.into(),
+                  }
+                  .into(),
+                )
+                .await
+              {
+                error!(error = as_error!(e); "Reconnect: Failed to close socket.");
               }
-              .into(),
-            )
-            .await
-          {
-            error!(error = as_error!(e); "Reconnect: Failed to close socket.");
+              socket = match Self::connect(endpoints.as_slice()).await {
+                Err(e) => {
+                  error!(error = as_error!(e); "Reconnect: Failed to connect.");
+                  continue;
+                }
+                Ok(socket) => socket,
+              };
+            }
+            Some(Command::Close(code, reason)) => {
+              if let Err(e) = socket
+                .close(
+                  CloseFrame {
+                    code,
+                    reason: reason.into(),
+                  }
+                  .into(),
+                )
+                .await
+              {
+                error!(error = as_error!(e); "Reconnect: Failed to close socket.");
+              }
+            }
+            Some(Command::Send(msg)) => {
+              if let Err(e) = socket.send(msg).await {
+                error!(error = as_error!(e); "Send: Failed to send message.");
+              }
+              if let Err(e) = socket.flush().await {
+                error!(error = as_error!(e); "Send: Failed to flush socket.");
+              }
+            }
           }
-          socket = match Self::connect(endpoints.as_slice()).await {
+        },
+        Some(payload) = socket.next() => {
+          match payload {
             Err(e) => {
-              error!(error = as_error!(e); "Reconnect: Failed to connect.");
+              error!(error = as_error!(e); "Receive: Failed to receive payload.");
               continue;
             }
-            Ok(socket) => socket,
-          };
-        }
-        Some(Command::Close(code, reason)) => {
-          if let Err(e) = socket
-            .close(
-              CloseFrame {
-                code,
-                reason: reason.into(),
+            Ok(msg) => {
+              if let Err(e) = payload_tx.send(msg) {
+                error!(error = as_error!(e); "Receive: Failed to signal payload.");
               }
-              .into(),
-            )
-            .await
-          {
-            error!(error = as_error!(e); "Reconnect: Failed to close socket.");
-          }
-        }
-        Some(Command::Send(msg)) => {
-          if let Err(e) = socket.send(msg).await {
-            error!(error = as_error!(e); "Send: Failed to send message.");
-          }
-          if let Err(e) = socket.flush().await {
-            error!(error = as_error!(e); "Send: Failed to flush socket.");
+            }
           }
         }
       }
@@ -147,22 +176,11 @@ where
     let _ = self.command.send(Command::Close(code, reason.to_string()));
   }
 
-  async fn reconnect_on_error(
-    &mut self,
-    payload: Option<WSResult<Message>>,
+  fn reconnect_on_error(
+    &self,
+    payload: Option<Message>,
   ) -> WebsocketHandleResult<Option<Message>> {
     match payload {
-      Some(Err(e)) => {
-        error!(
-          error = as_error!(e);
-          "Error while receiving payload from server. Re-Connecting..."
-        );
-        self.command.send(Command::Reconnect(
-          CloseCode::Abnormal,
-          "Error while receiving payload from server.".to_string(),
-        ));
-        return Ok(None);
-      }
       None => {
         error!("Received close payload from stream. Re-Connecting...");
         self.command.send(Command::Reconnect(
@@ -171,14 +189,11 @@ where
         ));
         return Ok(None);
       }
-      Some(Ok(msg)) => return Ok(Some(msg)),
+      Some(msg) => return Ok(Some(msg)),
     }
   }
 
-  async fn handle_message(
-    &mut self,
-    msg: Message,
-  ) -> WebsocketMessageResult<Option<R>> {
+  fn handle_message(&self, msg: Message) -> WebsocketMessageResult<Option<R>> {
     match msg {
       Message::Text(text) => {
         let payload: R = json_parse(text.as_str())?;
@@ -215,8 +230,8 @@ where
 
 impl<R, W> Stream for WebSocket<R, W>
 where
-  R: DeserializeOwned + Unpin,
-  W: Serialize + Unpin,
+  R: DeserializeOwned + Send + Unpin + 'static,
+  W: Serialize + Send + Unpin + 'static,
 {
   type Item = R;
   fn poll_next(
@@ -224,8 +239,8 @@ where
     cx: &mut Context<'_>,
   ) -> Poll<Option<Self::Item>> {
     let me = self.get_mut();
-    match me.socket.poll_next_unpin(cx) {
-      Poll::Ready(payload) => match block_on(me.reconnect_on_error(payload)) {
+    match me.payload.poll_recv(cx) {
+      Poll::Ready(payload) => match me.reconnect_on_error(payload) {
         Err(e) => {
           error!(
             error = as_error!(e);
@@ -236,7 +251,7 @@ where
         Ok(None) => {
           return Poll::Pending;
         }
-        Ok(Some(msg)) => match block_on(me.handle_message(msg)) {
+        Ok(Some(msg)) => match me.handle_message(msg) {
           Err(e) => {
             error!(error = as_error!(e); "Failed to decoding the payload.");
             return Poll::Pending;
@@ -258,8 +273,8 @@ where
 
 impl<R, W> Sink<W> for WebSocket<R, W>
 where
-  R: DeserializeOwned + Unpin,
-  W: Serialize + Unpin,
+  R: DeserializeOwned + Unpin + Send + 'static,
+  W: Serialize + Unpin + Send + 'static,
 {
   type Error = WebsocketSinkError;
 
