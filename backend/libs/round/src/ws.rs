@@ -13,7 +13,6 @@ use ::rand::Rng;
 use ::serde::{de::DeserializeOwned, ser::Serialize};
 use ::serde_json::{from_str as json_parse, to_string as jsonify};
 use ::tokio::runtime::Handle;
-use ::tokio::task::block_in_place;
 use ::tokio::time::interval;
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
@@ -187,9 +186,8 @@ where
     let me = self.get_mut();
     match me.socket.poll_next_unpin(cx) {
       Poll::Ready(payload) => {
-        let payload = block_in_place(|| {
-          Handle::current().block_on(me.reconnect_on_error(payload))
-        });
+        let payload =
+          Handle::current().block_on(me.reconnect_on_error(payload));
         match payload {
           Err(e) => {
             error!(
@@ -202,9 +200,8 @@ where
             return Poll::Pending;
           }
           Ok(Some(msg)) => {
-            let processed_msg = block_in_place(|| {
-              Handle::current().block_on(me.handle_message(msg))
-            });
+            let processed_msg =
+              Handle::current().block_on(me.handle_message(msg));
             match processed_msg {
               Err(e) => {
                 error!(error = as_error!(e); "Failed to decoding the payload.");
