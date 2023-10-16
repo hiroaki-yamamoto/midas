@@ -312,9 +312,7 @@ where
     let payload = jsonify(&item)?;
     let msg = Message::Text(payload);
     let me = self.get_mut();
-    return me
-      .command
-      .send(Command::Send(msg))
-      .map_err(|err| WebsocketSinkError::CommandSendError(err.to_string()));
+
+    return block_on(me.send_msg(msg)).map_err(|err| err.into());
   }
 }

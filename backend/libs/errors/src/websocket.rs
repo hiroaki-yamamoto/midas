@@ -50,8 +50,6 @@ pub enum WebsocketSinkError {
   WebSocketError(#[source] SocketError),
   #[error(display = "JSON Encode Error: {:?}", _0)]
   JsonError(#[source] JsonError),
-  #[error(display = "Command Send Error: {:?}", _0)]
-  CommandSendError(String),
 }
 
 pub type WebSocketInitResult<T> = Result<T, WebsocketInitError>;
