@@ -1,4 +1,3 @@
-use ::std::marker::PhantomData;
 use ::std::pin::Pin;
 use ::std::task::{Context, Poll};
 use ::std::time::Duration;
@@ -12,11 +11,13 @@ use ::rand::thread_rng;
 use ::rand::Rng;
 use ::serde::{de::DeserializeOwned, ser::Serialize};
 use ::serde_json::{from_str as json_parse, to_string as jsonify};
+use ::tokio::sync::mpsc;
 use ::tokio::time::interval;
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
 use ::tokio_tungstenite::tungstenite::protocol::CloseFrame;
 use ::tokio_tungstenite::tungstenite::{Message, Result as WSResult};
+use serde_json::error;
 
 use ::errors::{
   MaximumAttemptExceeded, WebSocketInitResult, WebsocketHandleResult,
@@ -24,28 +25,86 @@ use ::errors::{
 };
 use ::types::TLSWebSocket;
 
-/// WebSocket Client.
-/// R = Read Entity
-/// W = Write Entity
-pub struct WebSocket<R, W>
-where
-  R: DeserializeOwned + Unpin,
-  W: Serialize + Unpin,
-{
-  socket: TLSWebSocket,
-  endpoints: Vec<String>,
-  _r: PhantomData<R>,
-  _w: PhantomData<W>,
+enum Command {
+  Terminate,
+  Reconnect(CloseCode, String),
+  Close(CloseCode, String),
+  Send(Message),
 }
 
-impl<R, W> WebSocket<R, W>
-where
-  R: DeserializeOwned + Unpin,
-  W: Serialize + Unpin,
-{
-  pub async fn connect(
+/// WebSocket Client.
+pub struct WebSocket {
+  command: mpsc::UnboundedSender<Command>,
+}
+
+impl WebSocket {
+  pub async fn new(endpoints: &[String]) -> WebSocketInitResult<Self> {
+    let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel::<Command>();
+    let handle = ::tokio::spawn(Self::event_loop(cmd_rx, endpoints));
+    return Ok(Self { command: cmd_tx });
+  }
+
+  async fn event_loop(
+    mut cmd: mpsc::UnboundedReceiver<Command>,
     endpoints: &[String],
-  ) -> WebSocketInitResult<TLSWebSocket> {
+  ) -> WebsocketHandleResult<()> {
+    let mut socket = Self::connect(endpoints).await?;
+    loop {
+      match cmd.recv().await {
+        Some(Command::Terminate) => {
+          break;
+        }
+        None => {
+          break;
+        }
+        Some(Command::Reconnect(code, reason)) => {
+          if let Err(e) = socket
+            .close(
+              CloseFrame {
+                code,
+                reason: reason.into(),
+              }
+              .into(),
+            )
+            .await
+          {
+            error!(error = as_error!(e); "Reconnect: Failed to close socket.");
+          }
+          socket = match Self::connect(endpoints).await {
+            Err(e) => {
+              error!(error = as_error!(e); "Reconnect: Failed to connect.");
+            }
+            Ok(socket) => socket,
+          };
+        }
+        Some(Command::Close(code, reason)) => {
+          if let Err(e) = socket
+            .close(
+              CloseFrame {
+                code,
+                reason: reason.into(),
+              }
+              .into(),
+            )
+            .await
+          {
+            error!(error = as_error!(e); "Reconnect: Failed to close socket.");
+          }
+        }
+        Some(Command::Send(msg)) => {
+          if let Err(e) = socket.send(msg).await {
+            error!(error = as_error!(e); "Send: Failed to send message.");
+          }
+          if let Err(e) = socket.flush().await {
+            error!(error = as_error!(e); "Send: Failed to flush socket.");
+          }
+        }
+      }
+    }
+    return Ok(());
+  }
+
+  async fn connect(endpoints: &[String]) -> WebSocketInitResult<TLSWebSocket> {
     let mut interval = interval(Duration::from_secs(1));
     let url_index = {
       let mut rng = thread_rng();
@@ -72,16 +131,6 @@ where
     return Err(MaximumAttemptExceeded.into());
   }
 
-  pub async fn new(endpoints: &[String]) -> WebSocketInitResult<Self> {
-    let socket = Self::connect(endpoints).await?;
-    return Ok(Self {
-      socket: socket.into(),
-      endpoints: endpoints.into_iter().map(|s| s.to_string()).collect(),
-      _r: PhantomData,
-      _w: PhantomData,
-    });
-  }
-
   async fn close(&mut self, code: CloseCode, reason: &str) -> WSResult<()> {
     return self
       .socket
@@ -93,17 +142,6 @@ where
         .into(),
       )
       .await;
-  }
-
-  async fn reconnect(&mut self) -> WebSocketInitResult<()> {
-    self.socket = Self::connect(self.endpoints.as_slice()).await?;
-    return Ok(());
-  }
-
-  async fn send_msg(&mut self, msg: Message) -> WSResult<()> {
-    let send_result = self.socket.send(msg).await;
-    let flush_result = self.socket.flush().await;
-    return send_result.and(flush_result);
   }
 
   async fn reconnect_on_error(
