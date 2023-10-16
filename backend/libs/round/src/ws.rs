@@ -1,4 +1,3 @@
-use ::std::marker::PhantomData;
 use ::std::pin::Pin;
 use ::std::task::{Context, Poll};
 use ::std::time::Duration;
@@ -34,32 +33,22 @@ enum Command {
 }
 
 /// WebSocket Client.
-pub struct WebSocket<R, W> {
+pub struct WebSocket {
   command: mpsc::UnboundedSender<Command>,
-  _r: PhantomData<R>,
-  _w: PhantomData<W>,
 }
 
-impl<R, W> WebSocket<R, W>
-where
-  R: DeserializeOwned + Send + 'static,
-  W: Serialize + Send + 'static,
-{
+impl WebSocket {
   pub async fn new(endpoints: &[String]) -> WebSocketInitResult<Self> {
-    let (cmd_tx, cmd_rx) = mpsc::unbounded_channel::<Command>();
-    let handle = ::tokio::spawn(Self::event_loop(cmd_rx, endpoints.to_owned()));
-    return Ok(Self {
-      command: cmd_tx,
-      _r: PhantomData,
-      _w: PhantomData,
-    });
+    let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel::<Command>();
+    let handle = ::tokio::spawn(Self::event_loop(cmd_rx, endpoints));
+    return Ok(Self { command: cmd_tx });
   }
 
   async fn event_loop(
     mut cmd: mpsc::UnboundedReceiver<Command>,
-    endpoints: Vec<String>,
+    endpoints: &[String],
   ) -> WebsocketHandleResult<()> {
-    let mut socket = Self::connect(endpoints.as_slice()).await?;
+    let mut socket = Self::connect(endpoints).await?;
     loop {
       match cmd.recv().await {
         Some(Command::Terminate) => {
@@ -81,10 +70,9 @@ where
           {
             error!(error = as_error!(e); "Reconnect: Failed to close socket.");
           }
-          socket = match Self::connect(endpoints.as_slice()).await {
+          socket = match Self::connect(endpoints).await {
             Err(e) => {
               error!(error = as_error!(e); "Reconnect: Failed to connect.");
-              continue;
             }
             Ok(socket) => socket,
           };
@@ -143,8 +131,17 @@ where
     return Err(MaximumAttemptExceeded.into());
   }
 
-  fn close(&mut self, code: CloseCode, reason: &str) {
-    let _ = self.command.send(Command::Close(code, reason.to_string()));
+  async fn close(&mut self, code: CloseCode, reason: &str) -> WSResult<()> {
+    return self
+      .socket
+      .close(
+        CloseFrame {
+          code,
+          reason: reason.to_string().into(),
+        }
+        .into(),
+      )
+      .await;
   }
 
   async fn reconnect_on_error(
@@ -157,18 +154,21 @@ where
           error = as_error!(e);
           "Error while receiving payload from server. Re-Connecting..."
         );
-        self.command.send(Command::Reconnect(
-          CloseCode::Abnormal,
-          "Error while receiving payload from server.".to_string(),
-        ));
+        let _ = self
+          .close(
+            CloseCode::Abnormal,
+            "Error while receiving payload from server.",
+          )
+          .await;
+        self.reconnect().await?;
         return Ok(None);
       }
       None => {
         error!("Received close payload from stream. Re-Connecting...");
-        self.command.send(Command::Reconnect(
-          CloseCode::Abnormal,
-          "Received close payload from stream.".to_string(),
-        ));
+        let _ = self
+          .close(CloseCode::Abnormal, "Received close payload from stream.")
+          .await;
+        self.reconnect().await?;
         return Ok(None);
       }
       Some(Ok(msg)) => return Ok(Some(msg)),
@@ -190,7 +190,7 @@ where
         return Ok(payload.into());
       }
       Message::Ping(payload) => {
-        let _ = self.command.send(Command::Send(Message::Pong(payload)));
+        let _ = self.send_msg(Message::Pong(payload)).await?;
         return Ok(None);
       }
       Message::Pong(msg) => {
@@ -199,10 +199,7 @@ where
       }
       Message::Close(_) => {
         error!("Disconnected. Re-Connecting...");
-        let _ = self.command.send(Command::Reconnect(
-          CloseCode::Abnormal,
-          "Disconnected.".to_string(),
-        ));
+        let _ = self.reconnect().await?;
         return Ok(None);
       }
       Message::Frame(frame) => {
