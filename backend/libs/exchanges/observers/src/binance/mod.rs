@@ -303,7 +303,7 @@ where
         .await
     };
 
-    if let Err(e) = try_join_all([
+    match try_join_all([
       signal_defer.boxed(),
       self.ping().boxed(),
       self.request_node_id(ready_evloop_rx).boxed(),
@@ -313,7 +313,13 @@ where
     ])
     .await
     {
-      return Err(e.into());
+      Err(e) => return Err(e.into()),
+      Ok(res) => {
+        // let res: Result<Vec<()>, ObserverError> = res.into_iter().collect();
+        // if let Err(e) = res {
+        //   return Err(e.into());
+        // }
+      }
     };
     return Ok(());
   }

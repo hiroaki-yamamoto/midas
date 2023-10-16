@@ -1,10 +1,11 @@
 use ::std::marker::PhantomData;
 use ::std::pin::Pin;
-use ::std::sync::Arc;
 use ::std::task::{Context, Poll};
 use ::std::time::Duration;
 
-use ::futures::sink::{Sink, SinkExt};
+use ::futures::executor::block_on;
+use ::futures::sink::Sink;
+use ::futures::sink::SinkExt;
 use ::futures::stream::{Stream, StreamExt};
 use ::log::{as_display, as_error, error, info, warn};
 use ::rand::thread_rng;
@@ -13,14 +14,13 @@ use ::serde::{de::DeserializeOwned, ser::Serialize};
 use ::serde_json::{from_str as json_parse, to_string as jsonify};
 use ::tokio::select;
 use ::tokio::sync::mpsc;
-use ::tokio::sync::RwLock;
 use ::tokio::task::JoinHandle;
 use ::tokio::time::interval;
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
 use ::tokio_tungstenite::tungstenite::protocol::CloseFrame;
-use ::tokio_tungstenite::tungstenite::Message;
-use futures::FutureExt;
+use ::tokio_tungstenite::tungstenite::{Message, Result as WSResult};
+use serde_json::error;
 
 use ::errors::{
   MaximumAttemptExceeded, WebSocketInitResult, WebsocketHandleResult,
@@ -33,31 +33,15 @@ enum Command {
   Reconnect(CloseCode, String),
   Close(CloseCode, String),
   Send(Message),
-  Flush,
 }
 
 /// WebSocket Client.
-pub struct WebSocket<R, W>
-where
-  R: DeserializeOwned + Unpin + Send + 'static,
-  W: Serialize + Unpin + Send + 'static,
-{
-  _ev_handle: JoinHandle<WebsocketHandleResult<()>>,
+pub struct WebSocket<R, W> {
+  ev_handle: JoinHandle<WebsocketHandleResult<()>>,
   command: mpsc::UnboundedSender<Command>,
   payload: mpsc::UnboundedReceiver<Message>,
-  is_running: Arc<RwLock<bool>>,
   _r: PhantomData<R>,
   _w: PhantomData<W>,
-}
-
-impl<R, W> Drop for WebSocket<R, W>
-where
-  R: DeserializeOwned + Unpin + Send + 'static,
-  W: Serialize + Unpin + Send + 'static,
-{
-  fn drop(&mut self) {
-    let _ = self.command.send(Command::Terminate);
-  }
 }
 
 impl<R, W> WebSocket<R, W>
@@ -68,17 +52,14 @@ where
   pub async fn new(endpoints: &[String]) -> WebSocketInitResult<Self> {
     let (cmd_tx, cmd_rx) = mpsc::unbounded_channel::<Command>();
     let (payload_tx, payload_rx) = mpsc::unbounded_channel::<Message>();
-    let is_running = Arc::new(RwLock::new(false));
     let handle = ::tokio::spawn(Self::event_loop(
       cmd_rx,
       payload_tx,
-      is_running.clone(),
       endpoints.to_owned(),
     ));
     return Ok(Self {
-      _ev_handle: handle,
+      ev_handle: handle,
       command: cmd_tx,
-      is_running,
       payload: payload_rx,
       _r: PhantomData,
       _w: PhantomData,
@@ -88,11 +69,9 @@ where
   async fn event_loop(
     mut cmd: mpsc::UnboundedReceiver<Command>,
     payload_tx: mpsc::UnboundedSender<Message>,
-    is_running: Arc<RwLock<bool>>,
     endpoints: Vec<String>,
   ) -> WebsocketHandleResult<()> {
     let mut socket = Self::connect(endpoints.as_slice()).await?;
-    *is_running.write().await = true;
     loop {
       select! {
         cmd_payload = cmd.recv() => {
@@ -145,12 +124,7 @@ where
               if let Err(e) = socket.flush().await {
                 error!(error = as_error!(e); "Send: Failed to flush socket.");
               }
-            },
-            Some(Command::Flush) => {
-              if let Err(e) = socket.flush().await {
-                error!(error = as_error!(e); "Flush: Failed to flush socket.");
-              }
-            },
+            }
           }
         },
         Some(payload) = socket.next() => {
@@ -198,7 +172,7 @@ where
     return Err(MaximumAttemptExceeded.into());
   }
 
-  pub fn close(&mut self, code: CloseCode, reason: &str) {
+  fn close(&mut self, code: CloseCode, reason: &str) {
     let _ = self.command.send(Command::Close(code, reason.to_string()));
   }
 
@@ -209,7 +183,7 @@ where
     match payload {
       None => {
         error!("Received close payload from stream. Re-Connecting...");
-        let _ = self.command.send(Command::Reconnect(
+        self.command.send(Command::Reconnect(
           CloseCode::Abnormal,
           "Received close payload from stream.".to_string(),
         ));
@@ -305,47 +279,33 @@ where
   type Error = WebsocketSinkError;
 
   fn poll_ready(
-    self: Pin<&mut Self>,
+    mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Result<(), Self::Error>> {
-    let is_running = match self.is_running.read().boxed().poll_unpin(cx) {
-      Poll::Ready(is_running) => is_running,
-      Poll::Pending => return Poll::Pending,
-    };
-    return if *is_running {
-      Poll::Ready(Ok(()))
-    } else {
-      Poll::Pending
-    };
+    return self
+      .socket
+      .poll_ready_unpin(cx)
+      .map(|res| res.map_err(|err| err.into()));
   }
 
   fn poll_close(
-    self: Pin<&mut Self>,
-    _: &mut Context<'_>,
+    mut self: Pin<&mut Self>,
+    cx: &mut Context<'_>,
   ) -> Poll<Result<(), Self::Error>> {
-    let _ = self
-      .command
-      .send(Command::Close(CloseCode::Normal, "Bye.".to_string()))
-      .map_err(|err| {
-        return WebsocketSinkError::CommandSendError(format!(
-          "poll_close failure: {:?}",
-          err
-        ));
-      })?;
-    return Poll::Ready(Ok(()));
+    return self
+      .socket
+      .poll_close_unpin(cx)
+      .map(|res| res.map_err(|err| err.into()));
   }
 
   fn poll_flush(
-    self: Pin<&mut Self>,
-    _: &mut Context<'_>,
+    mut self: Pin<&mut Self>,
+    cx: &mut Context<'_>,
   ) -> Poll<Result<(), Self::Error>> {
-    let _ = self.command.send(Command::Flush).map_err(|err| {
-      WebsocketSinkError::CommandSendError(format!(
-        "poll_flush failure: {:?}",
-        err
-      ))
-    })?;
-    return Poll::Ready(Ok(()));
+    return self
+      .socket
+      .poll_flush_unpin(cx)
+      .map(|res| res.map_err(|err| err.into()));
   }
 
   fn start_send(self: Pin<&mut Self>, item: W) -> Result<(), Self::Error> {
