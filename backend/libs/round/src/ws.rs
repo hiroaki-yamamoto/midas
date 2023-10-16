@@ -6,7 +6,7 @@ use ::std::time::Duration;
 
 use ::futures::sink::{Sink, SinkExt};
 use ::futures::stream::{Stream, StreamExt};
-use ::log::{as_display, as_error, error, info, warn};
+use ::log::{as_debug, as_display, as_error, error, info, warn};
 use ::rand::thread_rng;
 use ::rand::Rng;
 use ::serde::{de::DeserializeOwned, ser::Serialize};
@@ -28,6 +28,7 @@ use ::errors::{
 };
 use ::types::TLSWebSocket;
 
+#[derive(Debug)]
 enum Command {
   Terminate,
   Reconnect(CloseCode, String),
@@ -92,7 +93,9 @@ where
     endpoints: Vec<String>,
   ) -> WebsocketHandleResult<()> {
     let mut socket = Self::connect(endpoints.as_slice()).await?;
-    *is_running.write().await = true;
+    {
+      *is_running.write().await = true;
+    }
     loop {
       select! {
         cmd_payload = cmd.recv() => {
