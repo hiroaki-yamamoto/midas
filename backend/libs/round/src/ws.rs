@@ -12,8 +12,6 @@ use ::rand::thread_rng;
 use ::rand::Rng;
 use ::serde::{de::DeserializeOwned, ser::Serialize};
 use ::serde_json::{from_str as json_parse, to_string as jsonify};
-use ::tokio::runtime::Handle;
-use ::tokio::task::block_in_place;
 use ::tokio::time::interval;
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
@@ -186,40 +184,30 @@ where
   ) -> Poll<Option<Self::Item>> {
     let me = self.get_mut();
     match me.socket.poll_next_unpin(cx) {
-      Poll::Ready(payload) => {
-        let payload = block_in_place(|| {
-          Handle::current().block_on(me.reconnect_on_error(payload))
-        });
-        match payload {
+      Poll::Ready(payload) => match block_on(me.reconnect_on_error(payload)) {
+        Err(e) => {
+          error!(
+            error = as_error!(e);
+            "Un-recoverable Error while handling server payload."
+          );
+          return Poll::Ready(None);
+        }
+        Ok(None) => {
+          return Poll::Pending;
+        }
+        Ok(Some(msg)) => match block_on(me.handle_message(msg)) {
           Err(e) => {
-            error!(
-              error = as_error!(e);
-              "Un-recoverable Error while handling server payload."
-            );
-            return Poll::Ready(None);
+            error!(error = as_error!(e); "Failed to decoding the payload.");
+            return Poll::Pending;
           }
           Ok(None) => {
             return Poll::Pending;
           }
-          Ok(Some(msg)) => {
-            let processed_msg = block_in_place(|| {
-              Handle::current().block_on(me.handle_message(msg))
-            });
-            match processed_msg {
-              Err(e) => {
-                error!(error = as_error!(e); "Failed to decoding the payload.");
-                return Poll::Pending;
-              }
-              Ok(None) => {
-                return Poll::Pending;
-              }
-              Ok(Some(payload)) => {
-                return Poll::Ready(Some(payload));
-              }
-            }
+          Ok(Some(payload)) => {
+            return Poll::Ready(Some(payload));
           }
-        }
-      }
+        },
+      },
       Poll::Pending => {
         return Poll::Pending;
       }
