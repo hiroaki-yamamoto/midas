@@ -3,6 +3,7 @@ use ::err_derive::Error;
 use ::mongodb::error::Error as DBErr;
 use ::tokio::sync::mpsc::error::SendError;
 use ::tokio::sync::oneshot::error::RecvError;
+use ::tokio::task::JoinError;
 
 use crate::dlock::DLockError;
 use crate::kvs::KVSError;
@@ -34,6 +35,8 @@ pub enum ObserverError {
   KVSError(#[source] KVSError),
   #[error(display = "Unknown Exchange: {}", _0)]
   UnknownExchangeError(#[source] UnknownExchangeError),
+  #[error(display = "Parallel Join Error: {}", _0)]
+  JoinError(#[source] JoinError),
   #[error(display = "Unhandled Error: {}", _0)]
   Other(String),
 }
