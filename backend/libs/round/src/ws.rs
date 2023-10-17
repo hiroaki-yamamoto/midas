@@ -181,44 +181,37 @@ where
   type Item = R;
   fn poll_next(
     self: Pin<&mut Self>,
-    cx: &mut Context<'_>,
+    _cx: &mut Context<'_>,
   ) -> Poll<Option<Self::Item>> {
     let me = self.get_mut();
-    match me.socket.poll_next_unpin(cx) {
-      Poll::Ready(payload) => {
-        let payload =
-          Handle::current().block_on(me.reconnect_on_error(payload));
-        match payload {
+    let cur_thread = Handle::current();
+    let payload = cur_thread.block_on(me.socket.next());
+    let payload = cur_thread.block_on(me.reconnect_on_error(payload));
+    match payload {
+      Err(e) => {
+        error!(
+          error = as_error!(e);
+          "Un-recoverable Error while handling server payload."
+        );
+        return Poll::Ready(None);
+      }
+      Ok(None) => {
+        return Poll::Pending;
+      }
+      Ok(Some(msg)) => {
+        let processed_msg = cur_thread.block_on(me.handle_message(msg));
+        match processed_msg {
           Err(e) => {
-            error!(
-              error = as_error!(e);
-              "Un-recoverable Error while handling server payload."
-            );
-            return Poll::Ready(None);
+            error!(error = as_error!(e); "Failed to decoding the payload.");
+            return Poll::Pending;
           }
           Ok(None) => {
             return Poll::Pending;
           }
-          Ok(Some(msg)) => {
-            let processed_msg =
-              Handle::current().block_on(me.handle_message(msg));
-            match processed_msg {
-              Err(e) => {
-                error!(error = as_error!(e); "Failed to decoding the payload.");
-                return Poll::Pending;
-              }
-              Ok(None) => {
-                return Poll::Pending;
-              }
-              Ok(Some(payload)) => {
-                return Poll::Ready(Some(payload));
-              }
-            }
+          Ok(Some(payload)) => {
+            return Poll::Ready(Some(payload));
           }
         }
-      }
-      Poll::Pending => {
-        return Poll::Pending;
       }
     }
   }
