@@ -127,7 +127,7 @@ impl CSRF {
         .http_only(false)
         .secure(true)
         .path("/")
-        .finish();
+        .build();
         match req_cookie {
           None => {
             return reply::with_header(
