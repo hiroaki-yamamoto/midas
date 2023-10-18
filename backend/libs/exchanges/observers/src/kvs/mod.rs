@@ -2,10 +2,11 @@ mod filter;
 
 use ::futures::stream::{iter, BoxStream, StreamExt};
 
-use ::kvs::redis::{Commands, RedisResult};
+use ::errors::KVSResult;
+use ::kvs::redis::Commands;
 use ::kvs::traits::normal::Base;
 use ::kvs::traits::normal::ChannelName;
-use ::kvs_macros::last_check_kvs;
+use ::kvs_macros::{kvs, last_check_kvs};
 use ::rpc::entities::Exchanges;
 
 pub use self::filter::NodeFilter;
@@ -13,22 +14,32 @@ pub use self::filter::NodeFilter;
 last_check_kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");
 last_check_kvs!(pub, ONEXTypeKVS, String, "observer_node_exchange_type:{}");
 
+kvs!(pub, InitLock, String, "init_lock:{}");
+
 impl<T> ONEXTypeKVS<T>
 where
   T: Commands + Send + Sync,
 {
   /// Index node ids to KVS
-  pub async fn index_node(&self, nodes: String) -> RedisResult<usize> {
+  pub async fn index_node(&self, node: String) -> KVSResult<usize> {
     let channel_name = self.channel_name("node_index");
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;
-    return cmd.sadd(channel_name, nodes);
+    return Ok(cmd.sadd(channel_name, node)?);
+  }
+
+  /// Unindex node ids to KVS
+  pub async fn unindex_node(&self, node: String) -> KVSResult<usize> {
+    let channel_name = self.channel_name("node_index");
+    let cmd = self.commands();
+    let mut cmd = cmd.lock().await;
+    return Ok(cmd.srem(channel_name, node)?);
   }
 
   pub async fn get_nodes_by_exchange(
     &self,
     exchange: Exchanges,
-  ) -> RedisResult<BoxStream<'_, String>> {
+  ) -> KVSResult<BoxStream<'_, String>> {
     let cmd = self.commands();
     let index_channel_name = self.channel_name("node_index");
     let keys: Vec<String> = async {

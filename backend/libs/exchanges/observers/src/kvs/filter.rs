@@ -1,7 +1,8 @@
 use ::std::collections::HashSet;
 
+use ::errors::KVSResult;
 use ::futures::stream::{iter, BoxStream, StreamExt};
-use ::kvs::redis::{Commands, RedisResult};
+use ::kvs::redis::Commands;
 use ::kvs::traits::last_checked::ListOp;
 use ::rpc::entities::Exchanges;
 
@@ -32,7 +33,7 @@ where
   pub async fn get_handling_symbol_at_exchange(
     &self,
     exchange: Exchanges,
-  ) -> RedisResult<BoxStream<String>> {
+  ) -> KVSResult<BoxStream<String>> {
     let nodes = self
       .exchange_type_kvs
       .get_nodes_by_exchange(exchange)
@@ -53,7 +54,7 @@ where
     &self,
     exchange: Exchanges,
     num_symbols: usize,
-  ) -> RedisResult<Vec<String>> {
+  ) -> KVSResult<Vec<String>> {
     let nodes: Vec<String> = self
       .get_handling_symbol_at_exchange(exchange)
       .await?

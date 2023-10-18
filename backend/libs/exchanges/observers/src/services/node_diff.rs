@@ -1,54 +1,47 @@
 use ::std::collections::HashSet;
 
-use ::futures::future::try_join_all;
 use ::futures::StreamExt;
 use ::log::info;
 use ::mongodb::Database;
 
+use crate::entities::TradeObserverControlEvent as Event;
+use crate::kvs::NodeFilter;
+use crate::kvs::{ONEXTypeKVS, ObserverNodeKVS};
 use ::kvs::redis::Commands;
 use ::kvs::Connection as KVSConnection;
-use ::observers::entities::TradeObserverControlEvent as Event;
-use ::observers::kvs::NodeFilter;
-use ::observers::kvs::{ONEXTypeKVS, ObserverNodeKVS};
-use ::observers::pubsub::NodeControlEventPubSub;
 use ::rpc::entities::Exchanges;
-use ::subscribe::nats::Client as Nats;
-use ::subscribe::PubSub;
 use ::symbols::get_reader;
 
-use crate::errors::Result as ObserverControlResult;
+use ::errors::ObserverResult;
 
-pub struct SyncHandler<T>
+pub struct NodeDIffTaker<T>
 where
   T: Commands + Send + Sync,
 {
   db: Database,
   kvs: ObserverNodeKVS<T>,
   type_kvs: ONEXTypeKVS<T>,
-  publisher: NodeControlEventPubSub,
 }
 
-impl<T> SyncHandler<T>
+impl<T> NodeDIffTaker<T>
 where
   T: Commands + Send + Sync,
 {
   pub async fn new(
     db: &Database,
     cmd: KVSConnection<T>,
-    nats: &Nats,
-  ) -> ObserverControlResult<Self> {
+  ) -> ObserverResult<Self> {
     return Ok(Self {
       db: db.clone(),
       kvs: ObserverNodeKVS::new(cmd.clone().into()),
       type_kvs: ONEXTypeKVS::new(cmd.clone().into()),
-      publisher: NodeControlEventPubSub::new(nats).await?,
     });
   }
 
   pub async fn get_symbol_diff(
-    &mut self,
+    &self,
     exchange: &Exchanges,
-  ) -> ObserverControlResult<Vec<Event>> {
+  ) -> ObserverResult<HashSet<Event>> {
     let symbol_reader = get_reader(&self.db, exchange.clone()).await; // TODO: fix this
     let trading_symbols_list = symbol_reader.list_trading().await?;
     info!("Fetching symbols from DB");
@@ -70,24 +63,7 @@ where
     let to_remove = (&nodes_symbols - &db_symbols)
       .into_iter()
       .map(|s| Event::SymbolDel(exchange.clone(), s));
-    let merged: Vec<Event> = to_add.chain(to_remove).collect();
+    let merged: HashSet<Event> = to_add.chain(to_remove).collect();
     return Ok(merged);
-  }
-
-  pub async fn handle(
-    &mut self,
-    exchange: &Exchanges,
-  ) -> ObserverControlResult<()> {
-    let publish_defer =
-      self
-        .get_symbol_diff(exchange)
-        .await?
-        .into_iter()
-        .map(|diff| {
-          info!("Publishing symbol {:?}", diff);
-          return self.publisher.publish(diff);
-        });
-    let _ = try_join_all(publish_defer).await?;
-    return Ok(());
   }
 }

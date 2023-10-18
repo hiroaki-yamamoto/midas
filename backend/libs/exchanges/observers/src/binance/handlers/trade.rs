@@ -1,11 +1,11 @@
 use ::std::collections::HashMap;
 use ::std::sync::Arc;
 
-use ::futures::future::{try_join_all, FutureExt};
 use ::futures::sink::SinkExt;
 use ::futures::stream::StreamExt;
 use ::log::{as_error, as_serde, error, info};
 use ::rug::Float;
+use ::serde::Serialize;
 use ::tokio::select;
 use ::tokio::sync::{mpsc, oneshot, watch};
 use ::tokio::sync::{Mutex, RwLock};
@@ -26,7 +26,12 @@ const MAX_NUM_PARAMS: u64 = 5;
 
 pub type BookTickerSocket = WebSocket<WebsocketPayload, SubscribeRequest>;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+enum SocketCommand {
+  Regist(oneshot::Sender<Cursor>),
+  Send(SubscribeRequest, Cursor),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default, Serialize)]
 struct Cursor {
   pub socket: usize,
   pub param: u64,
@@ -34,51 +39,37 @@ struct Cursor {
 
 pub struct BookTickerHandler {
   symbol_index: Mutex<HashMap<String, Cursor>>,
-  subscribe_rx: Arc<Mutex<mpsc::UnboundedReceiver<Vec<String>>>>,
-  subscribe_tx: mpsc::UnboundedSender<Vec<String>>,
-  unsub_rx: Arc<Mutex<mpsc::UnboundedReceiver<Vec<String>>>>,
-  unsub_tx: mpsc::UnboundedSender<Vec<String>>,
-  regist_socket_rx:
-    Arc<Mutex<mpsc::UnboundedReceiver<oneshot::Sender<Cursor>>>>,
-  regist_socket_tx: mpsc::UnboundedSender<oneshot::Sender<Cursor>>,
-  send_payload_rx:
-    Arc<Mutex<mpsc::UnboundedReceiver<(SubscribeRequest, Cursor)>>>,
-  send_payload_tx: mpsc::UnboundedSender<(SubscribeRequest, Cursor)>,
-  cur: RwLock<Cursor>,
-  pubsub: BookTickerPubSub,
+  cmd_tx: mpsc::UnboundedSender<SocketCommand>,
+  term_tx: watch::Sender<bool>,
+  cur: Arc<RwLock<Cursor>>,
+}
+
+impl Drop for BookTickerHandler {
+  fn drop(&mut self) {
+    let _ = self.term_tx.send(true);
+  }
 }
 
 impl BookTickerHandler {
   pub async fn new(pubsub: &Nats) -> ObserverResult<Self> {
-    let (subscribe_tx, subscribe_rx) = mpsc::unbounded_channel();
-    let (unsub_tx, unsub_rx) = mpsc::unbounded_channel();
-    let (regist_socket_tx, regist_socket_rx) = mpsc::unbounded_channel();
-    let (send_payload_tx, send_payload_rx) = mpsc::unbounded_channel();
+    let (cmd_tx, cmd_rx) = mpsc::unbounded_channel();
+    let (term_tx, term_rx) = watch::channel(false);
+    let current = Arc::new(RwLock::new(Cursor::default()));
+    let pubsub = BookTickerPubSub::new(pubsub).await?;
+    ::tokio::spawn(Self::socket_event_loop(
+      current.clone(),
+      pubsub,
+      term_rx.clone(),
+      cmd_rx,
+    ));
     let me = Self {
       symbol_index: Mutex::new(HashMap::new()),
-      subscribe_rx: Arc::new(Mutex::new(subscribe_rx)),
-      subscribe_tx,
-      unsub_rx: Arc::new(Mutex::new(unsub_rx)),
-      unsub_tx,
-      regist_socket_rx: Arc::new(Mutex::new(regist_socket_rx)),
-      regist_socket_tx,
-      send_payload_rx: Arc::new(Mutex::new(send_payload_rx)),
-      send_payload_tx,
-      cur: RwLock::new(Cursor::default()),
-      pubsub: BookTickerPubSub::new(pubsub).await?,
+      cmd_tx,
+      term_tx,
+      cur: current,
     };
 
     return Ok(me);
-  }
-
-  pub async fn start(&self, sig: watch::Receiver<bool>) -> ObserverResult<()> {
-    let _ = try_join_all([
-      self.subscribe_event_loop(sig.clone()).boxed(),
-      self.unsubscribe_event_loop(sig.clone()).boxed(),
-      self.socket_event_loop(sig.clone()).boxed(),
-    ])
-    .await?;
-    return Ok(());
   }
 
   async fn get_or_new_socket(
@@ -92,8 +83,9 @@ impl BookTickerHandler {
     {
       let socket = WebSocket::new(&[WS_ENDPOINT.to_string()]).await?;
       sockets.insert(sockets_size, socket);
-      current.socket = sockets_size - 1;
+      current.socket = sockets_size;
       current.param = 0;
+      info!(current_ids = as_serde!(current); "New socket created");
     }
     return Ok(current.socket);
   }
@@ -101,7 +93,7 @@ impl BookTickerHandler {
   /// Reference: https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-book-ticker-streams
   async fn handle_subscribe(&self, symbols: Vec<String>) -> ObserverResult<()> {
     let (socket_id_tx, socket_id_rx) = oneshot::channel();
-    if let Err(e) = self.regist_socket_tx.send(socket_id_tx) {
+    if let Err(e) = self.cmd_tx.send(SocketCommand::Regist(socket_id_tx)) {
       return Err(ObserverError::Other(format!(
         "Failed to request socket id: {:?}",
         e
@@ -124,14 +116,14 @@ impl BookTickerHandler {
         .collect(),
     }
     .into_subscribe();
-    if let Err(e) = self.send_payload_tx.send((payload, socket_id)) {
+    if let Err(e) = self.cmd_tx.send(SocketCommand::Send(payload, socket_id)) {
       return Err(ObserverError::Other(format!(
         "Failed to send payload: {:?}",
         e
       )));
     }
-    let cur = { self.cur.read().await };
     {
+      let cur = self.cur.read().await;
       let mut symbol_index = self.symbol_index.lock().await;
       symbols.into_iter().for_each(|symbol| {
         symbol_index.insert(symbol.into(), cur.clone());
@@ -144,9 +136,9 @@ impl BookTickerHandler {
     return Ok(());
   }
 
-  pub fn subscribe(&self, symbols: &[String]) -> ObserverResult<()> {
+  pub async fn subscribe(&self, symbols: &[String]) -> ObserverResult<()> {
     info!(symbols = as_serde!(symbols); "Signaling subscribe event");
-    return Ok(self.subscribe_tx.send(symbols.into())?);
+    return self.handle_subscribe(symbols.to_vec()).await;
   }
 
   async fn build_params(
@@ -194,99 +186,57 @@ impl BookTickerHandler {
       .map(|(cur, payload)| (cur, payload.into_unsubscribe()))
       .collect();
     for (cursor, req) in requests {
-      let _ = self.send_payload_tx.send((req, cursor));
+      let _ = self.cmd_tx.send(SocketCommand::Send(req, cursor));
     }
     return Ok(());
   }
 
-  pub fn unsubscribe(&self, symbols: Vec<String>) -> ObserverResult<()> {
-    return Ok(self.unsub_tx.send(symbols)?);
-  }
-
-  async fn subscribe_event_loop(
-    &self,
-    mut sig: watch::Receiver<bool>,
-  ) -> ObserverResult<()> {
-    let subscribe_rx = self.subscribe_rx.clone();
-    let mut subscribe_rx = subscribe_rx.lock().await;
-    loop {
-      select! {
-        _ = sig.changed() => {
-          break;
-        },
-        Some(symbols) = subscribe_rx.recv() => {
-          info!(symbols = as_serde!(symbols); "Received subscribe event");
-          if let Err(e) = {
-            self.handle_subscribe(symbols).await
-          } {
-            error!(error = as_error!(e); "Failed to subscribe");
-          };
-        },
-      }
-    }
-    return Ok(());
-  }
-
-  async fn unsubscribe_event_loop(
-    &self,
-    mut sig: watch::Receiver<bool>,
-  ) -> ObserverResult<()> {
-    let unsub_rx = self.unsub_rx.clone();
-    let mut unsub_rx = unsub_rx.lock().await;
-    loop {
-      select! {
-        _ = sig.changed() => {
-          break;
-        },
-        Some(symbols) = unsub_rx.recv() => {
-          info!(symbols = as_serde!(symbols); "Received unsubscribe event");
-          if let Err(e) = {
-            self.handle_unsubscribe(symbols).await
-          } {
-            error!(error = as_error!(e); "Failed to unsubscribe");
-          };
-        }
-      }
-    }
-    return Ok(());
+  pub async fn unsubscribe(&self, symbols: Vec<String>) -> ObserverResult<()> {
+    return self.handle_unsubscribe(symbols).await;
   }
 
   async fn socket_event_loop(
-    &self,
+    current: Arc<RwLock<Cursor>>,
+    pubsub: BookTickerPubSub,
     mut sig: watch::Receiver<bool>,
+    mut command: mpsc::UnboundedReceiver<SocketCommand>,
   ) -> ObserverResult<()> {
     let mut sockets: StreamMap<usize, BookTickerSocket> = StreamMap::new();
-    let mut regist_socket_rx = self.regist_socket_rx.lock().await;
-    let mut send_payload_rx = self.send_payload_rx.lock().await;
     loop {
       select! {
         _ = sig.changed() => {
           break;
         },
-        Some((payload, cur)) = send_payload_rx.recv() => {
-          match sockets.iter_mut().find(|&&mut (id, _)| id == cur.socket) {
-            Some((_, socket)) => {
-              if let Err(e) = socket.send(payload).await {
-                error!(error = as_error!(e); "Failed to send payload");
+        Some(cmd) = command.recv() => {
+          match cmd {
+            SocketCommand::Send(payload, cur) => {
+              match sockets.iter_mut().find(|&&mut (id, _)| id == cur.socket) {
+                Some((_, socket)) => {
+                  if let Err(e) = socket.send(payload).await {
+                    error!(error = as_error!(e); "Failed to send payload");
+                  };
+                },
+                None => {
+                  error!(id = cur.socket; "Socket not found");
+                }
               };
             },
-            None => {
-              error!(id = cur.socket; "Socket not found");
-            }
-          };
-        },
-        Some(socket_id_tx) = regist_socket_rx.recv() => {
-          let mut cur = self.cur.write().await;
-          match Self::get_or_new_socket(&mut sockets, &mut cur).await {
-            Err(e) => {
-              error!(error = as_error!(e); "Failed to register a socket");
+            SocketCommand::Regist(socket_id_tx) => {
+              {
+                let mut cur = current.write().await;
+                match Self::get_or_new_socket(&mut sockets, &mut cur).await {
+                  Err(e) => {
+                    error!(error = as_error!(e); "Failed to register a socket");
+                  },
+                  Ok(socket_id) => {
+                    info!(id = socket_id; "Socket registered");
+                    if let Err(_) = socket_id_tx.send(cur.clone()) {
+                      error!("Failed to send socket id");
+                    };
+                  }
+                }
+              }
             },
-            Ok(socket_id) => {
-              info!(id = socket_id; "Socket registered");
-              if let Err(_) = socket_id_tx.send(cur.clone()) {
-                error!("Failed to send socket id");
-              };
-            }
           }
         },
         Some((_, payload)) = sockets.next() => {
@@ -305,7 +255,8 @@ impl BookTickerHandler {
                   continue;
                 }
               };
-              if let Err(e) = self.pubsub.publish(&ticker).await {
+              info!(ticker = as_serde!(ticker); "Publishing bookticker info...");
+              if let Err(e) = pubsub.publish(&ticker).await {
                 error!(error = as_error!(e); "Failed to publish book ticker");
                 continue;
               }

@@ -19,13 +19,14 @@ pub trait Lock<S>: Base<S> + ChannelName
 where
   S: Commands + Send,
 {
-  async fn lock<Ft>(
-    &mut self,
+  async fn lock<Ft, Fr>(
+    &self,
     key: &str,
     func_on_success: impl (Fn() -> Ft) + Send + Sync,
-  ) -> DLockResult<()>
+  ) -> DLockResult<Fr>
   where
-    Ft: Future<Output = ()> + Send,
+    Ft: Future<Output = Fr> + Send,
+    Fr: Send,
   {
     let (refresh_tx, mut refresh_rx) = channel::<()>(1);
     let channel_name = self.channel_name(&format!("{}:lock", key));
@@ -65,14 +66,14 @@ where
       .await?;
       if lock == "OK" {
         let _ = refresh_tx.send(());
-        let _ = func_on_success().await;
+        let res = func_on_success().await;
         let _ = refresh_tx.send(());
         let _ = async {
           let mut dlock = dlock.lock().await;
           dlock.del::<_, usize>("lock")
         }
         .await;
-        Ok::<(), DLockError>(())
+        Ok::<Fr, DLockError>(res)
       } else {
         Err(DLockError::CastFailure("Failed to acquire lock"))
       }
