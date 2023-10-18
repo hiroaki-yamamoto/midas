@@ -47,7 +47,7 @@ where
   control_event: NodeControlEventPubSub,
   node_event: NodeEventPubSub,
   trade_handler: Arc<BookTickerHandler>,
-  symbols_to_add: Mutex<Vec<String>>,
+  symbols_to_add: Arc<Mutex<Vec<String>>>,
   symbols_to_del: Arc<Mutex<Vec<String>>>,
   signal_tx: Arc<watch::Sender<bool>>,
   signal_rx: watch::Receiver<bool>,
@@ -80,17 +80,12 @@ where
       node_event,
       signal_tx: Arc::new(signal_tx),
       signal_rx,
-      symbols_to_add: Mutex::new(Vec::new()),
+      symbols_to_add: Mutex::new(Vec::new()).into(),
       symbols_to_del: Mutex::new(Vec::new()).into(),
       node_id_manager: Arc::new(node_id_manager),
       initer: Arc::new(initer),
     };
     return Ok(me);
-  }
-
-  async fn get_node_id(&self) -> Option<String> {
-    let node_id = self.node_id.read().await;
-    return node_id.clone();
   }
 
   async fn handle_control_event(
@@ -137,9 +132,14 @@ where
     return Ok(());
   }
 
-  async fn handle_subscribe(&self) -> ObserverResult<()> {
+  async fn handle_subscribe(
+    node_id: Arc<RwLock<Option<String>>>,
+    mut signal: watch::Receiver<bool>,
+    symbols_to_add: Arc<Mutex<Vec<String>>>,
+    trade_handler: Arc<BookTickerHandler>,
+    kvs: Arc<ObserverNodeKVS<T>>,
+  ) -> ObserverResult<()> {
     let mut interval = interval(SUBSCRIBE_DELAY);
-    let mut signal = self.signal_rx.clone();
     loop {
       select! {
         _ = signal.changed() => {
@@ -147,12 +147,12 @@ where
           break;
         },
         _ = interval.tick() => {
-          let node_id = self.get_node_id().await;
+          let node_id = { node_id.read().await.clone() };
           if node_id.is_none() {
             continue;
           }
           let mut symbols_to_add: Vec<String> = {
-            let mut to_add = self.symbols_to_add.lock().await;
+            let mut to_add = symbols_to_add.lock().await;
             to_add.drain(..).collect()
           };
           info!(symbols = as_serde!(symbols_to_add); "Start subscription process");
@@ -166,7 +166,7 @@ where
               }
             }.collect();
             info!(symbols = as_serde!(to_add); "Calling subscribe function");
-            if let Err(e) = self.trade_handler.subscribe(
+            if let Err(e) = trade_handler.subscribe(
               to_add.as_slice()
             ).await {
               warn!(error = as_error!(e); "Failed to send subscription signal");
@@ -174,7 +174,7 @@ where
             }
             info!(symbols = as_serde!(to_add); "Registered symbols to Websocket");
             if let Err(e) =
-              self.kvs.lpush::<usize>(node_id.clone().unwrap().as_str(), to_add.clone(), None).await
+              kvs.lpush::<usize>(node_id.clone().unwrap().as_str(), to_add.clone(), None).await
             {
               warn!(
                 error = as_error!(e);
@@ -335,18 +335,27 @@ where
       self.trade_handler.clone(),
       self.kvs.clone(),
     ));
-    let result: ObserverResult<Vec<()>> =
-      try_join_all([signal_defer, ping, request_node_id, unsubscribe])
-        .await?
-        .into_iter()
-        .collect();
+    let subscribe = ::tokio::spawn(Self::handle_subscribe(
+      self.node_id.clone(),
+      self.signal_rx.clone(),
+      self.symbols_to_add.clone(),
+      self.trade_handler.clone(),
+      self.kvs.clone(),
+    ));
+    let result: ObserverResult<Vec<()>> = try_join_all([
+      signal_defer,
+      ping,
+      request_node_id,
+      unsubscribe,
+      subscribe,
+    ])
+    .await?
+    .into_iter()
+    .collect();
     let _ = result?;
 
-    if let Err(e) = try_join_all([
-      self.handle_control_event(ready_evloop_tx).boxed(),
-      self.handle_subscribe().boxed(),
-    ])
-    .await
+    if let Err(e) =
+      try_join_all([self.handle_control_event(ready_evloop_tx).boxed()]).await
     {
       return Err(e.into());
     };
