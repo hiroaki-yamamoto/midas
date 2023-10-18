@@ -43,12 +43,12 @@ where
   T: RedisCommands + Send + Sync + 'static,
 {
   node_id: Arc<RwLock<Option<String>>>,
-  kvs: ObserverNodeKVS<T>,
+  kvs: Arc<ObserverNodeKVS<T>>,
   control_event: NodeControlEventPubSub,
   node_event: NodeEventPubSub,
-  trade_handler: BookTickerHandler,
+  trade_handler: Arc<BookTickerHandler>,
   symbols_to_add: Mutex<Vec<String>>,
-  symbols_to_del: Mutex<Vec<String>>,
+  symbols_to_del: Arc<Mutex<Vec<String>>>,
   signal_tx: Arc<watch::Sender<bool>>,
   signal_rx: watch::Receiver<bool>,
   node_id_manager: Arc<NodeIDManager<T>>,
@@ -74,14 +74,14 @@ where
     let kvs = ObserverNodeKVS::new(redis_cmd.into());
     let me = Self {
       node_id: Arc::new(RwLock::new(None)),
-      trade_handler,
-      kvs,
+      trade_handler: trade_handler.into(),
+      kvs: kvs.into(),
       control_event,
       node_event,
       signal_tx: Arc::new(signal_tx),
       signal_rx,
       symbols_to_add: Mutex::new(Vec::new()),
-      symbols_to_del: Mutex::new(Vec::new()),
+      symbols_to_del: Mutex::new(Vec::new()).into(),
       node_id_manager: Arc::new(node_id_manager),
       initer: Arc::new(initer),
     };
@@ -190,9 +190,14 @@ where
     return Ok(());
   }
 
-  async fn handle_unsubscribe(&self) -> ObserverResult<()> {
+  async fn handle_unsubscribe(
+    mut signal: watch::Receiver<bool>,
+    node_id_lock: Arc<RwLock<Option<String>>>,
+    symbols_to_del: Arc<Mutex<Vec<String>>>,
+    trade_handler: Arc<BookTickerHandler>,
+    node_kvs: Arc<ObserverNodeKVS<T>>,
+  ) -> ObserverResult<()> {
     let mut interval = interval(SUBSCRIBE_DELAY);
-    let mut signal = self.signal_rx.clone();
     loop {
       select! {
         _ = signal.changed() => {
@@ -200,25 +205,25 @@ where
           break;
         },
         _ = interval.tick() => {
-          let node_id = self.get_node_id().await;
+          let node_id = { node_id_lock.read().await.clone() } ;
           if node_id.is_none() {
             continue;
           }
           let mut lrem_defer = vec![];
           let to_del: Vec<String> = {
-            let mut to_del = self.symbols_to_del.lock().await;
+            let mut to_del = symbols_to_del.lock().await;
             to_del.drain(..).collect()
           };
 
-          if let Err(e) = self.trade_handler.unsubscribe(to_del.clone()).await
+          if let Err(e) = trade_handler.unsubscribe(to_del.clone()).await
           {
             warn!(error = as_error!(e); "Failed to unsubscribe");
           };
 
           lrem_defer.extend(to_del.into_iter().map(|sym| {
-            let kvs = self.kvs.clone();
             let node_id = node_id.clone();
             let node_id = node_id.unwrap();
+            let kvs = node_kvs.clone();
             return async move {kvs
                 .lrem::<usize>(node_id.as_str(), 0, sym).await};
           }));
@@ -323,8 +328,15 @@ where
       ready_evloop_rx,
       self.initer.clone(),
     ));
+    let unsubscribe = ::tokio::spawn(Self::handle_unsubscribe(
+      self.signal_rx.clone(),
+      self.node_id.clone(),
+      self.symbols_to_del.clone(),
+      self.trade_handler.clone(),
+      self.kvs.clone(),
+    ));
     let result: ObserverResult<Vec<()>> =
-      try_join_all([signal_defer, ping, request_node_id])
+      try_join_all([signal_defer, ping, request_node_id, unsubscribe])
         .await?
         .into_iter()
         .collect();
@@ -333,7 +345,6 @@ where
     if let Err(e) = try_join_all([
       self.handle_control_event(ready_evloop_tx).boxed(),
       self.handle_subscribe().boxed(),
-      self.handle_unsubscribe().boxed(),
     ])
     .await
     {
