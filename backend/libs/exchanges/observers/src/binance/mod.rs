@@ -89,13 +89,14 @@ where
   }
 
   async fn handle_control_event(
-    &self,
+    mut signal: watch::Receiver<bool>,
+    control_event: NodeControlEventPubSub,
+    symbols_to_add: Arc<Mutex<Vec<String>>>,
+    symbols_to_del: Arc<Mutex<Vec<String>>>,
     ready: oneshot::Sender<()>,
   ) -> ObserverResult<()> {
-    let control_event = self.control_event.clone();
     let mut control_event =
       control_event.pull_subscribe("biannceTradeObserver").await?;
-    let mut signal = self.signal_rx.clone();
     let _ = ready.send(());
     loop {
       select! {
@@ -111,7 +112,7 @@ where
               }
               info!(symbol = symbol.as_str(); "Received symbol add event.");
               {
-                let mut symbols_to_add = self.symbols_to_add.lock().await;
+                let mut symbols_to_add = symbols_to_add.lock().await;
                 symbols_to_add.push(symbol);
               }
             }
@@ -121,7 +122,7 @@ where
               }
               info!(symbol = symbol.as_str(); "Received symbol del event.");
               {
-                let mut to_del = self.symbols_to_del.lock().await;
+                let mut to_del = symbols_to_del.lock().await;
                 to_del.push(symbol);
               }
             }
@@ -342,23 +343,25 @@ where
       self.trade_handler.clone(),
       self.kvs.clone(),
     ));
+    let handle_control = ::tokio::spawn(Self::handle_control_event(
+      self.signal_rx.clone(),
+      self.control_event.clone(),
+      self.symbols_to_add.clone(),
+      self.symbols_to_del.clone(),
+      ready_evloop_tx,
+    ));
     let result: ObserverResult<Vec<()>> = try_join_all([
       signal_defer,
       ping,
       request_node_id,
       unsubscribe,
       subscribe,
+      handle_control,
     ])
     .await?
     .into_iter()
     .collect();
     let _ = result?;
-
-    if let Err(e) =
-      try_join_all([self.handle_control_event(ready_evloop_tx).boxed()]).await
-    {
-      return Err(e.into());
-    };
     return Ok(());
   }
 }
