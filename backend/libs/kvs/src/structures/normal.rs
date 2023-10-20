@@ -5,8 +5,9 @@ use ::tokio::sync::Mutex;
 
 use crate::redis::AsyncCommands as Commands;
 use crate::redis::FromRedisValue;
+use crate::traits::base::{Base, ChannelName};
 use crate::traits::normal::{
-  Base, ChannelName, Exist, Expiration, Get, ListOp, Lock, Remove, Set,
+  Exist, Expiration, Get, ListOp, Lock, Remove, Set,
 };
 
 pub struct KVSBuilder<R>
@@ -31,7 +32,7 @@ where
   where
     T: Commands,
   {
-    return KVS::new(connection, self.channel_name).into();
+    return Arc::new(KVS::new(connection, self.channel_name).into());
   }
 }
 

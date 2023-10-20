@@ -1,2 +1,2 @@
 mod normal;
-pub use normal::KVS as NormalKVS;
+pub use normal::{KVSBuilder as NormalKVSBuilder, KVS as NormalKVS};
