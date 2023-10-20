@@ -5,6 +5,7 @@ use ::std::time::Duration;
 
 use ::futures::executor::block_on;
 use ::futures::future::FutureExt;
+use ::futures::ready;
 use ::futures::sink::Sink;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{Stream, StreamExt};
@@ -187,51 +188,42 @@ where
   ) -> Poll<Option<Self::Item>> {
     let endpoints = self.endpoints.clone();
     let mut socket = &mut self.socket;
-    match socket.poll_next_unpin(cx) {
-      Poll::Ready(payload) => {
-        let msg =
-          Self::reconnect_on_error(&mut socket, endpoints.as_slice(), payload)
+    let payload = ready!(socket.poll_next_unpin(cx));
+    let payload = ready!(Self::reconnect_on_error(
+      &mut socket,
+      endpoints.as_slice(),
+      payload
+    )
+    .boxed_local()
+    .poll_unpin(cx));
+    match payload {
+      Err(e) => {
+        error!(
+          error = as_error!(e);
+          "Un-recoverable Error while handling server payload."
+        );
+        return Poll::Ready(None);
+      }
+      Ok(None) => {
+        return Poll::Pending;
+      }
+      Ok(Some(msg)) => {
+        let handled_payload =
+          ready!(Self::handle_message(&mut socket, endpoints.as_slice(), msg)
             .boxed_local()
-            .poll_unpin(cx);
-        match msg {
-          Poll::Ready(Err(e)) => {
-            error!(
-              error = as_error!(e);
-              "Un-recoverable Error while handling server payload."
-            );
-            return Poll::Ready(None);
-          }
-          Poll::Ready(Ok(None)) => {
+            .poll_unpin(cx));
+        match handled_payload {
+          Err(e) => {
+            error!(error = as_error!(e); "Failed to decoding the payload.");
             return Poll::Pending;
           }
-          Poll::Ready(Ok(Some(msg))) => {
-            let handled_payload =
-              Self::handle_message(&mut socket, endpoints.as_slice(), msg)
-                .boxed_local()
-                .poll_unpin(cx);
-            match handled_payload {
-              Poll::Ready(Err(e)) => {
-                error!(error = as_error!(e); "Failed to decoding the payload.");
-                return Poll::Pending;
-              }
-              Poll::Ready(Ok(None)) => {
-                return Poll::Pending;
-              }
-              Poll::Ready(Ok(Some(payload))) => {
-                return Poll::Ready(Some(payload));
-              }
-              Poll::Pending => {
-                return Poll::Pending;
-              }
-            }
-          }
-          Poll::Pending => {
+          Ok(None) => {
             return Poll::Pending;
+          }
+          Ok(Some(payload)) => {
+            return Poll::Ready(Some(payload));
           }
         }
-      }
-      Poll::Pending => {
-        return Poll::Pending;
       }
     }
   }
