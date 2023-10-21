@@ -9,29 +9,31 @@ use ::tokio::sync::Mutex;
 use crate::redis::AsyncCommands as Commands;
 use crate::redis::FromRedisValue;
 
-pub struct KVSBuilder<R>
+pub struct KVSBuilder<'a, R>
 where
   R: FromRedisValue,
 {
-  channel_name: String,
+  channel_name: &'a str,
   _r: PhantomData<R>,
 }
 
-impl<R> KVSBuilder<R>
+impl<'a, R> KVSBuilder<'a, R>
 where
   R: FromRedisValue,
 {
-  pub fn new(channel_name: String) -> Self {
+  pub fn new(channel_name: &'a str) -> Self {
     return Self {
       channel_name,
-      _r: PhantomData::default(),
+      _r: PhantomData,
     };
   }
   pub fn build<T>(&self, connection: Arc<Mutex<T>>) -> Arc<Mutex<KVS<R, T>>>
   where
     T: Commands,
   {
-    return Arc::new(KVS::new(connection, self.channel_name.clone()).into());
+    return Arc::new(
+      KVS::new(connection, self.channel_name.to_string()).into(),
+    );
   }
 }
 
