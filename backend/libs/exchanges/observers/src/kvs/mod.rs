@@ -15,7 +15,7 @@ last_check_kvs!(pub, ONEXTypeKVS, String, "observer_node_exchange_type:{}");
 
 #[allow(non_upper_case_globals)]
 pub const InitLock: NormalKVSBuilder<String> =
-  NormalKVSBuilder::<String>::new("init_lock:{}".to_String());
+  NormalKVSBuilder::<String>::new("init_lock".to_String());
 
 impl<T> ONEXTypeKVS<T>
 where

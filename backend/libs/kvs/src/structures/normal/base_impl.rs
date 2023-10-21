@@ -26,7 +26,7 @@ where
   T: Commands,
 {
   fn channel_name(&self, key: &str) -> String where {
-    return format!("{}.{}", self.channel_name, key);
+    return format!("{}:{}", self.channel_name, key);
   }
 }
 

@@ -1,9 +1,8 @@
-use ::kvs_macros::symbol_kvs;
+use ::kvs::SymbolKVSBuilder;
 
-symbol_kvs!(
-  pub,
-  CurrentSyncProgressStore,
-  i64,
-  "{}:{}:kline_sync:current"
-);
-symbol_kvs!(pub, NumObjectsToFetchStore, i64, "{}:{}:kline_sync:num");
+#[allow(non_upper_case_globals)]
+pub const CurrentSyncProgressStore: SymbolKVSBuilder<i64> =
+  SymbolKVSBuilder::new("kline_sync:current");
+#[allow(non_upper_case_globals)]
+pub const NumObjectsToFetchStore: SymbolKVSBuilder<i64> =
+  SymbolKVSBuilder::new("kline_sync:num");
