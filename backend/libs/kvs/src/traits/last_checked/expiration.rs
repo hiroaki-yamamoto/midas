@@ -6,17 +6,17 @@ use ::redis::Commands;
 use ::errors::KVSResult;
 
 use crate::options::WriteOption;
-use crate::traits::normal::Expiration as NormalExp;
+use crate::traits::base::Expiration as BaseExp;
 
 use super::base::Base;
 
 #[async_trait]
-pub trait Expiration<T>: Base<T> + NormalExp<T>
+pub trait Expiration<T>: Base<T> + BaseExp<T>
 where
   T: Commands + Send,
 {
   async fn expire(&self, key: &str, dur: Duration) -> KVSResult<bool> {
-    let ret = NormalExp::expire(self, key, dur).await?;
+    let ret = BaseExp::expire(self, key, dur).await?;
     self
       .flag_last_checked(
         key,

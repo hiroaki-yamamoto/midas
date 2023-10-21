@@ -4,12 +4,12 @@ use ::redis::{Commands, FromRedisValue, ToRedisArgs};
 use ::errors::KVSResult;
 
 use crate::options::WriteOption;
-use crate::traits::normal::Set as NormalSet;
+use crate::traits::base::Set as BaseSet;
 
 use super::base::Base;
 
 #[async_trait]
-pub trait Set<T, V>: Base<T> + NormalSet<T, V>
+pub trait Set<T, V>: Base<T> + BaseSet<T, V>
 where
   T: Commands + Send,
   for<'a> V: ToRedisArgs + Send + 'a,
@@ -23,7 +23,7 @@ where
   where
     R: FromRedisValue + Send,
   {
-    let ret = NormalSet::set(self, &key, value, opt.clone()).await?;
+    let ret = BaseSet::set(self, &key, value, opt.clone()).await?;
     self.flag_last_checked(key, opt.into()).await?;
     return Ok(ret);
   }
