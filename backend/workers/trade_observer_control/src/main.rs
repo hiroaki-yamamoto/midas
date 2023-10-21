@@ -1,4 +1,3 @@
-mod dlock;
 mod errors;
 mod handlers;
 

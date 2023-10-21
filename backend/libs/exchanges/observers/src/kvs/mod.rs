@@ -4,8 +4,7 @@ use ::futures::stream::{iter, BoxStream, StreamExt};
 
 use ::errors::KVSResult;
 use ::kvs::redis::Commands;
-use ::kvs::traits::normal::Base;
-use ::kvs::traits::normal::ChannelName;
+use ::kvs::NormalKVSBuilder;
 use ::kvs_macros::{kvs, last_check_kvs};
 use ::rpc::entities::Exchanges;
 
@@ -14,7 +13,9 @@ pub use self::filter::NodeFilter;
 last_check_kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");
 last_check_kvs!(pub, ONEXTypeKVS, String, "observer_node_exchange_type:{}");
 
-kvs!(pub, InitLock, String, "init_lock:{}");
+#[allow(non_upper_case_globals)]
+pub const InitLock: NormalKVSBuilder<String> =
+  NormalKVSBuilder::<String>::new("init_lock:{}".to_String());
 
 impl<T> ONEXTypeKVS<T>
 where
