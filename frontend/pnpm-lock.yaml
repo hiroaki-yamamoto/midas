@@ -81,7 +81,7 @@ dependencies:
 devDependencies:
   '@angular-devkit/build-angular':
     specifier: ~16.2.6
-    version: 16.2.6(@angular/compiler-cli@16.2.9)(@angular/localize@16.2.9)(@types/node@18.18.5)(karma@6.4.2)(typescript@4.9.5)
+    version: 16.2.6(@angular/compiler-cli@16.2.9)(@angular/localize@16.2.10)(@types/node@18.18.5)(karma@6.4.2)(typescript@4.9.5)
   '@angular-eslint/builder':
     specifier: 16.2.0
     version: 16.2.0(eslint@8.51.0)(typescript@4.9.5)
@@ -104,8 +104,8 @@ devDependencies:
     specifier: ~16.2.9
     version: 16.2.9(@angular/compiler@16.2.9)(typescript@4.9.5)
   '@angular/localize':
-    specifier: 16.2.9
-    version: 16.2.9(@angular/compiler-cli@16.2.9)(@angular/compiler@16.2.9)
+    specifier: 16.2.10
+    version: 16.2.10(@angular/compiler-cli@16.2.9)(@angular/compiler@16.2.9)
   '@cypress/schematic':
     specifier: 2.5.1
     version: 2.5.1(@angular/cli@16.2.6)(@angular/core@16.2.9)
@@ -241,7 +241,7 @@ packages:
       - chokidar
     dev: true
 
-  /@angular-devkit/build-angular@16.2.6(@angular/compiler-cli@16.2.9)(@angular/localize@16.2.9)(@types/node@18.18.5)(karma@6.4.2)(typescript@4.9.5):
+  /@angular-devkit/build-angular@16.2.6(@angular/compiler-cli@16.2.9)(@angular/localize@16.2.10)(@types/node@18.18.5)(karma@6.4.2)(typescript@4.9.5):
     resolution: {integrity: sha512-QdU/q77K1P8CPEEZGxw1QqLcnA9ofboDWS7vcLRBmFmk2zydtLTApbK0P8GNDRbnmROOKkoaLo+xUTDJz9gvPA==}
     engines: {node: ^16.14.0 || >=18.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
     peerDependencies:
@@ -281,7 +281,7 @@ packages:
       '@angular-devkit/build-webpack': 0.1602.6(chokidar@3.5.3)(webpack-dev-server@4.15.1)(webpack@5.88.2)
       '@angular-devkit/core': 16.2.6(chokidar@3.5.3)
       '@angular/compiler-cli': 16.2.9(@angular/compiler@16.2.9)(typescript@4.9.5)
-      '@angular/localize': 16.2.9(@angular/compiler-cli@16.2.9)(@angular/compiler@16.2.9)
+      '@angular/localize': 16.2.10(@angular/compiler-cli@16.2.9)(@angular/compiler@16.2.9)
       '@babel/core': 7.22.9
       '@babel/generator': 7.22.9
       '@babel/helper-annotate-as-pure': 7.22.5
@@ -638,17 +638,17 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /@angular/localize@16.2.9(@angular/compiler-cli@16.2.9)(@angular/compiler@16.2.9):
-    resolution: {integrity: sha512-t5002NgBj+wjd81IXwg+yc2ypaBk6OWLAka1GXmWua3x7hwGw1yMtPFmzOE1cCNdXgWlluLxWclFjCUrAbGEww==}
+  /@angular/localize@16.2.10(@angular/compiler-cli@16.2.9)(@angular/compiler@16.2.9):
+    resolution: {integrity: sha512-LrumtnstYOJ7h1FoXrO7bFxAgtoeQmhkRWHUSIV0J5hhnembPL5Kgc7hsGsMhPyIJQ1Opgx6Gdi7+NWQHpC/wg==}
     engines: {node: ^16.14.0 || >=18.10.0}
     hasBin: true
     peerDependencies:
-      '@angular/compiler': 16.2.9
-      '@angular/compiler-cli': 16.2.9
+      '@angular/compiler': 16.2.10
+      '@angular/compiler-cli': 16.2.10
     dependencies:
       '@angular/compiler': 16.2.9(@angular/core@16.2.9)
       '@angular/compiler-cli': 16.2.9(@angular/compiler@16.2.9)(typescript@4.9.5)
-      '@babel/core': 7.22.5
+      '@babel/core': 7.23.2
       fast-glob: 3.3.0
       yargs: 17.7.2
     transitivePeerDependencies:
@@ -818,15 +818,38 @@ packages:
     dependencies:
       '@ampproject/remapping': 2.2.1
       '@babel/code-frame': 7.22.13
-      '@babel/generator': 7.22.9
+      '@babel/generator': 7.23.0
       '@babel/helper-compilation-targets': 7.22.15
       '@babel/helper-module-transforms': 7.23.0(@babel/core@7.22.9)
       '@babel/helpers': 7.23.2
       '@babel/parser': 7.23.0
-      '@babel/template': 7.22.5
+      '@babel/template': 7.22.15
       '@babel/traverse': 7.23.2
       '@babel/types': 7.23.0
       convert-source-map: 1.9.0
+      debug: 4.3.4(supports-color@8.1.1)
+      gensync: 1.0.0-beta.2
+      json5: 2.2.3
+      semver: 6.3.1
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /@babel/core@7.23.2:
+    resolution: {integrity: sha512-n7s51eWdaWZ3vGT2tD4T7J6eJs3QoBXydv7vkUM06Bf1cbVD2Kc2UrkzhiQwobfV7NwOnQXYL7UBJ5VPU+RGoQ==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@ampproject/remapping': 2.2.1
+      '@babel/code-frame': 7.22.13
+      '@babel/generator': 7.23.0
+      '@babel/helper-compilation-targets': 7.22.15
+      '@babel/helper-module-transforms': 7.23.0(@babel/core@7.23.2)
+      '@babel/helpers': 7.23.2
+      '@babel/parser': 7.23.0
+      '@babel/template': 7.22.15
+      '@babel/traverse': 7.23.2
+      '@babel/types': 7.23.0
+      convert-source-map: 2.0.0
       debug: 4.3.4(supports-color@8.1.1)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
@@ -980,6 +1003,20 @@ packages:
       '@babel/core': ^7.0.0
     dependencies:
       '@babel/core': 7.22.9
+      '@babel/helper-environment-visitor': 7.22.20
+      '@babel/helper-module-imports': 7.22.15
+      '@babel/helper-simple-access': 7.22.5
+      '@babel/helper-split-export-declaration': 7.22.6
+      '@babel/helper-validator-identifier': 7.22.20
+    dev: true
+
+  /@babel/helper-module-transforms@7.23.0(@babel/core@7.23.2):
+    resolution: {integrity: sha512-WhDWw1tdrlT0gMgUJSlX0IQvoO1eN279zrAUbVB+KpV2c3Tylz8+GnKOLllCS6Z/iZQEyVYxhZVUdPTqs2YYPw==}
+    engines: {node: '>=6.9.0'}
+    peerDependencies:
+      '@babel/core': ^7.0.0
+    dependencies:
+      '@babel/core': 7.23.2
       '@babel/helper-environment-visitor': 7.22.20
       '@babel/helper-module-imports': 7.22.15
       '@babel/helper-simple-access': 7.22.5
@@ -1426,7 +1463,7 @@ packages:
     dependencies:
       '@babel/core': 7.22.9
       '@babel/helper-plugin-utils': 7.22.5
-      '@babel/template': 7.22.5
+      '@babel/template': 7.22.15
     dev: true
 
   /@babel/plugin-transform-destructuring@7.23.0(@babel/core@7.22.9):
@@ -5164,6 +5201,10 @@ packages:
 
   /convert-source-map@1.9.0:
     resolution: {integrity: sha512-ASFBup0Mz1uyiIjANan1jzLQami9z1PoYSZCiiYW2FczPbenXc45FZdBZLzOT+r6+iciuEModtmCti+hjaAk0A==}
+
+  /convert-source-map@2.0.0:
+    resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
+    dev: true
 
   /cookie-signature@1.0.6:
     resolution: {integrity: sha512-QADzlaHc8icV8I7vbaJXJwod9HWYp8uCqf1xa4OfNu1T7JVxQIrUgOWtHdNDtPiywmFbiS12VjotIXLrKM3orQ==}
