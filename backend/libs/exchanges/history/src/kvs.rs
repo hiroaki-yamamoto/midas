@@ -1,9 +1,7 @@
 use ::kvs::SymbolKVSBuilder;
 
-#[allow(non_upper_case_globals)]
-pub const CurrentSyncProgressStoreBuilder: SymbolKVSBuilder<i64> =
+pub const CUR_SYNC_PROG_KVS_BUILDER: SymbolKVSBuilder<i64> =
   SymbolKVSBuilder::new("kline_sync:current");
 
-#[allow(non_upper_case_globals)]
-pub const NumObjectsToFetchStoreBuilder: SymbolKVSBuilder<i64> =
+pub const NUM_TO_FETCH_KVS_BUILDER: SymbolKVSBuilder<i64> =
   SymbolKVSBuilder::new("kline_sync:num");

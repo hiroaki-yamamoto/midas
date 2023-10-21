@@ -9,16 +9,13 @@ use ::rpc::entities::Exchanges;
 
 pub use self::filter::NodeFilter;
 
-#[allow(non_upper_case_globals)]
-pub const ObserverNodeKVSBuilder: LastCheckedKVSBuilder<String> =
+pub const NODE_KVS_BUILDER: LastCheckedKVSBuilder<String> =
   LastCheckedKVSBuilder::new("observer_node");
 
-#[allow(non_upper_case_globals)]
-pub const ONEXTypeKVSBuilder: LastCheckedKVSBuilder<String> =
+pub const NODE_EXCHANGE_TYPE_KVS_BUILDER: LastCheckedKVSBuilder<String> =
   LastCheckedKVSBuilder::new("observer_node_exchange_type");
 
-#[allow(non_upper_case_globals)]
-pub const InitLockBuilder: NormalKVSBuilder<String> =
+pub const INIT_LOCK_BUILDER: NormalKVSBuilder<String> =
   NormalKVSBuilder::<String>::new("init_lock".to_String());
 
 impl<T> ONEXTypeKVS<T>
