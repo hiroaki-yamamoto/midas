@@ -24,18 +24,18 @@ where
   where
     R: FromRedisValue + Send,
   {
-    return Base::lpush(&self, key, value, opt).await;
+    return Base::lpush(self, key, value, opt).await;
   }
 
   async fn lpop(&self, key: &str, count: Option<NonZeroUsize>) -> KVSResult<V> {
-    return Base::lpop(&self, key, count).await;
+    return Base::lpop(self, key, count).await;
   }
 
   async fn lrem<R>(&self, key: &str, count: isize, elem: V) -> KVSResult<R>
   where
     R: FromRedisValue,
   {
-    return Base::lrem(&self, key, count, elem).await;
+    return Base::lrem(self, key, count, elem).await;
   }
 
   async fn lrange<R>(
@@ -47,13 +47,13 @@ where
   where
     R: FromRedisValue,
   {
-    return Base::lrange(&self, key, start, stop).await;
+    return Base::lrange(self, key, start, stop).await;
   }
 
   async fn llen<R>(&self, key: &str) -> KVSResult<R>
   where
     R: FromRedisValue,
   {
-    return Base::llen(&self, key).await;
+    return Base::llen(self, key).await;
   }
 }

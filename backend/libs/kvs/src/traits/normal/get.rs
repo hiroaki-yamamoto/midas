@@ -12,6 +12,6 @@ where
   V: FromRedisValue,
 {
   async fn get(&self, key: &str) -> KVSResult<V> {
-    return Base::get(&self, key).await;
+    return Base::get(self, key).await;
   }
 }

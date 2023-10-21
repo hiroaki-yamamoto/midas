@@ -16,6 +16,6 @@ where
   where
     R: FromRedisValue,
   {
-    return Base::del(&self, keys).await;
+    return Base::del(self, keys).await;
   }
 }

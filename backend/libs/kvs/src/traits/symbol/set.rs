@@ -32,7 +32,8 @@ where
       cmds.set_options(&channel_name, value, opt)
     } else {
       cmds.set(&channel_name, value)
-    };
+    }
+    .await;
     return Ok(result?);
   }
 }

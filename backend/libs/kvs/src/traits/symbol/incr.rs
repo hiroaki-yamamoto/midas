@@ -1,4 +1,5 @@
 use ::async_trait::async_trait;
+use ::futures::future::TryFutureExt;
 use ::redis::AsyncCommands as Commands;
 
 use ::errors::KVSResult;
@@ -23,13 +24,18 @@ where
     let channel_name = self.channel_name(exchange, symbol);
     let cmds = self.commands();
     let mut cmds = cmds.lock().await;
-    return Ok(cmds.incr(&channel_name, delta).and_then(|_: ()| {
-      return opt.execute(&mut cmds, &channel_name);
-    })?);
+    return Ok(
+      cmds
+        .incr(&channel_name, delta)
+        .and_then(|_: ()| async {
+          return opt.execute(self.commands(), &channel_name).await;
+        })
+        .await?,
+    );
   }
 
   async fn reset(&self, exchange: &str, symbol: &str) -> KVSResult<()> {
     let channel_name = self.channel_name(exchange, symbol);
-    return Ok(self.commands().lock().await.set(channel_name, 0)?);
+    return Ok(self.commands().lock().await.set(channel_name, 0).await?);
   }
 }

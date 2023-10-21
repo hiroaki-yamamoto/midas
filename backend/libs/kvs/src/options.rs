@@ -27,7 +27,7 @@ pub trait WriteOptionTrait {
   {
     let mut res: RedisResult<()> = Ok(());
     if let Some(duration) = self.duration() {
-      let cmds = cmds.lock().await;
+      let mut cmds = cmds.lock().await;
       res = res.and(cmds.pexpire(key, duration.as_millis() as usize).await);
     }
     return res;

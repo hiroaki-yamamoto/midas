@@ -1,6 +1,8 @@
 use ::std::time::{Duration, SystemTime};
 
 use ::async_trait::async_trait;
+use ::futures::StreamExt;
+
 use ::errors::KVSResult;
 
 use crate::redis::{AsyncCommands as Commands, RedisResult};
@@ -17,9 +19,12 @@ where
     let mut cmd = cmd.lock().await;
 
     let scan_pattern = self.get_timestamp_channel("*");
-    let keys: Vec<String> =
-      cmd.scan_match::<_, String>(scan_pattern)?.collect();
-    let last_checked_timestamps: Vec<i64> = cmd.mget(&keys)?;
+    let keys: Vec<String> = cmd
+      .scan_match::<_, String>(scan_pattern)
+      .await?
+      .collect()
+      .await;
+    let last_checked_timestamps: Vec<i64> = cmd.mget(&keys).await?;
     let last_checked_timestamps: Vec<KVSResult<SystemTime>> =
       last_checked_timestamps
         .into_iter()

@@ -35,7 +35,7 @@ where
     let key = self.get_timestamp_channel(key);
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;
-    let timestamp: i64 = cmd.get(key)?;
+    let timestamp: i64 = cmd.get(key).await?;
     return Ok(Self::convert_timestamp(timestamp)?);
   }
 
@@ -55,8 +55,8 @@ where
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;
     return Ok(match opt {
-      Some(opt) => cmd.set_options(key, now, opt)?,
-      None => cmd.set(key, now)?,
+      Some(opt) => cmd.set_options(key, now, opt).await?,
+      None => cmd.set(key, now).await?,
     });
   }
 
@@ -70,6 +70,6 @@ where
       .collect();
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;
-    return Ok(cmd.del(keys)?);
+    return Ok(cmd.del(keys).await?);
   }
 }

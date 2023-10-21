@@ -20,6 +20,6 @@ where
       .collect();
     let cmd = self.commands();
     let mut cmd = cmd.lock().await;
-    return Ok(cmd.del(channel_names)?);
+    return Ok(cmd.del(channel_names).await?);
   }
 }

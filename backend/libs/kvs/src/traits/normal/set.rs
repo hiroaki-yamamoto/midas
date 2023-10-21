@@ -21,6 +21,6 @@ where
   where
     R: FromRedisValue,
   {
-    return Self::set(&self, key, value, opt).await;
+    return Base::set(self, key, value, opt).await;
   }
 }

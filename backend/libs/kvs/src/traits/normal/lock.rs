@@ -21,6 +21,6 @@ where
     Ft: Future<Output = Fr> + Send,
     Fr: Send,
   {
-    return Base::lock(&self, key, func_on_success).await;
+    return Base::lock(self, key, func_on_success).await;
   }
 }
