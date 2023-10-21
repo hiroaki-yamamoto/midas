@@ -1,3 +1,6 @@
+mod base_impl;
+mod normal_impl;
+
 use ::std::marker::PhantomData;
 use ::std::sync::Arc;
 
@@ -5,10 +8,6 @@ use ::tokio::sync::Mutex;
 
 use crate::redis::AsyncCommands as Commands;
 use crate::redis::FromRedisValue;
-use crate::traits::base::{Base, ChannelName};
-use crate::traits::normal::{
-  Exist, Expiration, Get, ListOp, Lock, Remove, Set,
-};
 
 pub struct KVSBuilder<R>
 where
@@ -32,7 +31,7 @@ where
   where
     T: Commands,
   {
-    return Arc::new(KVS::new(connection, self.channel_name).into());
+    return Arc::new(KVS::new(connection, self.channel_name.clone()).into());
   }
 }
 
@@ -58,25 +57,5 @@ where
       channel_name,
       _r: PhantomData::default(),
     };
-  }
-}
-
-impl<R, T> Base<T> for KVS<R, T>
-where
-  R: FromRedisValue,
-  T: Commands,
-{
-  fn commands(&self) -> Arc<Mutex<T>> {
-    return self.connection.clone();
-  }
-}
-
-impl<R, T> ChannelName for KVS<R, T>
-where
-  R: FromRedisValue,
-  T: Commands,
-{
-  fn channel_name(&self, key: &str) -> String where {
-    return format!("{}.{}", self.channel_name, key);
   }
 }
