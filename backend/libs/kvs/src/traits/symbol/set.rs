@@ -1,6 +1,8 @@
 use ::async_trait::async_trait;
 use ::errors::KVSResult;
-use ::redis::{Commands, FromRedisValue, SetOptions, ToRedisArgs};
+use ::redis::{
+  AsyncCommands as Commands, FromRedisValue, SetOptions, ToRedisArgs,
+};
 
 use super::channel_name::ChannelName;
 use crate::options::WriteOption;
@@ -10,7 +12,7 @@ use crate::traits::base::Base;
 pub trait Set<T, V>: Base<T> + ChannelName
 where
   T: Commands + Send,
-  for<'a> V: ToRedisArgs + Send + 'a,
+  for<'async_trait> V: ToRedisArgs + Send + Sync + 'async_trait,
 {
   async fn set<R>(
     &self,

@@ -1,5 +1,5 @@
 use ::async_trait::async_trait;
-use ::redis::{Commands, FromRedisValue, ToRedisArgs};
+use ::redis::{AsyncCommands as Commands, FromRedisValue, ToRedisArgs};
 
 use ::errors::KVSResult;
 
@@ -12,7 +12,7 @@ use super::base::Base;
 pub trait Set<T, V>: Base<T> + BaseSet<T, V>
 where
   T: Commands + Send,
-  for<'a> V: ToRedisArgs + Send + 'a,
+  for<'async_trait> V: ToRedisArgs + Send + Sync + 'async_trait,
 {
   async fn set<R>(
     &self,

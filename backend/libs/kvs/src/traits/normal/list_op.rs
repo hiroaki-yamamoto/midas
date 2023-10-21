@@ -12,7 +12,8 @@ use crate::WriteOption;
 pub trait ListOp<T, V>: Base<T, V> + Lock<T>
 where
   T: Commands + Send,
-  for<'a> V: FromRedisValue + ToRedisArgs + Send + 'a,
+  for<'async_trait> V:
+    FromRedisValue + ToRedisArgs + Send + Sync + 'async_trait,
 {
   async fn lpush<R>(
     &self,

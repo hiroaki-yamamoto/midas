@@ -3,7 +3,7 @@ use ::std::future::Future;
 use ::async_trait::async_trait;
 
 use ::errors::DLockResult;
-use ::redis::Commands;
+use ::redis::AsyncCommands as Commands;
 
 use crate::traits::base::Lock as Base;
 

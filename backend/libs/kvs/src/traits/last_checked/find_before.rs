@@ -3,7 +3,7 @@ use ::std::time::{Duration, SystemTime};
 use ::async_trait::async_trait;
 use ::errors::KVSResult;
 
-use crate::redis::{Commands, RedisResult};
+use crate::redis::{AsyncCommands as Commands, RedisResult};
 
 use super::Base;
 

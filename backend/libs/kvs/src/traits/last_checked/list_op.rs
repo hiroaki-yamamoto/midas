@@ -1,7 +1,7 @@
 use ::std::num::NonZeroUsize;
 
 use ::async_trait::async_trait;
-use ::redis::{Commands, FromRedisValue, ToRedisArgs};
+use ::redis::{AsyncCommands as Commands, FromRedisValue, ToRedisArgs};
 
 use ::errors::KVSResult;
 
@@ -13,7 +13,8 @@ use crate::traits::base::ListOp as BaseListOp;
 pub trait ListOp<T, V>: Base<T> + BaseListOp<T, V>
 where
   T: Commands + Send,
-  for<'async_trait> V: FromRedisValue + ToRedisArgs + Send + 'async_trait,
+  for<'async_trait> V:
+    FromRedisValue + ToRedisArgs + Send + Sync + 'async_trait,
 {
   async fn lpush<R>(
     &self,

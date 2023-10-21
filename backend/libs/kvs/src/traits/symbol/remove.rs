@@ -1,7 +1,7 @@
 use ::std::sync::Arc;
 
 use ::async_trait::async_trait;
-use ::redis::Commands;
+use ::redis::AsyncCommands as Commands;
 
 use ::errors::KVSResult;
 
@@ -11,7 +11,7 @@ use crate::traits::base::Base;
 #[async_trait]
 pub trait Remove<T>: Base<T> + ChannelName
 where
-  T: Commands + Send,
+  T: Commands + Send + Sync,
 {
   async fn del(&self, exchange: &str, symbols: &[Arc<str>]) -> KVSResult<()> {
     let channel_names: Vec<String> = symbols

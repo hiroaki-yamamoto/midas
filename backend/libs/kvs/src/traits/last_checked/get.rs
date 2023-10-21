@@ -1,6 +1,6 @@
 use ::async_trait::async_trait;
 use ::errors::KVSResult;
-use ::redis::{Commands, FromRedisValue, ToRedisArgs};
+use ::redis::{AsyncCommands as Commands, FromRedisValue, ToRedisArgs};
 
 use super::base::Base;
 use crate::traits::base::Get as BaseGet;

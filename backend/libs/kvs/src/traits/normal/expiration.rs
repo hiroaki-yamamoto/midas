@@ -1,7 +1,7 @@
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::redis::Commands;
+use ::redis::AsyncCommands as Commands;
 
 use ::errors::KVSResult;
 
