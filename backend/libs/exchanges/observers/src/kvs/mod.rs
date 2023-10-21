@@ -4,17 +4,21 @@ use ::futures::stream::{iter, BoxStream, StreamExt};
 
 use ::errors::KVSResult;
 use ::kvs::redis::Commands;
-use ::kvs::NormalKVSBuilder;
-use ::kvs_macros::{kvs, last_check_kvs};
+use ::kvs::{LastCheckedKVSBuilder, NormalKVSBuilder};
 use ::rpc::entities::Exchanges;
 
 pub use self::filter::NodeFilter;
 
-last_check_kvs!(pub, ObserverNodeKVS, String, "observer_node:{}");
-last_check_kvs!(pub, ONEXTypeKVS, String, "observer_node_exchange_type:{}");
+#[allow(non_upper_case_globals)]
+pub const ObserverNodeKVSBuilder: LastCheckedKVSBuilder<String> =
+  LastCheckedKVSBuilder::new("observer_node");
 
 #[allow(non_upper_case_globals)]
-pub const InitLock: NormalKVSBuilder<String> =
+pub const ONEXTypeKVSBuilder: LastCheckedKVSBuilder<String> =
+  LastCheckedKVSBuilder::new("observer_node_exchange_type");
+
+#[allow(non_upper_case_globals)]
+pub const InitLockBuilder: NormalKVSBuilder<String> =
   NormalKVSBuilder::<String>::new("init_lock".to_String());
 
 impl<T> ONEXTypeKVS<T>
