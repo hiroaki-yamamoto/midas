@@ -6,7 +6,7 @@ use ::redis::Commands;
 use ::errors::KVSResult;
 
 use super::channel_name::ChannelName;
-use crate::traits::normal::Base;
+use crate::traits::base::Base;
 
 #[async_trait]
 pub trait Remove<T>: Base<T> + ChannelName

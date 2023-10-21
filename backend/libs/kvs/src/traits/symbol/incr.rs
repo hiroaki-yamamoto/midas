@@ -4,7 +4,7 @@ use ::redis::Commands;
 use ::errors::KVSResult;
 
 use crate::options::{WriteOption, WriteOptionTrait};
-use crate::traits::normal::Base;
+use crate::traits::base::Base;
 
 use super::channel_name::ChannelName;
 

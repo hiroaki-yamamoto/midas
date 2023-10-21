@@ -3,7 +3,7 @@ use ::errors::KVSResult;
 use ::redis::{Commands, FromRedisValue};
 
 use super::channel_name::ChannelName;
-use crate::traits::normal::Base;
+use crate::traits::base::Base;
 
 #[async_trait]
 pub trait Get<T, V>: Base<T> + ChannelName
