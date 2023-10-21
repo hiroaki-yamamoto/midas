@@ -7,10 +7,10 @@ use ::errors::{KVSError, KVSResult};
 use ::redis::{Commands, FromRedisValue, SetOptions};
 
 use crate::options::WriteOption;
-use crate::traits::normal::{Base as NormalBase, ChannelName};
+use crate::traits::base::{Base as BaseBase, ChannelName};
 
 #[async_trait]
-pub trait Base<T>: NormalBase<T> + ChannelName
+pub trait Base<T>: BaseBase<T> + ChannelName
 where
   T: Commands + Send,
 {

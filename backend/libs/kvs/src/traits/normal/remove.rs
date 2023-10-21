@@ -5,10 +5,10 @@ use ::redis::{Commands, FromRedisValue};
 
 use ::errors::KVSResult;
 
-use super::{Base, ChannelName};
+use crate::traits::base::Remove as Base;
 
 #[async_trait]
-pub trait Remove<T>: Base<T> + ChannelName
+pub trait Remove<T>: Base<T>
 where
   T: Commands + Send,
 {
@@ -16,10 +16,6 @@ where
   where
     R: FromRedisValue,
   {
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    let channel_names: Vec<String> =
-      keys.into_iter().map(|key| self.channel_name(key)).collect();
-    return Ok(cmd.del(channel_names)?);
+    return Base::del(&self, keys).await;
   }
 }

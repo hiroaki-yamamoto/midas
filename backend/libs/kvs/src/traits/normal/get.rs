@@ -3,18 +3,15 @@ use ::redis::{Commands, FromRedisValue};
 
 use ::errors::KVSResult;
 
-use super::{Base, ChannelName};
+use crate::traits::base::Get as Base;
 
 #[async_trait]
-pub trait Get<T, V>: Base<T> + ChannelName
+pub trait Get<T, V>: Base<T, V>
 where
   T: Commands + Send,
   V: FromRedisValue,
 {
   async fn get(&self, key: &str) -> KVSResult<V> {
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    let channel_name = self.channel_name(key);
-    return Ok(cmd.get(channel_name)?);
+    return Base::get(&self, key).await;
   }
 }

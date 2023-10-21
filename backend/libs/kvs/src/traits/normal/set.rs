@@ -1,13 +1,13 @@
 use ::async_trait::async_trait;
-use ::redis::{Commands, FromRedisValue, SetOptions, ToRedisArgs};
+use ::redis::{Commands, FromRedisValue, ToRedisArgs};
 
 use ::errors::KVSResult;
 
-use super::{Base, ChannelName};
 use crate::options::WriteOption;
+use crate::traits::base::Set as Base;
 
 #[async_trait]
-pub trait Set<T, V>: Base<T> + ChannelName
+pub trait Set<T, V>: Base<T, V>
 where
   T: Commands + Send,
   for<'a> V: ToRedisArgs + Send + 'a,
@@ -21,15 +21,6 @@ where
   where
     R: FromRedisValue,
   {
-    let channel_name = self.channel_name(key);
-    let cmds = self.commands();
-    let mut cmds = cmds.lock().await;
-    let result = if let Some(opt) = opt.into() {
-      let opt: SetOptions = opt.into();
-      cmds.set_options(&channel_name, value, opt)
-    } else {
-      cmds.set(&channel_name, value)
-    };
-    return Ok(result?);
+    return Self::set(&self, key, value, opt).await;
   }
 }

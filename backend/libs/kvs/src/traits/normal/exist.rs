@@ -3,17 +3,14 @@ use ::redis::Commands;
 
 use ::errors::KVSResult;
 
-use super::{Base, ChannelName};
+use crate::traits::base::Exist as BaseExist;
 
 #[async_trait]
-pub trait Exist<T>: Base<T> + ChannelName
+pub trait Exist<T>: BaseExist<T>
 where
   T: Commands + Send,
 {
   async fn exists(&self, key: &str) -> KVSResult<bool> {
-    let channel_name = self.channel_name(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    return Ok(cmd.exists(channel_name)?);
+    return BaseExist::exists(self, key).await;
   }
 }
