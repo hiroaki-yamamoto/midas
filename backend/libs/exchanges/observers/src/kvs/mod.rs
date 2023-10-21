@@ -1,10 +1,12 @@
 mod filter;
 
+use ::std::sync::Arc;
+
 use ::futures::stream::{iter, BoxStream, StreamExt};
 
 use ::errors::KVSResult;
-use ::kvs::redis::Commands;
-use ::kvs::{LastCheckedKVSBuilder, NormalKVSBuilder};
+use ::kvs::redis::AsyncCommands;
+use ::kvs::{LastCheckedKVS, LastCheckedKVSBuilder, NormalKVSBuilder};
 use ::rpc::entities::Exchanges;
 
 pub use self::filter::NodeFilter;
@@ -18,10 +20,23 @@ pub const NODE_EXCHANGE_TYPE_KVS_BUILDER: LastCheckedKVSBuilder<String> =
 pub const INIT_LOCK_BUILDER: NormalKVSBuilder<String> =
   NormalKVSBuilder::<String>::new("init_lock".to_String());
 
-impl<T> ONEXTypeKVS<T>
+pub struct NodeIndexer<T>
 where
-  T: Commands + Send + Sync,
+  T: AsyncCommands,
 {
+  node_exchange_type_kvs: Arc<LastCheckedKVS<String, T>>,
+}
+
+impl<T> NodeIndexer<T>
+where
+  T: AsyncCommands,
+{
+  pub fn new(node_exchange_type_kvs: Arc<LastCheckedKVS<String, T>>) -> Self {
+    return Self {
+      node_exchange_type_kvs,
+    };
+  }
+
   /// Index node ids to KVS
   pub async fn index_node(&self, node: String) -> KVSResult<usize> {
     let channel_name = self.channel_name("node_index");
@@ -79,5 +94,3 @@ where
     return Ok(keys.boxed());
   }
 }
-
-impl<T> ObserverNodeKVS<T> where T: Commands + Send + Sync {}
