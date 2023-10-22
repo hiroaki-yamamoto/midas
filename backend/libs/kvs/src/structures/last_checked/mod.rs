@@ -48,7 +48,7 @@ where
   R: FromRedisValue,
   T: Commands + Clone,
 {
-  pub fn new(connection: T, channel_name: String) -> Self {
+  pub(self) fn new(connection: T, channel_name: String) -> Self {
     return Self {
       connection,
       channel_name,

@@ -1,4 +1,5 @@
 use ::std::collections::HashSet;
+use ::std::sync::Arc;
 
 use ::errors::KVSResult;
 use ::futures::stream::{iter, BoxStream, StreamExt};
@@ -6,14 +7,14 @@ use ::kvs::redis::Commands;
 use ::kvs::traits::last_checked::ListOp;
 use ::rpc::entities::Exchanges;
 
-use super::{ONEXTypeKVS, ObserverNodeKVS};
+use super::NodeIndexer;
 
 pub struct NodeFilter<T>
 where
   T: Commands + Send + Sync,
 {
-  node_kvs: ObserverNodeKVS<T>,
-  exchange_type_kvs: ONEXTypeKVS<T>,
+  node_kvs: Arc<dyn ListOp<T, String>>,
+  indexer: NodeIndexer<T>,
 }
 
 impl<T> NodeFilter<T>
@@ -21,13 +22,10 @@ where
   T: Commands + Send + Sync,
 {
   pub fn new(
-    node_kvs: &ObserverNodeKVS<T>,
-    exchange_type_kvs: &ONEXTypeKVS<T>,
+    node_kvs: Arc<dyn ListOp<T, String>>,
+    indexer: NodeIndexer<T>,
   ) -> Self {
-    Self {
-      node_kvs: node_kvs.clone(),
-      exchange_type_kvs: exchange_type_kvs.clone(),
-    }
+    Self { node_kvs, indexer }
   }
 
   pub async fn get_handling_symbol_at_exchange(
