@@ -27,21 +27,21 @@ where
     let channel_name = self.channel_name(&key);
     let opt: Option<WriteOption> = opt.into();
 
-    let cmds = self.commands();
+    let mut cmds = self.commands();
     let res = if opt.non_existent_only() {
       match self.exists(&key).await {
         Ok(exists) => {
           if exists {
             return Err(KVSError::KeyExists(key.to_string()));
           } else {
-            let mut cmds = cmds.lock().await;
+            // let mut cmds = cmds.lock().await;
             cmds.lpush(&channel_name, value).await
           }
         }
         Err(e) => return Err(e),
       }
     } else {
-      let mut cmds = cmds.lock().await;
+      // let mut cmds = cmds.lock().await;
       cmds.lpush(&channel_name, value).await
     }?;
 
@@ -51,8 +51,8 @@ where
 
   async fn lpop(&self, key: &str, count: Option<NonZeroUsize>) -> KVSResult<V> {
     let channel_name = self.channel_name(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
+    let mut cmd = self.commands();
+    // let mut cmd = cmd.lock().await;
     return Ok(cmd.lpop(channel_name, count).await?);
   }
 
@@ -61,8 +61,8 @@ where
     R: FromRedisValue,
   {
     let channel_name = self.channel_name(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
+    let mut cmd = self.commands();
+    // let mut cmd = cmd.lock().await;
     return Ok(cmd.lrem(channel_name, count, elem).await?);
   }
 
@@ -76,8 +76,8 @@ where
     R: FromRedisValue,
   {
     let channel_name = self.channel_name(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
+    let mut cmd = self.commands();
+    // let mut cmd = cmd.lock().await;
     return Ok(cmd.lrange(channel_name, start, stop).await?);
   }
 
@@ -86,8 +86,8 @@ where
     R: FromRedisValue,
   {
     let channel_name = self.channel_name(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
+    let mut cmd = self.commands();
+    // let mut cmd = cmd.lock().await;
     return Ok(cmd.llen(channel_name).await?);
   }
 }

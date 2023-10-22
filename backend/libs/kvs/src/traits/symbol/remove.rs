@@ -18,8 +18,8 @@ where
       .into_iter()
       .map(|symbol| self.channel_name(exchange, symbol))
       .collect();
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
+    let mut cmd = self.commands();
+    // let mut cmd = cmd.lock().await;
     return Ok(cmd.del(channel_names).await?);
   }
 }

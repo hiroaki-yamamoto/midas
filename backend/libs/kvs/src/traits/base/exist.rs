@@ -12,8 +12,8 @@ where
 {
   async fn exists(&self, key: &str) -> KVSResult<bool> {
     let channel_name = self.channel_name(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
+    let mut cmd = self.commands();
+    // let mut cmd = cmd.lock().await;
     return Ok(cmd.exists(channel_name).await?);
   }
 }

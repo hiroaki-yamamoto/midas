@@ -21,13 +21,13 @@ pub struct WriteOption {
 pub trait WriteOptionTrait {
   fn duration(&self) -> Option<Duration>;
   fn non_existent_only(&self) -> bool;
-  async fn execute<C>(&self, cmds: Arc<Mutex<C>>, key: &str) -> RedisResult<()>
+  async fn execute<C>(&self, mut cmds: C, key: &str) -> RedisResult<()>
   where
     C: Commands,
   {
     let mut res: RedisResult<()> = Ok(());
     if let Some(duration) = self.duration() {
-      let mut cmds = cmds.lock().await;
+      // let mut cmds = cmds.lock().await;
       res = res.and(cmds.pexpire(key, duration.as_millis() as usize).await);
     }
     return res;
@@ -72,7 +72,7 @@ impl WriteOptionTrait for Option<WriteOption> {
       .map(|opt| opt.non_existent_only())
       .unwrap_or(false);
   }
-  async fn execute<T>(&self, cmds: Arc<Mutex<T>>, key: &str) -> RedisResult<()>
+  async fn execute<T>(&self, mut cmds: T, key: &str) -> RedisResult<()>
   where
     T: Commands,
   {

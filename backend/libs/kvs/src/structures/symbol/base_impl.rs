@@ -1,9 +1,5 @@
-use ::std::sync::Arc;
-
-use ::tokio::sync::Mutex;
-
 use crate::redis::AsyncCommands as Commands;
-use crate::redis::{FromRedisValue, ToRedisArgs};
+use crate::redis::FromRedisValue;
 
 use super::KVS;
 use crate::traits::base::Base;
@@ -11,9 +7,9 @@ use crate::traits::base::Base;
 impl<R, T> Base<T> for KVS<R, T>
 where
   R: FromRedisValue,
-  T: Commands,
+  T: Commands + Clone,
 {
-  fn commands(&self) -> Arc<Mutex<T>> {
+  fn commands(&self) -> T {
     return self.connection.clone();
   }
 }

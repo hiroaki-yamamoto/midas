@@ -33,8 +33,8 @@ where
 
   async fn get_last_checked(&self, key: &str) -> KVSResult<SystemTime> {
     let key = self.get_timestamp_channel(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
+    let mut cmd = self.commands();
+    // let mut cmd = cmd.lock().await;
     let timestamp: i64 = cmd.get(key).await?;
     return Ok(Self::convert_timestamp(timestamp)?);
   }
@@ -52,8 +52,8 @@ where
       .duration_since(SystemTime::UNIX_EPOCH)?
       .as_secs();
     let opt: Option<SetOptions> = opt.map(|opt| opt.into());
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
+    let mut cmd = self.commands();
+    // let mut cmd = cmd.lock().await;
     return Ok(match opt {
       Some(opt) => cmd.set_options(key, now, opt).await?,
       None => cmd.set(key, now).await?,
@@ -68,8 +68,8 @@ where
       .into_iter()
       .map(|key| self.get_timestamp_channel(key))
       .collect();
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
+    let mut cmd = self.commands();
+    // let mut cmd = cmd.lock().await;
     return Ok(cmd.del(keys).await?);
   }
 }

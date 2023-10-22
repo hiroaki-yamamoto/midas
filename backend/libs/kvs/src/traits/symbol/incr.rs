@@ -22,8 +22,8 @@ where
     opt: Option<WriteOption>,
   ) -> KVSResult<()> {
     let channel_name = self.channel_name(exchange, symbol);
-    let cmds = self.commands();
-    let mut cmds = cmds.lock().await;
+    let mut cmds = self.commands();
+    // let mut cmds = cmds.lock().await;
     return Ok(
       cmds
         .incr(&channel_name, delta)
@@ -36,6 +36,6 @@ where
 
   async fn reset(&self, exchange: &str, symbol: &str) -> KVSResult<()> {
     let channel_name = self.channel_name(exchange, symbol);
-    return Ok(self.commands().lock().await.set(channel_name, 0).await?);
+    return Ok(self.commands().set(channel_name, 0).await?);
   }
 }

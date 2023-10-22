@@ -14,8 +14,8 @@ where
 {
   async fn expire(&self, key: &str, dur: Duration) -> KVSResult<bool> {
     let dur_mils = dur.as_millis() as usize;
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
+    let mut cmd = self.commands();
+    // let mut cmd = cmd.lock().await;
     let channel_name = self.channel_name(key);
     if cmd.pexpire::<_, u16>(channel_name, dur_mils).await? == 1 {
       return Ok(true);

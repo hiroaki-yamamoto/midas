@@ -12,8 +12,8 @@ where
   V: FromRedisValue,
 {
   async fn get(&self, key: &str) -> KVSResult<V> {
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
+    let mut cmd = self.commands();
+    // let mut cmd = cmd.lock().await;
     let channel_name = self.channel_name(key);
     return Ok(cmd.get(channel_name).await?);
   }

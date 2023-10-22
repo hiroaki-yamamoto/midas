@@ -2,9 +2,6 @@ mod base_impl;
 mod last_checked_impl;
 
 use ::std::marker::PhantomData;
-use ::std::sync::Arc;
-
-use ::tokio::sync::Mutex;
 
 use crate::redis::AsyncCommands as Commands;
 use crate::redis::FromRedisValue;
@@ -27,13 +24,11 @@ where
       _r: PhantomData,
     };
   }
-  pub fn build<T>(&self, connection: Arc<Mutex<T>>) -> Arc<Mutex<KVS<R, T>>>
+  pub fn build<T>(&self, connection: T) -> KVS<R, T>
   where
-    T: Commands,
+    T: Commands + Clone,
   {
-    return Arc::new(
-      KVS::new(connection, self.channel_name.to_string()).into(),
-    );
+    return KVS::new(connection, self.channel_name.to_string());
   }
 }
 
@@ -41,9 +36,9 @@ where
 pub struct KVS<R, T>
 where
   R: FromRedisValue,
-  T: Commands,
+  T: Commands + Clone,
 {
-  pub connection: Arc<Mutex<T>>,
+  pub connection: T,
   channel_name: String,
   _r: PhantomData<R>,
 }
@@ -51,9 +46,9 @@ where
 impl<R, T> KVS<R, T>
 where
   R: FromRedisValue,
-  T: Commands,
+  T: Commands + Clone,
 {
-  pub fn new(connection: Arc<Mutex<T>>, channel_name: String) -> Self {
+  pub fn new(connection: T, channel_name: String) -> Self {
     return Self {
       connection,
       channel_name,

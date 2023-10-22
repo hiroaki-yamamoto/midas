@@ -6,7 +6,7 @@ use crate::traits::last_checked::{Base, Expiration, Get, ListOp, Remove, Set};
 
 impl<R, T> Base<T> for KVS<R, T>
 where
-  T: Commands + Send,
+  T: Commands + Clone + Send,
   R: FromRedisValue,
 {
 }
@@ -14,34 +14,34 @@ where
 impl<R, T> Expiration<T> for KVS<R, T>
 where
   R: FromRedisValue,
-  T: Commands,
+  T: Commands + Clone + Send,
 {
 }
 
 impl<R, T> Get<T, R> for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send,
-  T: Commands + Send,
+  T: Commands + Clone + Send,
 {
 }
 
 impl<R, T> ListOp<T, R> for KVS<R, T>
 where
   for<'a> R: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
-  T: Commands,
+  T: Commands + Clone + Send,
 {
 }
 
 impl<R, T> Remove<T> for KVS<R, T>
 where
   R: FromRedisValue,
-  T: Commands,
+  T: Commands + Clone + Send,
 {
 }
 
 impl<R, T> Set<T, R> for KVS<R, T>
 where
   for<'a> R: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
-  T: Commands,
+  T: Commands + Clone + Send,
 {
 }

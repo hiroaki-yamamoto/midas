@@ -9,48 +9,48 @@ use crate::traits::normal::{
 impl<R, T> Exist<T> for KVS<R, T>
 where
   R: FromRedisValue,
-  T: Commands,
+  T: Commands + Clone,
 {
 }
 
 impl<R, T> Expiration<T> for KVS<R, T>
 where
   R: FromRedisValue,
-  T: Commands,
+  T: Commands + Clone,
 {
 }
 
 impl<R, T> Get<T, R> for KVS<R, T>
 where
   R: FromRedisValue,
-  T: Commands,
+  T: Commands + Clone,
 {
 }
 
 impl<R, T> ListOp<T, R> for KVS<R, T>
 where
   for<'a> R: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
-  T: Commands,
+  T: Commands + Clone,
 {
 }
 
 impl<R, T> Lock<T> for KVS<R, T>
 where
   R: FromRedisValue,
-  T: Commands,
+  T: Commands + Clone,
 {
 }
 
 impl<R, T> Remove<T> for KVS<R, T>
 where
   R: FromRedisValue,
-  T: Commands,
+  T: Commands + Clone,
 {
 }
 
 impl<R, T> Set<T, R> for KVS<R, T>
 where
   for<'a> R: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
-  T: Commands,
+  T: Commands + Clone,
 {
 }

@@ -31,8 +31,8 @@ where
     let (refresh_tx, mut refresh_rx) = channel::<()>(1);
     let channel_name = self.channel_name(&format!("{}:lock", key));
     let channel_name_2 = channel_name.clone();
-    let dlock = self.commands();
-    let dlock2 = self.commands();
+    let mut dlock = self.commands();
+    let mut dlock2 = self.commands();
 
     let expire_refresh = async move {
       let _ = refresh_rx.recv().await;
@@ -40,8 +40,8 @@ where
       loop {
         select! {
           _ = refresh_timer.tick() => {
-            let mut dlock = dlock2.lock().await;
-            let _ = dlock.expire::<_, i64>(channel_name_2.clone(), 3).await;
+            // let mut dlock = dlock2.lock().await;
+            let _ = dlock2.expire::<_, i64>(channel_name_2.clone(), 3).await;
           },
           _ = refresh_rx.recv() => {
             break;
@@ -53,7 +53,7 @@ where
     let acquire_process = async move {
       let random = generate_random_txt(32);
       let lock: String = async {
-        let mut dlock = dlock.lock().await;
+        // let mut dlock = dlock.lock().await;
         dlock
           .set_options(
             channel_name,
@@ -71,7 +71,7 @@ where
         let res = func_on_success().await;
         let _ = refresh_tx.send(());
         let _ = async {
-          let mut dlock = dlock.lock().await;
+          // let mut dlock = dlock.lock().await;
           dlock.del::<_, usize>("lock").await
         }
         .await;

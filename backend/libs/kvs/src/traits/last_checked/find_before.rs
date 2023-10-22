@@ -15,8 +15,8 @@ where
   C: Commands + Send,
 {
   async fn find_before(&self, dur: Duration) -> RedisResult<Vec<String>> {
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
+    let mut cmd = self.commands();
+    // let mut cmd = cmd.lock().await;
 
     let scan_pattern = self.get_timestamp_channel("*");
     let keys: Vec<String> = cmd
