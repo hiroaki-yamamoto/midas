@@ -6,19 +6,15 @@ use ::log::{as_error, error, info, warn};
 use ::tokio::time::sleep;
 
 use ::errors::{ObserverError, UnknownExchangeError};
-use ::kvs::redis::Commands;
-use ::kvs::traits::last_checked::Get;
-use ::kvs::traits::last_checked::ListOp;
-use ::kvs::traits::last_checked::Remove;
-use ::kvs::traits::last_checked::Set;
-use ::kvs::Connection;
+use ::kvs::redis::AsyncCommands as Commands;
+use ::kvs::traits::last_checked::{Get, ListOp, Remove, Set};
 use ::kvs::WriteOption;
 use ::random::generate_random_txt;
 use ::rpc::entities::Exchanges;
 
 use ::errors::ObserverResult;
 
-use crate::kvs::{ONEXTypeKVS, ObserverNodeKVS};
+use crate::kvs::{NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER};
 
 const NODE_ID_TXT_SIZE: usize = 64;
 
@@ -30,18 +26,18 @@ pub struct NodeIDManager<T>
 where
   T: Commands + Send + Sync,
 {
-  node_kvs: ObserverNodeKVS<T>,
-  exchange_type_kvs: ONEXTypeKVS<T>,
+  node_kvs: Arc<dyn Remove<T> + ListOp<T, String>>,
+  exchange_type_kvs: Arc<dyn Get<T, String> + Set<T, String> + Remove<T>>,
 }
 
 impl<T> NodeIDManager<T>
 where
   T: Commands + Sync + Send,
 {
-  pub fn new(con: Connection<T>) -> Self {
+  pub fn new(con: T) -> Self {
     return Self {
-      node_kvs: ObserverNodeKVS::new(con.clone().into()),
-      exchange_type_kvs: ONEXTypeKVS::new(con),
+      node_kvs: NODE_KVS_BUILDER.build(con.clone()),
+      exchange_type_kvs: NODE_EXCHANGE_TYPE_KVS_BUILDER.build(con),
     };
   }
 
