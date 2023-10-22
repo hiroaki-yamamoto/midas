@@ -1,16 +1,17 @@
+use ::std::sync::Arc;
+
 use ::futures::future::try_join_all;
 
 use ::config::Database;
 use ::errors::{ObserverError, ObserverResult};
-use ::kvs::redis::Commands;
+use ::kvs::redis::AsyncCommands as Commands;
 use ::kvs::traits::normal::Lock;
-use ::kvs::Connection;
 use ::log::{as_serde, info};
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 
-use crate::kvs::InitLock;
+use crate::kvs::INIT_LOCK_BUILDER;
 use crate::pubsub::NodeControlEventPubSub;
 
 use super::NodeDIffTaker;
@@ -23,22 +24,18 @@ where
   diff_taker: NodeDIffTaker<C>,
   balancer: ObservationBalancer<C>,
   control_pubsub: NodeControlEventPubSub,
-  dlock: InitLock<C>,
+  dlock: Arc<dyn Lock<C>>,
 }
 
 impl<C> Init<C>
 where
   C: Commands + Sync + Send,
 {
-  pub async fn new(
-    kvs: Connection<C>,
-    db: Database,
-    nats: &Nats,
-  ) -> ObserverResult<Self> {
+  pub async fn new(kvs: C, db: Database, nats: &Nats) -> ObserverResult<Self> {
     let diff_taker = NodeDIffTaker::new(&db, kvs.clone().into()).await?;
     let balancer = ObservationBalancer::new(kvs.clone().into()).await?;
     let control_pubsub = NodeControlEventPubSub::new(nats).await?;
-    let dlock = InitLock::new(kvs.into());
+    let dlock = INIT_LOCK_BUILDER.build(kvs);
 
     return Ok(Self {
       diff_taker,

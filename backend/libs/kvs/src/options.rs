@@ -1,9 +1,7 @@
 use ::std::convert::From;
-use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::tokio::sync::Mutex;
 
 use ::redis::{
   AsyncCommands as Commands, ExistenceCheck, RedisResult, SetExpiry, SetOptions,
@@ -72,7 +70,7 @@ impl WriteOptionTrait for Option<WriteOption> {
       .map(|opt| opt.non_existent_only())
       .unwrap_or(false);
   }
-  async fn execute<T>(&self, mut cmds: T, key: &str) -> RedisResult<()>
+  async fn execute<T>(&self, cmds: T, key: &str) -> RedisResult<()>
   where
     T: Commands,
   {

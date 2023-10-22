@@ -1,22 +1,24 @@
 use ::std::collections::HashSet;
+use ::std::sync::Arc;
 
 use ::futures::StreamExt;
 
 use ::errors::{KVSResult, ObserverResult};
-use ::kvs::redis::Commands;
+use ::kvs::redis::AsyncCommands as Commands;
 use ::kvs::traits::last_checked::ListOp;
-use ::kvs::Connection;
 use ::rpc::entities::Exchanges;
 
 use crate::entities::TradeObserverControlEvent as ControlEvent;
-use crate::kvs::{NodeFilter, ONEXTypeKVS, ObserverNodeKVS};
+use crate::kvs::{
+  NodeFilter, NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER,
+};
 
 pub struct ObservationBalancer<T>
 where
   T: Commands + Send + Sync,
 {
-  node_kvs: ObserverNodeKVS<T>,
-  exchange_type_kvs: ONEXTypeKVS<T>,
+  node_kvs: Arc<dyn ListOp<T, String>>,
+  exchange_type_kvs: Arc<dyn ListOp<T, String>>,
   node_filter: NodeFilter<T>,
 }
 
@@ -24,9 +26,9 @@ impl<T> ObservationBalancer<T>
 where
   T: Commands + Send + Sync,
 {
-  pub async fn new(kvs: Connection<T>) -> ObserverResult<Self> {
-    let node_kvs = ObserverNodeKVS::new(kvs.clone().into());
-    let exchange_type_kvs = ONEXTypeKVS::new(kvs.clone().into());
+  pub async fn new(kvs: T) -> ObserverResult<Self> {
+    let node_kvs = NODE_KVS_BUILDER.build(kvs).await?;
+    let exchange_type_kvs = NODE_EXCHANGE_TYPE_KVS_BUILDER.build(kvs).await?;
     let filter = NodeFilter::new(&node_kvs, &exchange_type_kvs);
     return Ok(Self {
       node_kvs: node_kvs,

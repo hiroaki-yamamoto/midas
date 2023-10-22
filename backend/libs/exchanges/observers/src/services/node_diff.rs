@@ -1,14 +1,16 @@
 use ::std::collections::HashSet;
+use ::std::sync::Arc;
 
 use ::futures::StreamExt;
 use ::log::info;
 use ::mongodb::Database;
 
 use crate::entities::TradeObserverControlEvent as Event;
-use crate::kvs::NodeFilter;
-use crate::kvs::{ONEXTypeKVS, ObserverNodeKVS};
-use ::kvs::redis::Commands;
-use ::kvs::Connection as KVSConnection;
+use crate::kvs::{
+  NodeFilter, NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER,
+};
+use ::kvs::redis::AsyncCommands as Commands;
+use ::kvs::traits::last_checked::ListOp;
 use ::rpc::entities::Exchanges;
 use ::symbols::get_reader;
 
@@ -19,22 +21,19 @@ where
   T: Commands + Send + Sync,
 {
   db: Database,
-  kvs: ObserverNodeKVS<T>,
-  type_kvs: ONEXTypeKVS<T>,
+  kvs: Arc<dyn ListOp<T, String>>,
+  type_kvs: Arc<dyn ListOp<T, String>>,
 }
 
 impl<T> NodeDIffTaker<T>
 where
   T: Commands + Send + Sync,
 {
-  pub async fn new(
-    db: &Database,
-    cmd: KVSConnection<T>,
-  ) -> ObserverResult<Self> {
+  pub async fn new(db: &Database, cmd: T) -> ObserverResult<Self> {
     return Ok(Self {
       db: db.clone(),
-      kvs: ObserverNodeKVS::new(cmd.clone().into()),
-      type_kvs: ONEXTypeKVS::new(cmd.clone().into()),
+      kvs: NODE_KVS_BUILDER.build(cmd),
+      type_kvs: NODE_EXCHANGE_TYPE_KVS_BUILDER.build(cmd),
     });
   }
 
