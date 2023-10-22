@@ -37,12 +37,13 @@ use self::pubsub::BookTickerPubSub;
 
 const SUBSCRIBE_DELAY: Duration = Duration::from_secs(1);
 
-pub struct TradeObserver<T>
+pub struct TradeObserver<T, KVSType>
 where
   T: RedisCommands + Send + Sync + 'static,
+  KVSType: ListOp<T, String>,
 {
   node_id: Arc<RwLock<Option<String>>>,
-  kvs: Arc<dyn ListOp<T, String>>,
+  kvs: KVSType,
   control_event: NodeControlEventPubSub,
   node_event: NodeEventPubSub,
   trade_handler: Arc<BookTickerHandler>,
@@ -54,9 +55,10 @@ where
   initer: Arc<Init<T>>,
 }
 
-impl<T> TradeObserver<T>
+impl<T, KVSType> TradeObserver<T, KVSType>
 where
   T: RedisCommands + Send + Sync,
+  KVSType: ListOp<T, String>,
 {
   pub async fn new(
     broker: &Nats,
@@ -137,7 +139,7 @@ where
     mut signal: watch::Receiver<bool>,
     symbols_to_add: Arc<Mutex<Vec<String>>>,
     trade_handler: Arc<BookTickerHandler>,
-    kvs: Arc<dyn ListOp<T, String>>,
+    kvs: KVSType,
   ) -> ObserverResult<()> {
     let mut interval = interval(SUBSCRIBE_DELAY);
     loop {
@@ -195,7 +197,7 @@ where
     node_id_lock: Arc<RwLock<Option<String>>>,
     symbols_to_del: Arc<Mutex<Vec<String>>>,
     trade_handler: Arc<BookTickerHandler>,
-    node_kvs: Arc<dyn ListOp<T, String>>,
+    node_kvs: KVSType,
   ) -> ObserverResult<()> {
     let mut interval = interval(SUBSCRIBE_DELAY);
     loop {
@@ -284,9 +286,10 @@ where
 }
 
 #[async_trait]
-impl<T> TradeObserverTrait for TradeObserver<T>
+impl<T, KVSType> TradeObserverTrait for TradeObserver<T, KVSType>
 where
   T: RedisCommands + Send + Sync + 'static,
+  KVSType: ListOp<T, String>,
 {
   async fn start(&self, signal: Box<Signal>) -> ObserverResult<()> {
     let (ready_evloop_tx, ready_evloop_rx) = oneshot::channel();

@@ -7,7 +7,7 @@ use ::tokio::time::sleep;
 
 use ::errors::{ObserverError, UnknownExchangeError};
 use ::kvs::redis::AsyncCommands as Commands;
-use ::kvs::traits::last_checked::{Get, ListOp, Remove, Set};
+use ::kvs::traits::last_checked::{Get, LastCheckedKVS, ListOp, Remove, Set};
 use ::kvs::WriteOption;
 use ::random::generate_random_txt;
 use ::rpc::entities::Exchanges;
@@ -26,8 +26,8 @@ pub struct NodeIDManager<T>
 where
   T: Commands + Send + Sync,
 {
-  node_kvs: Arc<dyn Remove<T> + ListOp<T, String>>,
-  exchange_type_kvs: Arc<dyn Get<T, String> + Set<T, String> + Remove<T>>,
+  node_kvs: Arc<dyn LastCheckedKVS<T, String>>,
+  exchange_type_kvs: Arc<dyn LastCheckedKVS<T, String>>,
 }
 
 impl<T> NodeIDManager<T>

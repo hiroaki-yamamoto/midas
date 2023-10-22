@@ -13,18 +13,20 @@ use crate::kvs::{
   NodeFilter, NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER,
 };
 
-pub struct ObservationBalancer<T>
+pub struct ObservationBalancer<T, NodeKVS>
 where
   T: Commands + Send + Sync,
+  NodeKVS: ListOp<T, String>,
 {
   node_kvs: Arc<dyn ListOp<T, String>>,
   exchange_type_kvs: Arc<dyn ListOp<T, String>>,
-  node_filter: NodeFilter<T>,
+  node_filter: NodeFilter<T, NodeKVS>,
 }
 
-impl<T> ObservationBalancer<T>
+impl<T, NodeKVS> ObservationBalancer<T, NodeKVS>
 where
   T: Commands + Send + Sync,
+  NodeKVS: ListOp<T, String>,
 {
   pub async fn new(kvs: T) -> ObserverResult<Self> {
     let node_kvs = NODE_KVS_BUILDER.build(kvs).await?;
