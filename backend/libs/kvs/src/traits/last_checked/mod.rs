@@ -25,6 +25,7 @@ pub trait LastCheckedKVS<T, V>:
   + ListOp<T, V>
   + FindBefore<T>
   + Expiration<T>
+  + SetOp<T, V>
   + Send
   + Sync
 where
