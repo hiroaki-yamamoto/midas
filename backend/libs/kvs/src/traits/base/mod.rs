@@ -7,6 +7,7 @@ mod list_op;
 mod lock;
 mod remove;
 mod set;
+mod set_op;
 
 pub use self::base::Base;
 pub use self::channel_name::ChannelName;
@@ -17,3 +18,4 @@ pub use self::list_op::ListOp;
 pub use self::lock::Lock;
 pub use self::remove::Remove;
 pub use self::set::Set;
+pub use self::set_op::SetOp;
