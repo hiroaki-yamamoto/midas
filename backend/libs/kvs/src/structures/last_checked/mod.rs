@@ -3,8 +3,12 @@ mod last_checked_impl;
 
 use ::std::marker::PhantomData;
 
+use redis::ToRedisArgs;
+
 use crate::redis::AsyncCommands as Commands;
 use crate::redis::FromRedisValue;
+
+use crate::traits::last_checked::LastCheckedKVS;
 
 pub struct KVSBuilder<'a, R>
 where
@@ -55,4 +59,11 @@ where
       _r: PhantomData::default(),
     };
   }
+}
+
+impl<T, V> LastCheckedKVS<T, V> for KVS<V, T>
+where
+  T: Commands + Clone + Send + Sync,
+  for<'a> V: Send + Sync + FromRedisValue + ToRedisArgs + 'a,
+{
 }
