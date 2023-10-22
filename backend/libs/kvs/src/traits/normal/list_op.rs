@@ -15,15 +15,12 @@ where
   for<'async_trait> V:
     FromRedisValue + ToRedisArgs + Send + Sync + 'async_trait,
 {
-  async fn lpush<R>(
+  async fn lpush(
     &self,
     key: &str,
     value: Vec<V>,
     opt: impl Into<Option<WriteOption>> + Send,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
+  ) -> KVSResult<usize> {
     return Base::lpush(self, key, value, opt).await;
   }
 
@@ -31,29 +28,20 @@ where
     return Base::lpop(self, key, count).await;
   }
 
-  async fn lrem<R>(&self, key: &str, count: isize, elem: V) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
+  async fn lrem(&self, key: &str, count: isize, elem: V) -> KVSResult<usize> {
     return Base::lrem(self, key, count, elem).await;
   }
 
-  async fn lrange<R>(
+  async fn lrange(
     &self,
     key: &str,
     start: isize,
     stop: isize,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
+  ) -> KVSResult<Vec<V>> {
     return Base::lrange(self, key, start, stop).await;
   }
 
-  async fn llen<R>(&self, key: &str) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
+  async fn llen(&self, key: &str) -> KVSResult<usize> {
     return Base::llen(self, key).await;
   }
 }

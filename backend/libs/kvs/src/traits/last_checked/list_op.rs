@@ -16,15 +16,12 @@ where
   for<'async_trait> V:
     FromRedisValue + ToRedisArgs + Send + Sync + 'async_trait,
 {
-  async fn lpush<R>(
+  async fn lpush(
     &self,
     key: &str,
     value: Vec<V>,
     opt: Option<WriteOption>,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
+  ) -> KVSResult<usize> {
     let ret = BaseListOp::lpush(self, &key, value, opt.clone()).await?;
     self.flag_last_checked(key, opt.into()).await?;
     return Ok(ret);
@@ -36,33 +33,24 @@ where
     return Ok(ret);
   }
 
-  async fn lrem<R>(&self, key: &str, count: isize, elem: V) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
+  async fn lrem(&self, key: &str, count: isize, elem: V) -> KVSResult<usize> {
     let ret = BaseListOp::lrem(self, &key, count, elem).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }
 
-  async fn lrange<R>(
+  async fn lrange(
     &self,
     key: &str,
     start: isize,
     stop: isize,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
+  ) -> KVSResult<Vec<V>> {
     let ret = BaseListOp::lrange(self, &key, start, stop).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }
 
-  async fn llen<R>(&self, key: &str) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
+  async fn llen(&self, key: &str) -> KVSResult<usize> {
     let ret = BaseListOp::llen(self, &key).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);

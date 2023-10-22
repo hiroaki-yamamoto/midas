@@ -15,15 +15,12 @@ where
   T: Commands + Send,
   for<'a> V: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
 {
-  async fn lpush<R>(
+  async fn lpush(
     &self,
     key: &str,
     value: Vec<V>,
     opt: impl Into<Option<WriteOption>> + Send,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
+  ) -> KVSResult<usize> {
     let channel_name = self.channel_name(&key);
     let opt: Option<WriteOption> = opt.into();
 
@@ -56,35 +53,26 @@ where
     return Ok(cmd.lpop(channel_name, count).await?);
   }
 
-  async fn lrem<R>(&self, key: &str, count: isize, elem: V) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
+  async fn lrem(&self, key: &str, count: isize, elem: V) -> KVSResult<usize> {
     let channel_name = self.channel_name(key);
     let mut cmd = self.commands();
     // let mut cmd = cmd.lock().await;
     return Ok(cmd.lrem(channel_name, count, elem).await?);
   }
 
-  async fn lrange<R>(
+  async fn lrange(
     &self,
     key: &str,
     start: isize,
     stop: isize,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
+  ) -> KVSResult<Vec<V>> {
     let channel_name = self.channel_name(key);
     let mut cmd = self.commands();
     // let mut cmd = cmd.lock().await;
     return Ok(cmd.lrange(channel_name, start, stop).await?);
   }
 
-  async fn llen<R>(&self, key: &str) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
+  async fn llen(&self, key: &str) -> KVSResult<usize> {
     let channel_name = self.channel_name(key);
     let mut cmd = self.commands();
     // let mut cmd = cmd.lock().await;
