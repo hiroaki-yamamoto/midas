@@ -18,15 +18,14 @@ use ::tokio::time::interval;
 use ::config::Database;
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{CreateStreamResult, ObserverError, ObserverResult};
-use ::kvs::redis::Commands as RedisCommands;
+use ::kvs::redis::AsyncCommands as RedisCommands;
 use ::kvs::traits::last_checked::ListOp;
-use ::kvs::Connection;
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 
 use crate::entities::{TradeObserverControlEvent, TradeObserverNodeEvent};
-use crate::kvs::ObserverNodeKVS;
+use crate::kvs::NODE_KVS_BUILDER;
 use crate::pubsub::{NodeControlEventPubSub, NodeEventPubSub};
 use crate::services::{Init, NodeIDManager};
 use crate::traits::{
@@ -43,7 +42,7 @@ where
   T: RedisCommands + Send + Sync + 'static,
 {
   node_id: Arc<RwLock<Option<String>>>,
-  kvs: Arc<ObserverNodeKVS<T>>,
+  kvs: Arc<dyn ListOp<T, String>>,
   control_event: NodeControlEventPubSub,
   node_event: NodeEventPubSub,
   trade_handler: Arc<BookTickerHandler>,
@@ -61,7 +60,7 @@ where
 {
   pub async fn new(
     broker: &Nats,
-    redis_cmd: Connection<T>,
+    redis_cmd: T,
     db: Database,
   ) -> ObserverResult<Self> {
     let control_event = NodeControlEventPubSub::new(broker).await?;
@@ -71,7 +70,7 @@ where
     let node_id_manager = NodeIDManager::new(redis_cmd.clone().into());
     let initer = Init::new(redis_cmd.clone().into(), db, broker).await?;
 
-    let kvs = ObserverNodeKVS::new(redis_cmd.into());
+    let kvs = NODE_KVS_BUILDER.build(redis_cmd);
     let me = Self {
       node_id: Arc::new(RwLock::new(None)),
       trade_handler: trade_handler.into(),
@@ -138,7 +137,7 @@ where
     mut signal: watch::Receiver<bool>,
     symbols_to_add: Arc<Mutex<Vec<String>>>,
     trade_handler: Arc<BookTickerHandler>,
-    kvs: Arc<ObserverNodeKVS<T>>,
+    kvs: Arc<dyn ListOp<T, String>>,
   ) -> ObserverResult<()> {
     let mut interval = interval(SUBSCRIBE_DELAY);
     loop {
@@ -196,7 +195,7 @@ where
     node_id_lock: Arc<RwLock<Option<String>>>,
     symbols_to_del: Arc<Mutex<Vec<String>>>,
     trade_handler: Arc<BookTickerHandler>,
-    node_kvs: Arc<ObserverNodeKVS<T>>,
+    node_kvs: Arc<dyn ListOp<T, String>>,
   ) -> ObserverResult<()> {
     let mut interval = interval(SUBSCRIBE_DELAY);
     loop {
