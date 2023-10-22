@@ -3,7 +3,7 @@ use crate::redis::{FromRedisValue, ToRedisArgs};
 
 use super::KVS;
 use crate::traits::base::{
-  Base, ChannelName, Exist, Expiration, Get, ListOp, Lock, Remove, Set,
+  Base, ChannelName, Exist, Expiration, Get, ListOp, Lock, Remove, Set, SetOp,
 };
 
 impl<R, T> Base<T> for KVS<R, T>
@@ -69,6 +69,13 @@ where
 }
 
 impl<R, T> Set<T, R> for KVS<R, T>
+where
+  for<'a> R: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
+  T: Commands + Clone,
+{
+}
+
+impl<R, T> SetOp<T, R> for KVS<R, T>
 where
   for<'a> R: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
   T: Commands + Clone,
