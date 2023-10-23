@@ -12,10 +12,7 @@ pub trait Remove<T>: Base<T> + ChannelName
 where
   T: Commands + Send,
 {
-  async fn del<R>(&self, keys: &[Arc<str>]) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
+  async fn del(&self, keys: &[Arc<str>]) -> KVSResult<usize> {
     let mut cmd = self.commands();
     // let mut cmd = cmd.lock().await;
     let channel_names: Vec<String> =

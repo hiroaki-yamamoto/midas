@@ -15,19 +15,15 @@ use super::{Base, ChannelName};
 use crate::options::WriteOption;
 
 #[async_trait]
-pub trait Lock<S>: Base<S> + ChannelName
+pub trait Lock<S, Ft, Fr>: Base<S> + ChannelName
 where
   S: Commands + Send,
 {
-  async fn lock<Ft, Fr>(
+  async fn lock(
     &self,
     key: &str,
     func_on_success: impl (Fn() -> Ft) + Send + Sync,
-  ) -> DLockResult<Fr>
-  where
-    Ft: Future<Output = Fr> + Send,
-    Fr: Send,
-  {
+  ) -> DLockResult<Fr> {
     let (refresh_tx, mut refresh_rx) = channel::<()>(1);
     let channel_name = self.channel_name(&format!("{}:lock", key));
     let channel_name_2 = channel_name.clone();

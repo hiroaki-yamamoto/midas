@@ -4,13 +4,13 @@ use ::std::num::NonZeroUsize;
 
 use ::errors::{KVSError, KVSResult};
 
-use super::{Base, Exist, Lock};
+use super::{Base, Exist};
 
 use crate::options::WriteOptionTrait;
 use crate::WriteOption;
 
 #[async_trait]
-pub trait ListOp<T, V>: Base<T> + Lock<T> + Exist<T>
+pub trait ListOp<T, V>: Base<T> + Exist<T>
 where
   T: Commands + Send,
   for<'a> V: FromRedisValue + ToRedisArgs + Send + Sync + 'a,

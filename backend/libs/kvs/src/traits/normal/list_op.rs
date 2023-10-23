@@ -4,12 +4,12 @@ use ::std::num::NonZeroUsize;
 
 use ::errors::KVSResult;
 
-use crate::traits::base::{ListOp as Base, Lock};
+use crate::traits::base::ListOp as Base;
 
 use crate::WriteOption;
 
 #[async_trait]
-pub trait ListOp<T, V>: Base<T, V> + Lock<T>
+pub trait ListOp<T, V>: Base<T, V>
 where
   T: Commands + Send,
   for<'async_trait> V:

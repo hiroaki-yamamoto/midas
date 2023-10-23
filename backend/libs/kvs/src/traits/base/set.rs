@@ -14,15 +14,12 @@ where
   T: Commands + Send,
   for<'a> V: ToRedisArgs + Send + Sync + 'a,
 {
-  async fn set<R>(
+  async fn set(
     &self,
     key: &str,
     value: V,
     opt: impl Into<Option<WriteOption>> + Send,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
+  ) -> KVSResult<bool> {
     let channel_name = self.channel_name(key);
     let mut cmds = self.commands();
     // let mut cmds = cmds.lock().await;
