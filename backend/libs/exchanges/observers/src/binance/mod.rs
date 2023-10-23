@@ -37,7 +37,7 @@ use self::pubsub::BookTickerPubSub;
 
 const SUBSCRIBE_DELAY: Duration = Duration::from_secs(1);
 
-pub struct TradeObserver<T, KVSType>
+pub struct TradeObserver<'a, T, KVSType>
 where
   T: RedisCommands + Send + Sync + 'static,
   KVSType: ListOp<T, String>,
@@ -52,10 +52,10 @@ where
   signal_tx: Arc<watch::Sender<bool>>,
   signal_rx: watch::Receiver<bool>,
   node_id_manager: Arc<NodeIDManager<T>>,
-  initer: Arc<Init<T>>,
+  initer: Arc<Init<'a, T>>,
 }
 
-impl<T, KVSType> TradeObserver<T, KVSType>
+impl<'a, T, KVSType> TradeObserver<'a, T, KVSType>
 where
   T: RedisCommands + Send + Sync,
   KVSType: ListOp<T, String>,
@@ -246,7 +246,7 @@ where
     node_id_manager: Arc<NodeIDManager<T>>,
     node_id_lock: Arc<RwLock<Option<String>>>,
     ready: oneshot::Receiver<()>,
-    init: Arc<Init<T>>,
+    init: Arc<Init<'a, T>>,
   ) -> ObserverResult<()> {
     let node_id = node_id_manager.register(Exchanges::Binance).await?;
     {
@@ -286,7 +286,7 @@ where
 }
 
 #[async_trait]
-impl<T, KVSType> TradeObserverTrait for TradeObserver<T, KVSType>
+impl<'a, T, KVSType> TradeObserverTrait for TradeObserver<'a, T, KVSType>
 where
   T: RedisCommands + Send + Sync + 'static,
   KVSType: ListOp<T, String>,
