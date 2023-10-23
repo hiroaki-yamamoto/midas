@@ -1,3 +1,4 @@
+use ::std::marker::PhantomData;
 use ::std::sync::Arc;
 use ::std::time::Duration;
 
@@ -7,7 +8,7 @@ use ::tokio::time::sleep;
 
 use ::errors::{ObserverError, UnknownExchangeError};
 use ::kvs::redis::AsyncCommands as Commands;
-use ::kvs::traits::last_checked::{Get, LastCheckedKVS, ListOp, Remove, Set};
+use ::kvs::traits::last_checked::{Get, ListOp, Remove, Set};
 use ::kvs::WriteOption;
 use ::random::generate_random_txt;
 use ::rpc::entities::Exchanges;
@@ -22,22 +23,28 @@ const NODE_ID_TXT_SIZE: usize = 64;
 ///
 /// **Note**: This struct doesn't publish any events to Trade Observer Control.
 #[derive(Debug)]
-pub struct NodeIDManager<T>
+pub struct NodeIDManager<T, NodeKVS, ExchangeKVS>
 where
   T: Commands + Send + Sync,
+  NodeKVS: ListOp<T, String> + Remove<T>,
+  ExchangeKVS: Set<T, String>,
 {
-  node_kvs: Arc<dyn LastCheckedKVS<T, String>>,
-  exchange_type_kvs: Arc<dyn LastCheckedKVS<T, String>>,
+  node_kvs: NodeKVS,
+  exchange_type_kvs: ExchangeKVS,
+  _t: PhantomData<T>,
 }
 
-impl<T> NodeIDManager<T>
+impl<T, NodeKVS, ExchangeKVS> NodeIDManager<T, NodeKVS, ExchangeKVS>
 where
   T: Commands + Sync + Send,
+  NodeKVS: ListOp<T, String> + Remove<T>,
+  ExchangeKVS: Set<T, String>,
 {
   pub fn new(con: T) -> Self {
     return Self {
       node_kvs: NODE_KVS_BUILDER.build(con.clone()),
       exchange_type_kvs: NODE_EXCHANGE_TYPE_KVS_BUILDER.build(con),
+      _t: PhantomData,
     };
   }
 

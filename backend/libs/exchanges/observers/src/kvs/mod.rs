@@ -1,6 +1,6 @@
 mod filter;
 
-use ::std::sync::Arc;
+use ::std::marker::PhantomData;
 
 use ::futures::stream::{iter, BoxStream, StreamExt};
 
@@ -21,19 +21,25 @@ pub const NODE_EXCHANGE_TYPE_KVS_BUILDER: LastCheckedKVSBuilder<String> =
 pub const INIT_LOCK_BUILDER: NormalKVSBuilder<String> =
   NormalKVSBuilder::<String>::new("init_lock".to_String());
 
-pub struct NodeIndexer<T>
+pub struct NodeIndexer<T, ExchangeTypeKVS>
 where
   T: AsyncCommands,
+  ExchangeTypeKVS: SetOp<T, String>,
 {
-  exchange_type_kvs: Arc<dyn SetOp<T, String>>,
+  exchange_type_kvs: ExchangeTypeKVS,
+  _t: PhantomData<T>,
 }
 
-impl<T> NodeIndexer<T>
+impl<T, ExchangeTypeKVS> NodeIndexer<T, ExchangeTypeKVS>
 where
   T: AsyncCommands,
+  ExchangeTypeKVS: SetOp<T, String>,
 {
-  pub fn new(exchange_type_kvs: Arc<dyn SetOp<T, String>>) -> Self {
-    return Self { exchange_type_kvs };
+  pub fn new(exchange_type_kvs: ExchangeTypeKVS) -> Self {
+    return Self {
+      exchange_type_kvs,
+      _t: PhantomData,
+    };
   }
 
   /// Index node ids to KVS

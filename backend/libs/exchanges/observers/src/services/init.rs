@@ -1,4 +1,4 @@
-use ::std::sync::Arc;
+use ::std::marker::PhantomData;
 
 use ::futures::future::{try_join_all, BoxFuture};
 
@@ -12,24 +12,34 @@ use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 
 use crate::kvs::INIT_LOCK_BUILDER;
+use ::kvs::traits::last_checked::{ListOp, SetOp};
+
 use crate::pubsub::NodeControlEventPubSub;
 
 use super::NodeDIffTaker;
 use super::ObservationBalancer;
 
-pub struct Init<'fut, C>
+pub struct Init<'a, C, NodeKVS, ExchangeTypeKVS, DLock>
 where
   C: Commands + Sync + Send,
+  NodeKVS: ListOp<C, String>,
+  ExchangeTypeKVS: SetOp<C, String>,
+  DLock: Lock<C, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>,
 {
-  diff_taker: NodeDIffTaker<C>,
-  balancer: ObservationBalancer<C>,
+  diff_taker: NodeDIffTaker<C, NodeKVS, ExchangeTypeKVS>,
+  balancer: ObservationBalancer<C, NodeKVS, ExchangeTypeKVS>,
   control_pubsub: NodeControlEventPubSub,
-  dlock: Arc<dyn Lock<C, BoxFuture<'fut, ObserverResult<()>>, ()>>,
+  dlock: DLock,
+  _a: PhantomData<&'a ()>,
 }
 
-impl<'fut, C> Init<'fut, C>
+impl<'a, C, NodeKVS, ExchangeTypeKVS, DLock>
+  Init<'a, C, NodeKVS, ExchangeTypeKVS, DLock>
 where
   C: Commands + Sync + Send,
+  NodeKVS: ListOp<C, String>,
+  ExchangeTypeKVS: SetOp<C, String>,
+  DLock: Lock<C, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>,
 {
   pub async fn new(kvs: C, db: Database, nats: &Nats) -> ObserverResult<Self> {
     let diff_taker = NodeDIffTaker::new(&db, kvs.clone().into()).await?;
@@ -42,6 +52,7 @@ where
       balancer,
       control_pubsub,
       dlock,
+      _a: PhantomData,
     });
   }
 

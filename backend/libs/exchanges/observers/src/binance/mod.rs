@@ -2,11 +2,12 @@ pub mod entities;
 pub(crate) mod handlers;
 mod pubsub;
 
+use ::std::marker::PhantomData;
 use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::futures::future::try_join_all;
+use ::futures::future::{try_join_all, BoxFuture};
 use ::futures::stream::{BoxStream, StreamExt};
 use ::futures::FutureExt;
 use ::log::{as_error, as_serde, debug, info, warn};
@@ -19,7 +20,8 @@ use ::config::Database;
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{CreateStreamResult, ObserverError, ObserverResult};
 use ::kvs::redis::AsyncCommands as RedisCommands;
-use ::kvs::traits::last_checked::ListOp;
+use ::kvs::traits::last_checked::{ListOp, Remove, Set, SetOp};
+use ::kvs::traits::normal::Lock;
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
@@ -37,13 +39,15 @@ use self::pubsub::BookTickerPubSub;
 
 const SUBSCRIBE_DELAY: Duration = Duration::from_secs(1);
 
-pub struct TradeObserver<'a, T, KVSType>
+pub struct TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
 where
   T: RedisCommands + Send + Sync + 'static,
-  KVSType: ListOp<T, String>,
+  NodeKVS: ListOp<T, String> + Remove<T>,
+  ExchangeTypeKVS: SetOp<T, String> + Set<T, String>,
+  DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>,
 {
   node_id: Arc<RwLock<Option<String>>>,
-  kvs: KVSType,
+  kvs: NodeKVS,
   control_event: NodeControlEventPubSub,
   node_event: NodeEventPubSub,
   trade_handler: Arc<BookTickerHandler>,
@@ -51,14 +55,18 @@ where
   symbols_to_del: Arc<Mutex<Vec<String>>>,
   signal_tx: Arc<watch::Sender<bool>>,
   signal_rx: watch::Receiver<bool>,
-  node_id_manager: Arc<NodeIDManager<T>>,
-  initer: Arc<Init<'a, T>>,
+  node_id_manager: Arc<NodeIDManager<T, NodeKVS, ExchangeTypeKVS>>,
+  initer: Init<'a, T, NodeKVS, ExchangeTypeKVS, DLock>,
+  _a: PhantomData<&'a ()>,
 }
 
-impl<'a, T, KVSType> TradeObserver<'a, T, KVSType>
+impl<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
+  TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
 where
   T: RedisCommands + Send + Sync,
-  KVSType: ListOp<T, String>,
+  NodeKVS: ListOp<T, String> + Remove<T>,
+  ExchangeTypeKVS: SetOp<T, String> + Set<T, String>,
+  DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>,
 {
   pub async fn new(
     broker: &Nats,
@@ -85,6 +93,7 @@ where
       symbols_to_del: Mutex::new(Vec::new()).into(),
       node_id_manager: Arc::new(node_id_manager),
       initer: Arc::new(initer),
+      _a: PhantomData,
     };
     return Ok(me);
   }
@@ -139,7 +148,7 @@ where
     mut signal: watch::Receiver<bool>,
     symbols_to_add: Arc<Mutex<Vec<String>>>,
     trade_handler: Arc<BookTickerHandler>,
-    kvs: KVSType,
+    kvs: NodeKVS,
   ) -> ObserverResult<()> {
     let mut interval = interval(SUBSCRIBE_DELAY);
     loop {
@@ -197,7 +206,7 @@ where
     node_id_lock: Arc<RwLock<Option<String>>>,
     symbols_to_del: Arc<Mutex<Vec<String>>>,
     trade_handler: Arc<BookTickerHandler>,
-    node_kvs: KVSType,
+    node_kvs: NodeKVS,
   ) -> ObserverResult<()> {
     let mut interval = interval(SUBSCRIBE_DELAY);
     loop {
@@ -243,10 +252,10 @@ where
   }
 
   async fn request_node_id(
-    node_id_manager: Arc<NodeIDManager<T>>,
+    node_id_manager: Arc<NodeIDManager<T, NodeKVS, ExchangeTypeKVS>>,
     node_id_lock: Arc<RwLock<Option<String>>>,
     ready: oneshot::Receiver<()>,
-    init: Arc<Init<'a, T>>,
+    init: DLock,
   ) -> ObserverResult<()> {
     let node_id = node_id_manager.register(Exchanges::Binance).await?;
     {
@@ -286,10 +295,13 @@ where
 }
 
 #[async_trait]
-impl<'a, T, KVSType> TradeObserverTrait for TradeObserver<'a, T, KVSType>
+impl<'a, T, NodeKVS, ExchangeTypeKVS, DLock> TradeObserverTrait
+  for TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
 where
   T: RedisCommands + Send + Sync + 'static,
-  KVSType: ListOp<T, String>,
+  NodeKVS: ListOp<T, String> + Remove<T>,
+  ExchangeTypeKVS: SetOp<T, String> + Set<T, String>,
+  DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>,
 {
   async fn start(&self, signal: Box<Signal>) -> ObserverResult<()> {
     let (ready_evloop_tx, ready_evloop_rx) = oneshot::channel();

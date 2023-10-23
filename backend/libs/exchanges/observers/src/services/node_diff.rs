@@ -1,5 +1,5 @@
 use ::std::collections::HashSet;
-use ::std::sync::Arc;
+use ::std::marker::PhantomData;
 
 use ::futures::StreamExt;
 use ::log::info;
@@ -10,30 +10,36 @@ use crate::kvs::{
   NodeFilter, NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER,
 };
 use ::kvs::redis::AsyncCommands as Commands;
-use ::kvs::traits::last_checked::ListOp;
+use ::kvs::traits::last_checked::{ListOp, SetOp};
 use ::rpc::entities::Exchanges;
 use ::symbols::get_reader;
 
 use ::errors::ObserverResult;
 
-pub struct NodeDIffTaker<T>
+pub struct NodeDIffTaker<T, NodeKVS, TypeKVS>
 where
   T: Commands + Send + Sync,
+  NodeKVS: ListOp<T, String>,
+  TypeKVS: SetOp<T, String>,
 {
   db: Database,
-  kvs: Arc<dyn ListOp<T, String>>,
-  type_kvs: Arc<dyn ListOp<T, String>>,
+  kvs: NodeKVS,
+  type_kvs: TypeKVS,
+  _t: PhantomData<T>,
 }
 
-impl<T> NodeDIffTaker<T>
+impl<T, NodeKVS, TypeKVS> NodeDIffTaker<T, NodeKVS, TypeKVS>
 where
   T: Commands + Send + Sync,
+  NodeKVS: ListOp<T, String>,
+  TypeKVS: SetOp<T, String>,
 {
   pub async fn new(db: &Database, cmd: T) -> ObserverResult<Self> {
     return Ok(Self {
       db: db.clone(),
       kvs: NODE_KVS_BUILDER.build(cmd),
       type_kvs: NODE_EXCHANGE_TYPE_KVS_BUILDER.build(cmd),
+      _t: PhantomData,
     });
   }
 

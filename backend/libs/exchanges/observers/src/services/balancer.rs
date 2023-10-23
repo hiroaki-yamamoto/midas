@@ -1,31 +1,33 @@
 use ::std::collections::HashSet;
-use ::std::sync::Arc;
 
 use ::futures::StreamExt;
 
 use ::errors::{KVSResult, ObserverResult};
 use ::kvs::redis::AsyncCommands as Commands;
-use ::kvs::traits::last_checked::ListOp;
+use ::kvs::traits::last_checked::{ListOp, SetOp};
 use ::rpc::entities::Exchanges;
 
 use crate::entities::TradeObserverControlEvent as ControlEvent;
+use crate::kvs::NodeFilter;
 use crate::kvs::{NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER};
 
-type NodeKVS<C> = Arc<dyn ListOp<C, String>>;
-type NodeFilter<C> = Arc<dyn ListOp<C, NodeKVS<C>>>;
-
-pub struct ObservationBalancer<T>
+pub struct ObservationBalancer<T, NodeKVS, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
+  NodeKVS: ListOp<T, String>,
+  ExchangeTypeKVS: SetOp<T, String>,
 {
-  node_kvs: NodeKVS<T>,
-  exchange_type_kvs: NodeKVS<T>,
-  node_filter: NodeFilter<T>,
+  node_kvs: NodeKVS,
+  exchange_type_kvs: ExchangeTypeKVS,
+  node_filter: NodeFilter<T, NodeKVS, ExchangeTypeKVS>,
 }
 
-impl<T> ObservationBalancer<T>
+impl<T, NodeKVS, ExchangeTypeKVS>
+  ObservationBalancer<T, NodeKVS, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
+  NodeKVS: ListOp<T, String>,
+  ExchangeTypeKVS: SetOp<T, String>,
 {
   pub async fn new(kvs: T) -> ObserverResult<Self> {
     let node_kvs = NODE_KVS_BUILDER.build(kvs).await?;

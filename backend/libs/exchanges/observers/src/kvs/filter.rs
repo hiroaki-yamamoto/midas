@@ -1,31 +1,40 @@
 use ::std::collections::HashSet;
-use ::std::sync::Arc;
+use ::std::marker::PhantomData;
 
 use ::errors::KVSResult;
 use ::futures::stream::{iter, BoxStream, StreamExt};
-use ::kvs::redis::Commands;
-use ::kvs::traits::last_checked::ListOp;
+use ::kvs::redis::AsyncCommands as Commands;
+use ::kvs::traits::last_checked::{ListOp, SetOp};
 use ::rpc::entities::Exchanges;
 
 use super::NodeIndexer;
 
-pub struct NodeFilter<T>
+pub struct NodeFilter<T, NodeKVS, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
+  NodeKVS: ListOp<T, String>,
+  ExchangeTypeKVS: SetOp<T, String>,
 {
-  node_kvs: Arc<dyn ListOp<T, String>>,
-  indexer: NodeIndexer<T>,
+  node_kvs: NodeKVS,
+  indexer: NodeIndexer<T, ExchangeTypeKVS>,
+  _t: PhantomData<T>,
 }
 
-impl<T> NodeFilter<T>
+impl<T, NodeKVS, ExchangeTypeKVS> NodeFilter<T, NodeKVS, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
+  NodeKVS: ListOp<T, String>,
+  ExchangeTypeKVS: SetOp<T, String>,
 {
   pub fn new(
-    node_kvs: Arc<dyn ListOp<T, String>>,
-    indexer: NodeIndexer<T>,
+    node_kvs: NodeKVS,
+    indexer: NodeIndexer<T, ExchangeTypeKVS>,
   ) -> Self {
-    Self { node_kvs, indexer }
+    return Self {
+      node_kvs,
+      indexer,
+      _t: PhantomData,
+    };
   }
 
   pub async fn get_handling_symbol_at_exchange(
