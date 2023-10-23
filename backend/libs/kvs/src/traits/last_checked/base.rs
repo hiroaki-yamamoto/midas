@@ -4,7 +4,7 @@ use ::std::time::SystemTime;
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Local, LocalResult, TimeZone};
 use ::errors::{KVSError, KVSResult};
-use ::redis::{AsyncCommands as Commands, FromRedisValue, SetOptions};
+use ::redis::{AsyncCommands as Commands, SetOptions};
 
 use crate::options::WriteOption;
 use crate::traits::base::{Base as BaseBase, ChannelName};
