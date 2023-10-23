@@ -1,7 +1,7 @@
 use ::std::sync::Arc;
 
 use ::async_trait::async_trait;
-use ::redis::{AsyncCommands as Commands, FromRedisValue};
+use ::redis::AsyncCommands as Commands;
 
 use ::errors::KVSResult;
 

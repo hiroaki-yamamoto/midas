@@ -18,6 +18,8 @@ use crate::options::WriteOption;
 pub trait Lock<S, Ft, Fr>: Base<S> + ChannelName
 where
   S: Commands + Send,
+  Ft: Future<Output = Fr> + Send,
+  Fr: Send,
 {
   async fn lock(
     &self,

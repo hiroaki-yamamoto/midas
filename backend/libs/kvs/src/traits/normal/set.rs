@@ -1,5 +1,5 @@
 use ::async_trait::async_trait;
-use ::redis::{AsyncCommands as Commands, FromRedisValue, ToRedisArgs};
+use ::redis::{AsyncCommands as Commands, ToRedisArgs};
 
 use ::errors::KVSResult;
 
@@ -17,10 +17,7 @@ where
     key: &str,
     value: V,
     opt: impl Into<Option<WriteOption>> + Send,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
+  ) -> KVSResult<bool> {
     return Base::set(self, key, value, opt).await;
   }
 }

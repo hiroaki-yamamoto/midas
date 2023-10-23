@@ -1,5 +1,5 @@
 use ::async_trait::async_trait;
-use ::redis::{AsyncCommands as Commands, FromRedisValue, ToRedisArgs};
+use ::redis::{AsyncCommands as Commands, ToRedisArgs};
 
 use ::errors::KVSResult;
 
@@ -14,15 +14,12 @@ where
   T: Commands + Send,
   for<'async_trait> V: ToRedisArgs + Send + Sync + 'async_trait,
 {
-  async fn set<R>(
+  async fn set(
     &self,
     key: &str,
     value: V,
     opt: Option<WriteOption>,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
+  ) -> KVSResult<bool> {
     let ret = BaseSet::set(self, &key, value, opt.clone()).await?;
     self.flag_last_checked(key, opt.into()).await?;
     return Ok(ret);

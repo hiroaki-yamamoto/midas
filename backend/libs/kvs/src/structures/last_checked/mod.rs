@@ -1,6 +1,7 @@
 mod base_impl;
 mod last_checked_impl;
 
+use ::std::future::Future;
 use ::std::marker::PhantomData;
 
 use redis::ToRedisArgs;
@@ -28,42 +29,54 @@ where
       _r: PhantomData,
     };
   }
-  pub fn build<T>(&self, connection: T) -> KVS<R, T>
+  pub fn build<T, Ft, Fr>(&self, connection: T) -> KVS<R, T, Ft, Fr>
   where
     T: Commands + Clone,
+    Ft: Future<Output = Fr> + Send,
+    Fr: Send,
   {
     return KVS::new(connection, self.channel_name.to_string());
   }
 }
 
 /// Wrap this struct with Arc if Clone is needed.
-pub struct KVS<R, T>
+pub struct KVS<R, T, Ft, Fr>
 where
   R: FromRedisValue,
   T: Commands + Clone,
+  Ft: Future<Output = Fr> + Send,
+  Fr: Send,
 {
   pub connection: T,
   channel_name: String,
   _r: PhantomData<R>,
+  _ft: PhantomData<Ft>,
+  _fr: PhantomData<Fr>,
 }
 
-impl<R, T> KVS<R, T>
+impl<R, T, Ft, Fr> KVS<R, T, Ft, Fr>
 where
   R: FromRedisValue,
   T: Commands + Clone,
+  Ft: Future<Output = Fr> + Send,
+  Fr: Send,
 {
   pub(self) fn new(connection: T, channel_name: String) -> Self {
     return Self {
       connection,
       channel_name,
-      _r: PhantomData::default(),
+      _r: PhantomData,
+      _fr: PhantomData,
+      _ft: PhantomData,
     };
   }
 }
 
-impl<T, V> LastCheckedKVS<T, V> for KVS<V, T>
+impl<T, V, Ft, Fr> LastCheckedKVS<T, V> for KVS<V, T, Ft, Fr>
 where
   T: Commands + Clone + Send + Sync,
   for<'a> V: Send + Sync + FromRedisValue + ToRedisArgs + 'a,
+  Ft: Future<Output = Fr> + Send + Sync,
+  Fr: Send + Sync,
 {
 }

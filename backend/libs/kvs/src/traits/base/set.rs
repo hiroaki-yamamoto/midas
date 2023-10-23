@@ -1,7 +1,5 @@
 use ::async_trait::async_trait;
-use ::redis::{
-  AsyncCommands as Commands, FromRedisValue, SetOptions, ToRedisArgs,
-};
+use ::redis::{AsyncCommands as Commands, SetOptions, ToRedisArgs};
 
 use ::errors::KVSResult;
 

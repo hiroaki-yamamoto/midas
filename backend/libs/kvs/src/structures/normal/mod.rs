@@ -1,6 +1,7 @@
 mod base_impl;
 mod normal_impl;
 
+use ::std::future::Future;
 use ::std::marker::PhantomData;
 
 use crate::redis::AsyncCommands as Commands;
@@ -24,35 +25,45 @@ where
       _r: PhantomData,
     };
   }
-  pub fn build<T>(&self, connection: T) -> KVS<R, T>
+  pub fn build<T, Ft, Fr>(&self, connection: T) -> KVS<R, T, Ft, Fr>
   where
     T: Commands + Clone,
+    Ft: Future<Output = Fr> + Send,
+    Fr: Send,
   {
     return KVS::new(connection, self.channel_name.to_string());
   }
 }
 
 /// Wrap this struct with Arc if Clone is needed.
-pub struct KVS<R, T>
+pub struct KVS<R, T, Ft, Fr>
 where
   R: FromRedisValue,
   T: Commands + Clone,
+  Ft: Future<Output = Fr> + Send,
+  Fr: Send,
 {
   pub connection: T,
   channel_name: String,
   _r: PhantomData<R>,
+  _ft: PhantomData<Ft>,
+  _fr: PhantomData<Fr>,
 }
 
-impl<R, T> KVS<R, T>
+impl<R, T, Ft, Fr> KVS<R, T, Ft, Fr>
 where
   R: FromRedisValue,
   T: Commands + Clone,
+  Ft: Future<Output = Fr> + Send,
+  Fr: Send,
 {
   pub(self) fn new(connection: T, channel_name: String) -> Self {
     return Self {
       connection,
       channel_name,
-      _r: PhantomData::default(),
+      _r: PhantomData,
+      _ft: PhantomData,
+      _fr: PhantomData,
     };
   }
 }
