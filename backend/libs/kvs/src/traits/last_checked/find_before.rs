@@ -28,7 +28,7 @@ where
     let last_checked_timestamps: Vec<KVSResult<SystemTime>> =
       last_checked_timestamps
         .into_iter()
-        .map(|timestamp| Self::convert_timestamp(timestamp))
+        .map(|timestamp| self.convert_timestamp(timestamp))
         .collect();
     let keys: Vec<String> = keys
       .into_iter()

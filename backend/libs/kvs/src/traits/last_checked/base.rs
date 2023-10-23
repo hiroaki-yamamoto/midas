@@ -18,7 +18,7 @@ where
     return format!("last_check_timestamp:{}", self.channel_name(key));
   }
 
-  fn convert_timestamp(timestamp: i64) -> KVSResult<SystemTime> {
+  fn convert_timestamp(&self, timestamp: i64) -> KVSResult<SystemTime> {
     let datetime: DateTime<Local> = match Local.timestamp_opt(timestamp, 0) {
       LocalResult::Single(dt) => dt,
       LocalResult::None => {
@@ -36,17 +36,14 @@ where
     let mut cmd = self.commands();
     // let mut cmd = cmd.lock().await;
     let timestamp: i64 = cmd.get(key).await?;
-    return Ok(Self::convert_timestamp(timestamp)?);
+    return Ok(self.convert_timestamp(timestamp)?);
   }
 
-  async fn flag_last_checked<R>(
+  async fn flag_last_checked(
     &self,
     key: &str,
     opt: Option<WriteOption>,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
+  ) -> KVSResult<bool> {
     let key = self.get_timestamp_channel(key);
     let now = SystemTime::now()
       .duration_since(SystemTime::UNIX_EPOCH)?
@@ -60,10 +57,7 @@ where
     });
   }
 
-  async fn del_last_checked<R>(&self, keys: &[Arc<str>]) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
+  async fn del_last_checked(&self, keys: &[Arc<str>]) -> KVSResult<usize> {
     let keys: Vec<String> = keys
       .into_iter()
       .map(|key| self.get_timestamp_channel(key))
