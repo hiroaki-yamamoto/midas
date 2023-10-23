@@ -72,7 +72,7 @@ where
     broker: &Nats,
     redis_cmd: T,
     db: Database,
-  ) -> ObserverResult<Self> {
+  ) -> ObserverResult<TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>> {
     let control_event = NodeControlEventPubSub::new(broker).await?;
     let node_event = NodeEventPubSub::new(broker).await?;
     let (signal_tx, signal_rx) = watch::channel::<bool>(false);

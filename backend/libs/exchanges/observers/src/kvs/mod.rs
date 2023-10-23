@@ -19,7 +19,7 @@ pub const NODE_EXCHANGE_TYPE_KVS_BUILDER: LastCheckedKVSBuilder<String> =
   LastCheckedKVSBuilder::new("observer_node_exchange_type");
 
 pub const INIT_LOCK_BUILDER: NormalKVSBuilder<String> =
-  NormalKVSBuilder::<String>::new("init_lock".to_String());
+  NormalKVSBuilder::<String>::new("init_lock");
 
 pub struct NodeIndexer<T, ExchangeTypeKVS>
 where
@@ -44,10 +44,8 @@ where
 
   /// Index node ids to KVS
   pub async fn index_node(&self, node: String) -> KVSResult<usize> {
-    let channel_name = self.channel_name("node_index");
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    return Ok(cmd.sadd(channel_name, node)?);
+    return self.exchange_type_kvs.sadd("node_index", node).await;
+    // return Ok(cmd.sadd(channel_name, node)?);
   }
 
   /// Unindex node ids to KVS
