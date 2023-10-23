@@ -1,6 +1,6 @@
 use ::std::sync::Arc;
 
-use ::futures::future::try_join_all;
+use ::futures::future::{try_join_all, BoxFuture};
 
 use ::config::Database;
 use ::errors::{ObserverError, ObserverResult};
@@ -17,17 +17,17 @@ use crate::pubsub::NodeControlEventPubSub;
 use super::NodeDIffTaker;
 use super::ObservationBalancer;
 
-pub struct Init<C>
+pub struct Init<'fut, C>
 where
   C: Commands + Sync + Send,
 {
   diff_taker: NodeDIffTaker<C>,
   balancer: ObservationBalancer<C>,
   control_pubsub: NodeControlEventPubSub,
-  dlock: Arc<dyn Lock<C>>,
+  dlock: Arc<dyn Lock<C, BoxFuture<'fut, ObserverResult<()>>, ()>>,
 }
 
-impl<C> Init<C>
+impl<'fut, C> Init<'fut, C>
 where
   C: Commands + Sync + Send,
 {

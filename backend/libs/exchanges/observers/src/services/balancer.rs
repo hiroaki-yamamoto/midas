@@ -9,32 +9,31 @@ use ::kvs::traits::last_checked::ListOp;
 use ::rpc::entities::Exchanges;
 
 use crate::entities::TradeObserverControlEvent as ControlEvent;
-use crate::kvs::{
-  NodeFilter, NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER,
-};
+use crate::kvs::{NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER};
 
-pub struct ObservationBalancer<T, NodeKVS>
+type NodeKVS<C> = Arc<dyn ListOp<C, String>>;
+type NodeFilter<C> = Arc<dyn ListOp<C, NodeKVS<C>>>;
+
+pub struct ObservationBalancer<T>
 where
   T: Commands + Send + Sync,
-  NodeKVS: ListOp<T, String>,
 {
-  node_kvs: Arc<dyn ListOp<T, String>>,
-  exchange_type_kvs: Arc<dyn ListOp<T, String>>,
-  node_filter: NodeFilter<T, NodeKVS>,
+  node_kvs: NodeKVS<T>,
+  exchange_type_kvs: NodeKVS<T>,
+  node_filter: NodeFilter<T>,
 }
 
-impl<T, NodeKVS> ObservationBalancer<T, NodeKVS>
+impl<T> ObservationBalancer<T>
 where
   T: Commands + Send + Sync,
-  NodeKVS: ListOp<T, String>,
 {
   pub async fn new(kvs: T) -> ObserverResult<Self> {
     let node_kvs = NODE_KVS_BUILDER.build(kvs).await?;
     let exchange_type_kvs = NODE_EXCHANGE_TYPE_KVS_BUILDER.build(kvs).await?;
     let filter = NodeFilter::new(&node_kvs, &exchange_type_kvs);
     return Ok(Self {
-      node_kvs: node_kvs,
-      exchange_type_kvs: exchange_type_kvs,
+      node_kvs: node_kvs.into(),
+      exchange_type_kvs: exchange_type_kvs.into(),
       node_filter: filter,
     });
   }

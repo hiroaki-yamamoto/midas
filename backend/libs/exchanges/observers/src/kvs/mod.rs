@@ -6,7 +6,8 @@ use ::futures::stream::{iter, BoxStream, StreamExt};
 
 use ::errors::KVSResult;
 use ::kvs::redis::AsyncCommands;
-use ::kvs::{LastCheckedKVS, LastCheckedKVSBuilder, NormalKVSBuilder};
+use ::kvs::traits::last_checked::SetOp;
+use ::kvs::{LastCheckedKVSBuilder, NormalKVSBuilder};
 use ::rpc::entities::Exchanges;
 
 pub use self::filter::NodeFilter;
@@ -24,17 +25,15 @@ pub struct NodeIndexer<T>
 where
   T: AsyncCommands,
 {
-  node_exchange_type_kvs: Arc<LastCheckedKVS<String, T>>,
+  exchange_type_kvs: Arc<dyn SetOp<T, String>>,
 }
 
 impl<T> NodeIndexer<T>
 where
   T: AsyncCommands,
 {
-  pub fn new(node_exchange_type_kvs: Arc<LastCheckedKVS<String, T>>) -> Self {
-    return Self {
-      node_exchange_type_kvs,
-    };
+  pub fn new(exchange_type_kvs: Arc<dyn SetOp<T, String>>) -> Self {
+    return Self { exchange_type_kvs };
   }
 
   /// Index node ids to KVS

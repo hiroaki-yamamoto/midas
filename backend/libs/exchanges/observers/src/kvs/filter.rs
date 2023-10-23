@@ -1,4 +1,5 @@
 use ::std::collections::HashSet;
+use ::std::sync::Arc;
 
 use ::errors::KVSResult;
 use ::futures::stream::{iter, BoxStream, StreamExt};
@@ -8,21 +9,22 @@ use ::rpc::entities::Exchanges;
 
 use super::NodeIndexer;
 
-pub struct NodeFilter<T, NodeKVS>
+pub struct NodeFilter<T>
 where
   T: Commands + Send + Sync,
-  NodeKVS: ListOp<T, String>,
 {
-  node_kvs: NodeKVS,
+  node_kvs: Arc<dyn ListOp<T, String>>,
   indexer: NodeIndexer<T>,
 }
 
-impl<T, NodeKVS> NodeFilter<T, NodeKVS>
+impl<T> NodeFilter<T>
 where
   T: Commands + Send + Sync,
-  NodeKVS: ListOp<T, String>,
 {
-  pub fn new(node_kvs: NodeKVS, indexer: NodeIndexer<T>) -> Self {
+  pub fn new(
+    node_kvs: Arc<dyn ListOp<T, String>>,
+    indexer: NodeIndexer<T>,
+  ) -> Self {
     Self { node_kvs, indexer }
   }
 
