@@ -11,12 +11,13 @@ use crate::traits::base::Expiration as BaseExp;
 use super::base::Base;
 
 #[async_trait]
-pub trait Expiration<T>: Base<T> + BaseExp<T>
+pub trait Expiration<T>: Send
 where
   T: Commands + Send,
 {
+  type Base: Base<T> + BaseExp<T>;
   async fn expire(&self, key: &str, dur: Duration) -> KVSResult<bool> {
-    let ret = BaseExp::expire(self, key, dur).await?;
+    let ret = Self::Base::expire(self, key, dur).await?;
     self
       .flag_last_checked(
         key,

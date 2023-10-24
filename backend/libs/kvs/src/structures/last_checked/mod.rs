@@ -71,12 +71,3 @@ where
     };
   }
 }
-
-impl<T, V, Ft, Fr> LastCheckedKVS<T, V> for KVS<V, T, Ft, Fr>
-where
-  T: Commands + Clone + Send + Sync,
-  for<'a> V: Send + Sync + FromRedisValue + ToRedisArgs + 'a,
-  Ft: Future<Output = Fr> + Send + Sync,
-  Fr: Send + Sync,
-{
-}
