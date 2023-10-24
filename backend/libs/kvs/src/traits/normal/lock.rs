@@ -19,6 +19,6 @@ where
     key: &str,
     func_on_success: impl (Fn() -> Ft) + Send + Sync,
   ) -> DLockResult<Fr> {
-    return Base::lock(self, key, func_on_success).await;
+    return self.__lock__(key, func_on_success).await;
   }
 }

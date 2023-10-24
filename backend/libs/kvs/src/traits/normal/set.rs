@@ -18,6 +18,6 @@ where
     value: V,
     opt: impl Into<Option<WriteOption>> + Send,
   ) -> KVSResult<bool> {
-    return Base::set(self, key, value, opt).await;
+    return self.__set__(key, value, opt).await;
   }
 }

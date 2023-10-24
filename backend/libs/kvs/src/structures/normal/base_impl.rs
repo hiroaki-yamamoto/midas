@@ -15,7 +15,7 @@ where
   Ft: Future<Output = Fr> + Send,
   Fr: Send,
 {
-  fn commands(&self) -> T {
+  fn __commands__(&self) -> T {
     return self.connection.clone();
   }
 }
@@ -27,7 +27,7 @@ where
   Ft: Future<Output = Fr> + Send,
   Fr: Send,
 {
-  fn channel_name(&self, key: &str) -> String where {
+  fn __channel_name__(&self, key: &str) -> String where {
     return format!("{}:{}", self.channel_name, key);
   }
 }

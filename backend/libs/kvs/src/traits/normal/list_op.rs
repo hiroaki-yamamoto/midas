@@ -21,15 +21,15 @@ where
     value: Vec<V>,
     opt: impl Into<Option<WriteOption>> + Send,
   ) -> KVSResult<usize> {
-    return Base::lpush(self, key, value, opt).await;
+    return self.__lpush__(key, value, opt).await;
   }
 
   async fn lpop(&self, key: &str, count: Option<NonZeroUsize>) -> KVSResult<V> {
-    return Base::lpop(self, key, count).await;
+    return self.__lpop__(key, count).await;
   }
 
   async fn lrem(&self, key: &str, count: isize, elem: V) -> KVSResult<usize> {
-    return Base::lrem(self, key, count, elem).await;
+    return self.__lrem__(key, count, elem).await;
   }
 
   async fn lrange(
@@ -38,10 +38,10 @@ where
     start: isize,
     stop: isize,
   ) -> KVSResult<Vec<V>> {
-    return Base::lrange(self, key, start, stop).await;
+    return self.__lrange__(key, start, stop).await;
   }
 
   async fn llen(&self, key: &str) -> KVSResult<usize> {
-    return Base::llen(self, key).await;
+    return self.__llen__(key).await;
   }
 }

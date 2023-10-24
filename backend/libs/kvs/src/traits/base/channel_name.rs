@@ -1,3 +1,3 @@
 pub trait ChannelName {
-  fn channel_name(&self, key: &str) -> String;
+  fn __channel_name__(&self, key: &str) -> String;
 }

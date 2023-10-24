@@ -22,19 +22,19 @@ where
     value: Vec<V>,
     opt: Option<WriteOption>,
   ) -> KVSResult<usize> {
-    let ret = BaseListOp::lpush(self, &key, value, opt.clone()).await?;
+    let ret = self.__lpush__(key, value, opt.clone()).await?;
     self.flag_last_checked(key, opt.into()).await?;
     return Ok(ret);
   }
 
   async fn lpop(&self, key: &str, count: Option<NonZeroUsize>) -> KVSResult<V> {
-    let ret = BaseListOp::lpop(self, &key, count).await?;
+    let ret = self.__lpop__(key, count).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }
 
   async fn lrem(&self, key: &str, count: isize, elem: V) -> KVSResult<usize> {
-    let ret = BaseListOp::lrem(self, &key, count, elem).await?;
+    let ret = self.__lrem__(key, count, elem).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }
@@ -45,13 +45,13 @@ where
     start: isize,
     stop: isize,
   ) -> KVSResult<Vec<V>> {
-    let ret = BaseListOp::lrange(self, &key, start, stop).await?;
+    let ret = self.__lrange__(key, start, stop).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }
 
   async fn llen(&self, key: &str) -> KVSResult<usize> {
-    let ret = BaseListOp::llen(self, &key).await?;
+    let ret = self.__llen__(key).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }

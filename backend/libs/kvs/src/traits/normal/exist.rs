@@ -11,6 +11,6 @@ where
   T: Commands + Send,
 {
   async fn exists(&self, key: &str) -> KVSResult<bool> {
-    return BaseExist::exists(self, key).await;
+    return self.__exists__(key).await;
   }
 }

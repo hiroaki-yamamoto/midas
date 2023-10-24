@@ -13,6 +13,6 @@ where
   T: Commands + Send,
 {
   async fn expire(&self, key: &str, dur: Duration) -> KVSResult<bool> {
-    return Base::expire(self, key, dur).await;
+    return self.__expire__(key, dur).await;
   }
 }

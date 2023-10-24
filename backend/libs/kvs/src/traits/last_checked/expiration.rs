@@ -16,7 +16,7 @@ where
   T: Commands + Send,
 {
   async fn expire(&self, key: &str, dur: Duration) -> KVSResult<bool> {
-    let ret = BaseExp::expire(self, key, dur).await?;
+    let ret = self.__expire__(key, dur).await?;
     self
       .flag_last_checked(
         key,

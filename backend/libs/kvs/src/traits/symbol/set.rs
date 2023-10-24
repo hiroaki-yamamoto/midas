@@ -25,7 +25,7 @@ where
     R: FromRedisValue,
   {
     let channel_name = self.channel_name(exchange, symbol);
-    let mut cmds = self.commands();
+    let mut cmds = self.__commands__();
     // let mut cmds = cmds.lock().await;
     let result = if let Some(opt) = opt {
       let opt: SetOptions = opt.into();

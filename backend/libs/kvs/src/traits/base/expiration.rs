@@ -12,11 +12,11 @@ pub trait Expiration<T>: Base<T> + ChannelName
 where
   T: Commands + Send,
 {
-  async fn expire(&self, key: &str, dur: Duration) -> KVSResult<bool> {
+  async fn __expire__(&self, key: &str, dur: Duration) -> KVSResult<bool> {
     let dur_mils = dur.as_millis() as usize;
-    let mut cmd = self.commands();
+    let mut cmd = self.__commands__();
     // let mut cmd = cmd.lock().await;
-    let channel_name = self.channel_name(key);
+    let channel_name = self.__channel_name__(key);
     if cmd.pexpire::<_, u16>(channel_name, dur_mils).await? == 1 {
       return Ok(true);
     } else {

@@ -9,7 +9,7 @@ where
   R: FromRedisValue,
   T: Commands + Clone,
 {
-  fn commands(&self) -> T {
+  fn __commands__(&self) -> T {
     return self.connection.clone();
   }
 }

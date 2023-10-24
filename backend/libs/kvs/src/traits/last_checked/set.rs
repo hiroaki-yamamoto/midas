@@ -20,7 +20,7 @@ where
     value: V,
     opt: Option<WriteOption>,
   ) -> KVSResult<bool> {
-    let ret = BaseSet::set(self, &key, value, opt.clone()).await?;
+    let ret = self.__set__(key, value, opt.clone()).await?;
     self.flag_last_checked(key, opt.into()).await?;
     return Ok(ret);
   }

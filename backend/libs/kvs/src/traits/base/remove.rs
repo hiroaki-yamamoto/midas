@@ -12,11 +12,13 @@ pub trait Remove<T>: Base<T> + ChannelName
 where
   T: Commands + Send,
 {
-  async fn del(&self, keys: &[Arc<str>]) -> KVSResult<usize> {
-    let mut cmd = self.commands();
+  async fn __del__(&self, keys: &[Arc<str>]) -> KVSResult<usize> {
+    let mut cmd = self.__commands__();
     // let mut cmd = cmd.lock().await;
-    let channel_names: Vec<String> =
-      keys.into_iter().map(|key| self.channel_name(key)).collect();
+    let channel_names: Vec<String> = keys
+      .into_iter()
+      .map(|key| self.__channel_name__(key))
+      .collect();
     return Ok(cmd.del(channel_names).await?);
   }
 }

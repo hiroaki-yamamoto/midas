@@ -13,6 +13,6 @@ where
 {
   async fn get(&self, exchange: &str, symbol: &str) -> KVSResult<V> {
     let channel_name = self.channel_name(exchange, symbol);
-    return Ok(self.commands().get(channel_name).await?);
+    return Ok(self.__commands__().get(channel_name).await?);
   }
 }

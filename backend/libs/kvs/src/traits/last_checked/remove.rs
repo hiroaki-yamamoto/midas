@@ -14,7 +14,7 @@ where
   T: Commands + Send,
 {
   async fn del(&self, keys: &[Arc<str>]) -> KVSResult<usize> {
-    let ret = BaseRemove::del(self, keys).await?;
+    let ret = self.__del__(keys).await?;
     let _ = self.del_last_checked(keys).await?;
     return Ok(ret);
   }

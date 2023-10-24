@@ -10,9 +10,9 @@ pub trait Exist<T>: Base<T> + ChannelName
 where
   T: Commands + Send,
 {
-  async fn exists(&self, key: &str) -> KVSResult<bool> {
-    let channel_name = self.channel_name(key);
-    let mut cmd = self.commands();
+  async fn __exists__(&self, key: &str) -> KVSResult<bool> {
+    let channel_name = self.__channel_name__(key);
+    let mut cmd = self.__commands__();
     // let mut cmd = cmd.lock().await;
     return Ok(cmd.exists(channel_name).await?);
   }

@@ -13,6 +13,6 @@ where
   T: Commands + Send,
 {
   async fn del(&self, keys: &[Arc<str>]) -> KVSResult<usize> {
-    return Base::del(self, keys).await;
+    return self.__del__(keys).await;
   }
 }

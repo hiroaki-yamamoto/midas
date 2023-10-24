@@ -4,5 +4,5 @@ pub trait Base<T>
 where
   T: Commands,
 {
-  fn commands(&self) -> T;
+  fn __commands__(&self) -> T;
 }

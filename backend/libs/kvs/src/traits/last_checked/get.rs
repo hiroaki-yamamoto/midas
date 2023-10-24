@@ -12,7 +12,7 @@ where
   V: FromRedisValue + ToRedisArgs + Send,
 {
   async fn get(&self, key: &str) -> KVSResult<V> {
-    let value = BaseGet::get(self, &key).await?;
+    let value = self.__get__(key).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(value);
   }

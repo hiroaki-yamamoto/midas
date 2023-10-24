@@ -21,16 +21,16 @@ where
   Ft: Future<Output = Fr> + Send,
   Fr: Send,
 {
-  async fn lock(
+  async fn __lock__(
     &self,
     key: &str,
     func_on_success: impl (Fn() -> Ft) + Send + Sync,
   ) -> DLockResult<Fr> {
     let (refresh_tx, mut refresh_rx) = channel::<()>(1);
-    let channel_name = self.channel_name(&format!("{}:lock", key));
+    let channel_name = self.__channel_name__(&format!("{}:lock", key));
     let channel_name_2 = channel_name.clone();
-    let mut dlock = self.commands();
-    let mut dlock2 = self.commands();
+    let mut dlock = self.__commands__();
+    let mut dlock2 = self.__commands__();
 
     let expire_refresh = async move {
       let _ = refresh_rx.recv().await;
