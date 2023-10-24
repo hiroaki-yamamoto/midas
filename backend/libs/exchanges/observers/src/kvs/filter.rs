@@ -42,7 +42,7 @@ where
     exchange: Exchanges,
   ) -> KVSResult<BoxStream<String>> {
     let nodes = self
-      .exchange_type_kvs
+      .indexer
       .get_nodes_by_exchange(exchange)
       .await?
       .filter_map(move |node_id| async move {
