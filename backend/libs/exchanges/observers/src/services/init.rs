@@ -22,9 +22,11 @@ use super::ObservationBalancer;
 pub struct Init<'a, C, NodeKVS, ExchangeTypeKVS, DLock>
 where
   C: Commands + Sync + Send,
-  NodeKVS: ListOp<C, String>,
-  ExchangeTypeKVS: SetOp<C, String>,
-  DLock: Lock<C, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>,
+  NodeKVS: ListOp<C, String> + Send + Sync,
+  ExchangeTypeKVS: SetOp<C, String> + Send + Sync,
+  DLock: Lock<C, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
+    + Send
+    + Sync,
 {
   diff_taker: NodeDIffTaker<C, NodeKVS, ExchangeTypeKVS>,
   balancer: ObservationBalancer<C, NodeKVS, ExchangeTypeKVS>,
@@ -37,9 +39,11 @@ impl<'a, C, NodeKVS, ExchangeTypeKVS, DLock>
   Init<'a, C, NodeKVS, ExchangeTypeKVS, DLock>
 where
   C: Commands + Sync + Send,
-  NodeKVS: ListOp<C, String>,
-  ExchangeTypeKVS: SetOp<C, String>,
-  DLock: Lock<C, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>,
+  NodeKVS: ListOp<C, String> + Send + Sync,
+  ExchangeTypeKVS: SetOp<C, String> + Send + Sync,
+  DLock: Lock<C, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
+    + Send
+    + Sync,
 {
   pub async fn new(kvs: C, db: Database, nats: &Nats) -> ObserverResult<Self> {
     let diff_taker = NodeDIffTaker::new(&db, kvs.clone().into()).await?;

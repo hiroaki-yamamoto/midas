@@ -12,7 +12,7 @@ use super::NodeIndexer;
 pub struct NodeFilter<T, NodeKVS, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
-  NodeKVS: ListOp<T, String>,
+  NodeKVS: ListOp<T, String> + Send + Sync,
   ExchangeTypeKVS: SetOp<T, String>,
 {
   node_kvs: NodeKVS,
@@ -23,7 +23,7 @@ where
 impl<T, NodeKVS, ExchangeTypeKVS> NodeFilter<T, NodeKVS, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
-  NodeKVS: ListOp<T, String>,
+  NodeKVS: ListOp<T, String> + Send + Sync,
   ExchangeTypeKVS: SetOp<T, String>,
 {
   pub fn new(
@@ -47,11 +47,13 @@ where
       .await?
       .filter_map(move |node_id| async move {
         let node_id_cloned = node_id.clone();
-        return self
-          .node_kvs
-          .lrange::<HashSet<String>>(&node_id_cloned, 0, -1)
-          .await
-          .ok();
+        let val: Option<Vec<String>> =
+          self.node_kvs.lrange(&node_id_cloned, 0, -1).await.ok();
+        return val;
+      })
+      .map(|symbol_vec| {
+        let set: HashSet<String> = symbol_vec.into_iter().collect();
+        return set;
       })
       .flat_map(|symbols| iter(symbols));
     return Ok(nodes.boxed());

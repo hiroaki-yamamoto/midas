@@ -14,8 +14,8 @@ use crate::kvs::{NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER};
 pub struct ObservationBalancer<T, NodeKVS, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
-  NodeKVS: ListOp<T, String>,
-  ExchangeTypeKVS: SetOp<T, String>,
+  NodeKVS: ListOp<T, String> + Send + Sync,
+  ExchangeTypeKVS: SetOp<T, String> + Send + Sync,
 {
   node_kvs: NodeKVS,
   exchange_type_kvs: ExchangeTypeKVS,
@@ -26,8 +26,8 @@ impl<T, NodeKVS, ExchangeTypeKVS>
   ObservationBalancer<T, NodeKVS, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
-  NodeKVS: ListOp<T, String>,
-  ExchangeTypeKVS: SetOp<T, String>,
+  NodeKVS: ListOp<T, String> + Send + Sync,
+  ExchangeTypeKVS: SetOp<T, String> + Send + Sync,
 {
   pub async fn new(kvs: T) -> ObserverResult<Self> {
     let node_kvs = NODE_KVS_BUILDER.build(kvs).await?;
