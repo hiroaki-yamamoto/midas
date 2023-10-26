@@ -42,9 +42,11 @@ const SUBSCRIBE_DELAY: Duration = Duration::from_secs(1);
 pub struct TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
 where
   T: RedisCommands + Send + Sync + 'static,
-  NodeKVS: ListOp<T, String> + Remove<T>,
-  ExchangeTypeKVS: SetOp<T, String> + Set<T, String>,
-  DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>,
+  NodeKVS: ListOp<T, String> + Remove<T> + Send + Sync,
+  ExchangeTypeKVS: SetOp<T, String> + Set<T, String> + Send + Sync,
+  DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
+    + Send
+    + Sync,
 {
   node_id: Arc<RwLock<Option<String>>>,
   kvs: NodeKVS,
@@ -64,9 +66,11 @@ impl<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
   TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
 where
   T: RedisCommands + Send + Sync,
-  NodeKVS: ListOp<T, String> + Remove<T>,
-  ExchangeTypeKVS: SetOp<T, String> + Set<T, String>,
-  DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>,
+  NodeKVS: ListOp<T, String> + Remove<T> + Send + Sync,
+  ExchangeTypeKVS: SetOp<T, String> + Set<T, String> + Send + Sync,
+  DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
+    + Send
+    + Sync,
 {
   pub async fn new(
     broker: &Nats,
@@ -299,9 +303,11 @@ impl<'a, T, NodeKVS, ExchangeTypeKVS, DLock> TradeObserverTrait
   for TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
 where
   T: RedisCommands + Send + Sync + 'static,
-  NodeKVS: ListOp<T, String> + Remove<T>,
-  ExchangeTypeKVS: SetOp<T, String> + Set<T, String>,
-  DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>,
+  NodeKVS: ListOp<T, String> + Remove<T> + Send + Sync,
+  ExchangeTypeKVS: SetOp<T, String> + Set<T, String> + Send + Sync,
+  DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
+    + Send
+    + Sync,
 {
   async fn start(&self, signal: Box<Signal>) -> ObserverResult<()> {
     let (ready_evloop_tx, ready_evloop_rx) = oneshot::channel();
