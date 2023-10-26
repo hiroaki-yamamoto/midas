@@ -20,7 +20,7 @@ use ::config::Database;
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{CreateStreamResult, ObserverError, ObserverResult};
 use ::kvs::redis::AsyncCommands as RedisCommands;
-use ::kvs::traits::last_checked::{ListOp, Remove, Set, SetOp};
+use ::kvs::traits::last_checked::{Get, ListOp, Remove, Set, SetOp};
 use ::kvs::traits::normal::Lock;
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
@@ -43,7 +43,8 @@ pub struct TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
 where
   T: RedisCommands + Send + Sync + 'static,
   NodeKVS: ListOp<T, String> + Remove<T> + Send + Sync,
-  ExchangeTypeKVS: SetOp<T, String> + Set<T, String> + Send + Sync,
+  ExchangeTypeKVS:
+    Get<T, String> + SetOp<T, String> + Set<T, String> + Send + Sync,
   DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
     + Send
     + Sync,
@@ -67,7 +68,8 @@ impl<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
 where
   T: RedisCommands + Send + Sync,
   NodeKVS: ListOp<T, String> + Remove<T> + Send + Sync,
-  ExchangeTypeKVS: SetOp<T, String> + Set<T, String> + Send + Sync,
+  ExchangeTypeKVS:
+    Get<T, String> + SetOp<T, String> + Set<T, String> + Send + Sync,
   DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
     + Send
     + Sync,
@@ -304,7 +306,8 @@ impl<'a, T, NodeKVS, ExchangeTypeKVS, DLock> TradeObserverTrait
 where
   T: RedisCommands + Send + Sync + 'static,
   NodeKVS: ListOp<T, String> + Remove<T> + Send + Sync,
-  ExchangeTypeKVS: SetOp<T, String> + Set<T, String> + Send + Sync,
+  ExchangeTypeKVS:
+    Get<T, String> + SetOp<T, String> + Set<T, String> + Send + Sync,
   DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
     + Send
     + Sync,

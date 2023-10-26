@@ -4,7 +4,7 @@ use ::std::marker::PhantomData;
 use ::errors::KVSResult;
 use ::futures::stream::{iter, BoxStream, StreamExt};
 use ::kvs::redis::AsyncCommands as Commands;
-use ::kvs::traits::last_checked::{ListOp, SetOp};
+use ::kvs::traits::last_checked::{Get, ListOp, SetOp};
 use ::rpc::entities::Exchanges;
 
 use super::NodeIndexer;
@@ -13,7 +13,7 @@ pub struct NodeFilter<T, NodeKVS, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
   NodeKVS: ListOp<T, String> + Send + Sync,
-  ExchangeTypeKVS: SetOp<T, String>,
+  ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
 {
   node_kvs: NodeKVS,
   indexer: NodeIndexer<T, ExchangeTypeKVS>,
@@ -24,7 +24,7 @@ impl<T, NodeKVS, ExchangeTypeKVS> NodeFilter<T, NodeKVS, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
   NodeKVS: ListOp<T, String> + Send + Sync,
-  ExchangeTypeKVS: SetOp<T, String>,
+  ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
 {
   pub fn new(
     node_kvs: NodeKVS,
@@ -68,12 +68,7 @@ where
       .get_handling_symbol_at_exchange(exchange)
       .await?
       .filter_map(|node| async move {
-        return self
-          .node_kvs
-          .llen::<usize>(&node)
-          .await
-          .map(|num| (node, num))
-          .ok();
+        return self.node_kvs.llen(&node).await.map(|num| (node, num)).ok();
       })
       .filter_map(|(node, num)| async move {
         return if num > num_symbols { Some(node) } else { None };

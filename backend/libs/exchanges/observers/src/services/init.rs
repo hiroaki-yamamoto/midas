@@ -12,7 +12,7 @@ use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 
 use crate::kvs::INIT_LOCK_BUILDER;
-use ::kvs::traits::last_checked::{ListOp, SetOp};
+use ::kvs::traits::last_checked::{Get, ListOp, SetOp};
 
 use crate::pubsub::NodeControlEventPubSub;
 
@@ -23,7 +23,7 @@ pub struct Init<'a, C, NodeKVS, ExchangeTypeKVS, DLock>
 where
   C: Commands + Sync + Send,
   NodeKVS: ListOp<C, String> + Send + Sync,
-  ExchangeTypeKVS: SetOp<C, String> + Send + Sync,
+  ExchangeTypeKVS: Get<C, String> + SetOp<C, String> + Send + Sync,
   DLock: Lock<C, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
     + Send
     + Sync,
@@ -40,7 +40,7 @@ impl<'a, C, NodeKVS, ExchangeTypeKVS, DLock>
 where
   C: Commands + Sync + Send,
   NodeKVS: ListOp<C, String> + Send + Sync,
-  ExchangeTypeKVS: SetOp<C, String> + Send + Sync,
+  ExchangeTypeKVS: Get<C, String> + SetOp<C, String> + Send + Sync,
   DLock: Lock<C, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
     + Send
     + Sync,

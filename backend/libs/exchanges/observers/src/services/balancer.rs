@@ -4,7 +4,7 @@ use ::futures::StreamExt;
 
 use ::errors::{KVSResult, ObserverResult};
 use ::kvs::redis::AsyncCommands as Commands;
-use ::kvs::traits::last_checked::{ListOp, SetOp};
+use ::kvs::traits::last_checked::{Get, ListOp, SetOp};
 use ::rpc::entities::Exchanges;
 
 use crate::entities::TradeObserverControlEvent as ControlEvent;
@@ -15,7 +15,7 @@ pub struct ObservationBalancer<T, NodeKVS, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
   NodeKVS: ListOp<T, String> + Send + Sync,
-  ExchangeTypeKVS: SetOp<T, String> + Send + Sync,
+  ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
 {
   node_kvs: NodeKVS,
   exchange_type_kvs: ExchangeTypeKVS,
@@ -27,7 +27,7 @@ impl<T, NodeKVS, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
   NodeKVS: ListOp<T, String> + Send + Sync,
-  ExchangeTypeKVS: SetOp<T, String> + Send + Sync,
+  ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
 {
   pub async fn new(kvs: T) -> ObserverResult<Self> {
     let node_kvs = NODE_KVS_BUILDER.build(kvs).await?;

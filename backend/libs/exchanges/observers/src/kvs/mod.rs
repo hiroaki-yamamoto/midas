@@ -6,7 +6,7 @@ use ::futures::stream::{iter, BoxStream, StreamExt};
 
 use ::errors::KVSResult;
 use ::kvs::redis::AsyncCommands;
-use ::kvs::traits::last_checked::SetOp;
+use ::kvs::traits::last_checked::{Get, SetOp};
 use ::kvs::{LastCheckedKVSBuilder, NormalKVSBuilder};
 use ::rpc::entities::Exchanges;
 
@@ -23,8 +23,8 @@ pub const INIT_LOCK_BUILDER: NormalKVSBuilder<String> =
 
 pub struct NodeIndexer<T, ExchangeTypeKVS>
 where
-  T: AsyncCommands,
-  ExchangeTypeKVS: SetOp<T, String>,
+  T: AsyncCommands + Send + Sync,
+  ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
 {
   exchange_type_kvs: ExchangeTypeKVS,
   _t: PhantomData<T>,
@@ -32,8 +32,8 @@ where
 
 impl<T, ExchangeTypeKVS> NodeIndexer<T, ExchangeTypeKVS>
 where
-  T: AsyncCommands,
-  ExchangeTypeKVS: SetOp<T, String>,
+  T: AsyncCommands + Send + Sync,
+  ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
 {
   pub fn new(exchange_type_kvs: ExchangeTypeKVS) -> Self {
     return Self {
@@ -45,28 +45,19 @@ where
   /// Index node ids to KVS
   pub async fn index_node(&self, node: String) -> KVSResult<usize> {
     return self.exchange_type_kvs.sadd("node_index", node).await;
-    // return Ok(cmd.sadd(channel_name, node)?);
   }
 
   /// Unindex node ids to KVS
   pub async fn unindex_node(&self, node: String) -> KVSResult<usize> {
-    let channel_name = self.channel_name("node_index");
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    return Ok(cmd.srem(channel_name, node)?);
+    return self.exchange_type_kvs.srem("node_index", node).await;
   }
 
   pub async fn get_nodes_by_exchange(
     &self,
     exchange: Exchanges,
   ) -> KVSResult<BoxStream<'_, String>> {
-    let cmd = self.commands();
-    let index_channel_name = self.channel_name("node_index");
-    let keys: Vec<String> = async {
-      let mut cmds = cmd.lock().await;
-      cmds.smembers::<_, Vec<String>>(index_channel_name)
-    }
-    .await?;
+    let keys: Vec<String> =
+      self.exchange_type_kvs.smembers("node_index").await?;
 
     let keys = iter(keys)
       .map(move |key| {
