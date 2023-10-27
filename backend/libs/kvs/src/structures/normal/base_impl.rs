@@ -1,4 +1,5 @@
 use ::std::future::Future;
+use ::std::sync::Arc;
 
 use crate::redis::AsyncCommands as Commands;
 use crate::redis::{FromRedisValue, ToRedisArgs};
@@ -27,8 +28,8 @@ where
   Ft: Future<Output = Fr> + Send,
   Fr: Send,
 {
-  fn __channel_name__(&self, key: &str) -> String where {
-    return format!("{}:{}", self.channel_name, key);
+  fn __channel_name__(&self, key: Arc<String>) -> Arc<String> where {
+    return format!("{}:{}", self.channel_name, key).into();
   }
 }
 

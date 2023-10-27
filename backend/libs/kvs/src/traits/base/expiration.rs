@@ -1,3 +1,4 @@
+use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
@@ -12,12 +13,20 @@ pub trait Expiration<T>: Base<T> + ChannelName
 where
   T: Commands + Send,
 {
-  async fn __expire__(&self, key: &str, dur: Duration) -> KVSResult<bool> {
+  async fn __expire__(
+    &self,
+    key: Arc<String>,
+    dur: Duration,
+  ) -> KVSResult<bool> {
     let dur_mils = dur.as_millis() as usize;
     let mut cmd = self.__commands__();
     // let mut cmd = cmd.lock().await;
     let channel_name = self.__channel_name__(key);
-    if cmd.pexpire::<_, u16>(channel_name, dur_mils).await? == 1 {
+    if cmd
+      .pexpire::<_, u16>(channel_name.as_ref(), dur_mils)
+      .await?
+      == 1
+    {
       return Ok(true);
     } else {
       return Ok(false);

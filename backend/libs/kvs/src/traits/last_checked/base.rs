@@ -14,7 +14,7 @@ pub trait Base<T>: BaseBase<T> + ChannelName
 where
   T: Commands + Send,
 {
-  fn get_timestamp_channel(&self, key: &str) -> String {
+  fn get_timestamp_channel(&self, key: Arc<String>) -> String {
     return format!("last_check_timestamp:{}", self.__channel_name__(key));
   }
 
@@ -31,7 +31,7 @@ where
     return Ok(datetime.into());
   }
 
-  async fn get_last_checked(&self, key: &str) -> KVSResult<SystemTime> {
+  async fn get_last_checked(&self, key: Arc<String>) -> KVSResult<SystemTime> {
     let key = self.get_timestamp_channel(key);
     let mut cmd = self.__commands__();
     // let mut cmd = cmd.lock().await;
@@ -41,7 +41,7 @@ where
 
   async fn flag_last_checked(
     &self,
-    key: &str,
+    key: Arc<String>,
     opt: Option<WriteOption>,
   ) -> KVSResult<bool> {
     let key = self.get_timestamp_channel(key);
@@ -57,10 +57,13 @@ where
     });
   }
 
-  async fn del_last_checked(&self, keys: &[Arc<str>]) -> KVSResult<usize> {
+  async fn del_last_checked(
+    &self,
+    keys: Arc<[Arc<String>]>,
+  ) -> KVSResult<usize> {
     let keys: Vec<String> = keys
       .into_iter()
-      .map(|key| self.get_timestamp_channel(key))
+      .map(|key| self.get_timestamp_channel(key.clone()))
       .collect();
     let mut cmd = self.__commands__();
     // let mut cmd = cmd.lock().await;

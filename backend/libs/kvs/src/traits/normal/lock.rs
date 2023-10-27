@@ -1,4 +1,5 @@
 use ::std::future::Future;
+use ::std::sync::Arc;
 
 use ::async_trait::async_trait;
 
@@ -16,7 +17,7 @@ where
 {
   async fn lock(
     &self,
-    key: &str,
+    key: Arc<String>,
     func_on_success: impl (Fn() -> Ft) + Send + Sync,
   ) -> DLockResult<Fr> {
     return self.__lock__(key, func_on_success).await;

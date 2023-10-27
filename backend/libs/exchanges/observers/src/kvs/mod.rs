@@ -61,13 +61,9 @@ where
 
     let keys = iter(keys)
       .map(move |key| {
-        let exchange_key = self.channel_name(&key);
-        let cmd = self.commands();
-        let exchange = async move {
-          let mut cmd = cmd.lock().await;
-          cmd.get::<_, String>(exchange_key)
-        };
-        return (key, exchange);
+        let exchange_key = key.clone();
+        let exchange = self.exchange_type_kvs.get(&exchange_key);
+        return (exchange_key, exchange);
       })
       .filter_map(|(key, exchange)| async {
         let pair = exchange

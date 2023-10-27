@@ -1,3 +1,5 @@
+use ::std::sync::Arc;
+
 use ::std::future::Future;
 use ::std::time::Duration;
 
@@ -23,11 +25,11 @@ where
 {
   async fn __lock__(
     &self,
-    key: &str,
+    key: Arc<String>,
     func_on_success: impl (Fn() -> Ft) + Send + Sync,
   ) -> DLockResult<Fr> {
     let (refresh_tx, mut refresh_rx) = channel::<()>(1);
-    let channel_name = self.__channel_name__(&format!("{}:lock", key));
+    let channel_name = self.__channel_name__(format!("{}:lock", key).into());
     let channel_name_2 = channel_name.clone();
     let mut dlock = self.__commands__();
     let mut dlock2 = self.__commands__();
@@ -39,7 +41,7 @@ where
         select! {
           _ = refresh_timer.tick() => {
             // let mut dlock = dlock2.lock().await;
-            let _ = dlock2.expire::<_, i64>(channel_name_2.clone(), 3).await;
+            let _ = dlock2.expire::<_, i64>(channel_name_2.as_ref(), 3).await;
           },
           _ = refresh_rx.recv() => {
             break;
@@ -54,7 +56,7 @@ where
         // let mut dlock = dlock.lock().await;
         dlock
           .set_options(
-            channel_name,
+            channel_name.as_ref(),
             random.to_string(),
             WriteOption::default()
               .duration(Duration::from_secs(3).into())

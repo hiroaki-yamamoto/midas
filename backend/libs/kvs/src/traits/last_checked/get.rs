@@ -1,3 +1,5 @@
+use ::std::sync::Arc;
+
 use ::async_trait::async_trait;
 use ::errors::KVSResult;
 use ::redis::{AsyncCommands as Commands, FromRedisValue, ToRedisArgs};
@@ -11,8 +13,8 @@ where
   T: Commands + Send,
   V: FromRedisValue + ToRedisArgs + Send,
 {
-  async fn get(&self, key: &str) -> KVSResult<V> {
-    let value = self.__get__(key).await?;
+  async fn get(&self, key: Arc<String>) -> KVSResult<V> {
+    let value = self.__get__(key.clone()).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(value);
   }

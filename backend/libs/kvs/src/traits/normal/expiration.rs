@@ -1,3 +1,4 @@
+use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
@@ -12,7 +13,7 @@ pub trait Expiration<T>: Base<T>
 where
   T: Commands + Send,
 {
-  async fn expire(&self, key: &str, dur: Duration) -> KVSResult<bool> {
+  async fn expire(&self, key: Arc<String>, dur: Duration) -> KVSResult<bool> {
     return self.__expire__(key, dur).await;
   }
 }

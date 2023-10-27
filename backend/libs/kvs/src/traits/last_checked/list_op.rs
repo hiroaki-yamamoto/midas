@@ -1,4 +1,5 @@
 use ::std::num::NonZeroUsize;
+use ::std::sync::Arc;
 
 use ::async_trait::async_trait;
 use ::redis::{AsyncCommands as Commands, FromRedisValue, ToRedisArgs};
@@ -18,40 +19,49 @@ where
 {
   async fn lpush(
     &self,
-    key: &str,
+    key: Arc<String>,
     value: Vec<V>,
     opt: Option<WriteOption>,
   ) -> KVSResult<usize> {
-    let ret = self.__lpush__(key, value, opt.clone()).await?;
+    let ret = self.__lpush__(key.clone(), value, opt.clone()).await?;
     self.flag_last_checked(key, opt.into()).await?;
     return Ok(ret);
   }
 
-  async fn lpop(&self, key: &str, count: Option<NonZeroUsize>) -> KVSResult<V> {
-    let ret = self.__lpop__(key, count).await?;
+  async fn lpop(
+    &self,
+    key: Arc<String>,
+    count: Option<NonZeroUsize>,
+  ) -> KVSResult<V> {
+    let ret = self.__lpop__(key.clone(), count).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }
 
-  async fn lrem(&self, key: &str, count: isize, elem: V) -> KVSResult<usize> {
-    let ret = self.__lrem__(key, count, elem).await?;
+  async fn lrem(
+    &self,
+    key: Arc<String>,
+    count: isize,
+    elem: V,
+  ) -> KVSResult<usize> {
+    let ret = self.__lrem__(key.clone(), count, elem).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }
 
   async fn lrange(
     &self,
-    key: &str,
+    key: Arc<String>,
     start: isize,
     stop: isize,
   ) -> KVSResult<Vec<V>> {
-    let ret = self.__lrange__(key, start, stop).await?;
+    let ret = self.__lrange__(key.clone(), start, stop).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }
 
-  async fn llen(&self, key: &str) -> KVSResult<usize> {
-    let ret = self.__llen__(key).await?;
+  async fn llen(&self, key: Arc<String>) -> KVSResult<usize> {
+    let ret = self.__llen__(key.clone()).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }

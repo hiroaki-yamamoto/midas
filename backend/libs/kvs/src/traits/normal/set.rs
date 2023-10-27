@@ -1,3 +1,5 @@
+use ::std::sync::Arc;
+
 use ::async_trait::async_trait;
 use ::redis::{AsyncCommands as Commands, ToRedisArgs};
 
@@ -14,7 +16,7 @@ where
 {
   async fn set<R>(
     &self,
-    key: &str,
+    key: Arc<String>,
     value: V,
     opt: impl Into<Option<WriteOption>> + Send,
   ) -> KVSResult<bool> {

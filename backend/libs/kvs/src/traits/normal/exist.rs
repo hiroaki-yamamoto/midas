@@ -1,3 +1,5 @@
+use ::std::sync::Arc;
+
 use ::async_trait::async_trait;
 use ::redis::AsyncCommands as Commands;
 
@@ -10,7 +12,7 @@ pub trait Exist<T>: BaseExist<T>
 where
   T: Commands + Send,
 {
-  async fn exists(&self, key: &str) -> KVSResult<bool> {
+  async fn exists(&self, key: Arc<String>) -> KVSResult<bool> {
     return self.__exists__(key).await;
   }
 }

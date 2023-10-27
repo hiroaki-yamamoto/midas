@@ -18,7 +18,7 @@ where
     let mut cmd = self.__commands__();
     // let mut cmd = cmd.lock().await;
 
-    let scan_pattern = self.get_timestamp_channel("*");
+    let scan_pattern = self.get_timestamp_channel("*".to_string().into());
     let keys: Vec<String> = cmd
       .scan_match::<_, String>(scan_pattern)
       .await?

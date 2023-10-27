@@ -12,7 +12,7 @@ pub trait Remove<T>: Base<T>
 where
   T: Commands + Send,
 {
-  async fn del(&self, keys: &[Arc<str>]) -> KVSResult<usize> {
+  async fn del(&self, keys: Arc<[Arc<String>]>) -> KVSResult<usize> {
     return self.__del__(keys).await;
   }
 }

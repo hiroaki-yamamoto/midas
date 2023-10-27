@@ -13,10 +13,16 @@ pub trait Remove<T>: Base<T> + ChannelName
 where
   T: Commands + Send + Sync,
 {
-  async fn del(&self, exchange: &str, symbols: &[Arc<str>]) -> KVSResult<()> {
+  async fn del(
+    &self,
+    exchange: Arc<String>,
+    symbols: Arc<[Arc<String>]>,
+  ) -> KVSResult<()> {
     let channel_names: Vec<String> = symbols
       .into_iter()
-      .map(|symbol| self.channel_name(exchange, symbol))
+      .map(|symbol| {
+        (*self.channel_name(exchange.clone(), symbol.clone())).clone()
+      })
       .collect();
     let mut cmd = self.__commands__();
     // let mut cmd = cmd.lock().await;

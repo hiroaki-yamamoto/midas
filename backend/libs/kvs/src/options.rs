@@ -1,3 +1,5 @@
+use ::std::sync::Arc;
+
 use ::std::convert::From;
 use ::std::time::Duration;
 
@@ -19,14 +21,18 @@ pub struct WriteOption {
 pub trait WriteOptionTrait {
   fn duration(&self) -> Option<Duration>;
   fn non_existent_only(&self) -> bool;
-  async fn execute<C>(&self, mut cmds: C, key: &str) -> RedisResult<()>
+  async fn execute<C>(&self, mut cmds: C, key: Arc<String>) -> RedisResult<()>
   where
     C: Commands,
   {
     let mut res: RedisResult<()> = Ok(());
     if let Some(duration) = self.duration() {
       // let mut cmds = cmds.lock().await;
-      res = res.and(cmds.pexpire(key, duration.as_millis() as usize).await);
+      res = res.and(
+        cmds
+          .pexpire(key.as_ref(), duration.as_millis() as usize)
+          .await,
+      );
     }
     return res;
   }
@@ -70,7 +76,7 @@ impl WriteOptionTrait for Option<WriteOption> {
       .map(|opt| opt.non_existent_only())
       .unwrap_or(false);
   }
-  async fn execute<T>(&self, cmds: T, key: &str) -> RedisResult<()>
+  async fn execute<T>(&self, cmds: T, key: Arc<String>) -> RedisResult<()>
   where
     T: Commands,
   {

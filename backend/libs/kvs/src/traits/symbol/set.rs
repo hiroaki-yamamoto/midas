@@ -1,3 +1,5 @@
+use ::std::sync::Arc;
+
 use ::async_trait::async_trait;
 use ::errors::KVSResult;
 use ::redis::{
@@ -16,8 +18,8 @@ where
 {
   async fn set<R>(
     &self,
-    exchange: &str,
-    symbol: &str,
+    exchange: Arc<String>,
+    symbol: Arc<String>,
     value: V,
     opt: Option<WriteOption>,
   ) -> KVSResult<R>
@@ -29,9 +31,9 @@ where
     // let mut cmds = cmds.lock().await;
     let result = if let Some(opt) = opt {
       let opt: SetOptions = opt.into();
-      cmds.set_options(&channel_name, value, opt)
+      cmds.set_options(channel_name.as_ref(), value, opt)
     } else {
-      cmds.set(&channel_name, value)
+      cmds.set(channel_name.as_ref(), value)
     }
     .await;
     return Ok(result?);

@@ -1,3 +1,5 @@
+use ::std::sync::Arc;
+
 use crate::redis::AsyncCommands as Commands;
 use crate::redis::{FromRedisValue, ToRedisArgs};
 
@@ -9,9 +11,13 @@ where
   R: FromRedisValue,
   T: Commands + Clone,
 {
-  fn channel_name(&self, exchange: &str, symbol: &str) -> String {
+  fn channel_name(
+    &self,
+    exchange: Arc<String>,
+    symbol: Arc<String>,
+  ) -> Arc<String> {
     let channel_name = format!("{}:{}:{}", self.channel_name, exchange, symbol);
-    return channel_name;
+    return channel_name.into();
   }
 }
 

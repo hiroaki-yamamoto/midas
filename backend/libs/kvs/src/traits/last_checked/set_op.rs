@@ -1,4 +1,5 @@
 use ::async_trait::async_trait;
+use ::std::sync::Arc;
 
 use super::Base;
 use crate::redis::{AsyncCommands as Commands, FromRedisValue, ToRedisArgs};
@@ -11,18 +12,18 @@ where
   T: Commands,
   for<'a> V: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
 {
-  async fn sadd(&self, key: &str, value: V) -> KVSResult<usize> {
-    let val = self.__sadd__(key, value).await;
+  async fn sadd(&self, key: Arc<String>, value: V) -> KVSResult<usize> {
+    let val = self.__sadd__(key.clone(), value).await;
     Self::flag_last_checked(self, key, None).await?;
     return val;
   }
-  async fn srem(&self, key: &str, value: V) -> KVSResult<usize> {
-    let val = self.__srem__(key, value).await;
+  async fn srem(&self, key: Arc<String>, value: V) -> KVSResult<usize> {
+    let val = self.__srem__(key.clone(), value).await;
     Self::flag_last_checked(self, key, None).await?;
     return val;
   }
-  async fn smembers(&self, key: &str) -> KVSResult<Vec<V>> {
-    let val = self.__smembers__(key).await;
+  async fn smembers(&self, key: Arc<String>) -> KVSResult<Vec<V>> {
+    let val = self.__smembers__(key.clone()).await;
     Self::flag_last_checked(self, key, None).await?;
     return val;
   }
