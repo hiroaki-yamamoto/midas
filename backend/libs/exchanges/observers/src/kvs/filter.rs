@@ -1,3 +1,5 @@
+use ::std::sync::Arc;
+
 use ::std::collections::HashSet;
 use ::std::marker::PhantomData;
 
@@ -40,19 +42,19 @@ where
   pub async fn get_handling_symbol_at_exchange(
     &self,
     exchange: Exchanges,
-  ) -> KVSResult<BoxStream<String>> {
+  ) -> KVSResult<BoxStream<Arc<String>>> {
     let nodes = self
       .indexer
       .get_nodes_by_exchange(exchange)
       .await?
-      .filter_map(move |node_id| async move {
-        let node_id_cloned = node_id.clone();
+      .filter_map(move |node_id| async {
         let val: Option<Vec<String>> =
-          self.node_kvs.lrange(&node_id_cloned, 0, -1).await.ok();
+          self.node_kvs.lrange(node_id, 0, -1).await.ok();
         return val;
       })
       .map(|symbol_vec| {
-        let set: HashSet<String> = symbol_vec.into_iter().collect();
+        let set: HashSet<Arc<String>> =
+          symbol_vec.into_iter().map(|symbol| symbol.into()).collect();
         return set;
       })
       .flat_map(|symbols| iter(symbols));
@@ -63,12 +65,17 @@ where
     &self,
     exchange: Exchanges,
     num_symbols: usize,
-  ) -> KVSResult<Vec<String>> {
-    let nodes: Vec<String> = self
+  ) -> KVSResult<Vec<Arc<String>>> {
+    let nodes: Vec<Arc<String>> = self
       .get_handling_symbol_at_exchange(exchange)
       .await?
       .filter_map(|node| async move {
-        return self.node_kvs.llen(&node).await.map(|num| (node, num)).ok();
+        return self
+          .node_kvs
+          .llen(node.clone())
+          .await
+          .map(|num| (node, num))
+          .ok();
       })
       .filter_map(|(node, num)| async move {
         return if num > num_symbols { Some(node) } else { None };

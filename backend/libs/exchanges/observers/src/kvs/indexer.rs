@@ -46,7 +46,7 @@ where
   pub async fn get_nodes_by_exchange(
     &self,
     exchange: Exchanges,
-  ) -> KVSResult<BoxStream<'_, String>> {
+  ) -> KVSResult<BoxStream<'_, Arc<String>>> {
     let keys: Vec<String> =
       self.exchange_type_kvs.smembers(self.chname()).await?;
 
@@ -67,7 +67,7 @@ where
       })
       .filter_map(move |(key, node_exchange)| async move {
         if node_exchange == exchange {
-          return Some((*key).clone());
+          return Some(key);
         } else {
           return None;
         }
