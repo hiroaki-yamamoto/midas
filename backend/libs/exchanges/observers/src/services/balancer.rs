@@ -13,7 +13,7 @@ use crate::kvs::{NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER};
 
 pub struct ObservationBalancer<T, NodeKVS, ExchangeTypeKVS>
 where
-  T: Commands + Send + Sync,
+  T: Commands + Clone + Send + Sync,
   NodeKVS: ListOp<T, String> + Send + Sync,
   ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
 {
@@ -25,7 +25,7 @@ where
 impl<T, NodeKVS, ExchangeTypeKVS>
   ObservationBalancer<T, NodeKVS, ExchangeTypeKVS>
 where
-  T: Commands + Send + Sync,
+  T: Commands + Clone + Send + Sync,
   NodeKVS: ListOp<T, String> + Send + Sync,
   ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
 {

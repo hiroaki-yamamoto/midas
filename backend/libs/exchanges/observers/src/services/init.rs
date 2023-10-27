@@ -21,7 +21,7 @@ use super::ObservationBalancer;
 
 pub struct Init<'a, C, NodeKVS, ExchangeTypeKVS, DLock>
 where
-  C: Commands + Sync + Send,
+  C: Commands + Clone + Sync + Send,
   NodeKVS: ListOp<C, String> + Send + Sync,
   ExchangeTypeKVS: Get<C, String> + SetOp<C, String> + Send + Sync,
   DLock: Lock<C, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
@@ -38,7 +38,7 @@ where
 impl<'a, C, NodeKVS, ExchangeTypeKVS, DLock>
   Init<'a, C, NodeKVS, ExchangeTypeKVS, DLock>
 where
-  C: Commands + Sync + Send,
+  C: Commands + Clone + Sync + Send,
   NodeKVS: ListOp<C, String> + Send + Sync,
   ExchangeTypeKVS: Get<C, String> + SetOp<C, String> + Send + Sync,
   DLock: Lock<C, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
