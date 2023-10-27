@@ -15,10 +15,11 @@ pub trait Set: Base + BaseSet {
     &self,
     key: Arc<String>,
     value: Self::Value,
-    opt: Option<WriteOption>,
+    opt: Option<WriteOption<Self::Commands>>,
   ) -> KVSResult<bool> {
+    let opt = Arc::new(opt);
     let ret = self.__set__(key.clone(), value, opt.clone()).await?;
-    self.flag_last_checked(key, opt.into()).await?;
+    self.flag_last_checked(key, opt).await?;
     return Ok(ret);
   }
 }

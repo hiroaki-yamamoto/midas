@@ -8,7 +8,7 @@ use crate::traits::last_checked::{
 
 impl<R, T> Base for KVS<R, T>
 where
-  T: Commands + Clone + Send,
+  T: Commands + Clone + Send + Sync,
   R: FromRedisValue + ToRedisArgs + Send + Sync,
 {
 }
@@ -23,41 +23,41 @@ where
 impl<R, T> Get for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send,
+  T: Commands + Clone + Send + Sync,
 {
 }
 
 impl<R, T> ListOp for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send,
+  T: Commands + Clone + Send + Sync,
 {
 }
 
 impl<R, T> Remove for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send,
+  T: Commands + Clone + Send + Sync,
 {
 }
 
 impl<R, T> Set for KVS<R, T>
 where
   for<'a> R: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
-  T: Commands + Clone + Send,
+  T: Commands + Clone + Send + Sync,
 {
 }
 
 impl<R, T> FindBefore for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send,
+  T: Commands + Clone + Send + Sync,
 {
 }
 
 impl<R, T> SetOp for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send,
+  T: Commands + Clone + Send + Sync,
 {
 }

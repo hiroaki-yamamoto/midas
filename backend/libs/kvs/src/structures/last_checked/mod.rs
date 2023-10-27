@@ -26,7 +26,7 @@ where
   }
   pub fn build<T>(&self, connection: T) -> KVS<R, T>
   where
-    T: Commands + Clone,
+    T: Commands + Clone + Send + Sync,
   {
     return KVS::new(connection, self.channel_name.to_string());
   }
@@ -36,7 +36,7 @@ where
 pub struct KVS<V, T>
 where
   V: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone,
+  T: Commands + Clone + Send + Sync,
 {
   pub connection: T,
   channel_name: String,
@@ -46,7 +46,7 @@ where
 impl<V, T> KVS<V, T>
 where
   V: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone,
+  T: Commands + Clone + Send + Sync,
 {
   pub(self) fn new(connection: T, channel_name: String) -> Self {
     return Self {

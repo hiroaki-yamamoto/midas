@@ -13,8 +13,8 @@ pub trait Set: Base {
     &self,
     key: Arc<String>,
     value: Self::Value,
-    opt: impl Into<Option<WriteOption>> + Send,
+    opt: Option<WriteOption<Self::Commands>>,
   ) -> KVSResult<bool> {
-    return self.__set__(key, value, opt).await;
+    return self.__set__(key, value, Arc::new(opt)).await;
   }
 }

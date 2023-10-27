@@ -11,7 +11,7 @@ use crate::traits::base::{
 impl<R, T> Base for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone,
+  T: Commands + Clone + Send + Sync,
 {
   type Commands = T;
   fn __commands__(&self) -> T {
@@ -22,7 +22,7 @@ where
 impl<R, T> ChannelName for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone,
+  T: Commands + Clone + Send + Sync,
 {
   fn __channel_name__(&self, key: Arc<String>) -> Arc<String> where {
     return format!("{}:{}", self.channel_name, key).into();
@@ -32,21 +32,21 @@ where
 impl<R, T> Exist for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone,
+  T: Commands + Clone + Send + Sync,
 {
 }
 
 impl<R, T> Expiration for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone,
+  T: Commands + Clone + Send + Sync,
 {
 }
 
 impl<R, T> Get for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone,
+  T: Commands + Clone + Send + Sync,
 {
   type Value = R;
 }
@@ -54,7 +54,7 @@ where
 impl<R, T> ListOp for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone,
+  T: Commands + Clone + Send + Sync,
 {
   type Value = R;
 }
@@ -62,21 +62,21 @@ where
 impl<R, T> Lock for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone,
+  T: Commands + Clone + Send + Sync,
 {
 }
 
 impl<R, T> Remove for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone,
+  T: Commands + Clone + Send + Sync,
 {
 }
 
 impl<R, T> Set for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone,
+  T: Commands + Clone + Send + Sync,
 {
   type Value = R;
 }
@@ -84,7 +84,7 @@ where
 impl<R, T> SetOp for KVS<R, T>
 where
   R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone,
+  T: Commands + Clone + Send + Sync,
 {
   type Value = R;
 }

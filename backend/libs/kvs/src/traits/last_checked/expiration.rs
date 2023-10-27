@@ -14,12 +14,9 @@ use super::base::Base;
 pub trait Expiration: Base + BaseExp {
   async fn expire(&self, key: Arc<String>, dur: Duration) -> KVSResult<bool> {
     let ret = self.__expire__(key.clone(), dur).await?;
-    self
-      .flag_last_checked(
-        key,
-        WriteOption::default().duration(dur.into()).into(),
-      )
-      .await?;
+    let opt: WriteOption<Self::Commands> =
+      WriteOption::default().duration(dur.into());
+    self.flag_last_checked(key, Arc::new(opt)).await?;
     return Ok(ret);
   }
 }

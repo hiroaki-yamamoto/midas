@@ -9,7 +9,6 @@ use ::errors::{KVSError, KVSResult};
 use super::{Base, Exist};
 
 use crate::options::WriteOptionTrait;
-use crate::WriteOption;
 
 #[async_trait]
 pub trait ListOp: Base + Exist {
@@ -19,10 +18,9 @@ pub trait ListOp: Base + Exist {
     &self,
     key: Arc<String>,
     value: Vec<Self::Value>,
-    opt: impl Into<Option<WriteOption>> + Send,
+    opt: Arc<dyn WriteOptionTrait<Commands = Self::Commands> + Send + Sync>,
   ) -> KVSResult<usize> {
     let channel_name = self.__channel_name__(key.clone());
-    let opt: Option<WriteOption> = opt.into();
 
     let mut cmds = self.__commands__();
     let res = if opt.non_existent_only() {

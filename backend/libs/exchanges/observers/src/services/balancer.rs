@@ -16,10 +16,9 @@ use super::{NodeFilter, NodeIndexer};
 pub struct ObservationBalancer<T, NodeKVS, ExchangeTypeKVS>
 where
   T: Commands + Clone + Send + Sync,
-  NodeKVS: ListOp<T, String> + Send + Sync,
   ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
 {
-  node_kvs: Arc<NodeKVS>,
+  node_kvs: Arc<dyn ListOp<T, String> + Send + Sync>,
   indexer: Arc<NodeIndexer<T, ExchangeTypeKVS>>,
   node_filter: Arc<NodeFilter<T, NodeKVS, ExchangeTypeKVS>>,
 }
