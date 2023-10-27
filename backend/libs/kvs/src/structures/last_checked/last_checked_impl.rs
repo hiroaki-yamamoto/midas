@@ -1,5 +1,3 @@
-use ::std::future::Future;
-
 use crate::redis::AsyncCommands as Commands;
 use crate::redis::{FromRedisValue, ToRedisArgs};
 
@@ -8,74 +6,58 @@ use crate::traits::last_checked::{
   Base, Expiration, FindBefore, Get, ListOp, Remove, Set, SetOp,
 };
 
-impl<R, T, Ft, Fr> Base for KVS<R, T, Ft, Fr>
+impl<R, T> Base for KVS<R, T>
 where
   T: Commands + Clone + Send,
-  R: FromRedisValue,
-  Ft: Future<Output = Fr> + Send,
-  Fr: Send,
+  R: FromRedisValue + ToRedisArgs + Send + Sync,
 {
 }
 
-impl<R, T, Ft, Fr> Expiration for KVS<R, T, Ft, Fr>
+impl<R, T> Expiration for KVS<R, T>
 where
-  R: FromRedisValue,
-  T: Commands + Clone + Send,
-  Ft: Future<Output = Fr> + Send,
-  Fr: Send,
+  R: FromRedisValue + ToRedisArgs + Send + Sync,
+  T: Commands + Clone + Send + Sync,
 {
 }
 
-impl<R, T, Ft, Fr> Get for KVS<R, T, Ft, Fr>
+impl<R, T> Get for KVS<R, T>
 where
-  R: FromRedisValue + ToRedisArgs + Send,
+  R: FromRedisValue + ToRedisArgs + Send + Sync,
   T: Commands + Clone + Send,
-  Ft: Future<Output = Fr> + Send,
-  Fr: Send,
 {
 }
 
-impl<R, T, Ft, Fr> ListOp for KVS<R, T, Ft, Fr>
+impl<R, T> ListOp for KVS<R, T>
+where
+  R: FromRedisValue + ToRedisArgs + Send + Sync,
+  T: Commands + Clone + Send,
+{
+}
+
+impl<R, T> Remove for KVS<R, T>
+where
+  R: FromRedisValue + ToRedisArgs + Send + Sync,
+  T: Commands + Clone + Send,
+{
+}
+
+impl<R, T> Set for KVS<R, T>
 where
   for<'a> R: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
   T: Commands + Clone + Send,
-  Ft: Future<Output = Fr> + Send,
-  Fr: Send,
 {
 }
 
-impl<R, T, Ft, Fr> Remove for KVS<R, T, Ft, Fr>
+impl<R, T> FindBefore for KVS<R, T>
 where
-  R: FromRedisValue,
+  R: FromRedisValue + ToRedisArgs + Send + Sync,
   T: Commands + Clone + Send,
-  Ft: Future<Output = Fr> + Send,
-  Fr: Send,
 {
 }
 
-impl<R, T, Ft, Fr> Set for KVS<R, T, Ft, Fr>
+impl<R, T> SetOp for KVS<R, T>
 where
-  for<'a> R: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
+  R: FromRedisValue + ToRedisArgs + Send + Sync,
   T: Commands + Clone + Send,
-  Ft: Future<Output = Fr> + Send,
-  Fr: Send,
-{
-}
-
-impl<R, T, Ft, Fr> FindBefore for KVS<R, T, Ft, Fr>
-where
-  R: FromRedisValue,
-  T: Commands + Clone + Send,
-  Ft: Future<Output = Fr> + Send,
-  Fr: Send,
-{
-}
-
-impl<R, T, Ft, Fr> SetOp for KVS<R, T, Ft, Fr>
-where
-  for<'a> R: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
-  T: Commands + Clone + Send,
-  Ft: Future<Output = Fr> + Send,
-  Fr: Send,
 {
 }
