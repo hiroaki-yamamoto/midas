@@ -4,22 +4,18 @@ use ::std::sync::Arc;
 use ::async_trait::async_trait;
 
 use ::errors::DLockResult;
-use ::redis::AsyncCommands as Commands;
 
 use crate::traits::base::Lock as Base;
 
 #[async_trait]
-pub trait Lock<S, Ft, Fr>: Base<S, Ft, Fr>
-where
-  S: Commands + Send,
-  Ft: Future<Output = Fr> + Send,
-  Fr: Send,
-{
+pub trait Lock: Base {
   async fn lock(
     &self,
     key: Arc<String>,
-    func_on_success: impl (Fn() -> Ft) + Send + Sync,
-  ) -> DLockResult<Fr> {
+    func_on_success: impl (Fn() -> Arc<dyn Future<Output = Arc<dyn Send>>>)
+      + Send
+      + Sync,
+  ) -> DLockResult<Arc<dyn Send>> {
     return self.__lock__(key, func_on_success).await;
   }
 }

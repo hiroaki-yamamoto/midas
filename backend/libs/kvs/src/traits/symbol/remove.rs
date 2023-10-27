@@ -9,10 +9,7 @@ use super::channel_name::ChannelName;
 use crate::traits::base::Base;
 
 #[async_trait]
-pub trait Remove<T>: Base<T> + ChannelName
-where
-  T: Commands + Send + Sync,
-{
+pub trait Remove: Base + ChannelName {
   async fn del(
     &self,
     exchange: Arc<String>,

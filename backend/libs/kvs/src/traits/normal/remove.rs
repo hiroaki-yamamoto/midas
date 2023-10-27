@@ -1,17 +1,13 @@
 use ::std::sync::Arc;
 
 use ::async_trait::async_trait;
-use ::redis::AsyncCommands as Commands;
 
 use ::errors::KVSResult;
 
 use crate::traits::base::Remove as Base;
 
 #[async_trait]
-pub trait Remove<T>: Base<T>
-where
-  T: Commands + Send,
-{
+pub trait Remove: Base {
   async fn del(&self, keys: Arc<[Arc<String>]>) -> KVSResult<usize> {
     return self.__del__(keys).await;
   }

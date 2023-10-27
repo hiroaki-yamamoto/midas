@@ -9,10 +9,7 @@ use ::errors::KVSResult;
 use super::{Base, ChannelName};
 
 #[async_trait]
-pub trait Expiration<T>: Base<T> + ChannelName
-where
-  T: Commands + Send,
-{
+pub trait Expiration: Base + ChannelName {
   async fn __expire__(
     &self,
     key: Arc<String>,
@@ -20,7 +17,6 @@ where
   ) -> KVSResult<bool> {
     let dur_mils = dur.as_millis() as usize;
     let mut cmd = self.__commands__();
-    // let mut cmd = cmd.lock().await;
     let channel_name = self.__channel_name__(key);
     if cmd
       .pexpire::<_, u16>(channel_name.as_ref(), dur_mils)

@@ -10,10 +10,7 @@ use crate::redis::{AsyncCommands as Commands, RedisResult};
 use super::Base;
 
 #[async_trait]
-pub trait FindBefore<C>: Base<C>
-where
-  C: Commands + Send,
-{
+pub trait FindBefore: Base {
   async fn find_before(&self, dur: Duration) -> RedisResult<Vec<String>> {
     let mut cmd = self.__commands__();
     // let mut cmd = cmd.lock().await;

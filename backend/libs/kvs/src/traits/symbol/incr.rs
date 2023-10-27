@@ -12,10 +12,7 @@ use crate::traits::base::Base;
 use super::channel_name::ChannelName;
 
 #[async_trait]
-pub trait Incr<T>: ChannelName + Base<T>
-where
-  T: Commands + Send,
-{
+pub trait Incr: ChannelName + Base {
   async fn incr(
     &self,
     exchange: Arc<String>,

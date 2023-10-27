@@ -9,15 +9,11 @@ use super::{Base, ChannelName};
 use crate::options::WriteOption;
 
 #[async_trait]
-pub trait Set<T, V>: Base<T> + ChannelName
-where
-  T: Commands + Send,
-  for<'a> V: ToRedisArgs + Send + Sync + 'a,
-{
+pub trait Set: Base + ChannelName {
   async fn __set__(
     &self,
     key: Arc<String>,
-    value: V,
+    value: Arc<dyn ToRedisArgs>,
     opt: impl Into<Option<WriteOption>> + Send,
   ) -> KVSResult<bool> {
     let channel_name = self.__channel_name__(key);

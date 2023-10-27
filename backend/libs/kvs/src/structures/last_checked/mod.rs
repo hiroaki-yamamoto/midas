@@ -9,8 +9,6 @@ use redis::ToRedisArgs;
 use crate::redis::AsyncCommands as Commands;
 use crate::redis::FromRedisValue;
 
-use crate::traits::last_checked::LastCheckedKVS;
-
 pub struct KVSBuilder<'a, R>
 where
   R: FromRedisValue,
@@ -70,13 +68,4 @@ where
       _ft: PhantomData,
     };
   }
-}
-
-impl<T, V, Ft, Fr> LastCheckedKVS<T, V> for KVS<V, T, Ft, Fr>
-where
-  T: Commands + Clone + Send + Sync,
-  for<'a> V: Send + Sync + FromRedisValue + ToRedisArgs + 'a,
-  Ft: Future<Output = Fr> + Send + Sync,
-  Fr: Send + Sync,
-{
 }

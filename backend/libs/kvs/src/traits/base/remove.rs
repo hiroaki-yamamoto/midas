@@ -8,10 +8,7 @@ use ::errors::KVSResult;
 use super::{Base, ChannelName};
 
 #[async_trait]
-pub trait Remove<T>: Base<T> + ChannelName
-where
-  T: Commands + Send,
-{
+pub trait Remove: Base + ChannelName {
   async fn __del__(&self, keys: Arc<[Arc<String>]>) -> KVSResult<usize> {
     let mut cmd = self.__commands__();
     // let mut cmd = cmd.lock().await;

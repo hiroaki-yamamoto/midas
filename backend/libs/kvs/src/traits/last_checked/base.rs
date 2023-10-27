@@ -10,10 +10,7 @@ use crate::options::WriteOption;
 use crate::traits::base::{Base as BaseBase, ChannelName};
 
 #[async_trait]
-pub trait Base<T>: BaseBase<T> + ChannelName
-where
-  T: Commands + Send,
-{
+pub trait Base: BaseBase + ChannelName {
   fn get_timestamp_channel(&self, key: Arc<String>) -> String {
     return format!("last_check_timestamp:{}", self.__channel_name__(key));
   }

@@ -2,7 +2,7 @@ use ::std::num::NonZeroUsize;
 use ::std::sync::Arc;
 
 use ::async_trait::async_trait;
-use ::redis::{AsyncCommands as Commands, FromRedisValue, ToRedisArgs};
+use ::redis::{FromRedisValue, ToRedisArgs};
 
 use ::errors::KVSResult;
 
@@ -11,16 +11,11 @@ use crate::options::WriteOption;
 use crate::traits::base::ListOp as BaseListOp;
 
 #[async_trait]
-pub trait ListOp<T, V>: Base<T> + BaseListOp<T, V>
-where
-  T: Commands + Send,
-  for<'async_trait> V:
-    FromRedisValue + ToRedisArgs + Send + Sync + 'async_trait,
-{
+pub trait ListOp: Base + BaseListOp {
   async fn lpush(
     &self,
     key: Arc<String>,
-    value: Vec<V>,
+    value: Vec<Arc<dyn ToRedisArgs>>,
     opt: Option<WriteOption>,
   ) -> KVSResult<usize> {
     let ret = self.__lpush__(key.clone(), value, opt.clone()).await?;
@@ -32,7 +27,7 @@ where
     &self,
     key: Arc<String>,
     count: Option<NonZeroUsize>,
-  ) -> KVSResult<V> {
+  ) -> KVSResult<Arc<dyn FromRedisValue>> {
     let ret = self.__lpop__(key.clone(), count).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
@@ -42,7 +37,7 @@ where
     &self,
     key: Arc<String>,
     count: isize,
-    elem: V,
+    elem: Arc<dyn ToRedisArgs>,
   ) -> KVSResult<usize> {
     let ret = self.__lrem__(key.clone(), count, elem).await?;
     self.flag_last_checked(key, None).await?;
@@ -54,7 +49,7 @@ where
     key: Arc<String>,
     start: isize,
     stop: isize,
-  ) -> KVSResult<Vec<V>> {
+  ) -> KVSResult<Vec<Arc<dyn FromRedisValue>>> {
     let ret = self.__lrange__(key.clone(), start, stop).await?;
     self.flag_last_checked(key, None).await?;
     return Ok(ret);
