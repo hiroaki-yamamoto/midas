@@ -1,5 +1,7 @@
-use crate::redis::aio::MultiplexedConnection;
+use crate::redis::AsyncCommands;
 
 pub trait Base {
-  fn __commands__(&self) -> MultiplexedConnection;
+  type Commands: AsyncCommands;
+
+  fn __commands__(&self) -> Self::Commands;
 }

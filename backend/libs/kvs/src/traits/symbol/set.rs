@@ -10,11 +10,13 @@ use crate::traits::base::Base;
 
 #[async_trait]
 pub trait Set: Base + ChannelName {
+  type Value: ToRedisArgs + Send + Sync;
+
   async fn set(
     &self,
     exchange: Arc<String>,
     symbol: Arc<String>,
-    value: Arc<dyn ToRedisArgs>,
+    value: Self::Value,
     opt: Option<WriteOption>,
   ) -> KVSResult<bool> {
     let channel_name = self.channel_name(exchange, symbol);

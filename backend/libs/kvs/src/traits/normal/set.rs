@@ -1,7 +1,6 @@
 use ::std::sync::Arc;
 
 use ::async_trait::async_trait;
-use ::redis::ToRedisArgs;
 
 use ::errors::KVSResult;
 
@@ -13,7 +12,7 @@ pub trait Set: Base {
   async fn set(
     &self,
     key: Arc<String>,
-    value: Arc<dyn ToRedisArgs>,
+    value: Self::Value,
     opt: impl Into<Option<WriteOption>> + Send,
   ) -> KVSResult<bool> {
     return self.__set__(key, value, opt).await;

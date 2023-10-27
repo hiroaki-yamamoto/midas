@@ -9,11 +9,13 @@ use crate::traits::base::Base;
 
 #[async_trait]
 pub trait Get: Base + ChannelName {
+  type Value: FromRedisValue;
+
   async fn get(
     &self,
     exchange: Arc<String>,
     symbol: Arc<String>,
-  ) -> KVSResult<Arc<dyn FromRedisValue>> {
+  ) -> KVSResult<Self::Value> {
     let channel_name = self.channel_name(exchange, symbol);
     return Ok(self.__commands__().get(channel_name.as_ref()).await?);
   }

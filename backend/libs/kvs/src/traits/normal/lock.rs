@@ -1,7 +1,7 @@
-use ::std::future::Future;
 use ::std::sync::Arc;
 
 use ::async_trait::async_trait;
+use ::futures::future::BoxFuture;
 
 use ::errors::DLockResult;
 
@@ -12,10 +12,10 @@ pub trait Lock: Base {
   async fn lock(
     &self,
     key: Arc<String>,
-    func_on_success: impl (Fn() -> Arc<dyn Future<Output = Arc<dyn Send>>>)
-      + Send
-      + Sync,
-  ) -> DLockResult<Arc<dyn Send>> {
+    func_on_success: Arc<
+      dyn (Fn() -> BoxFuture<'async_trait, Arc<dyn Send + Sync>>) + Send + Sync,
+    >,
+  ) -> DLockResult<Arc<dyn Send + Sync>> {
     return self.__lock__(key, func_on_success).await;
   }
 }

@@ -10,10 +10,12 @@ use crate::options::WriteOption;
 
 #[async_trait]
 pub trait Set: Base + ChannelName {
+  type Value: ToRedisArgs + Send + Sync;
+
   async fn __set__(
     &self,
     key: Arc<String>,
-    value: Arc<dyn ToRedisArgs>,
+    value: Self::Value,
     opt: impl Into<Option<WriteOption>> + Send,
   ) -> KVSResult<bool> {
     let channel_name = self.__channel_name__(key);

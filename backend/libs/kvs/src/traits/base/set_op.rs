@@ -9,10 +9,12 @@ use super::{Base, ChannelName};
 
 #[async_trait]
 pub trait SetOp: Base + ChannelName {
+  type Value: FromRedisValue + ToRedisArgs + Send + Sync;
+
   async fn __sadd__(
     &self,
     key: Arc<String>,
-    value: Arc<dyn ToRedisArgs>,
+    value: Self::Value,
   ) -> KVSResult<usize> {
     let mut cmd = self.__commands__();
     let channel_name = self.__channel_name__(key);
@@ -21,7 +23,7 @@ pub trait SetOp: Base + ChannelName {
   async fn __srem__(
     &self,
     key: Arc<String>,
-    value: Arc<dyn ToRedisArgs>,
+    value: Self::Value,
   ) -> KVSResult<usize> {
     let mut cmd = self.__commands__();
     let channel_name = self.__channel_name__(key);
@@ -30,11 +32,11 @@ pub trait SetOp: Base + ChannelName {
   async fn __smembers__(
     &self,
     key: Arc<String>,
-  ) -> KVSResult<Vec<Arc<dyn FromRedisValue>>> {
+  ) -> KVSResult<Vec<Self::Value>> {
     let mut cmd = self.__commands__();
     let channel_name = self.__channel_name__(key);
-    let values: Vec<Arc<dyn FromRedisValue>> = cmd
-      .smembers::<_, Vec<Arc<dyn FromRedisValue>>>(channel_name.as_ref())
+    let values: Vec<Self::Value> = cmd
+      .smembers::<_, Vec<Self::Value>>(channel_name.as_ref())
       .await?;
     return Ok(values);
   }

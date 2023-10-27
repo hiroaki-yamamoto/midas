@@ -12,11 +12,13 @@ use crate::options::WriteOptionTrait;
 use crate::WriteOption;
 
 #[async_trait]
-pub trait ListOp {
+pub trait ListOp: Base + Exist {
+  type Value: FromRedisValue + ToRedisArgs + Send + Sync;
+
   async fn __lpush__(
     &self,
     key: Arc<String>,
-    value: Vec<Arc<dyn FromRedisValue>>,
+    value: Vec<Self::Value>,
     opt: impl Into<Option<WriteOption>> + Send,
   ) -> KVSResult<usize> {
     let channel_name = self.__channel_name__(key.clone());
@@ -48,7 +50,7 @@ pub trait ListOp {
     &self,
     key: Arc<String>,
     count: Option<NonZeroUsize>,
-  ) -> KVSResult<Arc<dyn FromRedisValue>> {
+  ) -> KVSResult<Self::Value> {
     let channel_name = self.__channel_name__(key);
     let mut cmd = self.__commands__();
     return Ok(cmd.lpop(channel_name.as_ref(), count).await?);
@@ -58,7 +60,7 @@ pub trait ListOp {
     &self,
     key: Arc<String>,
     count: isize,
-    elem: Arc<dyn ToRedisArgs>,
+    elem: Self::Value,
   ) -> KVSResult<usize> {
     let channel_name = self.__channel_name__(key);
     let mut cmd = self.__commands__();
@@ -70,7 +72,7 @@ pub trait ListOp {
     key: Arc<String>,
     start: isize,
     stop: isize,
-  ) -> KVSResult<Vec<Arc<dyn FromRedisValue>>> {
+  ) -> KVSResult<Vec<Self::Value>> {
     let channel_name = self.__channel_name__(key);
     let mut cmd = self.__commands__();
     return Ok(cmd.lrange(channel_name.as_ref(), start, stop).await?);
