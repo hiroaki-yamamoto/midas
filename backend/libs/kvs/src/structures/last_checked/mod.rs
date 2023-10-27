@@ -4,8 +4,6 @@ mod last_checked_impl;
 use ::std::future::Future;
 use ::std::marker::PhantomData;
 
-use redis::ToRedisArgs;
-
 use crate::redis::AsyncCommands as Commands;
 use crate::redis::FromRedisValue;
 

@@ -4,7 +4,7 @@ use crate::redis::FromRedisValue;
 use super::KVS;
 use crate::traits::base::Base;
 
-impl<R, T> Base<T> for KVS<R, T>
+impl<R, T> Base for KVS<R, T>
 where
   R: FromRedisValue,
   T: Commands + Clone,

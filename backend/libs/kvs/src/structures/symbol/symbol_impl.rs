@@ -21,21 +21,21 @@ where
   }
 }
 
-impl<R, T> Get<T, R> for KVS<R, T>
+impl<R, T> Get for KVS<R, T>
 where
   R: FromRedisValue,
   T: Commands + Clone + Sync,
 {
 }
 
-impl<R, T> Remove<T> for KVS<R, T>
+impl<R, T> Remove for KVS<R, T>
 where
   R: FromRedisValue,
   T: Commands + Clone + Sync,
 {
 }
 
-impl<R, T> Set<T, R> for KVS<R, T>
+impl<R, T> Set for KVS<R, T>
 where
   for<'a> R: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
   T: Commands + Clone + Sync,

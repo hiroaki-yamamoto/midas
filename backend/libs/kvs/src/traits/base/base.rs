@@ -1,9 +1,5 @@
-use ::std::sync::Arc;
-
-use ::redis::AsyncCommands as Commands;
-
-pub trait ClonnableCommands: Commands + Clone + Send + Sync {}
+use crate::redis::aio::MultiplexedConnection;
 
 pub trait Base {
-  fn __commands__(&self) -> Arc<dyn ClonnableCommands>;
+  fn __commands__(&self) -> MultiplexedConnection;
 }
