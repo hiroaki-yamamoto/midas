@@ -13,7 +13,7 @@ where
   T: AsyncCommands + Send + Sync,
   ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
 {
-  exchange_type_kvs: ExchangeTypeKVS,
+  exchange_type_kvs: Arc<ExchangeTypeKVS>,
   _t: PhantomData<T>,
 }
 
@@ -22,7 +22,7 @@ where
   T: AsyncCommands + Send + Sync,
   ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
 {
-  pub fn new(exchange_type_kvs: ExchangeTypeKVS) -> Self {
+  pub fn new(exchange_type_kvs: Arc<ExchangeTypeKVS>) -> Self {
     return Self {
       exchange_type_kvs,
       _t: PhantomData,

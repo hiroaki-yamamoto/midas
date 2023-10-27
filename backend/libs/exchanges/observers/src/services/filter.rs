@@ -17,8 +17,8 @@ where
   NodeKVS: ListOp<T, String> + Send + Sync,
   ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
 {
-  node_kvs: NodeKVS,
-  indexer: NodeIndexer<T, ExchangeTypeKVS>,
+  node_kvs: Arc<NodeKVS>,
+  indexer: Arc<NodeIndexer<T, ExchangeTypeKVS>>,
   _t: PhantomData<T>,
 }
 
@@ -29,8 +29,8 @@ where
   ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
 {
   pub fn new(
-    node_kvs: NodeKVS,
-    indexer: NodeIndexer<T, ExchangeTypeKVS>,
+    node_kvs: Arc<NodeKVS>,
+    indexer: Arc<NodeIndexer<T, ExchangeTypeKVS>>,
   ) -> Self {
     return Self {
       node_kvs,

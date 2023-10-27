@@ -41,7 +41,7 @@ const SUBSCRIBE_DELAY: Duration = Duration::from_secs(1);
 
 pub struct TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
 where
-  T: RedisCommands + Send + Sync + 'static,
+  T: RedisCommands + Clone + Send + Sync + 'static,
   NodeKVS: ListOp<T, String> + Remove<T> + Send + Sync,
   ExchangeTypeKVS:
     Get<T, String> + SetOp<T, String> + Set<T, String> + Send + Sync,
@@ -66,7 +66,7 @@ where
 impl<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
   TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
 where
-  T: RedisCommands + Send + Sync,
+  T: RedisCommands + Clone + Send + Sync,
   NodeKVS: ListOp<T, String> + Remove<T> + Send + Sync,
   ExchangeTypeKVS:
     Get<T, String> + SetOp<T, String> + Set<T, String> + Send + Sync,
@@ -90,7 +90,7 @@ where
     let me = Self {
       node_id: Arc::new(RwLock::new(None)),
       trade_handler: trade_handler.into(),
-      kvs: kvs.into(),
+      kvs: kvs,
       control_event,
       node_event,
       signal_tx: Arc::new(signal_tx),
@@ -304,7 +304,7 @@ where
 impl<'a, T, NodeKVS, ExchangeTypeKVS, DLock> TradeObserverTrait
   for TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
 where
-  T: RedisCommands + Send + Sync + 'static,
+  T: RedisCommands + Clone + Send + Sync + 'static,
   NodeKVS: ListOp<T, String> + Remove<T> + Send + Sync,
   ExchangeTypeKVS:
     Get<T, String> + SetOp<T, String> + Set<T, String> + Send + Sync,

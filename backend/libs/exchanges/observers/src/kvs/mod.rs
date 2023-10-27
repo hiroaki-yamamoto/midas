@@ -1,10 +1,4 @@
-mod filter;
-mod indexer;
-
 use ::kvs::{LastCheckedKVSBuilder, NormalKVSBuilder};
-
-pub use self::filter::NodeFilter;
-pub use self::indexer::NodeIndexer;
 
 pub const NODE_KVS_BUILDER: LastCheckedKVSBuilder<String> =
   LastCheckedKVSBuilder::new("observer_node");
