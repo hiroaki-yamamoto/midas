@@ -1,23 +1,22 @@
 mod base_impl;
 mod normal_impl;
 
-use ::std::future::Future;
 use ::std::marker::PhantomData;
 
 use crate::redis::AsyncCommands as Commands;
-use crate::redis::FromRedisValue;
+use crate::redis::{FromRedisValue, ToRedisArgs};
 
-pub struct KVSBuilder<'a, R>
+pub struct KVSBuilder<'a, Value>
 where
-  R: FromRedisValue,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
 {
   channel_name: &'a str,
-  _r: PhantomData<R>,
+  _r: PhantomData<Value>,
 }
 
-impl<'a, R> KVSBuilder<'a, R>
+impl<'a, Value> KVSBuilder<'a, Value>
 where
-  R: FromRedisValue,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
 {
   pub fn new(channel_name: &'a str) -> Self {
     return Self {
@@ -25,45 +24,35 @@ where
       _r: PhantomData,
     };
   }
-  pub fn build<T, Ft, Fr>(&self, connection: T) -> KVS<R, T, Ft, Fr>
+  pub fn build<CMD>(&self, connection: CMD) -> KVS<CMD, Value>
   where
-    T: Commands + Clone,
-    Ft: Future<Output = Fr> + Send,
-    Fr: Send,
+    CMD: Commands + Clone + Send + Sync,
   {
     return KVS::new(connection, self.channel_name.to_string());
   }
 }
 
 /// Wrap this struct with Arc if Clone is needed.
-pub struct KVS<R, T, Ft, Fr>
+pub struct KVS<CMD, Value>
 where
-  R: FromRedisValue,
-  T: Commands + Clone,
-  Ft: Future<Output = Fr> + Send,
-  Fr: Send,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
-  pub connection: T,
+  pub connection: CMD,
   channel_name: String,
-  _r: PhantomData<R>,
-  _ft: PhantomData<Ft>,
-  _fr: PhantomData<Fr>,
+  _r: PhantomData<Value>,
 }
 
-impl<R, T, Ft, Fr> KVS<R, T, Ft, Fr>
+impl<CMD, Value> KVS<CMD, Value>
 where
-  R: FromRedisValue,
-  T: Commands + Clone,
-  Ft: Future<Output = Fr> + Send,
-  Fr: Send,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
-  pub(self) fn new(connection: T, channel_name: String) -> Self {
+  pub(self) fn new(connection: CMD, channel_name: String) -> Self {
     return Self {
       connection,
       channel_name,
       _r: PhantomData,
-      _ft: PhantomData,
-      _fr: PhantomData,
     };
   }
 }
