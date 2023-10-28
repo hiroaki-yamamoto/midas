@@ -8,83 +8,83 @@ use crate::traits::base::{
   Base, ChannelName, Exist, Expiration, Get, ListOp, Lock, Remove, Set, SetOp,
 };
 
-impl<R, T> Base for KVS<R, T>
+impl<CMD, Value> Base for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
-  type Commands = T;
-  fn __commands__(&self) -> T {
+  type Commands = CMD;
+  fn __commands__(&self) -> CMD {
     return self.connection.clone();
   }
 }
 
-impl<R, T> ChannelName for KVS<R, T>
+impl<CMD, Value> ChannelName for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
   fn __channel_name__(&self, key: Arc<String>) -> Arc<String> where {
     return format!("{}:{}", self.channel_name, key).into();
   }
 }
 
-impl<R, T> Exist for KVS<R, T>
+impl<CMD, Value> Exist for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
 }
 
-impl<R, T> Expiration for KVS<R, T>
+impl<CMD, Value> Expiration for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
 }
 
-impl<R, T> Get for KVS<R, T>
+impl<CMD, Value> Get for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
-  type Value = R;
+  type Value = Value;
 }
 
-impl<R, T> ListOp for KVS<R, T>
+impl<CMD, Value> ListOp for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
-  type Value = R;
+  type Value = Value;
 }
 
-impl<R, T> Lock for KVS<R, T>
+impl<CMD, Value> Lock for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
-{
-}
-
-impl<R, T> Remove for KVS<R, T>
-where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
 }
 
-impl<R, T> Set for KVS<R, T>
+impl<CMD, Value> Remove for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
-  type Value = R;
 }
 
-impl<R, T> SetOp for KVS<R, T>
+impl<CMD, Value> Set for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
-  type Value = R;
+  type Value = Value;
+}
+
+impl<CMD, Value> SetOp for KVS<CMD, Value>
+where
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
+{
+  type Value = Value;
 }

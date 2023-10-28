@@ -6,58 +6,58 @@ use crate::traits::last_checked::{
   Base, Expiration, FindBefore, Get, ListOp, Remove, Set, SetOp,
 };
 
-impl<R, T> Base for KVS<R, T>
+impl<CMD, Value> Base for KVS<CMD, Value>
 where
-  T: Commands + Clone + Send + Sync,
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
 {
 }
 
-impl<R, T> Expiration for KVS<R, T>
+impl<CMD, Value> Expiration for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
 }
 
-impl<R, T> Get for KVS<R, T>
+impl<CMD, Value> Get for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
 }
 
-impl<R, T> ListOp for KVS<R, T>
+impl<CMD, Value> ListOp for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
 }
 
-impl<R, T> Remove for KVS<R, T>
+impl<CMD, Value> Remove for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
 }
 
-impl<R, T> Set for KVS<R, T>
+impl<CMD, Value> Set for KVS<CMD, Value>
 where
-  for<'a> R: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
 }
 
-impl<R, T> FindBefore for KVS<R, T>
+impl<CMD, Value> FindBefore for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
 }
 
-impl<R, T> SetOp for KVS<R, T>
+impl<CMD, Value> SetOp for KVS<CMD, Value>
 where
-  R: FromRedisValue + ToRedisArgs + Send + Sync,
-  T: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
 }
