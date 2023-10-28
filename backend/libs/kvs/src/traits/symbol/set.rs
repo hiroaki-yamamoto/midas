@@ -17,7 +17,7 @@ pub trait Set: Base + ChannelName {
     exchange: Arc<String>,
     symbol: Arc<String>,
     value: Self::Value,
-    opt: Option<WriteOption<Self::Commands>>,
+    opt: Option<WriteOption>,
   ) -> KVSResult<bool> {
     let channel_name = self.channel_name(exchange, symbol);
     let mut cmds = self.__commands__();

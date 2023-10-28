@@ -53,7 +53,7 @@ pub trait Lock: Base + ChannelName {
           .set_options(
             channel_name.as_ref(),
             random.to_string(),
-            WriteOption::<Self::Commands>::default()
+            WriteOption::default()
               .duration(Duration::from_secs(3).into())
               .non_existent_only(true)
               .into(),

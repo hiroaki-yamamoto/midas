@@ -6,19 +6,19 @@ use ::std::num::NonZeroUsize;
 
 use ::errors::{KVSError, KVSResult};
 
-use super::{Base, Exist};
+use super::{Exist, OptExecution};
 
-use crate::options::WriteOptionTrait;
+use crate::options::{WriteOption, WriteOptionTrait};
 
 #[async_trait]
-pub trait ListOp: Base + Exist {
+pub trait ListOp: Exist + OptExecution {
   type Value: FromRedisValue + ToRedisArgs + Send + Sync;
 
   async fn __lpush__(
     &self,
     key: Arc<String>,
     value: Vec<Self::Value>,
-    opt: Arc<dyn WriteOptionTrait<Commands = Self::Commands> + Send + Sync>,
+    opt: Option<WriteOption>,
   ) -> KVSResult<usize> {
     let channel_name = self.__channel_name__(key.clone());
 
@@ -39,8 +39,7 @@ pub trait ListOp: Base + Exist {
       // let mut cmds = cmds.lock().await;
       cmds.lpush(channel_name.as_ref(), value).await
     }?;
-
-    opt.execute(cmds, channel_name).await?;
+    self.__execute_opt__(key, opt).await?;
     return Ok(res);
   }
 

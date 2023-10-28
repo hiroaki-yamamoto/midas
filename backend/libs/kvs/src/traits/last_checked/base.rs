@@ -6,7 +6,7 @@ use ::chrono::{DateTime, Local, LocalResult, TimeZone};
 use ::errors::{KVSError, KVSResult};
 use ::redis::{AsyncCommands as Commands, SetOptions};
 
-use crate::options::WriteOptionTrait;
+use crate::options::WriteOption;
 use crate::traits::base::{Base as BaseBase, ChannelName};
 
 #[async_trait]
@@ -39,13 +39,13 @@ pub trait Base: BaseBase + ChannelName {
   async fn flag_last_checked(
     &self,
     key: Arc<String>,
-    opt: Arc<dyn WriteOptionTrait<Commands = Self::Commands> + Send + Sync>,
+    opt: Option<WriteOption>,
   ) -> KVSResult<bool> {
     let key = self.get_timestamp_channel(key);
     let now = SystemTime::now()
       .duration_since(SystemTime::UNIX_EPOCH)?
       .as_secs();
-    let opt: Option<SetOptions> = opt.upcast().map(|wo| wo.into());
+    let opt: Option<SetOptions> = opt.map(|wo| wo.into());
     let mut cmd = self.__commands__();
     // let mut cmd = cmd.lock().await;
     return Ok(match opt {

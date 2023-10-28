@@ -5,7 +5,8 @@ use crate::redis::{FromRedisValue, ToRedisArgs};
 
 use super::KVS;
 use crate::traits::base::{
-  Base, ChannelName, Exist, Expiration, Get, ListOp, Lock, Remove, Set, SetOp,
+  Base, ChannelName, Exist, Expiration, Get, ListOp, Lock, OptExecution,
+  Remove, Set, SetOp,
 };
 
 impl<CMD, Value> Base for KVS<CMD, Value>
@@ -60,6 +61,13 @@ where
 }
 
 impl<CMD, Value> Lock for KVS<CMD, Value>
+where
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
+{
+}
+
+impl<CMD, Value> OptExecution for KVS<CMD, Value>
 where
   Value: FromRedisValue + ToRedisArgs + Send + Sync,
   CMD: Commands + Clone + Send + Sync,

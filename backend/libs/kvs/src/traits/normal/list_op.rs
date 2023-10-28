@@ -15,9 +15,9 @@ pub trait ListOp: Base {
     &self,
     key: Arc<String>,
     value: Vec<Self::Value>,
-    opt: Option<WriteOption<Self::Commands>>,
+    opt: Option<WriteOption>,
   ) -> KVSResult<usize> {
-    return self.__lpush__(key, value, Arc::new(opt)).await;
+    return self.__lpush__(key, value, opt).await;
   }
 
   async fn lpop(

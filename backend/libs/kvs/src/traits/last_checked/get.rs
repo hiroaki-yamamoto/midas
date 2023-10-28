@@ -10,7 +10,7 @@ use crate::traits::base::Get as BaseGet;
 pub trait Get: Base + BaseGet {
   async fn get(&self, key: Arc<String>) -> KVSResult<Self::Value> {
     let value = self.__get__(key.clone()).await?;
-    self.flag_last_checked(key, Arc::new(None)).await?;
+    self.flag_last_checked(key, None).await?;
     return Ok(value);
   }
 }

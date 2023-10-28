@@ -15,10 +15,11 @@ pub trait ListOp: Base + BaseListOp {
     &self,
     key: Arc<String>,
     value: Vec<Self::Value>,
-    opt: Option<WriteOption<Self::Commands>>,
+    opt: Option<WriteOption>,
   ) -> KVSResult<usize> {
-    let opt = Arc::new(opt);
-    let ret = self.__lpush__(key.clone(), value, opt.clone()).await?;
+    let ret = self
+      .__lpush__(key.clone(), value, opt.clone().into())
+      .await?;
     self.flag_last_checked(key, opt.clone()).await?;
     return Ok(ret);
   }
@@ -29,7 +30,7 @@ pub trait ListOp: Base + BaseListOp {
     count: Option<NonZeroUsize>,
   ) -> KVSResult<Self::Value> {
     let ret = self.__lpop__(key.clone(), count).await?;
-    self.flag_last_checked(key, Arc::new(None)).await?;
+    self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }
 
@@ -40,7 +41,7 @@ pub trait ListOp: Base + BaseListOp {
     elem: Self::Value,
   ) -> KVSResult<usize> {
     let ret = self.__lrem__(key.clone(), count, elem).await?;
-    self.flag_last_checked(key, Arc::new(None)).await?;
+    self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }
 
@@ -51,13 +52,13 @@ pub trait ListOp: Base + BaseListOp {
     stop: isize,
   ) -> KVSResult<Vec<Self::Value>> {
     let ret = self.__lrange__(key.clone(), start, stop).await?;
-    self.flag_last_checked(key, Arc::new(None)).await?;
+    self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }
 
   async fn llen(&self, key: Arc<String>) -> KVSResult<usize> {
     let ret = self.__llen__(key.clone()).await?;
-    self.flag_last_checked(key, Arc::new(None)).await?;
+    self.flag_last_checked(key, None).await?;
     return Ok(ret);
   }
 }
