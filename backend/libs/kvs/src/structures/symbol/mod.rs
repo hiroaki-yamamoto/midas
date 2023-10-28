@@ -4,19 +4,19 @@ mod symbol_impl;
 use ::std::marker::PhantomData;
 
 use crate::redis::AsyncCommands as Commands;
-use crate::redis::FromRedisValue;
+use crate::redis::{FromRedisValue, ToRedisArgs};
 
-pub struct KVSBuilder<'a, R>
+pub struct KVSBuilder<'a, Value>
 where
-  R: FromRedisValue,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
 {
   channel_name: &'a str,
-  _r: PhantomData<R>,
+  _r: PhantomData<Value>,
 }
 
-impl<'a, R> KVSBuilder<'a, R>
+impl<'a, Value> KVSBuilder<'a, Value>
 where
-  R: FromRedisValue,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
 {
   pub const fn new(channel_name: &'a str) -> Self {
     return Self {
@@ -24,31 +24,31 @@ where
       _r: PhantomData,
     };
   }
-  pub fn build<T>(&self, connection: T) -> KVS<R, T>
+  pub fn build<CMD>(&self, connection: CMD) -> KVS<CMD, Value>
   where
-    T: Commands + Clone,
+    CMD: Commands + Clone + Send + Sync,
   {
     return KVS::new(connection, self.channel_name.to_string());
   }
 }
 
 /// Wrap this struct with Arc if Clone is needed.
-pub struct KVS<R, T>
+pub struct KVS<CMD, Value>
 where
-  R: FromRedisValue,
-  T: Commands + Clone,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
-  pub connection: T,
+  pub connection: CMD,
   channel_name: String,
-  _r: PhantomData<R>,
+  _r: PhantomData<Value>,
 }
 
-impl<R, T> KVS<R, T>
+impl<CMD, Value> KVS<CMD, Value>
 where
-  R: FromRedisValue,
-  T: Commands + Clone,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
-  pub(self) fn new(connection: T, channel_name: String) -> Self {
+  pub(self) fn new(connection: CMD, channel_name: String) -> Self {
     return Self {
       connection,
       channel_name,

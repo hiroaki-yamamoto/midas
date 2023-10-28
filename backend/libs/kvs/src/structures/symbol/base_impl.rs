@@ -1,15 +1,17 @@
 use crate::redis::AsyncCommands as Commands;
-use crate::redis::FromRedisValue;
+use crate::redis::{FromRedisValue, ToRedisArgs};
 
 use super::KVS;
 use crate::traits::base::Base;
 
-impl<R, T> Base for KVS<R, T>
+impl<CMD, Value> Base for KVS<CMD, Value>
 where
-  R: FromRedisValue,
-  T: Commands + Clone,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
-  fn __commands__(&self) -> T {
+  type Commands = CMD;
+
+  fn __commands__(&self) -> CMD {
     return self.connection.clone();
   }
 }

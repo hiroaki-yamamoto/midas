@@ -6,10 +6,10 @@ use crate::redis::{FromRedisValue, ToRedisArgs};
 use super::KVS;
 use crate::traits::symbol::{ChannelName, Get, Remove, Set};
 
-impl<R, T> ChannelName for KVS<R, T>
+impl<CMD, Value> ChannelName for KVS<CMD, Value>
 where
-  R: FromRedisValue,
-  T: Commands + Clone,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
   fn channel_name(
     &self,
@@ -21,23 +21,25 @@ where
   }
 }
 
-impl<R, T> Get for KVS<R, T>
+impl<CMD, Value> Get for KVS<CMD, Value>
 where
-  R: FromRedisValue,
-  T: Commands + Clone + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
+{
+  type Value = Value;
+}
+
+impl<CMD, Value> Remove for KVS<CMD, Value>
+where
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
 }
 
-impl<R, T> Remove for KVS<R, T>
+impl<CMD, Value> Set for KVS<CMD, Value>
 where
-  R: FromRedisValue,
-  T: Commands + Clone + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync,
+  CMD: Commands + Clone + Send + Sync,
 {
-}
-
-impl<R, T> Set for KVS<R, T>
-where
-  for<'a> R: FromRedisValue + ToRedisArgs + Send + Sync + 'a,
-  T: Commands + Clone + Sync,
-{
+  type Value = Value;
 }
