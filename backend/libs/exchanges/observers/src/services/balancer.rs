@@ -13,25 +13,24 @@ use crate::kvs::{NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER};
 
 use super::{NodeFilter, NodeIndexer};
 
-pub struct ObservationBalancer<T, NodeKVS, ExchangeTypeKVS>
+pub struct ObservationBalancer<T, ExchangeTypeKVS>
 where
   T: Commands + Clone + Send + Sync,
-  ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
+  ExchangeTypeKVS: Get + SetOp + Send + Sync,
 {
-  node_kvs: Arc<dyn ListOp<T, String> + Send + Sync>,
+  node_kvs: Arc<dyn ListOp<Value = String, Commands = T> + Send + Sync>,
   indexer: Arc<NodeIndexer<T, ExchangeTypeKVS>>,
-  node_filter: Arc<NodeFilter<T, NodeKVS, ExchangeTypeKVS>>,
+  node_filter: Arc<NodeFilter<T, ExchangeTypeKVS>>,
 }
 
-impl<T, NodeKVS, ExchangeTypeKVS>
-  ObservationBalancer<T, NodeKVS, ExchangeTypeKVS>
+impl<T, ExchangeTypeKVS> ObservationBalancer<T, ExchangeTypeKVS>
 where
   T: Commands + Clone + Send + Sync,
-  NodeKVS: ListOp<T, String> + Send + Sync,
-  ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
+  ExchangeTypeKVS: Get + SetOp + Send + Sync,
 {
   pub async fn new(kvs: T) -> ObserverResult<Self> {
-    let node_kvs: Arc<NodeKVS> = Arc::new(NODE_KVS_BUILDER.build(kvs));
+    let node_kvs: Arc<dyn ListOp<Commands = T, Value = String> + Send + Sync> =
+      NODE_KVS_BUILDER.build(kvs).into();
     let exchange_type_kvs: Arc<_> =
       NODE_EXCHANGE_TYPE_KVS_BUILDER.build(kvs).into();
     let indexer: Arc<_> = NodeIndexer::new(exchange_type_kvs.clone()).into();

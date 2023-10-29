@@ -1,14 +1,11 @@
 use ::std::collections::HashSet;
 use ::std::marker::PhantomData;
+use ::std::sync::Arc;
 
 use ::futures::StreamExt;
 use ::log::info;
 use ::mongodb::Database;
 
-use crate::entities::TradeObserverControlEvent as Event;
-use crate::kvs::{
-  NodeFilter, NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER,
-};
 use ::kvs::redis::AsyncCommands as Commands;
 use ::kvs::traits::last_checked::{ListOp, SetOp};
 use ::rpc::entities::Exchanges;
@@ -16,23 +13,24 @@ use ::symbols::get_reader;
 
 use ::errors::ObserverResult;
 
-pub struct NodeDIffTaker<T, NodeKVS, TypeKVS>
+use crate::entities::TradeObserverControlEvent as Event;
+use crate::kvs::{NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER};
+
+use super::NodeFilter;
+
+pub struct NodeDIffTaker<T>
 where
   T: Commands + Send + Sync,
-  NodeKVS: ListOp<T, String>,
-  TypeKVS: SetOp<T, String>,
 {
   db: Database,
-  kvs: NodeKVS,
-  type_kvs: TypeKVS,
+  kvs: Arc<dyn ListOp<Commands = T, Value = String> + Send + Sync>,
+  type_kvs: Arc<dyn SetOp<Commands = T, Value = String> + Send + Sync>,
   _t: PhantomData<T>,
 }
 
-impl<T, NodeKVS, TypeKVS> NodeDIffTaker<T, NodeKVS, TypeKVS>
+impl<T> NodeDIffTaker<T>
 where
   T: Commands + Send + Sync,
-  NodeKVS: ListOp<T, String>,
-  TypeKVS: SetOp<T, String>,
 {
   pub async fn new(db: &Database, cmd: T) -> ObserverResult<Self> {
     return Ok(Self {

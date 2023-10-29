@@ -8,10 +8,12 @@ use ::kvs::redis::AsyncCommands;
 use ::kvs::traits::last_checked::{Get, SetOp};
 use ::rpc::entities::Exchanges;
 
+trait IndexETTrait: Get + SetOp {}
+
 pub struct NodeIndexer<T, ExchangeTypeKVS>
 where
   T: AsyncCommands + Send + Sync,
-  ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
+  ExchangeTypeKVS: Get + SetOp,
 {
   exchange_type_kvs: Arc<ExchangeTypeKVS>,
   _t: PhantomData<T>,
@@ -20,7 +22,7 @@ where
 impl<T, ExchangeTypeKVS> NodeIndexer<T, ExchangeTypeKVS>
 where
   T: AsyncCommands + Send + Sync,
-  ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
+  ExchangeTypeKVS: Get + SetOp,
 {
   pub fn new(exchange_type_kvs: Arc<ExchangeTypeKVS>) -> Self {
     return Self {

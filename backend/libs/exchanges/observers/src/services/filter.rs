@@ -11,25 +11,29 @@ use ::rpc::entities::Exchanges;
 
 use super::NodeIndexer;
 
-pub struct NodeFilter<T, NodeKVS, ExchangeTypeKVS>
+pub struct NodeFilter<T, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
-  NodeKVS: ListOp<T, String> + Send + Sync,
-  ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
+  ExchangeTypeKVS: Get<Commands = T, Value = String>
+    + SetOp<Commands = T, Value = String>
+    + Send
+    + Sync,
 {
-  node_kvs: Arc<NodeKVS>,
+  node_kvs: Arc<dyn ListOp<Commands = T, Value = String> + Send + Sync>,
   indexer: Arc<NodeIndexer<T, ExchangeTypeKVS>>,
   _t: PhantomData<T>,
 }
 
-impl<T, NodeKVS, ExchangeTypeKVS> NodeFilter<T, NodeKVS, ExchangeTypeKVS>
+impl<T, ExchangeTypeKVS> NodeFilter<T, ExchangeTypeKVS>
 where
   T: Commands + Send + Sync,
-  NodeKVS: ListOp<T, String> + Send + Sync,
-  ExchangeTypeKVS: Get<T, String> + SetOp<T, String> + Send + Sync,
+  ExchangeTypeKVS: Get<Commands = T, Value = String>
+    + SetOp<Commands = T, Value = String>
+    + Send
+    + Sync,
 {
   pub fn new(
-    node_kvs: Arc<NodeKVS>,
+    node_kvs: Arc<dyn ListOp<Commands = T, Value = String> + Send + Sync>,
     indexer: Arc<NodeIndexer<T, ExchangeTypeKVS>>,
   ) -> Self {
     return Self {

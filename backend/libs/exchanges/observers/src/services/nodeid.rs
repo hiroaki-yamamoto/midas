@@ -23,22 +23,22 @@ const NODE_ID_TXT_SIZE: usize = 64;
 ///
 /// **Note**: This struct doesn't publish any events to Trade Observer Control.
 #[derive(Debug)]
-pub struct NodeIDManager<T, NodeKVS, ExchangeKVS>
+pub struct NodeIDManager<T, NodeKVS>
 where
   T: Commands + Send + Sync,
-  NodeKVS: ListOp<T, String> + Remove<T>,
-  ExchangeKVS: Set<T, String>,
+  NodeKVS:
+    ListOp<Commands = T, Value = String> + Remove<Commands = T> + Send + Sync,
 {
   node_kvs: NodeKVS,
-  exchange_type_kvs: ExchangeKVS,
+  exchange_type_kvs: Arc<dyn Set<Commands = T, Value = String> + Send + Sync>,
   _t: PhantomData<T>,
 }
 
-impl<T, NodeKVS, ExchangeKVS> NodeIDManager<T, NodeKVS, ExchangeKVS>
+impl<T, NodeKVS> NodeIDManager<T, NodeKVS>
 where
   T: Commands + Sync + Send,
-  NodeKVS: ListOp<T, String> + Remove<T>,
-  ExchangeKVS: Set<T, String>,
+  NodeKVS:
+    ListOp<Commands = T, Value = String> + Remove<Commands = T> + Send + Sync,
 {
   pub fn new(con: T) -> Self {
     return Self {
