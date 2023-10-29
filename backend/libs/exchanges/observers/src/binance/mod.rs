@@ -19,7 +19,7 @@ use ::config::Database;
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{CreateStreamResult, ObserverError, ObserverResult};
 use ::kvs::redis::AsyncCommands as RedisCommands;
-use ::kvs::traits::last_checked::{ListOp, Remove};
+use ::kvs::traits::last_checked::ListOp;
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
@@ -38,7 +38,6 @@ use self::pubsub::BookTickerPubSub;
 const SUBSCRIBE_DELAY: Duration = Duration::from_secs(1);
 
 type KVSListOp<C> = Arc<dyn ListOp<Commands = C, Value = String> + Send + Sync>;
-type KVSRemove<C> = Arc<dyn Remove<Commands = C> + Send + Sync>;
 
 pub struct TradeObserver<T>
 where
@@ -46,7 +45,6 @@ where
 {
   node_id: Arc<RwLock<Option<String>>>,
   kvs_listop: KVSListOp<T>,
-  kvs_remove: KVSRemove<T>,
   control_event: NodeControlEventPubSub,
   node_event: NodeEventPubSub,
   trade_handler: Arc<BookTickerHandler>,
@@ -72,7 +70,7 @@ where
     let (signal_tx, signal_rx) = watch::channel::<bool>(false);
     let trade_handler = BookTickerHandler::new(broker).await?;
     let node_id_manager = NodeIDManager::new(redis_cmd.clone().into());
-    let initer = Init::new(redis_cmd.clone().into(), db, broker)
+    let initer: Arc<_> = Init::new(redis_cmd.clone().into(), db, broker)
       .await?
       .into();
 
@@ -81,7 +79,6 @@ where
       node_id: Arc::new(RwLock::new(None)),
       trade_handler: trade_handler.into(),
       kvs_listop: kvs.clone(),
-      kvs_remove: kvs.clone(),
       control_event,
       node_event,
       signal_tx: Arc::new(signal_tx),
@@ -89,7 +86,7 @@ where
       symbols_to_add: Mutex::new(Vec::new()).into(),
       symbols_to_del: Mutex::new(Vec::new()).into(),
       node_id_manager: Arc::new(node_id_manager),
-      initer: Arc::new(initer),
+      initer,
     };
     return Ok(me);
   }
@@ -307,8 +304,9 @@ where
         .recv()
         .then(|_| async {
           if let Some(node_id) = { node_id_lock.read().await.clone() } {
+            let node_id = Arc::new(node_id);
             let (exchange, symbols) =
-              node_id_manager.unregist(node_id.into()).await?;
+              node_id_manager.unregist(node_id.clone()).await?;
             let _ = node_event
               .publish(TradeObserverNodeEvent::Unregist(exchange, symbols))
               .await;
@@ -340,14 +338,14 @@ where
       self.node_id.clone(),
       self.symbols_to_del.clone(),
       self.trade_handler.clone(),
-      self.kvs.clone(),
+      self.kvs_listop.clone(),
     ));
     let subscribe = ::tokio::spawn(Self::handle_subscribe(
       self.node_id.clone(),
       self.signal_rx.clone(),
       self.symbols_to_add.clone(),
       self.trade_handler.clone(),
-      self.kvs.clone(),
+      self.kvs_listop.clone(),
     ));
     let handle_control = ::tokio::spawn(Self::handle_control_event(
       self.signal_rx.clone(),

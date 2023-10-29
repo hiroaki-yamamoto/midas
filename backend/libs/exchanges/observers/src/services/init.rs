@@ -18,9 +18,10 @@ use crate::pubsub::NodeControlEventPubSub;
 use super::NodeDIffTaker;
 use super::ObservationBalancer;
 
+#[derive(Clone)]
 pub struct Init<C>
 where
-  C: Commands + Clone + Sync + Send,
+  C: Commands + Clone + Sync + Send + 'static,
 {
   diff_taker: Arc<NodeDIffTaker<C>>,
   balancer: Arc<ObservationBalancer<C>>,
@@ -30,7 +31,7 @@ where
 
 impl<C> Init<C>
 where
-  C: Commands + Clone + Sync + Send,
+  C: Commands + Clone + Sync + Send + 'static,
 {
   pub async fn new(
     kvs: C,
@@ -53,21 +54,20 @@ where
   }
 
   pub async fn init(&self, exchange: Exchanges) -> ObserverResult<()> {
-    let diff_taker = self.diff_taker.clone();
-    let balancer = self.balancer.clone();
-    let control_pubsub = self.control_pubsub.clone();
+    let me = self.clone();
     let _ = self
       .dlock
-      .lock(exchange.as_str_name().to_string().into(), Arc::new(move || {
+      .lock(exchange.as_str_name().to_string().into(), Box::pin(move || {
+        let me = me.clone();
         async move {
           let exchange = exchange.clone();
-          let diff = diff_taker.get_symbol_diff(&exchange).await?;
-          let balanced = balancer.get_event_to_balancing(exchange).await?;
+          let diff = me.diff_taker.get_symbol_diff(&exchange).await?;
+          let balanced = me.balancer.get_event_to_balancing(exchange).await?;
           let controls_to_publish = &diff | &balanced;
           info!(events = as_serde!(controls_to_publish); "Publishing symbol control events.");
           let defer: Vec<_> = controls_to_publish
             .into_iter()
-            .map(|event| control_pubsub.publish(event))
+            .map(|event| me.control_pubsub.publish(event))
             .collect();
           let _ = try_join_all(defer).await?;
           return Ok::<(), ObserverError>(());

@@ -1,3 +1,4 @@
+use ::std::pin::Pin;
 use ::std::sync::Arc;
 
 use ::std::time::Duration;
@@ -22,8 +23,8 @@ pub trait Lock: Base + ChannelName {
   async fn __lock__(
     &self,
     key: Arc<String>,
-    func_on_success: Arc<
-      dyn (Fn() -> BoxFuture<'async_trait, Self::Value>) + Send + Sync,
+    func_on_success: Pin<
+      Box<dyn (Fn() -> BoxFuture<'async_trait, Self::Value>) + Send + Sync>,
     >,
   ) -> DLockResult<Self::Value> {
     let (refresh_tx, mut refresh_rx) = channel::<()>(1);

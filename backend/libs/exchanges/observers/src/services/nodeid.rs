@@ -29,7 +29,7 @@ type NodeKVSDel<C> = Arc<dyn Remove<Commands = C> + Send + Sync>;
 /// **Note**: This struct doesn't publish any events to Trade Observer Control.
 pub struct NodeIDManager<T>
 where
-  T: Commands + Clone + Send + Sync,
+  T: Commands + Clone + Send + Sync + 'static,
 {
   node_kvs_list: NodeKVSList<T>,
   node_kvs_del: NodeKVSDel<T>,
@@ -44,7 +44,7 @@ where
 
 impl<T> NodeIDManager<T>
 where
-  T: Commands + Clone + Sync + Send,
+  T: Commands + Clone + Sync + Send + 'static,
 {
   pub fn new(con: T) -> Self {
     let node_kvs: Arc<_> = NODE_KVS_BUILDER.build(con.clone()).into();

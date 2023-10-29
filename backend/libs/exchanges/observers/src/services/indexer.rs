@@ -10,7 +10,7 @@ use ::rpc::entities::Exchanges;
 
 pub struct NodeIndexer<T>
 where
-  T: AsyncCommands + Send + Sync,
+  T: AsyncCommands + Send + Sync + 'static,
 {
   indexer: Arc<dyn SetOp<Commands = T, Value = String> + Send + Sync>,
   exchange_type_kvs: Arc<dyn Get<Commands = T, Value = String> + Send + Sync>,
@@ -19,14 +19,15 @@ where
 
 impl<T> NodeIndexer<T>
 where
-  T: AsyncCommands + Send + Sync,
+  T: AsyncCommands + Send + Sync + 'static,
 {
   pub fn new<KVS>(exchange_type_kvs: Arc<KVS>) -> Self
   where
     KVS: Get<Commands = T, Value = String>
       + SetOp<Commands = T, Value = String>
       + Send
-      + Sync,
+      + Sync
+      + 'static,
   {
     return Self {
       indexer: exchange_type_kvs.clone(),

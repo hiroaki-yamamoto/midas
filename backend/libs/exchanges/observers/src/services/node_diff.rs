@@ -20,7 +20,7 @@ use super::{NodeFilter, NodeIndexer};
 
 pub struct NodeDIffTaker<T>
 where
-  T: Commands + Clone + Send + Sync,
+  T: Commands + Clone + Send + Sync + 'static,
 {
   db: Database,
   kvs: Arc<dyn ListOp<Commands = T, Value = String> + Send + Sync>,
@@ -30,7 +30,7 @@ where
 
 impl<T> NodeDIffTaker<T>
 where
-  T: Commands + Clone + Send + Sync,
+  T: Commands + Clone + Send + Sync + 'static,
 {
   pub async fn new(db: &Database, cmd: T) -> ObserverResult<Self> {
     return Ok(Self {

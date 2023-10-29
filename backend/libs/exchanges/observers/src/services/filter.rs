@@ -13,7 +13,7 @@ use super::NodeIndexer;
 
 pub struct NodeFilter<T>
 where
-  T: Commands + Send + Sync,
+  T: Commands + Send + Sync + 'static,
 {
   node_kvs: Arc<dyn ListOp<Commands = T, Value = String> + Send + Sync>,
   indexer: Arc<NodeIndexer<T>>,
