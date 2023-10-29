@@ -20,7 +20,7 @@ use super::ObservationBalancer;
 
 pub struct Init<'a, C, DLock>
 where
-  C: Commands + Clone + Sync + Send,
+  C: Commands + Clone + Sync + Send + 'static,
   DLock: Lock<Commands = C> + Send + Sync,
 {
   diff_taker: NodeDIffTaker<C>,
@@ -32,7 +32,7 @@ where
 
 impl<'a, C, DLock> Init<'a, C, DLock>
 where
-  C: Commands + Clone + Sync + Send,
+  C: Commands + Clone + Sync + Send + 'static,
   DLock: Lock<Commands = C> + Send + Sync,
 {
   pub async fn new(kvs: C, db: Database, nats: &Nats) -> ObserverResult<Self> {

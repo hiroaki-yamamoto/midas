@@ -55,7 +55,7 @@ where
   symbols_to_del: Arc<Mutex<Vec<String>>>,
   signal_tx: Arc<watch::Sender<bool>>,
   signal_rx: watch::Receiver<bool>,
-  node_id_manager: Arc<NodeIDManager<T, NodeKVS>>,
+  node_id_manager: Arc<NodeIDManager<T>>,
   initer: Init<'a, T, DLock>,
   _a: PhantomData<&'a ()>,
 }
@@ -251,7 +251,7 @@ where
   }
 
   async fn request_node_id(
-    node_id_manager: Arc<NodeIDManager<T, NodeKVS>>,
+    node_id_manager: Arc<NodeIDManager<T>>,
     node_id_lock: Arc<RwLock<Option<String>>>,
     ready: oneshot::Receiver<()>,
     init: DLock,

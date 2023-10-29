@@ -18,7 +18,7 @@ impl<'a, Value> KVSBuilder<'a, Value>
 where
   Value: FromRedisValue + ToRedisArgs + Send + Sync,
 {
-  pub fn new(channel_name: &'a str) -> Self {
+  pub const fn new(channel_name: &'a str) -> Self {
     return Self {
       channel_name,
       _r: PhantomData,

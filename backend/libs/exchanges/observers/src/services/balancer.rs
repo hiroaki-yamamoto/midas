@@ -15,24 +15,24 @@ use super::{NodeFilter, NodeIndexer};
 
 pub struct ObservationBalancer<T>
 where
-  T: Commands + Clone + Send + Sync,
+  T: Commands + Clone + Send + Sync + 'static,
 {
   node_kvs: Arc<dyn ListOp<Value = String, Commands = T> + Send + Sync>,
-  indexer: NodeIndexer<T>,
-  node_filter: NodeFilter<T>,
+  indexer: Arc<NodeIndexer<T>>,
+  node_filter: Arc<NodeFilter<T>>,
 }
 
 impl<T> ObservationBalancer<T>
 where
-  T: Commands + Clone + Send + Sync,
+  T: Commands + Clone + Send + Sync + 'static,
 {
   pub async fn new(kvs: T) -> ObserverResult<Self> {
     let node_kvs: Arc<dyn ListOp<Commands = T, Value = String> + Send + Sync> =
       Arc::new(NODE_KVS_BUILDER.build(kvs));
     let exchange_type_kvs: Arc<_> =
       NODE_EXCHANGE_TYPE_KVS_BUILDER.build(kvs).into();
-    let indexer: NodeIndexer<T> = NodeIndexer::new(exchange_type_kvs.clone());
-    let filter = NodeFilter::new(node_kvs, indexer.clone());
+    let indexer: Arc<_> = NodeIndexer::new(exchange_type_kvs.clone()).into();
+    let filter = NodeFilter::new(node_kvs, indexer.clone()).into();
     return Ok(Self {
       node_kvs: node_kvs,
       indexer: indexer,

@@ -41,20 +41,19 @@ where
 
   /// Index node ids to KVS
   pub async fn index_node(&self, node: String) -> KVSResult<usize> {
-    return self.exchange_type_kvs.sadd(self.chname(), node).await;
+    return self.indexer.sadd(self.chname(), node).await;
   }
 
   /// Unindex node ids to KVS
   pub async fn unindex_node(&self, node: String) -> KVSResult<usize> {
-    return self.exchange_type_kvs.srem(self.chname(), node).await;
+    return self.indexer.srem(self.chname(), node).await;
   }
 
   pub async fn get_nodes_by_exchange(
     &self,
     exchange: Exchanges,
   ) -> KVSResult<BoxStream<'_, Arc<String>>> {
-    let keys: Vec<String> =
-      self.exchange_type_kvs.smembers(self.chname()).await?;
+    let keys: Vec<String> = self.indexer.smembers(self.chname()).await?;
 
     let keys = iter(keys)
       .map(move |key| {
