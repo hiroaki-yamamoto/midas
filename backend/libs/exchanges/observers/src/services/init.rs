@@ -12,36 +12,27 @@ use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 
 use crate::kvs::INIT_LOCK_BUILDER;
-use ::kvs::traits::last_checked::{Get, SetOp};
 
 use crate::pubsub::NodeControlEventPubSub;
 
 use super::NodeDIffTaker;
 use super::ObservationBalancer;
 
-pub struct Init<'a, C, ExchangeTypeKVS, DLock>
+pub struct Init<'a, C, DLock>
 where
   C: Commands + Clone + Sync + Send,
-  ExchangeTypeKVS: Get<Commands = C, Value = String>
-    + SetOp<Commands = C, Value = String>
-    + Send
-    + Sync,
   DLock: Lock<Commands = C> + Send + Sync,
 {
   diff_taker: NodeDIffTaker<C>,
-  balancer: ObservationBalancer<C, ExchangeTypeKVS>,
+  balancer: ObservationBalancer<C>,
   control_pubsub: NodeControlEventPubSub,
   dlock: DLock,
   _a: PhantomData<&'a ()>,
 }
 
-impl<'a, C, ExchangeTypeKVS, DLock> Init<'a, C, ExchangeTypeKVS, DLock>
+impl<'a, C, DLock> Init<'a, C, DLock>
 where
   C: Commands + Clone + Sync + Send,
-  ExchangeTypeKVS: Get<Commands = C, Value = String>
-    + SetOp<Commands = C, Value = String>
-    + Send
-    + Sync,
   DLock: Lock<Commands = C> + Send + Sync,
 {
   pub async fn new(kvs: C, db: Database, nats: &Nats) -> ObserverResult<Self> {

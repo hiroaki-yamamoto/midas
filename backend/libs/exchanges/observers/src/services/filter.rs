@@ -6,35 +6,27 @@ use ::std::marker::PhantomData;
 use ::errors::KVSResult;
 use ::futures::stream::{iter, BoxStream, StreamExt};
 use ::kvs::redis::AsyncCommands as Commands;
-use ::kvs::traits::last_checked::{Get, ListOp, SetOp};
+use ::kvs::traits::last_checked::ListOp;
 use ::rpc::entities::Exchanges;
 
 use super::NodeIndexer;
 
-pub struct NodeFilter<T, ExchangeTypeKVS>
+pub struct NodeFilter<T>
 where
   T: Commands + Send + Sync,
-  ExchangeTypeKVS: Get<Commands = T, Value = String>
-    + SetOp<Commands = T, Value = String>
-    + Send
-    + Sync,
 {
   node_kvs: Arc<dyn ListOp<Commands = T, Value = String> + Send + Sync>,
-  indexer: Arc<NodeIndexer<T, ExchangeTypeKVS>>,
+  indexer: Arc<NodeIndexer<T>>,
   _t: PhantomData<T>,
 }
 
-impl<T, ExchangeTypeKVS> NodeFilter<T, ExchangeTypeKVS>
+impl<T> NodeFilter<T>
 where
   T: Commands + Send + Sync,
-  ExchangeTypeKVS: Get<Commands = T, Value = String>
-    + SetOp<Commands = T, Value = String>
-    + Send
-    + Sync,
 {
   pub fn new(
     node_kvs: Arc<dyn ListOp<Commands = T, Value = String> + Send + Sync>,
-    indexer: Arc<NodeIndexer<T, ExchangeTypeKVS>>,
+    indexer: Arc<NodeIndexer<T>>,
   ) -> Self {
     return Self {
       node_kvs,

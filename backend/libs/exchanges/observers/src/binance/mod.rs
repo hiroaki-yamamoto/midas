@@ -7,7 +7,7 @@ use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::futures::future::{try_join_all, BoxFuture};
+use ::futures::future::try_join_all;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::futures::FutureExt;
 use ::log::{as_error, as_serde, debug, info, warn};
@@ -39,15 +39,12 @@ use self::pubsub::BookTickerPubSub;
 
 const SUBSCRIBE_DELAY: Duration = Duration::from_secs(1);
 
-pub struct TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
+pub struct TradeObserver<'a, T, NodeKVS, DLock>
 where
   T: RedisCommands + Clone + Send + Sync + 'static,
-  NodeKVS: ListOp<T, String> + Remove<T> + Send + Sync,
-  ExchangeTypeKVS:
-    Get<T, String> + SetOp<T, String> + Set<T, String> + Send + Sync,
-  DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
-    + Send
-    + Sync,
+  NodeKVS:
+    ListOp<Commands = T, Value = String> + Remove<Commands = T> + Send + Sync,
+  DLock: Lock<Commands = T> + Send + Sync,
 {
   node_id: Arc<RwLock<Option<String>>>,
   kvs: NodeKVS,
@@ -58,27 +55,23 @@ where
   symbols_to_del: Arc<Mutex<Vec<String>>>,
   signal_tx: Arc<watch::Sender<bool>>,
   signal_rx: watch::Receiver<bool>,
-  node_id_manager: Arc<NodeIDManager<T, NodeKVS, ExchangeTypeKVS>>,
-  initer: Init<'a, T, NodeKVS, ExchangeTypeKVS, DLock>,
+  node_id_manager: Arc<NodeIDManager<T, NodeKVS>>,
+  initer: Init<'a, T, DLock>,
   _a: PhantomData<&'a ()>,
 }
 
-impl<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
-  TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
+impl<'a, T, NodeKVS, DLock> TradeObserver<'a, T, NodeKVS, DLock>
 where
-  T: RedisCommands + Clone + Send + Sync,
-  NodeKVS: ListOp<T, String> + Remove<T> + Send + Sync,
-  ExchangeTypeKVS:
-    Get<T, String> + SetOp<T, String> + Set<T, String> + Send + Sync,
-  DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
-    + Send
-    + Sync,
+  T: RedisCommands + Clone + Send + Sync + 'static,
+  NodeKVS:
+    ListOp<Commands = T, Value = String> + Remove<Commands = T> + Send + Sync,
+  DLock: Lock<Commands = T> + Send + Sync,
 {
   pub async fn new(
     broker: &Nats,
     redis_cmd: T,
     db: Database,
-  ) -> ObserverResult<TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>> {
+  ) -> ObserverResult<TradeObserver<'a, T, NodeKVS, DLock>> {
     let control_event = NodeControlEventPubSub::new(broker).await?;
     let node_event = NodeEventPubSub::new(broker).await?;
     let (signal_tx, signal_rx) = watch::channel::<bool>(false);
@@ -258,7 +251,7 @@ where
   }
 
   async fn request_node_id(
-    node_id_manager: Arc<NodeIDManager<T, NodeKVS, ExchangeTypeKVS>>,
+    node_id_manager: Arc<NodeIDManager<T, NodeKVS>>,
     node_id_lock: Arc<RwLock<Option<String>>>,
     ready: oneshot::Receiver<()>,
     init: DLock,
@@ -301,16 +294,13 @@ where
 }
 
 #[async_trait]
-impl<'a, T, NodeKVS, ExchangeTypeKVS, DLock> TradeObserverTrait
-  for TradeObserver<'a, T, NodeKVS, ExchangeTypeKVS, DLock>
+impl<'a, T, NodeKVS, DLock> TradeObserverTrait
+  for TradeObserver<'a, T, NodeKVS, DLock>
 where
   T: RedisCommands + Clone + Send + Sync + 'static,
-  NodeKVS: ListOp<T, String> + Remove<T> + Send + Sync,
-  ExchangeTypeKVS:
-    Get<T, String> + SetOp<T, String> + Set<T, String> + Send + Sync,
-  DLock: Lock<T, BoxFuture<'a, ObserverResult<()>>, ObserverResult<()>>
-    + Send
-    + Sync,
+  NodeKVS:
+    ListOp<Commands = T, Value = String> + Remove<Commands = T> + Send + Sync,
+  DLock: Lock<Commands = T> + Send + Sync,
 {
   async fn start(&self, signal: Box<Signal>) -> ObserverResult<()> {
     let (ready_evloop_tx, ready_evloop_rx) = oneshot::channel();
