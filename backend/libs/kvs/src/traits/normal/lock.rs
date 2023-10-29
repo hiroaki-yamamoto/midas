@@ -13,9 +13,9 @@ pub trait Lock: Base {
     &self,
     key: Arc<String>,
     func_on_success: Arc<
-      dyn (Fn() -> BoxFuture<'async_trait, Arc<dyn Send + Sync>>) + Send + Sync,
+      dyn (Fn() -> BoxFuture<'async_trait, Self::Value>) + Send + Sync,
     >,
-  ) -> DLockResult<Arc<dyn Send + Sync>> {
+  ) -> DLockResult<Self::Value> {
     return self.__lock__(key, func_on_success).await;
   }
 }

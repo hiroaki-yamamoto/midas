@@ -6,51 +6,58 @@ use crate::traits::normal::{
   Exist, Expiration, Get, ListOp, Lock, Remove, Set,
 };
 
-impl<CMD, Value> Exist for KVS<CMD, Value>
+impl<CMD, Value, LockFnRetValue> Exist for KVS<CMD, Value, LockFnRetValue>
 where
   Value: ToRedisArgs + FromRedisValue + Send + Sync,
   CMD: Commands + Clone + Send + Sync,
+  LockFnRetValue: Send,
 {
 }
 
-impl<CMD, Value> Expiration for KVS<CMD, Value>
+impl<CMD, Value, LockFnRetValue> Expiration for KVS<CMD, Value, LockFnRetValue>
 where
   Value: ToRedisArgs + FromRedisValue + Send + Sync,
   CMD: Commands + Clone + Send + Sync,
+  LockFnRetValue: Send,
 {
 }
 
-impl<CMD, Value> Get for KVS<CMD, Value>
+impl<CMD, Value, LockFnRetValue> Get for KVS<CMD, Value, LockFnRetValue>
 where
   Value: ToRedisArgs + FromRedisValue + Send + Sync,
   CMD: Commands + Clone + Send + Sync,
+  LockFnRetValue: Send,
 {
 }
 
-impl<CMD, Value> ListOp for KVS<CMD, Value>
+impl<CMD, Value, LockFnRetValue> ListOp for KVS<CMD, Value, LockFnRetValue>
 where
   Value: FromRedisValue + ToRedisArgs + Send + Sync,
   CMD: Commands + Clone + Send + Sync,
+  LockFnRetValue: Send,
 {
 }
 
-impl<CMD, Value> Lock for KVS<CMD, Value>
+impl<CMD, Value, LockFnRetValue> Lock for KVS<CMD, Value, LockFnRetValue>
 where
   Value: ToRedisArgs + FromRedisValue + Send + Sync,
   CMD: Commands + Clone + Send + Sync,
+  LockFnRetValue: Send,
 {
 }
 
-impl<CMD, Value> Remove for KVS<CMD, Value>
+impl<CMD, Value, LockFnRetValue> Remove for KVS<CMD, Value, LockFnRetValue>
 where
   Value: ToRedisArgs + FromRedisValue + Send + Sync,
   CMD: Commands + Clone + Send + Sync,
+  LockFnRetValue: Send,
 {
 }
 
-impl<CMD, Value> Set for KVS<CMD, Value>
+impl<CMD, Value, LockFnRetValue> Set for KVS<CMD, Value, LockFnRetValue>
 where
   Value: FromRedisValue + ToRedisArgs + Send + Sync,
   CMD: Commands + Clone + Send + Sync,
+  LockFnRetValue: Send,
 {
 }

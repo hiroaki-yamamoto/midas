@@ -2,7 +2,6 @@ pub mod entities;
 pub(crate) mod handlers;
 mod pubsub;
 
-use ::std::marker::PhantomData;
 use ::std::sync::Arc;
 use ::std::time::Duration;
 
@@ -20,8 +19,7 @@ use ::config::Database;
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{CreateStreamResult, ObserverError, ObserverResult};
 use ::kvs::redis::AsyncCommands as RedisCommands;
-use ::kvs::traits::last_checked::{Get, ListOp, Remove, Set, SetOp};
-use ::kvs::traits::normal::Lock;
+use ::kvs::traits::last_checked::{ListOp, Remove};
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
@@ -39,15 +37,16 @@ use self::pubsub::BookTickerPubSub;
 
 const SUBSCRIBE_DELAY: Duration = Duration::from_secs(1);
 
-pub struct TradeObserver<'a, T, NodeKVS, DLock>
+type KVSListOp<C> = Arc<dyn ListOp<Commands = C, Value = String> + Send + Sync>;
+type KVSRemove<C> = Arc<dyn Remove<Commands = C> + Send + Sync>;
+
+pub struct TradeObserver<T>
 where
   T: RedisCommands + Clone + Send + Sync + 'static,
-  NodeKVS:
-    ListOp<Commands = T, Value = String> + Remove<Commands = T> + Send + Sync,
-  DLock: Lock<Commands = T> + Send + Sync,
 {
   node_id: Arc<RwLock<Option<String>>>,
-  kvs: NodeKVS,
+  kvs_listop: KVSListOp<T>,
+  kvs_remove: KVSRemove<T>,
   control_event: NodeControlEventPubSub,
   node_event: NodeEventPubSub,
   trade_handler: Arc<BookTickerHandler>,
@@ -56,34 +55,33 @@ where
   signal_tx: Arc<watch::Sender<bool>>,
   signal_rx: watch::Receiver<bool>,
   node_id_manager: Arc<NodeIDManager<T>>,
-  initer: Init<'a, T, DLock>,
-  _a: PhantomData<&'a ()>,
+  initer: Arc<Init<T>>,
 }
 
-impl<'a, T, NodeKVS, DLock> TradeObserver<'a, T, NodeKVS, DLock>
+impl<T> TradeObserver<T>
 where
   T: RedisCommands + Clone + Send + Sync + 'static,
-  NodeKVS:
-    ListOp<Commands = T, Value = String> + Remove<Commands = T> + Send + Sync,
-  DLock: Lock<Commands = T> + Send + Sync,
 {
   pub async fn new(
     broker: &Nats,
     redis_cmd: T,
     db: Database,
-  ) -> ObserverResult<TradeObserver<'a, T, NodeKVS, DLock>> {
+  ) -> ObserverResult<TradeObserver<T>> {
     let control_event = NodeControlEventPubSub::new(broker).await?;
     let node_event = NodeEventPubSub::new(broker).await?;
     let (signal_tx, signal_rx) = watch::channel::<bool>(false);
     let trade_handler = BookTickerHandler::new(broker).await?;
     let node_id_manager = NodeIDManager::new(redis_cmd.clone().into());
-    let initer = Init::new(redis_cmd.clone().into(), db, broker).await?;
+    let initer = Init::new(redis_cmd.clone().into(), db, broker)
+      .await?
+      .into();
 
-    let kvs = NODE_KVS_BUILDER.build(redis_cmd);
+    let kvs = Arc::new(NODE_KVS_BUILDER.build(redis_cmd));
     let me = Self {
       node_id: Arc::new(RwLock::new(None)),
       trade_handler: trade_handler.into(),
-      kvs: kvs,
+      kvs_listop: kvs.clone(),
+      kvs_remove: kvs.clone(),
       control_event,
       node_event,
       signal_tx: Arc::new(signal_tx),
@@ -92,7 +90,6 @@ where
       symbols_to_del: Mutex::new(Vec::new()).into(),
       node_id_manager: Arc::new(node_id_manager),
       initer: Arc::new(initer),
-      _a: PhantomData,
     };
     return Ok(me);
   }
@@ -147,7 +144,7 @@ where
     mut signal: watch::Receiver<bool>,
     symbols_to_add: Arc<Mutex<Vec<String>>>,
     trade_handler: Arc<BookTickerHandler>,
-    kvs: NodeKVS,
+    kvs: KVSListOp<T>,
   ) -> ObserverResult<()> {
     let mut interval = interval(SUBSCRIBE_DELAY);
     loop {
@@ -161,6 +158,7 @@ where
           if node_id.is_none() {
             continue;
           }
+          let node_id = Arc::new(node_id.unwrap());
           let mut symbols_to_add: Vec<String> = {
             let mut to_add = symbols_to_add.lock().await;
             to_add.drain(..).collect()
@@ -184,7 +182,7 @@ where
             }
             info!(symbols = as_serde!(to_add); "Registered symbols to Websocket");
             if let Err(e) =
-              kvs.lpush::<usize>(node_id.clone().unwrap().as_str(), to_add.clone(), None).await
+              kvs.lpush(node_id.clone(), to_add.clone(), None).await
             {
               warn!(
                 error = as_error!(e);
@@ -205,7 +203,7 @@ where
     node_id_lock: Arc<RwLock<Option<String>>>,
     symbols_to_del: Arc<Mutex<Vec<String>>>,
     trade_handler: Arc<BookTickerHandler>,
-    node_kvs: NodeKVS,
+    kvs: KVSListOp<T>,
   ) -> ObserverResult<()> {
     let mut interval = interval(SUBSCRIBE_DELAY);
     loop {
@@ -219,6 +217,7 @@ where
           if node_id.is_none() {
             continue;
           }
+          let node_id = Arc::new(node_id.unwrap());
           let mut lrem_defer = vec![];
           let to_del: Vec<String> = {
             let mut to_del = symbols_to_del.lock().await;
@@ -232,10 +231,8 @@ where
 
           lrem_defer.extend(to_del.into_iter().map(|sym| {
             let node_id = node_id.clone();
-            let node_id = node_id.unwrap();
-            let kvs = node_kvs.clone();
-            return async move {kvs
-                .lrem::<usize>(node_id.as_str(), 0, sym).await};
+            let kvs = kvs.clone();
+            return async move {kvs.lrem(node_id, 0, sym).await};
           }));
           if let Err(e) = try_join_all(lrem_defer).await {
             warn!(
@@ -254,7 +251,7 @@ where
     node_id_manager: Arc<NodeIDManager<T>>,
     node_id_lock: Arc<RwLock<Option<String>>>,
     ready: oneshot::Receiver<()>,
-    init: DLock,
+    init: Arc<Init<T>>,
   ) -> ObserverResult<()> {
     let node_id = node_id_manager.register(Exchanges::Binance).await?;
     {
@@ -294,13 +291,9 @@ where
 }
 
 #[async_trait]
-impl<'a, T, NodeKVS, DLock> TradeObserverTrait
-  for TradeObserver<'a, T, NodeKVS, DLock>
+impl<T> TradeObserverTrait for TradeObserver<T>
 where
   T: RedisCommands + Clone + Send + Sync + 'static,
-  NodeKVS:
-    ListOp<Commands = T, Value = String> + Remove<Commands = T> + Send + Sync,
-  DLock: Lock<Commands = T> + Send + Sync,
 {
   async fn start(&self, signal: Box<Signal>) -> ObserverResult<()> {
     let (ready_evloop_tx, ready_evloop_rx) = oneshot::channel();
@@ -315,7 +308,7 @@ where
         .then(|_| async {
           if let Some(node_id) = { node_id_lock.read().await.clone() } {
             let (exchange, symbols) =
-              node_id_manager.unregist(&node_id).await?;
+              node_id_manager.unregist(node_id.into()).await?;
             let _ = node_event
               .publish(TradeObserverNodeEvent::Unregist(exchange, symbols))
               .await;

@@ -17,13 +17,15 @@ use crate::options::WriteOption;
 
 #[async_trait]
 pub trait Lock: Base + ChannelName {
+  type Value: Send;
+
   async fn __lock__(
     &self,
     key: Arc<String>,
     func_on_success: Arc<
-      dyn (Fn() -> BoxFuture<'async_trait, Arc<dyn Send + Sync>>) + Send + Sync,
+      dyn (Fn() -> BoxFuture<'async_trait, Self::Value>) + Send + Sync,
     >,
-  ) -> DLockResult<Arc<dyn Send + Sync>> {
+  ) -> DLockResult<Self::Value> {
     let (refresh_tx, mut refresh_rx) = channel::<()>(1);
     let channel_name = self.__channel_name__(format!("{}:lock", key).into());
     let channel_name_2 = channel_name.clone();
@@ -66,7 +68,7 @@ pub trait Lock: Base + ChannelName {
         let res = func_on_success().await;
         let _ = refresh_tx.send(());
         let _ = async { dlock.del::<_, usize>("lock").await }.await;
-        Ok::<Arc<dyn Send + Sync>, DLockError>(res)
+        Ok::<Self::Value, DLockError>(res)
       } else {
         Err(DLockError::CastFailure("Failed to acquire lock"))
       }
