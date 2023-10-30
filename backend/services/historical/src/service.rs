@@ -14,7 +14,7 @@ use ::warp::{Filter, Reply};
 use kvs::redis::aio::MultiplexedConnection;
 
 use ::entities::HistoryFetchRequest as HistFetchReq;
-use ::errors::CreateStreamResult;
+use ::errors::KVSResult;
 use ::history::kvs::{CUR_SYNC_PROG_KVS_BUILDER, NUM_TO_FETCH_KVS_BUILDER};
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartDateSplitPubSub};
 use ::kvs::redis;
@@ -27,6 +27,8 @@ use ::subscribe::nats::Client as Nats;
 use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
 use ::symbols::traits::SymbolReader as SymbolReaderTrait;
 use ::symbols::types::ListSymbolStream;
+
+use crate::errors::ServiceResult;
 
 type ProgressKVS =
   Arc<dyn Get<Commands = MultiplexedConnection, Value = i64> + Send + Sync>;
@@ -45,15 +47,20 @@ impl Service {
     nats: &Nats,
     redis_cli: &redis::Client,
     db: &Database,
-  ) -> CreateStreamResult<Self> {
+  ) -> ServiceResult<Self> {
     let (status, splitter) = join!(
       FetchStatusEventPubSub::new(nats),
       HistChartDateSplitPubSub::new(nats)
     );
-    let redis_con = redis_cli.get_multiplexed_async_connection().await?;
+    let redis_con: KVSResult<MultiplexedConnection> = redis_cli
+      .get_multiplexed_async_connection()
+      .await
+      .map_err(|err| err.into());
+    let redis_con = redis_con?;
     let num_obj_kvs_get =
-      NUM_TO_FETCH_KVS_BUILDER.build(redis_con.clone()).into();
-    let sync_prog_kvs_get = CUR_SYNC_PROG_KVS_BUILDER.build(redis_con).into();
+      Arc::new(NUM_TO_FETCH_KVS_BUILDER.build(redis_con.clone()));
+    let sync_prog_kvs_get =
+      Arc::new(CUR_SYNC_PROG_KVS_BUILDER.build(redis_con));
     let ret = Self {
       status: status?,
       splitter: splitter?,
@@ -88,17 +95,17 @@ impl Service {
       })
       .and_then(|(me, size, cur, symbol): (
         Self,
-        NumObjectsToFetchStore<redis::Connection>,
-        CurrentSyncProgressStore<redis::Connection>,
+        ProgressKVS, ProgressKVS,
         ListSymbolStream,
       )| async move {
         let (clos_size, clos_cur) = (size.clone(), cur.clone());
         let prog = symbol.map(move |symbol| {
           return (symbol.symbol, clos_size.clone(), clos_cur.clone());
         }).filter_map(|(sym, size, cur)| async move {
-          let exchange_name = Exchanges::Binance.as_str_name().to_lowercase();
-          let size = size.get(&exchange_name, &sym);
-          let cur = cur.get(&exchange_name, &sym);
+          let exchange_name: Arc<String> = Exchanges::Binance.as_str_name().to_lowercase().into();
+          let sym: Arc<String> = sym.into();
+          let size = size.get(exchange_name.clone(), sym.clone());
+          let cur = cur.get(exchange_name.clone(), sym.clone());
           let (size, cur) = join!(size, cur);
           if let Some(size) = size.ok() {
             if let Some(cur) = cur.ok() {
@@ -106,10 +113,10 @@ impl Service {
             }
           }
           return None;
-        }).map(|(size, cur, symbol): (i64, i64, String)| {
+        }).map(|(size, cur, symbol): (i64, i64, Arc<String>)| {
           return Progress {
             exchange: Exchanges::Binance as i32,
-            symbol,
+            symbol: symbol.as_ref().clone(),
             size,
             cur
           };
@@ -124,8 +131,8 @@ impl Service {
       .and(::warp::ws())
       .map(|
         me: Self,
-        size: NumObjectsToFetchStore<_>,
-        cur: CurrentSyncProgressStore<_>,
+        size: ProgressKVS,
+        cur: ProgressKVS,
         mut start_prog: BoxStream<'static, Message>,
         ws: Ws
       | {
@@ -147,20 +154,17 @@ impl Service {
             Ok(mut resp) => loop {
               select! {
                 Some((item, _)) = resp.next() => {
-                  let size = async {
-                    size.get(
-                      &item.exchange.as_str_name().to_lowercase(),
-                      &item.symbol
-                    ).await.unwrap_or(0)
-                  }.await;
-                  let cur = async {
-                    cur.get(
-                      &item.exchange.as_str_name().to_lowercase(), &item.symbol
-                    ).await.unwrap_or(0)
-                  }.await;
+                  let exchange: Arc<String> = item
+                    .exchange
+                    .as_str_name()
+                    .to_lowercase()
+                    .into();
+                  let symbol: Arc<String> = item.symbol.into();
+                  let size = size.get(exchange.clone(), symbol.clone()).await.unwrap_or(0);
+                  let cur = cur.get(exchange.clone(), symbol.clone()).await.unwrap_or(0);
                   let prog = Progress {
                     exchange: item.exchange as i32,
-                    symbol: item.symbol.clone(),
+                    symbol: symbol.as_ref().clone(),
                     size,
                     cur
                   };
@@ -183,15 +187,13 @@ impl Service {
                     }
                   } else if let Ok(req) = parse_json::<StatusCheckRequest>(msg.as_bytes()) {
                     let exchange = req.exchange().as_str_name().to_lowercase();
-                    let size = async {
-                      size.get(&exchange, &req.symbol).await.unwrap_or(0)
-                    }.await;
-                    let cur = async {
-                      cur.get(&exchange, &req.symbol).await.unwrap_or(0)
-                    }.await;
+                    let exchange = Arc::new(exchange);
+                    let symbol = Arc::new(req.symbol.clone());
+                    let size = size.get(exchange.clone(), symbol.clone()).await.unwrap_or(0);
+                    let cur = cur.get(exchange.clone(), symbol.clone()).await.unwrap_or(0);
                     let prog = Progress {
-                      exchange: req.exchange,
-                      symbol: req.symbol,
+                      exchange: req.exchange().into(),
+                      symbol: symbol.as_ref().clone(),
                       size,
                       cur
                     };

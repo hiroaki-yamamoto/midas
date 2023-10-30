@@ -1,3 +1,4 @@
+mod errors;
 mod service;
 
 use ::futures::FutureExt;
