@@ -1,6 +1,8 @@
 #[cfg(debug_assertions)]
 use ::std::collections::HashSet;
 
+use ::std::sync::Arc;
+
 use ::std::time::{Duration, UNIX_EPOCH};
 
 use ::futures::StreamExt;
@@ -12,7 +14,7 @@ use ::log::warn;
 use ::date_splitter::DateSplitter;
 use ::history::binance::fetcher::HistoryFetcher as BinanceHistFetcher;
 use ::history::binance::writer::HistoryWriter as BinanceHistoryWriter;
-use ::history::kvs::{CurrentSyncProgressStore, NumObjectsToFetchStore};
+use ::history::kvs::{CUR_SYNC_PROG_KVS_BUILDER, NUM_TO_FETCH_KVS_BUILDER};
 use ::tokio::{join, select};
 
 use ::history::pubsub::{HistChartDateSplitPubSub, HistChartPubSub};
@@ -28,8 +30,9 @@ use ::subscribe::PubSub;
 async fn main() {
   info!("Starting kline date split worker");
   ::config::init(|cfg, mut sig, db, broker, _| async move {
-    let cur_prog_kvs = CurrentSyncProgressStore::new(cfg.redis().unwrap());
-    let num_prg_kvs = NumObjectsToFetchStore::new(cfg.redis().unwrap());
+    let redis = cfg.redis().await.unwrap();
+    let cur_prog_kvs = CUR_SYNC_PROG_KVS_BUILDER.build(redis.clone());
+    let num_prg_kvs = NUM_TO_FETCH_KVS_BUILDER.build(redis);
 
     let (req_pubsub, resp_pubsub) = join!(
       HistChartDateSplitPubSub::new(&broker),
@@ -44,7 +47,8 @@ async fn main() {
     loop {
       select! {
         Some((req, _)) = req_sub.next() => {
-          let exchange_name = req.exchange.as_str_name().to_lowercase();
+          let exchange_name = Arc::new(req.exchange.as_str_name().to_lowercase());
+          let symbol = Arc::new(req.symbol.clone());
           let mut start = req.start.map(|start| start.into()).unwrap_or(UNIX_EPOCH);
           let end = req.end.map(|end| end.into()).unwrap_or(UNIX_EPOCH);
           info!(
@@ -82,13 +86,15 @@ async fn main() {
             },
             Ok(v) => v
           };
-          if let Err(e) = cur_prog_kvs.reset(&exchange_name, &req.symbol).await {
+          if let Err(e) = cur_prog_kvs.reset(
+            exchange_name.clone(), symbol.clone()
+          ).await {
             error!(error = as_error!(e); "Failed to reset the progress");
             continue;
           }
-          if let Err(e) = num_prg_kvs.set::<()>(
-            &exchange_name,
-            &req.symbol,
+          if let Err(e) = num_prg_kvs.set(
+            exchange_name.clone(),
+            symbol.clone(),
             splitter.len().unwrap_or(0) as i64,
             WriteOption::default().duration(Duration::from_secs(180).into()).into(),
           ).await {

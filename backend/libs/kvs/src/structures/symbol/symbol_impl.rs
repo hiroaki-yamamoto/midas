@@ -5,7 +5,9 @@ use crate::redis::AsyncCommands as Commands;
 use crate::redis::{FromRedisValue, ToRedisArgs};
 
 use super::KVS;
-use crate::traits::symbol::{ChannelName, Get, Remove, Set};
+use crate::traits::symbol::{
+  ChannelName, Expiration, Get, Incr, OptExecution, Remove, Set,
+};
 
 impl<CMD, Value> ChannelName for KVS<CMD, Value>
 where
@@ -43,4 +45,25 @@ where
   CMD: Commands + Clone + Send + Sync + Debug,
 {
   type Value = Value;
+}
+
+impl<CMD, Value> Expiration for KVS<CMD, Value>
+where
+  Value: FromRedisValue + ToRedisArgs + Send + Sync + Debug,
+  CMD: Commands + Clone + Send + Sync + Debug,
+{
+}
+
+impl<CMD, Value> OptExecution for KVS<CMD, Value>
+where
+  Value: FromRedisValue + ToRedisArgs + Send + Sync + Debug,
+  CMD: Commands + Clone + Send + Sync + Debug,
+{
+}
+
+impl<CMD, Value> Incr for KVS<CMD, Value>
+where
+  Value: FromRedisValue + ToRedisArgs + Send + Sync + Debug,
+  CMD: Commands + Clone + Send + Sync + Debug,
+{
 }

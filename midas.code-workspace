@@ -29,7 +29,8 @@
 			"pubsub",
 			"kvs",
 			"debug",
-			"historical_service"
+			"historical_service",
+			"historical_date_split_worker"
 		]
 	}
 }

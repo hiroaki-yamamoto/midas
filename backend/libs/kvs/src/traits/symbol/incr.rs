@@ -6,12 +6,10 @@ use ::redis::AsyncCommands as Commands;
 use ::errors::KVSResult;
 
 use crate::options::WriteOption;
-use crate::traits::base::OptExecution;
-
-use super::channel_name::ChannelName;
+use crate::traits::symbol::OptExecution;
 
 #[async_trait]
-pub trait Incr: ChannelName + OptExecution {
+pub trait Incr: OptExecution {
   async fn incr(
     &self,
     exchange: Arc<String>,
@@ -19,11 +17,11 @@ pub trait Incr: ChannelName + OptExecution {
     delta: i64,
     opt: Option<WriteOption>,
   ) -> KVSResult<()> {
-    let channel_name = self.channel_name(exchange, symbol);
+    let channel_name = self.channel_name(exchange.clone(), symbol.clone());
     let mut cmds = self.__commands__();
     // let mut cmds = cmds.lock().await;
     cmds.incr(channel_name.as_ref(), delta).await?;
-    self.__execute_opt__(channel_name, opt).await?;
+    self.execute_opt(exchange, symbol, opt).await?;
     return Ok(());
   }
 
