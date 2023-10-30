@@ -1,3 +1,4 @@
+use ::std::fmt::Debug;
 use ::std::sync::Arc;
 
 use ::futures::future::{try_join_all, FutureExt};
@@ -21,7 +22,7 @@ use super::ObservationBalancer;
 #[derive(Clone)]
 pub struct Init<C>
 where
-  C: Commands + Clone + Sync + Send + 'static,
+  C: Commands + Clone + Sync + Send + Debug + 'static,
 {
   diff_taker: Arc<NodeDIffTaker<C>>,
   balancer: Arc<ObservationBalancer<C>>,
@@ -31,7 +32,7 @@ where
 
 impl<C> Init<C>
 where
-  C: Commands + Clone + Sync + Send + 'static,
+  C: Commands + Clone + Sync + Send + Debug + 'static,
 {
   pub async fn new(
     kvs: C,

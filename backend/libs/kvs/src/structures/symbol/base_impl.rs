@@ -1,3 +1,5 @@
+use ::std::fmt::Debug;
+
 use crate::redis::AsyncCommands as Commands;
 use crate::redis::{FromRedisValue, ToRedisArgs};
 
@@ -6,8 +8,8 @@ use crate::traits::base::Base;
 
 impl<CMD, Value> Base for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Debug + Send + Sync,
+  CMD: Commands + Debug + Clone + Send + Sync,
 {
   type Commands = CMD;
 

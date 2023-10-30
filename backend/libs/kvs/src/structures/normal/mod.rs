@@ -6,6 +6,7 @@ use ::std::marker::PhantomData;
 use crate::redis::AsyncCommands as Commands;
 use crate::redis::{FromRedisValue, ToRedisArgs};
 
+#[derive(Debug)]
 pub struct KVSBuilder<'a, Value, LockFnRetValue>
 where
   Value: FromRedisValue + ToRedisArgs + Send + Sync,
@@ -37,6 +38,7 @@ where
 }
 
 /// Wrap this struct with Arc if Clone is needed.
+#[derive(Debug)]
 pub struct KVS<CMD, Value, LockFnRetValue>
 where
   Value: FromRedisValue + ToRedisArgs + Send + Sync,

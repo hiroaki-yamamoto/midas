@@ -1,4 +1,5 @@
 use ::std::collections::HashSet;
+use ::std::fmt::Debug;
 use ::std::marker::PhantomData;
 use ::std::sync::Arc;
 
@@ -16,7 +17,7 @@ use super::{NodeFilter, NodeIndexer};
 
 pub struct ObservationBalancer<T>
 where
-  T: Commands + Clone + Send + Sync + 'static,
+  T: Commands + Clone + Send + Sync + Debug + 'static,
 {
   node_kvs: Arc<dyn ListOp<Value = String, Commands = T> + Send + Sync>,
   indexer: Arc<NodeIndexer<T>>,
@@ -26,7 +27,7 @@ where
 
 impl<T> ObservationBalancer<T>
 where
-  T: Commands + Clone + Send + Sync + 'static,
+  T: Commands + Clone + Send + Sync + Debug + 'static,
 {
   pub async fn new(kvs: T) -> ObserverResult<Self> {
     let node_kvs: Arc<dyn ListOp<Commands = T, Value = String> + Send + Sync> =

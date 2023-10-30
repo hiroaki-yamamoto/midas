@@ -1,3 +1,4 @@
+use ::std::fmt::Debug;
 use ::std::sync::Arc;
 
 use crate::redis::AsyncCommands as Commands;
@@ -11,8 +12,8 @@ use crate::traits::base::{
 
 impl<CMD, Value> Base for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Debug + Send + Sync,
+  CMD: Commands + Clone + Debug + Send + Sync,
 {
   type Commands = CMD;
   fn __commands__(&self) -> CMD {
@@ -22,8 +23,8 @@ where
 
 impl<CMD, Value> ChannelName for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Debug + Send + Sync,
+  CMD: Commands + Clone + Debug + Send + Sync,
 {
   fn __channel_name__(&self, key: Arc<String>) -> Arc<String> where {
     return format!("{}:{}", self.channel_name, key).into();
@@ -32,30 +33,30 @@ where
 
 impl<CMD, Value> Exist for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Debug + Send + Sync,
+  CMD: Commands + Clone + Debug + Send + Sync,
 {
 }
 
 impl<CMD, Value> Expiration for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Debug + Send + Sync,
+  CMD: Commands + Clone + Debug + Send + Sync,
 {
 }
 
 impl<CMD, Value> Get for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Debug + Send + Sync,
+  CMD: Commands + Clone + Debug + Send + Sync,
 {
   type Value = Value;
 }
 
 impl<CMD, Value> ListOp for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Debug + Send + Sync,
+  CMD: Commands + Clone + Debug + Send + Sync,
 {
   type Value = Value;
 }
@@ -69,30 +70,30 @@ where
 
 impl<CMD, Value> OptExecution for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Debug + Send + Sync,
+  CMD: Commands + Clone + Debug + Send + Sync,
 {
 }
 
 impl<CMD, Value> Remove for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Debug + Send + Sync,
+  CMD: Commands + Clone + Debug + Send + Sync,
 {
 }
 
 impl<CMD, Value> Set for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Debug + Send + Sync,
+  CMD: Commands + Clone + Debug + Send + Sync,
 {
   type Value = Value;
 }
 
 impl<CMD, Value> SetOp for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Debug + Send + Sync,
+  CMD: Commands + Clone + Debug + Send + Sync,
 {
   type Value = Value;
 }

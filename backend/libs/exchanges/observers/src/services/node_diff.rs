@@ -1,4 +1,5 @@
 use ::std::collections::HashSet;
+use ::std::fmt::Debug;
 use ::std::marker::PhantomData;
 use ::std::sync::Arc;
 
@@ -20,7 +21,7 @@ use super::{NodeFilter, NodeIndexer};
 
 pub struct NodeDIffTaker<T>
 where
-  T: Commands + Clone + Send + Sync + 'static,
+  T: Commands + Clone + Debug + Send + Sync + 'static,
 {
   db: Database,
   kvs: Arc<dyn ListOp<Commands = T, Value = String> + Send + Sync>,
@@ -30,7 +31,7 @@ where
 
 impl<T> NodeDIffTaker<T>
 where
-  T: Commands + Clone + Send + Sync + 'static,
+  T: Commands + Clone + Debug + Send + Sync + 'static,
 {
   pub async fn new(db: &Database, cmd: T) -> ObserverResult<Self> {
     return Ok(Self {

@@ -2,6 +2,7 @@ pub mod entities;
 pub(crate) mod handlers;
 mod pubsub;
 
+use ::std::fmt::Debug;
 use ::std::sync::Arc;
 use ::std::time::Duration;
 
@@ -41,7 +42,7 @@ type KVSListOp<C> = Arc<dyn ListOp<Commands = C, Value = String> + Send + Sync>;
 
 pub struct TradeObserver<T>
 where
-  T: RedisCommands + Clone + Send + Sync + 'static,
+  T: RedisCommands + Clone + Send + Sync + Debug + 'static,
 {
   node_id: Arc<RwLock<Option<String>>>,
   kvs_listop: KVSListOp<T>,
@@ -58,7 +59,7 @@ where
 
 impl<T> TradeObserver<T>
 where
-  T: RedisCommands + Clone + Send + Sync + 'static,
+  T: RedisCommands + Clone + Send + Sync + Debug + 'static,
 {
   pub async fn new(
     broker: &Nats,
@@ -290,7 +291,7 @@ where
 #[async_trait]
 impl<T> TradeObserverTrait for TradeObserver<T>
 where
-  T: RedisCommands + Clone + Send + Sync + 'static,
+  T: RedisCommands + Clone + Send + Sync + Debug + 'static,
 {
   async fn start(&self, signal: Box<Signal>) -> ObserverResult<()> {
     let (ready_evloop_tx, ready_evloop_rx) = oneshot::channel();

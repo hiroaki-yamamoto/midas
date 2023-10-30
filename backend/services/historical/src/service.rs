@@ -1,4 +1,4 @@
-use ::std::fmt::Debug;
+use ::std::sync::Arc;
 
 use ::futures::stream::BoxStream;
 use ::futures::{SinkExt, StreamExt};
@@ -11,10 +11,11 @@ use ::warp::filters::BoxedFilter;
 use ::warp::reject::{custom as cus_rej, Rejection};
 use ::warp::ws::{Message, WebSocket, Ws};
 use ::warp::{Filter, Reply};
+use kvs::redis::aio::MultiplexedConnection;
 
 use ::entities::HistoryFetchRequest as HistFetchReq;
 use ::errors::CreateStreamResult;
-use ::history::kvs::{CurrentSyncProgressStore, NumObjectsToFetchStore};
+use ::history::kvs::{CUR_SYNC_PROG_KVS_BUILDER, NUM_TO_FETCH_KVS_BUILDER};
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartDateSplitPubSub};
 use ::kvs::redis;
 use ::kvs::traits::symbol::Get;
@@ -27,9 +28,13 @@ use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
 use ::symbols::traits::SymbolReader as SymbolReaderTrait;
 use ::symbols::types::ListSymbolStream;
 
+type ProgressKVS =
+  Arc<dyn Get<Commands = MultiplexedConnection, Value = i64> + Send + Sync>;
+
 #[derive(Debug, Clone)]
 pub struct Service {
-  redis_cli: redis::Client,
+  num_obj_kvs_get: ProgressKVS,
+  sync_prog_kvs_get: ProgressKVS,
   status: FetchStatusEventPubSub,
   splitter: HistChartDateSplitPubSub,
   db: Database,
@@ -45,11 +50,16 @@ impl Service {
       FetchStatusEventPubSub::new(nats),
       HistChartDateSplitPubSub::new(nats)
     );
+    let redis_con = redis_cli.get_multiplexed_async_connection().await?;
+    let num_obj_kvs_get =
+      NUM_TO_FETCH_KVS_BUILDER.build(redis_con.clone()).into();
+    let sync_prog_kvs_get = CUR_SYNC_PROG_KVS_BUILDER.build(redis_con).into();
     let ret = Self {
       status: status?,
       splitter: splitter?,
-      redis_cli: redis_cli.clone(),
       db: db.clone(),
+      num_obj_kvs_get,
+      sync_prog_kvs_get,
     };
     return Ok(ret);
   }
@@ -72,28 +82,8 @@ impl Service {
             &format!("(DB, Symbol): {}", err)
           ));
         })?;
-        let size = me.redis_cli
-          .get_connection()
-          .map(|con| {
-            return NumObjectsToFetchStore::new(con.into());
-          })
-          .map_err(|err| {
-            return cus_rej(Status::new(
-              StatusCode::SERVICE_UNAVAILABLE,
-              &format!("(Redis, Size) {}", err)
-            ));
-          })?;
-        let cur = me.redis_cli
-          .get_connection()
-          .map(|con| {
-            return CurrentSyncProgressStore::new(con.into());
-          })
-          .map_err(|err| {
-            return cus_rej(Status::new(
-              StatusCode::SERVICE_UNAVAILABLE,
-              &format!("(Redis, Current) {}", err)
-            ));
-          })?;
+        let size = me.num_obj_kvs_get.clone();
+        let cur = me.sync_prog_kvs_get.clone();
         return Ok::<_, Rejection>((me, size, cur, symbols));
       })
       .and_then(|(me, size, cur, symbol): (

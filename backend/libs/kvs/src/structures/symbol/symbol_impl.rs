@@ -1,3 +1,4 @@
+use ::std::fmt::Debug;
 use ::std::sync::Arc;
 
 use crate::redis::AsyncCommands as Commands;
@@ -8,8 +9,8 @@ use crate::traits::symbol::{ChannelName, Get, Remove, Set};
 
 impl<CMD, Value> ChannelName for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync + Debug,
+  CMD: Commands + Clone + Send + Sync + Debug,
 {
   fn channel_name(
     &self,
@@ -23,23 +24,23 @@ where
 
 impl<CMD, Value> Get for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync + Debug,
+  CMD: Commands + Clone + Send + Sync + Debug,
 {
   type Value = Value;
 }
 
 impl<CMD, Value> Remove for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync + Debug,
+  CMD: Commands + Clone + Send + Sync + Debug,
 {
 }
 
 impl<CMD, Value> Set for KVS<CMD, Value>
 where
-  Value: FromRedisValue + ToRedisArgs + Send + Sync,
-  CMD: Commands + Clone + Send + Sync,
+  Value: FromRedisValue + ToRedisArgs + Send + Sync + Debug,
+  CMD: Commands + Clone + Send + Sync + Debug,
 {
   type Value = Value;
 }
