@@ -24,7 +24,7 @@ async fn main() {
   config.init_logger();
 
   let broker = config.nats_cli().await.unwrap();
-  let redis = config.redis().unwrap();
+  let redis = config.redis().await.unwrap();
   let db = config.db().await.unwrap();
   let exchange: Box<dyn TradeObserverTrait> = match cmd_args.exchange {
     Exchanges::Binance => Box::new(
