@@ -1,35 +1,20 @@
+use ::std::sync::Arc;
+
 use ::async_trait::async_trait;
-use ::redis::{Commands, FromRedisValue, SetOptions, ToRedisArgs};
 
 use ::errors::KVSResult;
 
-use super::{Base, ChannelName};
 use crate::options::WriteOption;
+use crate::traits::base::Set as Base;
 
 #[async_trait]
-pub trait Set<T, V>: Base<T> + ChannelName
-where
-  T: Commands + Send,
-  for<'a> V: ToRedisArgs + Send + 'a,
-{
-  async fn set<R>(
+pub trait Set: Base {
+  async fn set(
     &self,
-    key: &str,
-    value: V,
-    opt: impl Into<Option<WriteOption>> + Send,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
-    let channel_name = self.channel_name(key);
-    let cmds = self.commands();
-    let mut cmds = cmds.lock().await;
-    let result = if let Some(opt) = opt.into() {
-      let opt: SetOptions = opt.into();
-      cmds.set_options(&channel_name, value, opt)
-    } else {
-      cmds.set(&channel_name, value)
-    };
-    return Ok(result?);
+    key: Arc<String>,
+    value: Self::Value,
+    opt: Option<WriteOption>,
+  ) -> KVSResult<bool> {
+    return self.__set__(key, value, opt).await;
   }
 }

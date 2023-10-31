@@ -1,26 +1,29 @@
 use ::std::convert::From;
 use ::std::time::Duration;
 
-use ::redis::{Commands, ExistenceCheck, RedisResult, SetExpiry, SetOptions};
-
+use ::async_trait::async_trait;
+use ::redis::{ExistenceCheck, SetExpiry, SetOptions};
 use ::types::stateful_setter;
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct WriteOption {
   duration: Option<Duration>,
   non_existent_only: bool,
 }
 
+impl Default for WriteOption {
+  fn default() -> Self {
+    return Self {
+      duration: Option::default(),
+      non_existent_only: bool::default(),
+    };
+  }
+}
+
+#[async_trait]
 pub trait WriteOptionTrait {
   fn duration(&self) -> Option<Duration>;
   fn non_existent_only(&self) -> bool;
-  fn execute(&self, cmds: &mut impl Commands, key: &str) -> RedisResult<()> {
-    let mut res: RedisResult<()> = Ok(());
-    if let Some(duration) = self.duration() {
-      res = res.and(cmds.pexpire(key, duration.as_millis() as usize));
-    }
-    return res;
-  }
 }
 
 impl From<WriteOption> for SetOptions {
@@ -50,6 +53,7 @@ impl WriteOptionTrait for WriteOption {
   }
 }
 
+#[async_trait]
 impl WriteOptionTrait for Option<WriteOption> {
   fn duration(&self) -> Option<Duration> {
     return self.as_ref().and_then(|opt| opt.duration());
@@ -59,11 +63,5 @@ impl WriteOptionTrait for Option<WriteOption> {
       .as_ref()
       .map(|opt| opt.non_existent_only())
       .unwrap_or(false);
-  }
-  fn execute(&self, cmds: &mut impl Commands, key: &str) -> RedisResult<()> {
-    if let Some(opt) = self {
-      return opt.execute(cmds, key);
-    }
-    return Ok(());
   }
 }

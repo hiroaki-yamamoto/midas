@@ -1,3 +1,5 @@
+use ::std::fmt::Debug;
+use ::std::marker::PhantomData;
 use ::std::sync::Arc;
 use ::std::time::Duration;
 
@@ -6,42 +8,64 @@ use ::log::{as_error, error, info, warn};
 use ::tokio::time::sleep;
 
 use ::errors::{ObserverError, UnknownExchangeError};
-use ::kvs::redis::Commands;
-use ::kvs::traits::last_checked::Get;
-use ::kvs::traits::last_checked::ListOp;
-use ::kvs::traits::last_checked::Remove;
-use ::kvs::traits::last_checked::Set;
-use ::kvs::Connection;
+use ::kvs::redis::AsyncCommands as Commands;
+use ::kvs::traits::last_checked::{Get, ListOp, Remove, Set};
 use ::kvs::WriteOption;
 use ::random::generate_random_txt;
 use ::rpc::entities::Exchanges;
 
 use ::errors::ObserverResult;
 
-use crate::kvs::{ONEXTypeKVS, ObserverNodeKVS};
+use super::NodeIndexer;
+use crate::kvs::{NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER};
 
 const NODE_ID_TXT_SIZE: usize = 64;
+
+type NodeKVSList<C> =
+  Arc<dyn ListOp<Commands = C, Value = String> + Send + Sync>;
+type NodeKVSDel<C> = Arc<dyn Remove<Commands = C> + Send + Sync>;
 
 /// This struct manages the node id.
 ///
 /// **Note**: This struct doesn't publish any events to Trade Observer Control.
-#[derive(Debug)]
 pub struct NodeIDManager<T>
 where
-  T: Commands + Send + Sync,
+  T: Commands + Clone + Send + Sync + Debug + 'static,
 {
-  node_kvs: ObserverNodeKVS<T>,
-  exchange_type_kvs: ONEXTypeKVS<T>,
+  node_kvs_list: NodeKVSList<T>,
+  node_kvs_del: NodeKVSDel<T>,
+  indexer: Arc<NodeIndexer<T>>,
+  exchange_type_kvs_set:
+    Arc<dyn Set<Commands = T, Value = String> + Send + Sync>,
+  exchange_type_kvs_get:
+    Arc<dyn Get<Commands = T, Value = String> + Send + Sync>,
+  exchange_type_kvs_del: Arc<dyn Remove<Commands = T> + Send + Sync>,
+  _t: PhantomData<T>,
 }
 
 impl<T> NodeIDManager<T>
 where
-  T: Commands + Sync + Send,
+  T: Commands + Clone + Sync + Send + Debug + 'static,
 {
-  pub fn new(con: Connection<T>) -> Self {
+  pub fn new(con: T) -> Self {
+    let node_kvs: Arc<_> = NODE_KVS_BUILDER.build(con.clone()).into();
+    let node_kvs_list: NodeKVSList<_> = node_kvs.clone();
+    let node_kvs_del: NodeKVSDel<_> = node_kvs.clone();
+
+    let exchange_type_kvs = Arc::new(NODE_EXCHANGE_TYPE_KVS_BUILDER.build(con));
+    let indexer = Arc::new(NodeIndexer::new(exchange_type_kvs.clone()));
+
+    let exchange_type_kvs_set = exchange_type_kvs.clone();
+    let exchange_type_kvs_get = exchange_type_kvs.clone();
+    let exchange_type_kvs_del = exchange_type_kvs.clone();
     return Self {
-      node_kvs: ObserverNodeKVS::new(con.clone().into()),
-      exchange_type_kvs: ONEXTypeKVS::new(con),
+      node_kvs_list,
+      node_kvs_del,
+      indexer,
+      exchange_type_kvs_set,
+      exchange_type_kvs_get,
+      exchange_type_kvs_del,
+      _t: PhantomData,
     };
   }
 
@@ -51,7 +75,7 @@ where
   pub async fn register(&self, exchange: Exchanges) -> ObserverResult<String> {
     let mut node_id = generate_random_txt(NODE_ID_TXT_SIZE);
     loop {
-      match self.exchange_type_kvs.index_node(node_id.clone()).await {
+      match self.indexer.index_node(node_id.clone()).await {
         Ok(num) => {
           if num > 0 {
             info!(node_id = node_id.to_string(); "Node indexed");
@@ -73,9 +97,9 @@ where
       }
     }
     self
-      .exchange_type_kvs
+      .exchange_type_kvs_set
       .set(
-        &node_id,
+        node_id.clone().into(),
         exchange.as_str_name().into(),
         WriteOption::default()
           .duration(Duration::from_secs(30).into())
@@ -92,24 +116,21 @@ where
   /// **Return Value**: (exchange_type, symbols: Vec<String>)
   pub async fn unregist(
     &self,
-    node_id: &str,
+    node_id: Arc<String>,
   ) -> ObserverResult<(Exchanges, Vec<String>)> {
-    let symbols: Vec<String> = self.node_kvs.lrange(node_id, 0, -1).await?;
-    let exchange: String = self.exchange_type_kvs.get(node_id).await?;
+    let symbols: Vec<String> =
+      self.node_kvs_list.lrange(node_id.clone(), 0, -1).await?;
+    let exchange: String =
+      self.exchange_type_kvs_get.get(node_id.clone()).await?;
     let exchange = Exchanges::from_str_name(&exchange)
       .ok_or::<ObserverError>(UnknownExchangeError::new(exchange).into())?;
-    let node_id: Arc<str> = node_id.to_string().into();
-    let _: Vec<()> = try_join_all([
-      self.node_kvs.del(&[node_id.clone()]),
-      self.exchange_type_kvs.del(&[node_id.clone()]),
-      async move {
-        self
-          .exchange_type_kvs
-          .unindex_node(node_id.clone().to_string())
-          .await?;
-        Ok(())
-      }
-      .boxed(),
+    let _: Vec<_> = try_join_all([
+      self.node_kvs_del.del(Arc::new([node_id.clone()])),
+      self.exchange_type_kvs_del.del(Arc::new([node_id.clone()])),
+      self
+        .indexer
+        .unindex_node(node_id.clone().to_string())
+        .boxed(),
     ])
     .await?;
     return Ok((exchange, symbols));

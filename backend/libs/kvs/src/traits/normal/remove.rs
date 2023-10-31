@@ -1,25 +1,14 @@
 use ::std::sync::Arc;
 
 use ::async_trait::async_trait;
-use ::redis::{Commands, FromRedisValue};
 
 use ::errors::KVSResult;
 
-use super::{Base, ChannelName};
+use crate::traits::base::Remove as Base;
 
 #[async_trait]
-pub trait Remove<T>: Base<T> + ChannelName
-where
-  T: Commands + Send,
-{
-  async fn del<R>(&self, keys: &[Arc<str>]) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    let channel_names: Vec<String> =
-      keys.into_iter().map(|key| self.channel_name(key)).collect();
-    return Ok(cmd.del(channel_names)?);
+pub trait Remove: Base {
+  async fn del(&self, keys: Arc<[Arc<String>]>) -> KVSResult<usize> {
+    return self.__del__(keys).await;
   }
 }

@@ -9,7 +9,6 @@ edition = "2021"
 observers = { path = "../../libs/exchanges/observers" }
 symbols = { path = "../../libs/exchanges/symbols" }
 kvs = { path = "../../libs/kvs" }
-kvs_macros = { path = "../../libs/kvs_macros" }
 entities = { path = "../../libs/entities" }
 config = { path = "../../libs/config" }
 subscribe = { path = "../../libs/subscribe" }

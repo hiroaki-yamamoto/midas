@@ -13,7 +13,6 @@ config = { path = "../../config" }
 rpc = { path = "../../rpc" }
 subscribe = { path = "../../subscribe" }
 kvs = { path = "../../kvs" }
-kvs_macros = { path = "../../kvs_macros" }
 round = { path = "../../round" }
 random = { path = "../../random" }
 

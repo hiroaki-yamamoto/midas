@@ -1,19 +1,14 @@
+use ::std::sync::Arc;
+
 use ::async_trait::async_trait;
-use ::redis::Commands;
 
 use ::errors::KVSResult;
 
-use super::{Base, ChannelName};
+use crate::traits::base::Exist as BaseExist;
 
 #[async_trait]
-pub trait Exist<T>: Base<T> + ChannelName
-where
-  T: Commands + Send,
-{
-  async fn exists(&self, key: &str) -> KVSResult<bool> {
-    let channel_name = self.channel_name(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    return Ok(cmd.exists(channel_name)?);
+pub trait Exist: BaseExist {
+  async fn exists(&self, key: Arc<String>) -> KVSResult<bool> {
+    return self.__exists__(key).await;
   }
 }

@@ -4,21 +4,18 @@ use ::std::time::SystemTime;
 use ::async_trait::async_trait;
 use ::chrono::{DateTime, Local, LocalResult, TimeZone};
 use ::errors::{KVSError, KVSResult};
-use ::redis::{Commands, FromRedisValue, SetOptions};
+use ::redis::{AsyncCommands as Commands, SetOptions};
 
 use crate::options::WriteOption;
-use crate::traits::normal::{Base as NormalBase, ChannelName};
+use crate::traits::base::{Base as BaseBase, ChannelName};
 
 #[async_trait]
-pub trait Base<T>: NormalBase<T> + ChannelName
-where
-  T: Commands + Send,
-{
-  fn get_timestamp_channel(&self, key: &str) -> String {
-    return format!("last_check_timestamp:{}", self.channel_name(key));
+pub trait Base: BaseBase + ChannelName {
+  fn get_timestamp_channel(&self, key: Arc<String>) -> String {
+    return format!("last_check_timestamp:{}", self.__channel_name__(key));
   }
 
-  fn convert_timestamp(timestamp: i64) -> KVSResult<SystemTime> {
+  fn convert_timestamp(&self, timestamp: i64) -> KVSResult<SystemTime> {
     let datetime: DateTime<Local> = match Local.timestamp_opt(timestamp, 0) {
       LocalResult::Single(dt) => dt,
       LocalResult::None => {
@@ -31,45 +28,42 @@ where
     return Ok(datetime.into());
   }
 
-  async fn get_last_checked(&self, key: &str) -> KVSResult<SystemTime> {
+  async fn get_last_checked(&self, key: Arc<String>) -> KVSResult<SystemTime> {
     let key = self.get_timestamp_channel(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    let timestamp: i64 = cmd.get(key)?;
-    return Ok(Self::convert_timestamp(timestamp)?);
+    let mut cmd = self.__commands__();
+    // let mut cmd = cmd.lock().await;
+    let timestamp: i64 = cmd.get(key).await?;
+    return Ok(self.convert_timestamp(timestamp)?);
   }
 
-  async fn flag_last_checked<R>(
+  async fn flag_last_checked(
     &self,
-    key: &str,
+    key: Arc<String>,
     opt: Option<WriteOption>,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
+  ) -> KVSResult<bool> {
     let key = self.get_timestamp_channel(key);
     let now = SystemTime::now()
       .duration_since(SystemTime::UNIX_EPOCH)?
       .as_secs();
-    let opt: Option<SetOptions> = opt.map(|opt| opt.into());
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
+    let opt: Option<SetOptions> = opt.map(|wo| wo.into());
+    let mut cmd = self.__commands__();
+    // let mut cmd = cmd.lock().await;
     return Ok(match opt {
-      Some(opt) => cmd.set_options(key, now, opt)?,
-      None => cmd.set(key, now)?,
+      Some(opt) => cmd.set_options(key, now, opt).await?,
+      None => cmd.set(key, now).await?,
     });
   }
 
-  async fn del_last_checked<R>(&self, keys: &[Arc<str>]) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
+  async fn del_last_checked(
+    &self,
+    keys: Arc<[Arc<String>]>,
+  ) -> KVSResult<usize> {
     let keys: Vec<String> = keys
       .into_iter()
-      .map(|key| self.get_timestamp_channel(key))
+      .map(|key| self.get_timestamp_channel(key.clone()))
       .collect();
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    return Ok(cmd.del(keys)?);
+    let mut cmd = self.__commands__();
+    // let mut cmd = cmd.lock().await;
+    return Ok(cmd.del(keys).await?);
   }
 }

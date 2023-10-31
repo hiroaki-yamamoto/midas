@@ -9,12 +9,11 @@ resources:
 images:
   - name: template
     newName: trade-observer-worker
-
 # Watch stopper
-patches:
-  - target:
-      kind: Deployment
-    patch: |-
-      # - op: replace
-      #   path: /spec/replicas
-      #   value: 1
+# patches:
+#   - target:
+#       kind: Deployment
+#     patch: |-
+#       # - op: replace
+#       #   path: /spec/replicas
+#       #   value: 1

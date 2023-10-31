@@ -1522,6 +1522,7 @@ dependencies = [
  "config",
  "csrf",
  "entities",
+ "err-derive",
  "errors",
  "futures",
  "history",
@@ -1555,7 +1556,6 @@ dependencies = [
  "futures",
  "gmp-mpfr-sys",
  "kvs",
- "kvs_macros",
  "log",
  "mongodb",
  "num_cpus",
@@ -1908,14 +1908,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kvs_macros"
-version = "0.1.0"
-dependencies = [
- "quote",
- "syn 2.0.38",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2246,7 +2238,6 @@ dependencies = [
  "futures",
  "gmp-mpfr-sys",
  "kvs",
- "kvs_macros",
  "log",
  "mongodb",
  "random",
@@ -3783,7 +3774,6 @@ dependencies = [
  "errors",
  "futures",
  "kvs",
- "kvs_macros",
  "log",
  "mongodb",
  "num-derive",

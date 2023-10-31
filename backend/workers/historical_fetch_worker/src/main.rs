@@ -2,6 +2,7 @@
 use ::std::collections::HashSet;
 
 use ::std::collections::HashMap;
+use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::futures::StreamExt;
@@ -16,7 +17,7 @@ use ::tokio::select;
 use ::history::binance::fetcher::HistoryFetcher;
 use ::history::binance::writer::HistoryWriter;
 use ::history::entities::FetchStatusChanged;
-use ::history::kvs::CurrentSyncProgressStore;
+use ::history::kvs::CUR_SYNC_PROG_KVS_BUILDER;
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartPubSub};
 use ::history::traits::{
   HistoryFetcher as HistoryFetcherTrait, HistoryWriter as HistoryWriterTrait,
@@ -29,8 +30,8 @@ use ::subscribe::PubSub;
 async fn main() {
   info!("Starting kline fetch worker");
   ::config::init(|cfg, mut sig, db, broker, _| async move {
-    let redis = cfg.redis().unwrap();
-    let cur_prog_kvs = CurrentSyncProgressStore::new(redis);
+    let redis = cfg.redis().await.unwrap();
+    let cur_prog_kvs = CUR_SYNC_PROG_KVS_BUILDER.build(redis);
 
     let pubsub = HistChartPubSub::new(&broker).await.unwrap();
     let mut sub = pubsub.pull_subscribe("historyFetchWroker").await.unwrap();
@@ -44,14 +45,16 @@ async fn main() {
     reg.insert(Exchanges::Binance, Box::new(fetcher));
 
     #[cfg(debug_assertions)]
-    let mut dupe_map: HashMap<(Exchanges, String), HashSet<(_, _)>> =
+    let mut dupe_map: HashMap<(Arc<Exchanges>, Arc<String>), HashSet<(_, _)>> =
       HashMap::new();
     loop {
       select! {
         Some((req, _)) = sub.next() => {
+          let exchange = Arc::new(req.exchange.clone());
+          let symbol = Arc::new(req.symbol.clone());
           #[cfg(debug_assertions)]
           {
-            if let Some(dupe_list) = dupe_map.get_mut(&(req.exchange, req.symbol.clone())) {
+            if let Some(dupe_list) = dupe_map.get_mut(&(exchange.clone(), symbol.clone())) {
               if dupe_list.contains(&(req.start, req.end)) {
                 warn!(
                   request = as_serde!(req);
@@ -63,7 +66,7 @@ async fn main() {
             } else {
               let mut dupe_list = HashSet::new();
               dupe_list.insert((req.start, req.end));
-              dupe_map.insert((req.exchange, req.symbol.clone()), dupe_list);
+              dupe_map.insert((exchange.clone(), symbol.clone()), dupe_list);
             }
           }
           let klines = match reg.get_mut(&req.exchange) {
@@ -86,8 +89,8 @@ async fn main() {
             continue;
           }
           if let Err(e) = cur_prog_kvs.incr(
-            &req.exchange.as_str_name().to_lowercase(),
-            &req.symbol, 1,
+            Arc::new(exchange.as_str_name().to_lowercase()),
+            symbol.clone(), 1,
             WriteOption::default().duration(Duration::from_secs(180).into()).into()
           ).await {
             error!(error = as_error!(e); "Failed to report the progress");

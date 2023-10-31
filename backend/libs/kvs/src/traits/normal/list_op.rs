@@ -1,93 +1,52 @@
+use ::std::sync::Arc;
+
 use ::async_trait::async_trait;
-use ::redis::{Commands, FromRedisValue, ToRedisArgs};
 use ::std::num::NonZeroUsize;
 
-use ::errors::{KVSError, KVSResult};
+use ::errors::KVSResult;
 
-use super::{Base, Exist, Lock};
+use crate::traits::base::ListOp as Base;
 
-use crate::options::WriteOptionTrait;
 use crate::WriteOption;
 
 #[async_trait]
-pub trait ListOp<T, V>: Base<T> + Lock<T> + Exist<T>
-where
-  T: Commands + Send,
-  for<'a> V: FromRedisValue + ToRedisArgs + Send + 'a,
-{
-  async fn lpush<R>(
+pub trait ListOp: Base {
+  async fn lpush(
     &self,
-    key: &str,
-    value: Vec<V>,
-    opt: impl Into<Option<WriteOption>> + Send,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
-    let channel_name = self.channel_name(&key);
-    let opt: Option<WriteOption> = opt.into();
-
-    let cmds = self.commands();
-    let res = if opt.non_existent_only() {
-      match self.exists(&key).await {
-        Ok(exists) => {
-          if exists {
-            return Err(KVSError::KeyExists(key.to_string()));
-          } else {
-            let mut cmds = cmds.lock().await;
-            cmds.lpush(&channel_name, value)
-          }
-        }
-        Err(e) => return Err(e),
-      }
-    } else {
-      let mut cmds = cmds.lock().await;
-      cmds.lpush(&channel_name, value)
-    }?;
-
-    opt.execute(&mut cmds.lock().await, &channel_name)?;
-    return Ok(res);
+    key: Arc<String>,
+    value: Vec<Self::Value>,
+    opt: Option<WriteOption>,
+  ) -> KVSResult<usize> {
+    return self.__lpush__(key, value, opt).await;
   }
 
-  async fn lpop(&self, key: &str, count: Option<NonZeroUsize>) -> KVSResult<V> {
-    let channel_name = self.channel_name(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    return Ok(cmd.lpop(channel_name, count)?);
-  }
-
-  async fn lrem<R>(&self, key: &str, count: isize, elem: V) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
-    let channel_name = self.channel_name(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    return Ok(cmd.lrem(channel_name, count, elem)?);
-  }
-
-  async fn lrange<R>(
+  async fn lpop(
     &self,
-    key: &str,
+    key: Arc<String>,
+    count: Option<NonZeroUsize>,
+  ) -> KVSResult<Self::Value> {
+    return self.__lpop__(key, count).await;
+  }
+
+  async fn lrem(
+    &self,
+    key: Arc<String>,
+    count: isize,
+    elem: Self::Value,
+  ) -> KVSResult<usize> {
+    return self.__lrem__(key, count, elem).await;
+  }
+
+  async fn lrange(
+    &self,
+    key: Arc<String>,
     start: isize,
     stop: isize,
-  ) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
-    let channel_name = self.channel_name(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    return Ok(cmd.lrange(channel_name, start, stop)?);
+  ) -> KVSResult<Vec<Self::Value>> {
+    return self.__lrange__(key, start, stop).await;
   }
 
-  async fn llen<R>(&self, key: &str) -> KVSResult<R>
-  where
-    R: FromRedisValue,
-  {
-    let channel_name = self.channel_name(key);
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    return Ok(cmd.llen(channel_name)?);
+  async fn llen(&self, key: Arc<String>) -> KVSResult<usize> {
+    return self.__llen__(key).await;
   }
 }

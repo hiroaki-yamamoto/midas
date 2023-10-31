@@ -1,26 +1,15 @@
+use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::redis::Commands;
 
 use ::errors::KVSResult;
 
-use super::{Base, ChannelName};
+use crate::traits::base::Expiration as Base;
 
 #[async_trait]
-pub trait Expiration<T>: Base<T> + ChannelName
-where
-  T: Commands + Send,
-{
-  async fn expire(&self, key: &str, dur: Duration) -> KVSResult<bool> {
-    let dur_mils = dur.as_millis() as usize;
-    let cmd = self.commands();
-    let mut cmd = cmd.lock().await;
-    let channel_name = self.channel_name(key);
-    if cmd.pexpire::<_, u16>(channel_name, dur_mils)? == 1 {
-      return Ok(true);
-    } else {
-      return Ok(false);
-    };
+pub trait Expiration: Base {
+  async fn expire(&self, key: Arc<String>, dur: Duration) -> KVSResult<bool> {
+    return self.__expire__(key, dur).await;
   }
 }

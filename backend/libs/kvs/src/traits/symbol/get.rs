@@ -1,18 +1,22 @@
+use ::std::sync::Arc;
+
 use ::async_trait::async_trait;
 use ::errors::KVSResult;
-use ::redis::{Commands, FromRedisValue};
+use ::redis::{AsyncCommands as Commands, FromRedisValue};
 
 use super::channel_name::ChannelName;
-use crate::traits::normal::Base;
+use crate::traits::base::Base;
 
 #[async_trait]
-pub trait Get<T, V>: Base<T> + ChannelName
-where
-  T: Commands + Send,
-  V: FromRedisValue,
-{
-  async fn get(&self, exchange: &str, symbol: &str) -> KVSResult<V> {
+pub trait Get: Base + ChannelName {
+  type Value: FromRedisValue;
+
+  async fn get(
+    &self,
+    exchange: Arc<String>,
+    symbol: Arc<String>,
+  ) -> KVSResult<Self::Value> {
     let channel_name = self.channel_name(exchange, symbol);
-    return Ok(self.commands().lock().await.get(channel_name)?);
+    return Ok(self.__commands__().get(channel_name.as_ref()).await?);
   }
 }

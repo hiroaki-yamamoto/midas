@@ -1,35 +1,36 @@
+use ::std::sync::Arc;
+
 use ::async_trait::async_trait;
-use ::redis::Commands;
+use ::redis::AsyncCommands as Commands;
 
 use ::errors::KVSResult;
 
-use crate::options::{WriteOption, WriteOptionTrait};
-use crate::traits::normal::Base;
-
-use super::channel_name::ChannelName;
+use crate::options::WriteOption;
+use crate::traits::symbol::OptExecution;
 
 #[async_trait]
-pub trait Incr<T>: ChannelName + Base<T>
-where
-  T: Commands + Send,
-{
+pub trait Incr: OptExecution {
   async fn incr(
     &self,
-    exchange: &str,
-    symbol: &str,
+    exchange: Arc<String>,
+    symbol: Arc<String>,
     delta: i64,
     opt: Option<WriteOption>,
   ) -> KVSResult<()> {
-    let channel_name = self.channel_name(exchange, symbol);
-    let cmds = self.commands();
-    let mut cmds = cmds.lock().await;
-    return Ok(cmds.incr(&channel_name, delta).and_then(|_: ()| {
-      return opt.execute(&mut cmds, &channel_name);
-    })?);
+    let channel_name = self.channel_name(exchange.clone(), symbol.clone());
+    let mut cmds = self.__commands__();
+    // let mut cmds = cmds.lock().await;
+    cmds.incr(channel_name.as_ref(), delta).await?;
+    self.execute_opt(exchange, symbol, opt).await?;
+    return Ok(());
   }
 
-  async fn reset(&self, exchange: &str, symbol: &str) -> KVSResult<()> {
+  async fn reset(
+    &self,
+    exchange: Arc<String>,
+    symbol: Arc<String>,
+  ) -> KVSResult<()> {
     let channel_name = self.channel_name(exchange, symbol);
-    return Ok(self.commands().lock().await.set(channel_name, 0)?);
+    return Ok(self.__commands__().set(channel_name.as_ref(), 0).await?);
   }
 }

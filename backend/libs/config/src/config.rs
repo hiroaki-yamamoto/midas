@@ -11,11 +11,11 @@ use ::reqwest::{Certificate, Client};
 use ::serde::de::Error as SerdeError;
 use ::serde::{Deserialize, Deserializer};
 use ::serde_yaml::Result as YaMLResult;
-use ::tokio::time::sleep;
+use ::tokio::time::{sleep, timeout};
 
 use ::errors::{ConfigError, ConfigResult, MaximumAttemptExceeded};
-use ::kvs::redis::{Client as RedisClient, Connection as RedisConnection};
-use ::kvs::Connection as KVSConnection;
+use ::kvs::redis::aio::MultiplexedConnection as RedisConnection;
+use ::kvs::redis::Client as RedisClient;
 use ::rpc::entities::Exchanges;
 use ::subscribe::nats::connect as nats_connect;
 use ::subscribe::nats::Client as Nats;
@@ -75,13 +75,15 @@ impl Config {
     return ::redis::Client::open(url).map_err(|e| SerdeError::custom(e));
   }
 
-  pub fn redis(&self) -> ConfigResult<KVSConnection<RedisConnection>> {
+  pub async fn redis(&self) -> ConfigResult<RedisConnection> {
     for _ in 0..10 {
-      match self
-        .redis
-        .get_connection_with_timeout(Duration::from_secs(1))
+      match timeout(
+        Duration::from_secs(10),
+        self.redis.get_multiplexed_async_connection(),
+      )
+      .await
       {
-        Ok(o) => return Ok(o.into()),
+        Ok(o) => return Ok(o?),
         Err(e) => {
           warn!(
             error = as_error!(e);

@@ -1,23 +1,16 @@
 use ::std::sync::Arc;
 
 use ::async_trait::async_trait;
-use ::redis::{Commands, FromRedisValue};
 
 use ::errors::KVSResult;
 
 use super::base::Base;
-use crate::traits::normal::Remove as NormalRemove;
+use crate::traits::base::Remove as BaseRemove;
 
 #[async_trait]
-pub trait Remove<T>: Base<T> + NormalRemove<T>
-where
-  T: Commands + Send,
-{
-  async fn del<R>(&self, keys: &[Arc<str>]) -> KVSResult<R>
-  where
-    R: FromRedisValue + Send,
-  {
-    let ret = NormalRemove::del(self, keys).await?;
+pub trait Remove: Base + BaseRemove {
+  async fn del(&self, keys: Arc<[Arc<String>]>) -> KVSResult<usize> {
+    let ret = self.__del__(keys.clone()).await?;
     let _ = self.del_last_checked(keys).await?;
     return Ok(ret);
   }

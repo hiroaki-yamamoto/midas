@@ -1,37 +1,46 @@
 use ::std::collections::HashSet;
+use ::std::fmt::Debug;
+use ::std::marker::PhantomData;
+use ::std::sync::Arc;
 
 use ::futures::StreamExt;
 
 use ::errors::{KVSResult, ObserverResult};
-use ::kvs::redis::Commands;
+use ::kvs::redis::AsyncCommands as Commands;
 use ::kvs::traits::last_checked::ListOp;
-use ::kvs::Connection;
 use ::rpc::entities::Exchanges;
 
 use crate::entities::TradeObserverControlEvent as ControlEvent;
-use crate::kvs::{NodeFilter, ONEXTypeKVS, ObserverNodeKVS};
+use crate::kvs::{NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER};
+
+use super::{NodeFilter, NodeIndexer};
 
 pub struct ObservationBalancer<T>
 where
-  T: Commands + Send + Sync,
+  T: Commands + Clone + Send + Sync + Debug + 'static,
 {
-  node_kvs: ObserverNodeKVS<T>,
-  exchange_type_kvs: ONEXTypeKVS<T>,
-  node_filter: NodeFilter<T>,
+  node_kvs: Arc<dyn ListOp<Value = String, Commands = T> + Send + Sync>,
+  indexer: Arc<NodeIndexer<T>>,
+  node_filter: Arc<NodeFilter<T>>,
+  _t: PhantomData<T>,
 }
 
 impl<T> ObservationBalancer<T>
 where
-  T: Commands + Send + Sync,
+  T: Commands + Clone + Send + Sync + Debug + 'static,
 {
-  pub async fn new(kvs: Connection<T>) -> ObserverResult<Self> {
-    let node_kvs = ObserverNodeKVS::new(kvs.clone().into());
-    let exchange_type_kvs = ONEXTypeKVS::new(kvs.clone().into());
-    let filter = NodeFilter::new(&node_kvs, &exchange_type_kvs);
+  pub async fn new(kvs: T) -> ObserverResult<Self> {
+    let node_kvs: Arc<dyn ListOp<Commands = T, Value = String> + Send + Sync> =
+      Arc::new(NODE_KVS_BUILDER.build(kvs.clone()));
+    let exchange_type_kvs: Arc<_> =
+      NODE_EXCHANGE_TYPE_KVS_BUILDER.build(kvs).into();
+    let indexer: Arc<_> = NodeIndexer::new(exchange_type_kvs.clone()).into();
+    let filter = NodeFilter::new(node_kvs.clone(), indexer.clone()).into();
     return Ok(Self {
       node_kvs: node_kvs,
-      exchange_type_kvs: exchange_type_kvs,
+      indexer: indexer,
       node_filter: filter,
+      _t: PhantomData,
     });
   }
 
@@ -39,10 +48,7 @@ where
     &self,
     exchange: Exchanges,
   ) -> KVSResult<usize> {
-    let nodes = self
-      .exchange_type_kvs
-      .get_nodes_by_exchange(exchange)
-      .await?;
+    let nodes = self.indexer.get_nodes_by_exchange(exchange).await?;
     let num_nodes = nodes.count().await;
     let num_symbols = self
       .node_filter
@@ -66,7 +72,7 @@ where
     for node in overflowed_nodes {
       let symbols: Vec<String> = self
         .node_kvs
-        .lrange(&node, num_average_symbols as isize, -1)
+        .lrange(node, num_average_symbols as isize, -1)
         .await?;
       let remove: Vec<ControlEvent> = symbols
         .clone()
