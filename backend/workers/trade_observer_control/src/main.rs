@@ -18,7 +18,7 @@ use ::config;
 async fn main() {
   info!("Starting trade_observer_control");
   config::init(|cfg, mut sig, db, broker, _| async move {
-    let kvs = cfg.redis().unwrap();
+    let kvs = cfg.redis().await.unwrap();
     let node_event_pubsub = NodeEventPubSub::new(&broker).await.unwrap();
     let symbol_event_pubsub = SymbolEventPubSub::new(&broker).await.unwrap();
 
