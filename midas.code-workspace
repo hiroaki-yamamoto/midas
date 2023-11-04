@@ -11,7 +11,11 @@
 		{
 			"path": "frontend",
 			"name": "Frontend"
-		}
+		},
+		{
+			"path": "frontend.old",
+			"name": "Old Frontend",
+		},
 	],
 	"settings": {
 		"protoc": {
