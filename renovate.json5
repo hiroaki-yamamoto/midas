@@ -22,10 +22,16 @@
     "groupName": "Major Updates",
     "extends": ["schedule:weekends"]
   },
-  "packageRules": [
-    {
-      "packageNames": ["typescript"],
-      "allowedVersions": "<4.6.0"
-    }
+  // "packageRules": [
+  //   {
+  //     "packageNames": ["typescript"],
+  //     "allowedVersions": "<4.6.0"
+  //   }
+  // ]
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "frontend",
+    "frontend.old",
   ]
 }
