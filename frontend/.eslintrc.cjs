@@ -15,5 +15,6 @@ module.exports = {
       { allowConstantExport: true },
     ],
     'semi': ['error', 'always'],
+    'max-len': ['error', { code: 79, tabWidth: 2 }],
   },
 }
