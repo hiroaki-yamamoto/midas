@@ -9,7 +9,7 @@ use ::bot::entities::Bot;
 use ::bot::{BotInfoWriter, Transpiler};
 use ::reqwest::Client;
 use ::rpc::bot::Bot as RPCBot;
-use ::rpc::entities::Status;
+use ::rpc::status::Status;
 
 pub fn construct(
   db: &Database,

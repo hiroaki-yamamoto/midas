@@ -1,0 +1,8 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: /timestamp
+title: "Timestamp Schema"
+type: "object"
+properties:
+  mils: { type: integer }
+  nanos: { type: integer }
+required: ["mils", "nanos"]

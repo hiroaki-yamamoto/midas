@@ -1,0 +1,6 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "/exchange"
+title: "Exchange Entity"
+type: "string"
+enum:
+  - binance

@@ -9,11 +9,13 @@ use ::warp::Filter;
 use ::access_logger::log;
 use ::config::init;
 use ::csrf::{CSRFOption, CSRF};
+use ::handlers::rejection::handle as handle_rejection;
 use ::keychain::{APIKey, KeyChain};
-use ::rpc::entities::{InsertOneResult, Status};
-use ::rpc::keychain::ApiRename;
-use ::rpc::keychain::{ApiKey as RPCAPIKey, ApiKeyList as RPCAPIKeyList};
-use ::rpc::rejection_handler::handle_rejection;
+use ::rpc::api_key::ApiKey as RPCAPIKey;
+use ::rpc::api_key_list::ApiKeyList as RPCAPIKeyList;
+use ::rpc::api_rename_request::ApiRenameRequest;
+use ::rpc::insert_one_result::InsertOneResult;
+use ::rpc::status::Status;
 
 macro_rules! declare_reject_func {
   () => {
@@ -96,7 +98,7 @@ async fn main() {
       .and(id_filter)
       .and(::warp::filters::body::json())
       .and_then(
-        |keychain: KeyChain, id: ObjectId, rename: ApiRename| async move {
+        |keychain: KeyChain, id: ObjectId, rename: ApiRenameRequest| async move {
           if let Err(_) = keychain.rename_label(id, &rename.label).await {
             return Err(::warp::reject());
           };

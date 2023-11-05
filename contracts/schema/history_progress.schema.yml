@@ -1,0 +1,10 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: /history_progress
+title: "History progress Schema"
+type: "object"
+properties:
+  exchange: { $ref: ./exchange.json }
+  symbol: { type: string }
+  size: { type: integer }
+  cur: { type: integer }
+required: [exchange, symbol, size, cur]

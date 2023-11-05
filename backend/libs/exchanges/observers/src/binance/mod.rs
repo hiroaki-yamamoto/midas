@@ -21,7 +21,7 @@ use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{CreateStreamResult, ObserverError, ObserverResult};
 use ::kvs::redis::AsyncCommands as RedisCommands;
 use ::kvs::traits::last_checked::ListOp;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchange::Exchange as Exchanges;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 

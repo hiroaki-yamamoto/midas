@@ -2,7 +2,7 @@ use ::std::convert::TryFrom;
 
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::ParseError;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchange::Exchange;
 use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
 use ::types::casting::cast_f_from_txt;
@@ -46,7 +46,7 @@ impl TryFrom<BookTicker<String>> for BookTicker<Float> {
 impl From<&BookTicker<Float>> for CommonBookTicker {
   fn from(value: &BookTicker<Float>) -> Self {
     return Self {
-      exchange: Exchanges::Binance,
+      exchange: Exchange::Binance,
       symbol: value.symbol.clone(),
       id: value.id.to_string(),
       bid_price: value.bid_price.clone(),

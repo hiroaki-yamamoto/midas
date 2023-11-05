@@ -11,7 +11,7 @@ use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::entities::{HistoryFetchRequest, TradeTimeTrait};
 use ::errors::{FetchResult, MaximumAttemptExceeded, ValidationErr};
 use ::round::RestClient;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchange::Exchange;
 
 use super::entities::{BinancePayload, Kline, Query};
 use crate::entities::KlinesByExchange;
@@ -130,7 +130,7 @@ impl HistoryFetcherTrait for HistoryFetcher {
     symbol: &str,
   ) -> FetchResult<SystemTime> {
     let req = HistoryFetchRequest::new(
-      Exchanges::Binance,
+      Exchange::Binance,
       symbol,
       Some(SystemTime::UNIX_EPOCH.into()),
       None,

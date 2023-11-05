@@ -1,0 +1,7 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: /positionStatus
+title: "Position status Schema"
+type: "string"
+enum:
+  - closed
+  - open

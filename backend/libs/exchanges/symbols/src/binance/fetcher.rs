@@ -10,7 +10,7 @@ use ::url::Url;
 use ::clients::binance::REST_ENDPOINTS;
 use ::errors::{SymbolFetchError, SymbolFetchResult};
 use ::round::RestClient;
-use ::rpc::symbols::SymbolInfo;
+use ::rpc::symbol_info::SymbolInfo;
 use ::subscribe::nats::Client as Nats;
 
 use super::entities::{ExchangeInfo, Symbol};

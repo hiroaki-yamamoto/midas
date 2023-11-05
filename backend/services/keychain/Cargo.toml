@@ -13,6 +13,7 @@ config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 access_logger = { path = "../../libs/access_logger" }
 subscribe = { path = "../../libs/subscribe" }
+handlers = { path = "../../libs/handlers" }
 
 clap = { version = "4.3.0", features = ["derive"] }
 mongodb = { version = "2.4.0", default-features = false, features = [

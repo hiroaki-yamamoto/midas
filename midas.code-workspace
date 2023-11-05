@@ -36,7 +36,8 @@
 			"historical_service",
 			"historical_date_split_worker",
 			"historical_fetch_worker",
-			"frontend"
+			"frontend",
+			"contracts"
 		]
 	}
 }

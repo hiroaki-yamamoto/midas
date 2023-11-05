@@ -1,9 +1,9 @@
 use ::serde::{Deserialize, Serialize};
 
-use ::rpc::entities::Exchanges;
+use ::rpc::exchange::Exchange;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FetchStatusChanged {
-  pub exchange: Exchanges,
+  pub exchange: Exchange,
   pub symbol: String,
 }

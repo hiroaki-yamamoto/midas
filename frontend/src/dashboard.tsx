@@ -2,6 +2,9 @@ import style from './dashboard.module.scss';
 import OverAllGraph from './graph-overall/view';
 import { IData } from './graph-overall/data.interface.ts';
 import { ILegend } from './graph-overall/legend.interface.ts';
+import BotSummary from './bot-summary-panel/view';
+
+import { Bot } from './rpc/bot_pb';
 
 function Dashboard() {
 
@@ -17,6 +20,18 @@ function Dashboard() {
       tooltip: 'Bot Trading Profit Ratio: [bold]{valueY}%[/]',
     },
   ];
+
+  const bots: Bot[] = (() => {
+    const bots: Bot[] = [];
+    for (let i = 0; i < 10; i++) {
+      const bot = new Bot();
+      console.log(bot.setId);
+      bot.setId(i.toString());
+      bot.setName(`Test Bot ${i}`);
+      bots.push(bot);
+    }
+    return bots;
+  })();
 
   const data: IData[] = (() => {
     let data: IData[] = [];
@@ -45,6 +60,11 @@ function Dashboard() {
         <header className={style['dashboard-header']}>
           <h1>Bots</h1>
         </header>
+        {
+          bots.map((bot) => {
+            return (<BotSummary bot={bot} />);
+          })
+        }
       </section>
     </>
   );

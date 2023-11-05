@@ -1,0 +1,12 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: /position
+title: "Position Schema"
+type: "object"
+properties:
+  id: { type: string }
+  bot_id: { type: string }
+  symbol: { type: string }
+  status:
+    $ref: ./position_status.json
+  trading_amount: { type: string }
+  validation: { type: string }

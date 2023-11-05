@@ -7,8 +7,8 @@ use ::serde::{Deserialize, Serialize};
 
 use ::errors::ParseError;
 
-use ::rpc::entities::Exchanges;
-use ::rpc::keychain::ApiKey as RPCAPIKey;
+use ::rpc::api_key::ApiKey as RPCAPIKey;
+use ::rpc::exchange::Exchange;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct APIKeyInner {
@@ -51,7 +51,7 @@ impl APIKey {
   }
 }
 
-impl From<APIKey> for Exchanges {
+impl From<APIKey> for Exchange {
   fn from(v: APIKey) -> Self {
     match v {
       APIKey::Binance(_) => Self::Binance,
@@ -62,13 +62,13 @@ impl From<APIKey> for Exchanges {
 impl From<APIKey> for Result<RPCAPIKey, String> {
   fn from(value: APIKey) -> Self {
     let inner = value.inner().clone();
-    let exchange: Exchanges = value.into();
+    let exchange: Exchange = value.into();
     return Ok(RPCAPIKey {
-      id: inner.id.map(|oid| oid.to_hex()).unwrap_or(String::from("")),
+      id: inner.id.map(|oid| oid.to_hex()),
       exchange: exchange.into(),
       label: inner.label,
-      pub_key: inner.pub_key,
-      prv_key: inner.prv_key,
+      api_key_pub: inner.pub_key,
+      prv: inner.prv_key,
     });
   }
 }
@@ -76,13 +76,13 @@ impl From<APIKey> for Result<RPCAPIKey, String> {
 impl TryFrom<RPCAPIKey> for APIKey {
   type Error = ParseError;
   fn try_from(value: RPCAPIKey) -> Result<Self, Self::Error> {
-    let exchange: Exchanges = value.exchange();
+    let exchange: Exchange = value.exchange.into();
     let exchange: APIKey = match exchange {
-      Exchanges::Binance => APIKey::Binance(APIKeyInner {
-        id: ObjectId::parse_str(&value.id).ok(),
+      Exchange::Binance => APIKey::Binance(APIKeyInner {
+        id: value.id.map(|id| ObjectId::parse_str(&id).ok()).flatten(),
         label: value.label,
-        pub_key: value.pub_key,
-        prv_key: value.prv_key,
+        pub_key: value.api_key_pub,
+        prv_key: value.prv,
       }),
     };
     return Ok(exchange);

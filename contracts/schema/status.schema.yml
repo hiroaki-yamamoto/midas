@@ -1,0 +1,8 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: /status
+title: "Status Schema"
+type: "object"
+properties:
+  code: { type: integer }
+  message: { type: string }
+required: [code, message]

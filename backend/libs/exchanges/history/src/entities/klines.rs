@@ -1,7 +1,7 @@
 use ::std::convert::TryFrom;
 
 use ::errors::UnknownExchangeError;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchange::Exchange;
 
 use crate::binance::entities::Kline as BinanceKline;
 
@@ -19,9 +19,9 @@ impl TryFrom<KlinesByExchange> for Vec<BinanceKline> {
 }
 
 impl KlinesByExchange {
-  pub fn exchange(&self) -> Exchanges {
+  pub fn exchange(&self) -> Exchange {
     return match self {
-      &Self::Binance(_) => Exchanges::Binance,
+      &Self::Binance(_) => Exchange::Binance,
     };
   }
 }

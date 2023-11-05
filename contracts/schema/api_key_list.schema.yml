@@ -1,0 +1,9 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: /api_key_list
+title: "Api key list schema"
+type: "object"
+properties:
+  keys:
+    type: "array"
+    items:
+      $ref: ./api_key.json

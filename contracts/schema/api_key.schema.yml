@@ -1,0 +1,11 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: /api_key
+title: "Api key schema"
+type: "object"
+properties:
+  id: { type: string }
+  exchange: { $ref: ./exchange.json }
+  label: { type: string }
+  pub: { type: string }
+  prv: { type: string }
+required: ["label", "exchange", "pub", "prv"]

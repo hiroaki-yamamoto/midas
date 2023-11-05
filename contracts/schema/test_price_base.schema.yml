@@ -1,0 +1,11 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: /test_price_base
+title: "Test Price Base"
+type: "string"
+enum:
+  - close
+  - open
+  - high
+  - low
+  - openCloseMid
+  - highLowMid
