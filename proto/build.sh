@@ -3,7 +3,7 @@
 
 set -e
 
-FRONT_OUT=`dirname $0`/../frontend/src/app/rpc
+FRONT_OUT=`dirname $0`/../frontend/src/rpc
 PROTOS=`find . -type f -name '*.proto'`
 
 frontend() {
