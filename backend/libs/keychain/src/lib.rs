@@ -11,7 +11,7 @@ use ::subscribe::nats::Client;
 use ::subscribe::PubSub;
 
 use ::errors::KeyChainResult;
-use ::rpc::exchange::Exchange;
+use ::rpc::entities::Exchanges;
 
 pub use ::entities::APIKey;
 use ::entities::APIKeyEvent;
@@ -84,7 +84,7 @@ impl KeyChain {
 
   pub async fn get(
     &self,
-    exchange: Exchange,
+    exchange: Exchanges,
     id: ObjectId,
   ) -> Result<Option<APIKey>> {
     let key = self
@@ -92,7 +92,7 @@ impl KeyChain {
       .find_one(
         doc! {
           "_id": id,
-          "exchange": exchange.to_string().to_lowercase(),
+          "exchange": exchange.as_str_name().to_lowercase(),
         },
         None,
       )

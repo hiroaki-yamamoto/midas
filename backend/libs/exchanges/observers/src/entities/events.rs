@@ -1,6 +1,6 @@
 use ::serde::{Deserialize, Serialize};
 
-use ::rpc::exchange::Exchange as Exchanges;
+use ::rpc::entities::Exchanges;
 use ::symbols::entities::SymbolEvent;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

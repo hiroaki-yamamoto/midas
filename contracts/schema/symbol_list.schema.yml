@@ -1,5 +1,0 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
-$id: /symbol_list
-title: "Symbol list schema"
-type: "array"
-items: { $ref: "./symbol_info.json" }

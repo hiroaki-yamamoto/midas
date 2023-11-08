@@ -19,11 +19,10 @@ use ::history::kvs::{CUR_SYNC_PROG_KVS_BUILDER, NUM_TO_FETCH_KVS_BUILDER};
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartDateSplitPubSub};
 use ::kvs::redis;
 use ::kvs::traits::symbol::Get;
-use ::rpc::exchange::Exchange;
-use ::rpc::history_fetch_request::HistoryFetchRequest as RPCHistFetchReq;
-use ::rpc::history_progress::HistoryProgress as Progress;
-use ::rpc::status::Status;
-use ::rpc::status_check_request::StatusCheckRequest;
+use ::rpc::entities::{Exchanges, Status};
+use ::rpc::historical::{
+  HistoryFetchRequest as RPCHistFetchReq, Progress, StatusCheckRequest,
+};
 use ::subscribe::nats::Client as Nats;
 use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
 use ::symbols::traits::SymbolReader as SymbolReaderTrait;
@@ -103,8 +102,7 @@ impl Service {
         let prog = symbol.map(move |symbol| {
           return (symbol.symbol, clos_size.clone(), clos_cur.clone());
         }).filter_map(|(sym, size, cur)| async move {
-          let exchange_name: Arc<String> = Exchange::Binance.to_string()
-            .to_lowercase().into();
+          let exchange_name: Arc<String> = Exchanges::Binance.as_str_name().to_lowercase().into();
           let sym: Arc<String> = sym.into();
           let size = size.get(exchange_name.clone(), sym.clone());
           let cur = cur.get(exchange_name.clone(), sym.clone());
@@ -117,7 +115,7 @@ impl Service {
           return None;
         }).map(|(size, cur, symbol): (i64, i64, Arc<String>)| {
           return Progress {
-            exchange: Exchange::Binance.into(),
+            exchange: Exchanges::Binance as i32,
             symbol: symbol.as_ref().clone(),
             size,
             cur
@@ -158,14 +156,14 @@ impl Service {
                 Some((item, _)) = resp.next() => {
                   let exchange: Arc<String> = item
                     .exchange
-                    .to_string()
+                    .as_str_name()
                     .to_lowercase()
                     .into();
                   let symbol: Arc<String> = item.symbol.into();
                   let size = size.get(exchange.clone(), symbol.clone()).await.unwrap_or(0);
                   let cur = cur.get(exchange.clone(), symbol.clone()).await.unwrap_or(0);
                   let prog = Progress {
-                    exchange: item.exchange.into(),
+                    exchange: item.exchange as i32,
                     symbol: symbol.as_ref().clone(),
                     size,
                     cur
@@ -188,14 +186,13 @@ impl Service {
                       Err(e) => { println!("Publishing Sync Date Failed: {:?}", e); }
                     }
                   } else if let Ok(req) = parse_json::<StatusCheckRequest>(msg.as_bytes()) {
-                    let exchange: Exchange = req.exchange.into();
-                    let exchange_name = exchange.to_string().to_lowercase();
-                    let exchange_name = Arc::new(exchange_name);
+                    let exchange = req.exchange().as_str_name().to_lowercase();
+                    let exchange = Arc::new(exchange);
                     let symbol = Arc::new(req.symbol.clone());
-                    let size = size.get(exchange_name.clone(), symbol.clone()).await.unwrap_or(0);
-                    let cur = cur.get(exchange_name.clone(), symbol.clone()).await.unwrap_or(0);
+                    let size = size.get(exchange.clone(), symbol.clone()).await.unwrap_or(0);
+                    let cur = cur.get(exchange.clone(), symbol.clone()).await.unwrap_or(0);
                     let prog = Progress {
-                      exchange: exchange.into(),
+                      exchange: req.exchange().into(),
                       symbol: symbol.as_ref().clone(),
                       size,
                       cur

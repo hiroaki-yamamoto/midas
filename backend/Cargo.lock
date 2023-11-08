@@ -530,7 +530,6 @@ dependencies = [
  "csrf",
  "errors",
  "futures",
- "handlers",
  "libc",
  "log",
  "mongodb",
@@ -1424,15 +1423,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "handlers"
-version = "0.1.0"
-dependencies = [
- "csrf",
- "rpc",
- "warp",
-]
-
-[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1535,7 +1525,6 @@ dependencies = [
  "err-derive",
  "errors",
  "futures",
- "handlers",
  "history",
  "http",
  "kvs",
@@ -1880,7 +1869,6 @@ dependencies = [
  "config",
  "csrf",
  "futures",
- "handlers",
  "http",
  "keychain",
  "libc",
@@ -2852,17 +2840,6 @@ dependencies = [
 
 [[package]]
 name = "rpc"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "errors",
- "mongodb",
- "serde",
- "warp",
-]
-
-[[package]]
-name = "rpc_old"
 version = "0.1.0"
 dependencies = [
  "bson",

@@ -1,15 +1,15 @@
 use ::mongodb::Database;
 
-use ::rpc::exchange::Exchange;
+use ::rpc::entities::Exchanges;
 
 use super::traits::SymbolReader;
 
 pub async fn get_reader(
   db: &Database,
-  exchange: Exchange,
+  exchange: Exchanges,
 ) -> Box<dyn SymbolReader + Send + Sync> {
   return match exchange {
-    Exchange::Binance => {
+    Exchanges::Binance => {
       Box::new(super::binance::recorder::SymbolWriter::new(&db).await)
     }
   };

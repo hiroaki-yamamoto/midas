@@ -1,12 +1,12 @@
 use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
 
-use ::rpc::bookticker::Bookticker as RPCBookTicker;
-use ::rpc::exchange::Exchange;
+use ::rpc::bookticker::BookTicker as RPCBookTicker;
+use ::rpc::entities::Exchanges;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BookTicker {
-  pub exchange: Exchange,
+  pub exchange: Exchanges,
   pub id: String,
   pub symbol: String,
   pub bid_price: Float,

@@ -16,7 +16,7 @@ use ::tokio::time::{sleep, timeout};
 use ::errors::{ConfigError, ConfigResult, MaximumAttemptExceeded};
 use ::kvs::redis::aio::MultiplexedConnection as RedisConnection;
 use ::kvs::redis::Client as RedisClient;
-use ::rpc::exchange::Exchange;
+use ::rpc::entities::Exchanges;
 use ::subscribe::nats::connect as nats_connect;
 use ::subscribe::nats::Client as Nats;
 
@@ -43,9 +43,9 @@ pub struct ObserverConfig {
 
 impl ObserverConfig {
   /// Returns the minimum number of nodes to be initialized.
-  pub fn min_node_init(&self, exchange: Exchange) -> usize {
+  pub fn min_node_init(&self, exchange: Exchanges) -> usize {
     return match exchange {
-      Exchange::Binance => self.init_trigger_node_numbers.binance,
+      Exchanges::Binance => self.init_trigger_node_numbers.binance,
     };
   }
 }

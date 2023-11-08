@@ -2,7 +2,7 @@ use ::async_trait::async_trait;
 
 use ::errors::SymbolFetchResult;
 
-use ::rpc::symbol_info::SymbolInfo;
+use ::rpc::symbols::SymbolInfo;
 
 #[async_trait]
 pub trait SymbolFetcher {

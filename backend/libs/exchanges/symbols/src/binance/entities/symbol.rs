@@ -1,8 +1,7 @@
 use ::serde::{Deserialize, Serialize};
 
-use ::rpc::exchange::Exchange;
-use ::rpc::symbol_info::SymbolInfo;
-use ::rpc::symbol_type::SymbolType;
+use ::rpc::entities::Exchanges;
+use ::rpc::symbols::{SymbolInfo, Type as SymbolType};
 
 use super::filters::Filters;
 
@@ -36,8 +35,8 @@ impl From<&Symbol> for SymbolInfo {
 impl From<Symbol> for SymbolInfo {
   fn from(symbol: Symbol) -> Self {
     return Self {
-      symbol_info_type: SymbolType::Crypto.into(),
-      exchange: Exchange::Binance.into(),
+      r#type: SymbolType::Crypto.into(),
+      exchange: Exchanges::Binance.into(),
       symbol: symbol.symbol,
       base: symbol.base_asset,
       base_precision: symbol.base_asset_precision,

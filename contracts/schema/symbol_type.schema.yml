@@ -1,7 +1,0 @@
-$schema: "https://json-schema.org/draft/2020-12/schema"
-$id: /symbol_type
-title: "Symbol type schema"
-type: "string"
-enum:
-  - Crypto
-  - Stock

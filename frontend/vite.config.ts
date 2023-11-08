@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react-swc';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const opt: UserConfig = {
-    plugins: [react({ devTarget: 'es2022' })],
+    plugins: [react()],
   };
   if (mode === 'staging') {
     opt.build = {

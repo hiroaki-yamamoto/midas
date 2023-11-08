@@ -1,7 +1,7 @@
 use ::chrono::{DateTime, Utc};
-use ::rpc::exchange::Exchange;
-use ::rpc::history_fetch_request::HistoryFetchRequest as RPCFetchReq;
-use ::rpc::timestamp::Timestamp;
+use ::mongodb::bson::DateTime as MongoDateTime;
+use ::rpc::entities::Exchanges;
+use ::rpc::historical::HistoryFetchRequest as RPCFetchReq;
 use ::serde::{Deserialize, Serialize};
 use ::std::time::Duration;
 use ::std::time::SystemTime;
@@ -9,7 +9,7 @@ use ::types::stateful_setter;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HistoryFetchRequest {
-  pub exchange: Exchange,
+  pub exchange: Exchanges,
   pub symbol: String,
   pub start: Option<DateTime<Utc>>,
   pub end: Option<DateTime<Utc>>,
@@ -17,7 +17,7 @@ pub struct HistoryFetchRequest {
 
 impl HistoryFetchRequest {
   pub fn new(
-    exchange: Exchange,
+    exchange: Exchanges,
     symbol: &str,
     start: Option<DateTime<Utc>>,
     end: Option<DateTime<Utc>>,
@@ -51,21 +51,15 @@ impl HistoryFetchRequest {
 
 impl From<RPCFetchReq> for HistoryFetchRequest {
   fn from(val: RPCFetchReq) -> Self {
-    let start: Option<DateTime<Utc>> = val
-      .start
-      .map(|dt| Timestamp::from(dt))
-      .map(|dt| Option::<DateTime<Utc>>::from(dt))
-      .flatten();
-    let end: Option<DateTime<Utc>> = val
-      .end
-      .map(|dt| Timestamp::from(dt))
-      .map(|dt| Option::<DateTime<Utc>>::from(dt))
-      .flatten();
     return Self {
-      exchange: val.exchange.into(),
+      exchange: val.exchange(),
       symbol: val.symbol,
-      start,
-      end,
+      start: val
+        .start
+        .map(|t| MongoDateTime::from_system_time(t.into()).to_chrono()),
+      end: val
+        .end
+        .map(|t| MongoDateTime::from_system_time(t.into()).to_chrono()),
     };
   }
 }
