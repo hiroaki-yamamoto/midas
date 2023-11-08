@@ -2,6 +2,7 @@ import style from './dashboard.module.scss';
 import OverAllGraph from './graph-overall/view';
 import { IData } from './graph-overall/data.interface.ts';
 import { ILegend } from './graph-overall/legend.interface.ts';
+import { Bot } from './rpc/bot_pb';
 
 function Dashboard() {
 
@@ -32,6 +33,19 @@ function Dashboard() {
     }
     return data;
   })();
+
+  const bots: Bot[] = (() => {
+    let bots: Bot[] = [];
+    for (let i = 0; i < 5; i++) {
+      const info = new Bot();
+      info.setId(`test-bot-${i}`);
+      info.setName(`Test Bot ${i}`);
+      bots = bots.concat(info);
+    }
+    return bots;
+  })();
+
+  console.log(bots);
 
   return (
     <>
