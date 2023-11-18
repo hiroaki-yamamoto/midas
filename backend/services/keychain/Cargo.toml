@@ -30,4 +30,4 @@ futures = "0.3.26"
 serde = { version = "1.0.152", features = ["derive"] }
 libc = "0.2.139"
 num-traits = "0.2.15"
-http = "0.2.9"
+http = "1.0.0"
