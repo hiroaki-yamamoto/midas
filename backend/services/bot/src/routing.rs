@@ -1,8 +1,8 @@
 use ::std::convert::TryFrom;
 
+use ::http::StatusCode;
 use ::mongodb::Database;
 use ::warp::filters::BoxedFilter;
-use ::warp::http::StatusCode;
 use ::warp::{Filter, Reply};
 
 use ::bot::entities::Bot;

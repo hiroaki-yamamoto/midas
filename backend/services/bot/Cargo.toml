@@ -35,3 +35,4 @@ futures = "0.3.26"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 clap = { version = "4.3.0", features = ["derive"] }
 libc = "0.2.139"
+http = "1.0.0"

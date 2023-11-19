@@ -1,6 +1,6 @@
 use ::csrf::CSRFCheckFailed;
+use ::http::StatusCode;
 use ::std::convert::Infallible;
-use ::warp::http::StatusCode;
 use ::warp::{reject, reply};
 use ::warp::{Rejection, Reply};
 
@@ -55,7 +55,7 @@ pub async fn handle_rejection(
   }
   return Ok(reply::with_status(
     reply::json(&status),
-    StatusCode::from_u16(status.code as u16)
-      .unwrap_or(StatusCode::SERVICE_UNAVAILABLE),
+    ::warp::http::StatusCode::from_u16(status.code as u16)
+      .unwrap_or(::warp::http::StatusCode::SERVICE_UNAVAILABLE),
   ));
 }
