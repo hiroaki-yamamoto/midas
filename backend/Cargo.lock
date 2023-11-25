@@ -2918,6 +2918,10 @@ dependencies = [
 [[package]]
 name = "rpc"
 version = "0.1.0"
+
+[[package]]
+name = "rpc-old"
+version = "0.1.0"
 dependencies = [
  "bson",
  "clap",
