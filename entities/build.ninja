@@ -13,6 +13,12 @@ build ./../frontend/src/app/rpc/api_rename.ts: frontend ./api_rename.yml
 build ./../backend/libs/rpc/src/status.rs: backend ./status.yml
 build ./../frontend/src/app/rpc/status.ts: frontend ./status.yml
 
+build ./../backend/libs/rpc/src/base_symbols.rs: backend ./base_symbols.yml
+build ./../frontend/src/app/rpc/base_symbols.ts: frontend ./base_symbols.yml
+
+build ./../backend/libs/rpc/src/symbol_list.rs: backend ./symbol_list.yml
+build ./../frontend/src/app/rpc/symbol_list.ts: frontend ./symbol_list.yml
+
 build ./../backend/libs/rpc/src/test_price_base.rs: backend ./test_price_base.yml
 build ./../frontend/src/app/rpc/test_price_base.ts: frontend ./test_price_base.yml
 
@@ -28,8 +34,14 @@ build ./../frontend/src/app/rpc/insert_one_result.ts: frontend ./insert_one_resu
 build ./../backend/libs/rpc/src/exchanges.rs: backend ./exchanges.yml
 build ./../frontend/src/app/rpc/exchanges.ts: frontend ./exchanges.yml
 
+build ./../backend/libs/rpc/src/symbol_info.rs: backend ./symbol_info.yml
+build ./../frontend/src/app/rpc/symbol_info.ts: frontend ./symbol_info.yml
+
 build ./../backend/libs/rpc/src/api_key_list.rs: backend ./api_key_list.yml
 build ./../frontend/src/app/rpc/api_key_list.ts: frontend ./api_key_list.yml
+
+build ./../backend/libs/rpc/src/symbol_type.rs: backend ./symbol_type.yml
+build ./../frontend/src/app/rpc/symbol_type.ts: frontend ./symbol_type.yml
 
 build ./../backend/libs/rpc/src/status_check_request.rs: backend ./status_check_request.yml
 build ./../frontend/src/app/rpc/status_check_request.ts: frontend ./status_check_request.yml
