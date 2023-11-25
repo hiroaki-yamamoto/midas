@@ -1,0 +1,11 @@
+type: enum
+rust:
+  derive: [Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord]
+  attrs: ['serde(rename_all = "camelCase")']
+members:
+  - Close
+  - Open
+  - High
+  - Low
+  - OpenCloseMid
+  - HighLowMid

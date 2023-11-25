@@ -9,7 +9,7 @@ for f in `find . -type f -name '*.yml'`; do
   name=`basename $f .yml`
 cat << EOF >> build.ninja
 
-build $WORKDIR/../backend/libs/rpc/src/$name.rs: backend $WORKDIR/$f
-build $WORKDIR/../frontend/src/app/rpc/$name.ts: frontend $WORKDIR/$f
+build $WORKDIR/../backend/libs/rpc/src/$name.rs: backend $f
+build $WORKDIR/../frontend/src/app/rpc/$name.ts: frontend $f
 EOF
 done

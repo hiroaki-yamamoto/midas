@@ -4,5 +4,23 @@ rule backend
 rule frontend
   command = ../deps/egen/bin/egen -i $in -j yaml -o ../frontend/src/app/rpc -p zod-ts
 
-build ./../backend/libs/rpc/src/bookticker.rs: backend ././bookticker.yml
-build ./../frontend/src/app/rpc/bookticker.ts: frontend ././bookticker.yml
+build ./../backend/libs/rpc/src/status.rs: backend ./status.yml
+build ./../frontend/src/app/rpc/status.ts: frontend ./status.yml
+
+build ./../backend/libs/rpc/src/test_price_base.rs: backend ./test_price_base.yml
+build ./../frontend/src/app/rpc/test_price_base.ts: frontend ./test_price_base.yml
+
+build ./../backend/libs/rpc/src/bookticker.rs: backend ./bookticker.yml
+build ./../frontend/src/app/rpc/bookticker.ts: frontend ./bookticker.yml
+
+build ./../backend/libs/rpc/src/insert_one_result.rs: backend ./insert_one_result.yml
+build ./../frontend/src/app/rpc/insert_one_result.ts: frontend ./insert_one_result.yml
+
+build ./../backend/libs/rpc/src/exchanges.rs: backend ./exchanges.yml
+build ./../frontend/src/app/rpc/exchanges.ts: frontend ./exchanges.yml
+
+build ./../backend/libs/rpc/src/bot.rs: backend ./bot.yml
+build ./../frontend/src/app/rpc/bot.ts: frontend ./bot.yml
+
+build ./../backend/libs/rpc/src/trigger_type.rs: backend ./trigger_type.yml
+build ./../frontend/src/app/rpc/trigger_type.ts: frontend ./trigger_type.yml
