@@ -32,7 +32,8 @@
 			"historical_service",
 			"historical_date_split_worker",
 			"historical_fetch_worker",
-			"intermediate_entities"
+			"intermediate_entities",
+			"deps"
 		],
 		"yaml.schemas": {
 			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [
