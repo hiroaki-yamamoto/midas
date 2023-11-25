@@ -33,6 +33,11 @@
 			"historical_date_split_worker",
 			"historical_fetch_worker",
 			"intermediate_entities"
-		]
+		],
+		"yaml.schemas": {
+			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [
+				"entities/*.yml",
+			],
+		}
 	}
 }

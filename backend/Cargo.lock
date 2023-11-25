@@ -2918,6 +2918,9 @@ dependencies = [
 [[package]]
 name = "rpc"
 version = "0.1.0"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "rpc-old"

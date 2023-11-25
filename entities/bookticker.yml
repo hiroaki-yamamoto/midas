@@ -1,0 +1,10 @@
+type: struct
+rust:
+  derive: ["Clone", "PartialEq", "::serde::Serialize, ::serde::Deserialize"]
+members:
+  id: string
+  symbol: string
+  bid_price: string
+  bid_qty: string
+  ask_price: string
+  ask_qty: string

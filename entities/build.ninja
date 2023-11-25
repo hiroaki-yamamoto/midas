@@ -3,3 +3,6 @@ rule backend
 
 rule frontend
   command = ../deps/egen/bin/egen -i $in -j yaml -o ../frontend/src/app/rpc -p rust
+
+build ./../backend/libs/rpc/src/bookticker.rs: backend ././bookticker.yml
+build ./../frontend/src/app/rpc/bookticker.ts: frontend ././bookticker.yml
