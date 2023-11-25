@@ -13,5 +13,3 @@ build $WORKDIR/../backend/libs/rpc/src/$name.rs: backend $WORKDIR/$f
 build $WORKDIR/../frontend/src/app/rpc/$name.ts: frontend $WORKDIR/$f
 EOF
 done
-
-ninja
