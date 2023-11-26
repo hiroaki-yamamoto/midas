@@ -1,7 +1,7 @@
 use ::chrono::{DateTime, Utc};
 use ::mongodb::bson::DateTime as MongoDateTime;
-use ::rpc::entities::Exchanges;
-use ::rpc::historical::HistoryFetchRequest as RPCFetchReq;
+use ::rpc::exchanges::Exchanges;
+use ::rpc::history_fetch_request::HistoryFetchRequest as RPCFetchReq;
 use ::serde::{Deserialize, Serialize};
 use ::std::time::Duration;
 use ::std::time::SystemTime;
@@ -52,7 +52,7 @@ impl HistoryFetchRequest {
 impl From<RPCFetchReq> for HistoryFetchRequest {
   fn from(val: RPCFetchReq) -> Self {
     return Self {
-      exchange: val.exchange(),
+      exchange: val.exchange,
       symbol: val.symbol,
       start: val
         .start

@@ -10,5 +10,5 @@ rust:
 members:
   exchange: { use: Exchanges }
   symbol: string
-  start: string
-  end: string
+  start: { use: Timestamp }
+  end: { use: Timestamp }

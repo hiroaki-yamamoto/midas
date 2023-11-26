@@ -1,10 +1,11 @@
 import { z } from 'zod';
 
 import { Exchanges } from './exchanges.zod.ts';
+import { Timestamp } from './timestamp.zod.ts';
 
 export const HistoryFetchRequest = z.object({
-  end: z.string(),
+  end: z.lazy(() => Timestamp),
   exchange: z.lazy(() => Exchanges),
-  start: z.string(),
+  start: z.lazy(() => Timestamp),
   symbol: z.string(),
 });
