@@ -1,14 +1,10 @@
 use ::errors::ParseError;
-use ::types::chrono::{DateTime, TimeZone};
 use ::types::DateTime as UTCDateTime;
 
 use crate::timestamp::Timestamp;
 
-impl<T> From<DateTime<T>> for Timestamp
-where
-  T: TimeZone,
-{
-  fn from(value: DateTime<T>) -> Self {
+impl From<UTCDateTime> for Timestamp {
+  fn from(value: UTCDateTime) -> Self {
     return Self {
       secs: value.timestamp(),
       nanos: value.timestamp_subsec_nanos(),

@@ -16,6 +16,6 @@ pub use self::order_option::OrderOption;
 pub use self::trade_time::{TradeTime, TradeTimeTrait};
 
 use ::futures_core::stream::BoxStream;
-use ::rpc::symbols::SymbolInfo;
+use ::rpc::symbol_info::SymbolInfo;
 
 pub type ListSymbolStream<'a> = BoxStream<'a, SymbolInfo>;
