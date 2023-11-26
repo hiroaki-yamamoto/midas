@@ -8,8 +8,7 @@ use ::types::casting::cast_f_from_txt;
 
 use ::errors::ParseError;
 use ::rpc::bot::Bot as RPCBot;
-use ::rpc::entities::Exchanges;
-use ::rpc::google::protobuf::Timestamp;
+use ::rpc::exchanges::Exchanges;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bot {
@@ -17,8 +16,8 @@ pub struct Bot {
   pub id: Option<bson::oid::ObjectId>,
   pub name: String,
   pub base_currency: String,
-  pub exchange: Exchanges,
-  pub created_at: Option<bson::DateTime>,
+  pub exchange: Box<Exchanges>,
+  pub created_at: bson::DateTime,
   pub trading_amount: Float,
   pub cond_ts: String,
   pub cond_js: Option<String>,
@@ -37,9 +36,9 @@ impl Bot {
       id,
       name,
       base_currency,
-      exchange,
+      exchange: Box::new(exchange),
       trading_amount,
-      created_at: None,
+      created_at: bson::DateTime::now(),
       cond_ts: cond,
       cond_js: None,
     };
@@ -49,13 +48,7 @@ impl Bot {
 impl TryFrom<RPCBot> for Bot {
   type Error = ParseError;
   fn try_from(value: RPCBot) -> Result<Self, Self::Error> {
-    let exchange = Exchanges::try_from(value.exchange).map_err(|err| {
-      return ParseError::new(
-        "exchange".into(),
-        Some(value.exchange.to_string().as_str()),
-        Some(format!("{}", err).as_str()),
-      );
-    })?;
+    let exchange = value.exchange;
     let trading_amount = value.trading_amount;
     let trading_amount =
       cast_f_from_txt("trading_amount", trading_amount.as_str())?;
@@ -63,8 +56,8 @@ impl TryFrom<RPCBot> for Bot {
       id: bson::oid::ObjectId::from_str(value.id.as_str()).ok(),
       name: value.name,
       base_currency: value.base_currency,
-      exchange: exchange,
-      created_at: None,
+      exchange,
+      created_at: bson::DateTime::now(),
       cond_ts: value.condition,
       cond_js: None,
       trading_amount,
@@ -78,11 +71,8 @@ impl From<Bot> for RPCBot {
       id: value.id.map(|id| id.to_hex()).unwrap_or("".to_string()),
       name: value.name,
       base_currency: value.base_currency,
-      exchange: value.exchange as i32,
-      created_at: value
-        .created_at
-        .map(|time| Timestamp::try_from(time.to_system_time()).ok())
-        .flatten(),
+      exchange: value.exchange,
+      created_at: Box::new(value.created_at.to_chrono().into()),
       trading_amount: value.trading_amount.to_string(),
       condition: value.cond_ts,
     };

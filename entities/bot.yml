@@ -9,7 +9,7 @@ rust:
     - serde(rename_all = "camelCase")
 members:
   id: string
-  created_at: string
+  created_at: { use: Timestamp }
   name: string
   exchange: { use: Exchanges }
   base_currency: string

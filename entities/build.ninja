@@ -31,6 +31,9 @@ build ./../frontend/src/app/rpc/bookticker.ts: frontend ./bookticker.yml
 build ./../backend/libs/rpc/src/insert_one_result.rs: backend ./insert_one_result.yml
 build ./../frontend/src/app/rpc/insert_one_result.ts: frontend ./insert_one_result.yml
 
+build ./../backend/libs/rpc/src/timestamp.rs: backend ./timestamp.yml
+build ./../frontend/src/app/rpc/timestamp.ts: frontend ./timestamp.yml
+
 build ./../backend/libs/rpc/src/exchanges.rs: backend ./exchanges.yml
 build ./../frontend/src/app/rpc/exchanges.ts: frontend ./exchanges.yml
 
