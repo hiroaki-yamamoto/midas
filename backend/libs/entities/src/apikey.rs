@@ -7,8 +7,8 @@ use ::serde::{Deserialize, Serialize};
 
 use ::errors::ParseError;
 
-use ::rpc::entities::Exchanges;
-use ::rpc::keychain::ApiKey as RPCAPIKey;
+use ::rpc::api_key::ApiKey as RPCAPIKey;
+use ::rpc::exchanges::Exchanges;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct APIKeyInner {
@@ -76,8 +76,7 @@ impl From<APIKey> for Result<RPCAPIKey, String> {
 impl TryFrom<RPCAPIKey> for APIKey {
   type Error = ParseError;
   fn try_from(value: RPCAPIKey) -> Result<Self, Self::Error> {
-    let exchange: Exchanges = value.exchange();
-    let exchange: APIKey = match exchange {
+    let exchange: APIKey = match value.exchange.as_ref() {
       Exchanges::Binance => APIKey::Binance(APIKeyInner {
         id: ObjectId::parse_str(&value.id).ok(),
         label: value.label,
