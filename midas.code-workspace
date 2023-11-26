@@ -35,7 +35,8 @@
 			"intermediate_entities",
 			"deps",
 			"backend_entities",
-			"bot"
+			"bot",
+			"config"
 		],
 		"yaml.schemas": {
 			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [
