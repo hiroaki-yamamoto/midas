@@ -55,7 +55,7 @@ impl From<RPCFetchReq> for HistoryFetchRequest {
       exchange: val.exchange,
       symbol: val.symbol,
       start: start.into(),
-      end: start.into(),
+      end: end.into(),
     };
   }
 }
