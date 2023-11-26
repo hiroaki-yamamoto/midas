@@ -36,7 +36,8 @@
 			"deps",
 			"backend_entities",
 			"bot",
-			"config"
+			"config",
+			"keychain"
 		],
 		"yaml.schemas": {
 			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [

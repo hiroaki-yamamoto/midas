@@ -6,7 +6,6 @@ pub mod bookticker;
 pub mod bot;
 pub mod exchanges;
 pub mod history_fetch_request;
-mod impl_timestamp;
 pub mod insert_one_result;
 pub mod progress;
 pub mod status;
@@ -17,3 +16,6 @@ pub mod symbol_type;
 pub mod test_price_base;
 pub mod timestamp;
 pub mod trigger_type;
+
+mod impl_exchanges;
+mod impl_timestamp;

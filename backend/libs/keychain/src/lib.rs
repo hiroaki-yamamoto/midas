@@ -11,7 +11,7 @@ use ::subscribe::nats::Client;
 use ::subscribe::PubSub;
 
 use ::errors::KeyChainResult;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 
 pub use ::entities::APIKey;
 use ::entities::APIKeyEvent;
@@ -92,7 +92,7 @@ impl KeyChain {
       .find_one(
         doc! {
           "_id": id,
-          "exchange": exchange.as_str_name().to_lowercase(),
+          "exchange": exchange.as_str().to_lowercase(),
         },
         None,
       )
