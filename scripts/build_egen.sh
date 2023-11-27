@@ -7,7 +7,7 @@ source ./curl.sh
 export CC="musl-gcc -fPIE -pie -O2"
 
 BASEDIR=`dirname $0`
-VERSION='1.0.0'
+VERSION='1.0.2'
 DOWNLOAD_URL="https://github.com/hiroaki-yamamoto/egen/releases/download/v${VERSION}/egen"
 FILENAME=`basename $DOWNLOAD_URL`
 EXTRACTED_NAME=`basename ${FILENAME} .tar.gz`

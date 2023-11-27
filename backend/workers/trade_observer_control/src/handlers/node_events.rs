@@ -61,6 +61,7 @@ impl FromNodeEventHandler {
       }
       TradeObserverNodeEvent::Unregist(exchange, symbols) => {
         let publish_defer = symbols.into_iter().map(|symbol| {
+          let exchange = exchange.clone();
           self
             .control_event
             .publish(TradeObserverControlEvent::SymbolAdd(

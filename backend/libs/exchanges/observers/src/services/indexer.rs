@@ -6,7 +6,7 @@ use ::futures::stream::{iter, BoxStream, StreamExt};
 use ::errors::KVSResult;
 use ::kvs::redis::AsyncCommands;
 use ::kvs::traits::last_checked::{Get, SetOp};
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 
 pub struct NodeIndexer<T>
 where
@@ -52,9 +52,10 @@ where
 
   pub async fn get_nodes_by_exchange(
     &self,
-    exchange: Exchanges,
+    exchange: Box<Exchanges>,
   ) -> KVSResult<BoxStream<'_, Arc<String>>> {
     let keys: Vec<String> = self.indexer.smembers(self.chname()).await?;
+    let exchange: Exchanges = *exchange.clone();
 
     let keys = iter(keys)
       .map(move |key| {
@@ -63,16 +64,15 @@ where
         return (key, exchange);
       })
       .filter_map(|(key, exchange)| async {
-        let pair = exchange
-          .await
-          .map(|exchange| (key, Exchanges::from_str_name(&exchange)));
-        return pair.ok();
-      })
-      .filter_map(|(key, node_exchange)| async move {
-        return node_exchange.map(|node_exchange| (key, node_exchange));
+        let pair = exchange.await.map(|exchange| {
+          let exchange: Result<Exchanges, _> = exchange.parse();
+          return exchange.map(|e| (key, e)).ok();
+        });
+        let pair = pair.ok().flatten();
+        return pair;
       })
       .filter_map(move |(key, node_exchange)| async move {
-        if node_exchange == exchange {
+        if exchange == node_exchange {
           return Some(key);
         } else {
           return None;

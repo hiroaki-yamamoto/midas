@@ -1,0 +1,17 @@
+type: struct
+rust:
+  derive:
+    - Clone
+    - PartialEq
+    - ::serde::Serialize
+    - ::serde::Deserialize
+  attrs:
+    - serde(rename_all = "camelCase")
+members:
+  id: string
+  created_at: { use: Timestamp }
+  name: string
+  exchange: { use: Exchanges }
+  base_currency: string
+  trading_amount: string
+  condition: string

@@ -1,0 +1,10 @@
+type: struct
+rust:
+  derive: [Clone, PartialEq, "::serde::Serialize", "::serde::Deserialize"]
+  attrs: ['serde(rename_all = "camelCase")']
+members:
+  exchange:
+    use: Exchanges
+  symbol: string
+  size: i64
+  cur: i64

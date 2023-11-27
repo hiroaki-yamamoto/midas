@@ -9,7 +9,7 @@ use ::mongodb::Database;
 
 use ::kvs::redis::AsyncCommands as Commands;
 use ::kvs::traits::last_checked::ListOp;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 use ::symbols::get_reader;
 
 use ::errors::ObserverResult;
@@ -46,7 +46,7 @@ where
 
   pub async fn get_symbol_diff(
     &self,
-    exchange: &Exchanges,
+    exchange: Box<Exchanges>,
   ) -> ObserverResult<HashSet<Event>> {
     let symbol_reader = get_reader(&self.db, exchange.clone()).await; // TODO: fix this
     let trading_symbols_list = symbol_reader.list_trading().await?;

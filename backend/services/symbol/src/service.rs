@@ -4,8 +4,11 @@ use ::warp::filters::BoxedFilter;
 use ::warp::reject;
 use ::warp::{Filter, Rejection, Reply};
 
-use ::rpc::entities::{Exchanges, Status};
-use ::rpc::symbols::{BaseSymbols, SymbolInfo, SymbolList};
+use ::rpc::base_symbols::BaseSymbols;
+use ::rpc::exchanges::Exchanges;
+use ::rpc::status::Status;
+use ::rpc::symbol_info::SymbolInfo;
+use ::rpc::symbol_list::SymbolList;
 use ::subscribe::nats::Client as Nats;
 use ::symbols::binance::{
   fetcher as binance_fetcher, recorder as binance_recorder,
@@ -86,8 +89,10 @@ impl Service {
       .and(Exchanges::by_param())
       .map(move |exchange| me.get_recorder(exchange))
       .and_then(handle_supported_currencies)
-      .map(|symbols: Vec<SymbolInfo>| {
-        return Box::new(::warp::reply::json(&SymbolList { symbols: symbols }));
+      .map(|sym: Vec<SymbolInfo>| {
+        let sym: Vec<Box<SymbolInfo>> =
+          sym.into_iter().map(|sym| Box::new(sym.into())).collect();
+        return Box::new(::warp::reply::json(&SymbolList { symbols: sym }));
       });
   }
 
@@ -104,7 +109,9 @@ impl Service {
       .and(Exchanges::by_param())
       .map(move |exchange| me.get_fetcher(exchange))
       .and_then(handle_fetcher)
-      .map(move |sym| {
+      .map(move |sym: Vec<SymbolInfo>| {
+        let sym: Vec<Box<SymbolInfo>> =
+          sym.into_iter().map(|sym| Box::new(sym.into())).collect();
         return Box::new(::warp::reply::json(&SymbolList { symbols: sym }));
       });
   }

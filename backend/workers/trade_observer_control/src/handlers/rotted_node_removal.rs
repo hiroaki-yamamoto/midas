@@ -7,11 +7,10 @@ use ::kvs::redis::aio::MultiplexedConnection;
 use ::kvs::traits::last_checked::{FindBefore, Get, ListOp, Remove};
 use ::subscribe::nats::Client as Nats;
 
-use ::errors::UnknownExchangeError;
 use ::observers::entities::TradeObserverControlEvent;
 use ::observers::kvs::{NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER};
 use ::observers::pubsub::NodeControlEventPubSub;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 use ::subscribe::PubSub;
 
 use crate::errors::{Error as ControlError, Result as ControlResult};
@@ -59,14 +58,17 @@ impl RemoveRotHandler {
       let defer = async {
         let mut publish_defers = vec![];
         let exchange = self.type_kvs_get.get(node_id.clone()).await?;
-        let exchange: Exchanges = Exchanges::from_str_name(&exchange)
-          .ok_or_else(|| UnknownExchangeError::new(exchange))?;
+        let exchange: Exchanges = exchange.parse()?;
         let symbols: Vec<String> =
           self.node_kvs_listop.lrange(node_id.clone(), 0, -1).await?;
         for symbol in symbols {
-          let publish_defer = self
-            .control_event
-            .publish(TradeObserverControlEvent::SymbolAdd(exchange, symbol));
+          let publish_defer =
+            self
+              .control_event
+              .publish(TradeObserverControlEvent::SymbolAdd(
+                Box::new(exchange),
+                symbol,
+              ));
           publish_defers.push(publish_defer)
         }
         let _ = try_join_all(publish_defers).await?;

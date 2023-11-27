@@ -21,7 +21,7 @@ use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{CreateStreamResult, ObserverError, ObserverResult};
 use ::kvs::redis::AsyncCommands as RedisCommands;
 use ::kvs::traits::last_checked::ListOp;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 
@@ -111,7 +111,7 @@ where
         Some((event, _)) = control_event.next() => {
           match event {
             TradeObserverControlEvent::SymbolAdd(exchange, symbol) => {
-              if exchange != Exchanges::Binance {
+              if exchange.as_ref() != &Exchanges::Binance {
                 continue;
               }
               info!(symbol = symbol.as_str(); "Received symbol add event.");
@@ -121,7 +121,7 @@ where
               }
             }
             TradeObserverControlEvent::SymbolDel(exchange, symbol) => {
-              if exchange != Exchanges::Binance {
+              if exchange.as_ref() != &Exchanges::Binance {
                 continue;
               }
               info!(symbol = symbol.as_str(); "Received symbol del event.");
@@ -257,7 +257,7 @@ where
     };
     let _ = ready.await?;
     info!(node_id = node_id; "Registered node id");
-    let _ = init.init(Exchanges::Binance).await;
+    let _ = init.init(Box::new(Exchanges::Binance)).await;
     return Ok(());
   }
 
@@ -309,7 +309,10 @@ where
             let (exchange, symbols) =
               node_id_manager.unregist(node_id.clone()).await?;
             let _ = node_event
-              .publish(TradeObserverNodeEvent::Unregist(exchange, symbols))
+              .publish(TradeObserverNodeEvent::Unregist(
+                Box::new(exchange),
+                symbols,
+              ))
               .await;
             info!("Unregistered node id: {}", node_id);
             {

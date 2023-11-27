@@ -11,7 +11,7 @@ use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::entities::{HistoryFetchRequest, TradeTimeTrait};
 use ::errors::{FetchResult, MaximumAttemptExceeded, ValidationErr};
 use ::round::RestClient;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 
 use super::entities::{BinancePayload, Kline, Query};
 use crate::entities::KlinesByExchange;

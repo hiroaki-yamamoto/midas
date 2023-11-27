@@ -3,7 +3,7 @@ use ::std::time::Duration;
 
 use ::futures::{FutureExt, SinkExt, StreamExt};
 use ::log::{info, warn};
-use ::rpc::entities::Status;
+use ::rpc::status::Status;
 use ::serde_json::to_string;
 use ::tokio::select;
 use ::tokio::time::interval;
@@ -16,8 +16,8 @@ use ::csrf::{CSRFOption, CSRF};
 use ::errors::CreateStreamResult;
 use ::observers::binance;
 use ::observers::traits::TradeSubscriber as TradeSubscriberTrait;
-use ::rpc::bookticker::BookTicker;
-use ::rpc::entities::Exchanges;
+use ::rpc::bookticker::Bookticker as BookTicker;
+use ::rpc::exchanges::Exchanges;
 use ::subscribe::nats::Client as Nats;
 
 async fn get_exchange(
@@ -96,8 +96,9 @@ async fn main() {
       })
       .untuple_one()
       .and_then(|exchange: String, broker: Nats| async move {
-        let exchange: Exchanges = Exchanges::from_str_name(&exchange)
-          .ok_or(::warp::reject::not_found())?;
+        let exchange: Result<Exchanges, _> = exchange.parse();
+        let exchange: Exchanges =
+          exchange.map_err(|_| ::warp::reject::not_found())?;
         let observer = match exchange {
           Exchanges::Binance => get_exchange(exchange, &broker).await,
         }

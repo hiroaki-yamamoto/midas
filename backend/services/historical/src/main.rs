@@ -7,7 +7,7 @@ use ::warp::Filter;
 
 use ::config::init;
 use ::csrf::{CSRFOption, CSRF};
-use ::rpc::rejection_handler::handle_rejection;
+use ::warp_utils::handle_rejection;
 
 use crate::service::Service;
 

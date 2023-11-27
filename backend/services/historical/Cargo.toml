@@ -14,6 +14,7 @@ config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 subscribe = { path = "../../libs/subscribe" }
 errors = { path = "../../libs/errors" }
+warp_utils = { path = "../../libs/warp_utils" }
 
 history = { path = "../../libs/exchanges/history" }
 entities = { path = "../../libs/entities" }

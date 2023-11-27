@@ -1,4 +1,4 @@
 use ::futures::stream::BoxStream;
-use ::rpc::symbols::SymbolInfo;
+use ::rpc::symbol_info::SymbolInfo;
 
 pub type ListSymbolStream = BoxStream<'static, SymbolInfo>;

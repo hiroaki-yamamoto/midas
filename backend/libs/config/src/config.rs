@@ -16,7 +16,7 @@ use ::tokio::time::{sleep, timeout};
 use ::errors::{ConfigError, ConfigResult, MaximumAttemptExceeded};
 use ::kvs::redis::aio::MultiplexedConnection as RedisConnection;
 use ::kvs::redis::Client as RedisClient;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 use ::subscribe::nats::connect as nats_connect;
 use ::subscribe::nats::Client as Nats;
 
