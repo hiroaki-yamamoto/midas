@@ -10,3 +10,5 @@ types = { path = "../types" }
 errors = { path = "../errors" }
 
 serde = { version = "1.0.152", features = ["derive", "rc"] }
+http = "1.0.0"
+warp = "0.3.3"

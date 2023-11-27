@@ -558,9 +558,9 @@ dependencies = [
  "log",
  "mongodb",
  "reqwest",
- "rpc",
  "tokio",
  "warp",
+ "warp_utils",
 ]
 
 [[package]]
@@ -2920,8 +2920,10 @@ name = "rpc"
 version = "0.1.0"
 dependencies = [
  "errors",
+ "http 1.0.0",
  "serde",
  "types",
+ "warp",
 ]
 
 [[package]]
@@ -4189,7 +4191,9 @@ dependencies = [
 name = "warp_utils"
 version = "0.1.0"
 dependencies = [
+ "csrf",
  "http 1.0.0",
+ "rpc",
  "warp",
 ]
 

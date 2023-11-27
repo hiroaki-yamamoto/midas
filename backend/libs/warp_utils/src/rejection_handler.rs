@@ -4,7 +4,7 @@ use ::std::convert::Infallible;
 use ::warp::{reject, reply};
 use ::warp::{Rejection, Reply};
 
-use crate::entities::Status;
+use ::rpc::status::Status;
 
 pub async fn handle_rejection(
   err: Rejection,

@@ -1,6 +1,7 @@
 type: struct
 rust:
   derive:
+    - Debug
     - Clone
     - PartialEq
     - serde::Serialize
