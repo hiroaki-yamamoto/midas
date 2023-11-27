@@ -10,6 +10,6 @@ for f in `find . -type f -name '*.yml'`; do
 cat << EOF >> build.ninja
 
 build $WORKDIR/../backend/libs/rpc/src/$name.rs: backend $f
-build $WORKDIR/../frontend/src/app/rpc/$name.ts: frontend $f
+build $WORKDIR/../frontend/src/rpc/$name.ts: frontend $f
 EOF
 done
