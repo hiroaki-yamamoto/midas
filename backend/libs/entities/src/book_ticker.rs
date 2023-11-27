@@ -1,8 +1,8 @@
 use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
 
-use ::rpc::bookticker::BookTicker as RPCBookTicker;
-use ::rpc::entities::Exchanges;
+use ::rpc::bookticker::Bookticker as RPCBookTicker;
+use ::rpc::exchanges::Exchanges;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BookTicker {

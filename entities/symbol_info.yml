@@ -1,0 +1,17 @@
+type: struct
+rust:
+  derive:
+    [Debug, Clone, PartialEq, "::serde::Serialize", "::serde::Deserialize"]
+  attrs:
+    - 'serde(rename_all = "camelCase")'
+members:
+  symbol_type: { use: SymbolType }
+  exchange: { use: Exchanges }
+  symbol: string
+  status: string
+  base: string
+  quote: string
+  base_precision: i64
+  quote_precision: i64
+  base_commission_precision: i64
+  quote_commission_precision: i64

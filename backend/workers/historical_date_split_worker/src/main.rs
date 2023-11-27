@@ -23,7 +23,7 @@ use ::history::traits::{
 };
 use ::kvs::traits::symbol::{Incr, Set};
 use ::kvs::WriteOption;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 use ::subscribe::PubSub;
 
 #[tokio::main]
@@ -47,7 +47,7 @@ async fn main() {
     loop {
       select! {
         Some((req, _)) = req_sub.next() => {
-          let exchange_name = Arc::new(req.exchange.as_str_name().to_lowercase());
+          let exchange_name = Arc::new(req.exchange.as_str().to_lowercase());
           let symbol = Arc::new(req.symbol.clone());
           let mut start = req.start.map(|start| start.into()).unwrap_or(UNIX_EPOCH);
           let end = req.end.map(|end| end.into()).unwrap_or(UNIX_EPOCH);
@@ -57,7 +57,7 @@ async fn main() {
             end_at = as_debug!(end);
             "Start splitting currency",
           );
-          let (fetcher, writer) = match req.exchange {
+          let (fetcher, writer) = match req.exchange.as_ref() {
             Exchanges::Binance => (
               BinanceHistFetcher::new(None),
               BinanceHistoryWriter::new(&db).await,
@@ -74,7 +74,7 @@ async fn main() {
           if let Ok(mut fetcher) = fetcher {
             start = fetcher.first_trade_date(&req.symbol).await.unwrap_or(start);
           }
-          let splitter = match req.exchange {
+          let splitter = match req.exchange.as_ref() {
             Exchanges::Binance => DateSplitter::new(
               start, end, Duration::from_secs(60000)
             ),

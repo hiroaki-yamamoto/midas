@@ -7,7 +7,7 @@ use ::warp::Filter;
 use ::access_logger::log;
 use ::config::init;
 use ::csrf::{CSRFOption, CSRF};
-use ::rpc::rejection_handler::handle_rejection;
+use ::warp_utils::handle_rejection;
 
 use self::routing::construct;
 

@@ -1,15 +1,15 @@
 use ::std::convert::TryFrom;
 
+use ::http::StatusCode;
 use ::mongodb::Database;
 use ::warp::filters::BoxedFilter;
-use ::warp::http::StatusCode;
 use ::warp::{Filter, Reply};
 
 use ::bot::entities::Bot;
 use ::bot::{BotInfoWriter, Transpiler};
 use ::reqwest::Client;
 use ::rpc::bot::Bot as RPCBot;
-use ::rpc::entities::Status;
+use ::rpc::status::Status;
 
 pub fn construct(
   db: &Database,

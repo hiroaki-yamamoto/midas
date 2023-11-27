@@ -11,7 +11,7 @@ use ::log::{as_error, error, info};
 #[cfg(debug_assertions)]
 use ::log::{as_serde, warn};
 
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 use ::tokio::select;
 
 use ::history::binance::fetcher::HistoryFetcher;
@@ -45,7 +45,7 @@ async fn main() {
     reg.insert(Exchanges::Binance, Box::new(fetcher));
 
     #[cfg(debug_assertions)]
-    let mut dupe_map: HashMap<(Arc<Exchanges>, Arc<String>), HashSet<(_, _)>> =
+    let mut dupe_map: HashMap<(Arc<Box<Exchanges>>, Arc<String>), HashSet<(_, _)>> =
       HashMap::new();
     loop {
       select! {
@@ -80,7 +80,7 @@ async fn main() {
               }
             },
             None => {
-              error!("Unknown Exchange: {}", req.exchange.as_str_name().to_lowercase());
+              error!("Unknown Exchange: {}", req.exchange.as_str().to_lowercase());
               continue;
             }
           };
@@ -89,14 +89,14 @@ async fn main() {
             continue;
           }
           if let Err(e) = cur_prog_kvs.incr(
-            Arc::new(exchange.as_str_name().to_lowercase()),
+            Arc::new(exchange.as_str().to_lowercase()),
             symbol.clone(), 1,
             WriteOption::default().duration(Duration::from_secs(180).into()).into()
           ).await {
             error!(error = as_error!(e); "Failed to report the progress");
           };
           if let Err(e) = change_event_pub.publish(&FetchStatusChanged{
-            exchange: req.exchange,
+            exchange: req.exchange.as_ref().clone(),
             symbol: req.symbol,
           }).await {
             error!(

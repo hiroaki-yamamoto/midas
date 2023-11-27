@@ -36,7 +36,21 @@
 			"historical_service",
 			"historical_date_split_worker",
 			"historical_fetch_worker",
-			"frontend"
-		]
+			"frontend",
+			"intermediate_entities",
+			"deps",
+			"backend_entities",
+			"bot",
+			"config",
+			"keychain",
+			"warp_utils",
+			"client",
+			"history"
+		],
+		"yaml.schemas": {
+			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [
+				"entities/*.yml",
+			],
+		}
 	}
 }

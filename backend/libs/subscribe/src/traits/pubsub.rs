@@ -71,7 +71,10 @@ where
     entity: impl Borrow<T> + Send + Sync,
   ) -> PublishResult<PublishAckFuture> {
     let msg = Self::serialize(entity.borrow())?;
-    let res = self.get_ctx().publish(self.get_subject().into(), msg).await;
+    let res = self
+      .get_ctx()
+      .publish(self.get_subject().to_string(), msg)
+      .await;
     return Ok(res?);
   }
 

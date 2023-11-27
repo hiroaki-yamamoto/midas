@@ -8,11 +8,12 @@ edition = "2021"
 
 [dependencies]
 bot = { path = "../../libs/bot" }
-rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 errors = { path = "../../libs/errors" }
 csrf = { path = "../../libs/csrf" }
 access_logger = { path = "../../libs/access_logger" }
+warp_utils = { path = "../../libs/warp_utils" }
+rpc = { path = "../../libs/rpc" }
 
 warp = { version = "0.3.3", features = ["tls"] }
 mongodb = { version = "2.4.0", default-features = false, features = [
@@ -35,3 +36,4 @@ futures = "0.3.26"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 clap = { version = "4.3.0", features = ["derive"] }
 libc = "0.2.139"
+http = "1.0.0"

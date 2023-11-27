@@ -8,7 +8,7 @@ use ::errors::{ObserverError, ObserverResult};
 use ::kvs::redis::AsyncCommands as Commands;
 use ::kvs::traits::normal::Lock;
 use ::log::{as_serde, info};
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 
@@ -54,15 +54,15 @@ where
     });
   }
 
-  pub async fn init(&self, exchange: Exchanges) -> ObserverResult<()> {
+  pub async fn init(&self, exchange: Box<Exchanges>) -> ObserverResult<()> {
     let me = self.clone();
     let _ = self
       .dlock
-      .lock(exchange.as_str_name().to_string().into(), Box::pin(move || {
+      .lock(exchange.to_string().into(), Box::pin(move || {
         let me = me.clone();
+        let exchange = exchange.clone();
         async move {
-          let exchange = exchange.clone();
-          let diff = me.diff_taker.get_symbol_diff(&exchange).await?;
+          let diff = me.diff_taker.get_symbol_diff(exchange.clone()).await?;
           let balanced = me.balancer.get_event_to_balancing(exchange).await?;
           let controls_to_publish = &diff | &balanced;
           info!(events = as_serde!(controls_to_publish); "Publishing symbol control events.");

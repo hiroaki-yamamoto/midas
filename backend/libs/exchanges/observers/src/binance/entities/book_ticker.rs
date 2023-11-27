@@ -2,7 +2,7 @@ use ::std::convert::TryFrom;
 
 use ::entities::BookTicker as CommonBookTicker;
 use ::errors::ParseError;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
 use ::types::casting::cast_f_from_txt;
