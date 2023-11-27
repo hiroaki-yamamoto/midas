@@ -1,6 +1,6 @@
 use ::mongodb::Database;
 
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 
 use super::traits::SymbolReader;
 

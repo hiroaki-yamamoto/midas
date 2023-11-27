@@ -10,10 +10,12 @@ use ::access_logger::log;
 use ::config::init;
 use ::csrf::{CSRFOption, CSRF};
 use ::keychain::{APIKey, KeyChain};
-use ::rpc::entities::{InsertOneResult, Status};
-use ::rpc::keychain::ApiRename;
-use ::rpc::keychain::{ApiKey as RPCAPIKey, ApiKeyList as RPCAPIKeyList};
-use ::rpc::rejection_handler::handle_rejection;
+use ::rpc::api_key::ApiKey as RPCAPIKey;
+use ::rpc::api_key_list::ApiKeyList as RPCAPIKeyList;
+use ::rpc::api_rename::ApiRename;
+use ::rpc::insert_one_result::InsertOneResult;
+use ::rpc::status::Status;
+use ::warp_utils::handle_rejection;
 
 macro_rules! declare_reject_func {
   () => {

@@ -18,5 +18,6 @@ pub mod timestamp;
 pub mod trigger_type;
 
 mod impl_exchanges;
+mod impl_insert_one_result;
 mod impl_status;
 mod impl_timestamp;
