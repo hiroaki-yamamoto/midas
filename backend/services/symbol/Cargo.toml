@@ -15,6 +15,7 @@ config = { path = "../../libs/config" }
 csrf = { path = "../../libs/csrf" }
 access_logger = { path = "../../libs/access_logger" }
 subscribe = { path = "../../libs/subscribe" }
+warp_utils = { path = "../../libs/warp_utils" }
 
 mongodb = { version = "2.4.0", default-features = false, features = [
   "async-std-runtime",

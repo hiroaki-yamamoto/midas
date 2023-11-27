@@ -72,7 +72,11 @@ async fn main() {
           }
         };
       })
-      .map(|api_key_list| {
+      .map(|api_key_list: Vec<RPCAPIKey>| {
+        let api_key_list: Vec<Box<RPCAPIKey>> = api_key_list
+          .into_iter()
+          .map(|api_key| Box::new(api_key))
+          .collect();
         return ::warp::reply::json(&RPCAPIKeyList { keys: api_key_list });
       });
     let post_handler = ::warp::post()

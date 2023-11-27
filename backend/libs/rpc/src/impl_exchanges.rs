@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use ::errors::UnknownExchangeError;
+use ::warp::Filter;
 
 use crate::exchanges::Exchanges;
 
@@ -9,6 +10,23 @@ impl Exchanges {
     match self {
       Exchanges::Binance => "Binance",
     }
+  }
+
+  pub fn by_param(
+  ) -> impl Filter<Extract = (Exchanges,), Error = ::warp::Rejection>
+       + Clone
+       + Send
+       + Sync
+       + 'static {
+    return ::warp::path::param::<String>()
+      .and_then(|param: String| async move {
+        let exchanges: Result<Exchanges, _> = param.parse();
+        let exchanges = exchanges
+          .map(|exchange| (exchange,))
+          .map_err(|_| ::warp::reject::not_found());
+        return exchanges;
+      })
+      .untuple_one();
   }
 }
 
