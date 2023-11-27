@@ -1599,6 +1599,7 @@ dependencies = [
  "tokio",
  "types",
  "warp",
+ "warp_utils",
 ]
 
 [[package]]

@@ -8,7 +8,7 @@ use ::futures::StreamExt;
 use ::errors::{KVSResult, ObserverResult};
 use ::kvs::redis::AsyncCommands as Commands;
 use ::kvs::traits::last_checked::ListOp;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 
 use crate::entities::TradeObserverControlEvent as ControlEvent;
 use crate::kvs::{NODE_EXCHANGE_TYPE_KVS_BUILDER, NODE_KVS_BUILDER};
@@ -46,9 +46,9 @@ where
 
   async fn calc_num_average_symbols(
     &self,
-    exchange: Exchanges,
+    exchange: Box<Exchanges>,
   ) -> KVSResult<usize> {
-    let nodes = self.indexer.get_nodes_by_exchange(exchange).await?;
+    let nodes = self.indexer.get_nodes_by_exchange(exchange.clone()).await?;
     let num_nodes = nodes.count().await;
     let num_symbols = self
       .node_filter
@@ -61,12 +61,13 @@ where
 
   pub async fn get_event_to_balancing(
     &self,
-    exchange: Exchanges,
+    exchange: Box<Exchanges>,
   ) -> ObserverResult<HashSet<ControlEvent>> {
-    let num_average_symbols = self.calc_num_average_symbols(exchange).await?;
+    let num_average_symbols =
+      self.calc_num_average_symbols(exchange.clone()).await?;
     let overflowed_nodes = self
       .node_filter
-      .get_overflowed_nodes(exchange, num_average_symbols)
+      .get_overflowed_nodes(exchange.clone(), num_average_symbols)
       .await?;
     let mut symbol_diff: HashSet<ControlEvent> = HashSet::new();
     for node in overflowed_nodes {
@@ -77,11 +78,11 @@ where
       let remove: Vec<ControlEvent> = symbols
         .clone()
         .into_iter()
-        .map(|symbol| ControlEvent::SymbolDel(exchange, symbol))
+        .map(|symbol| ControlEvent::SymbolDel(exchange.clone(), symbol))
         .collect();
       let add: Vec<ControlEvent> = symbols
         .into_iter()
-        .map(|symbol| ControlEvent::SymbolAdd(exchange, symbol))
+        .map(|symbol| ControlEvent::SymbolAdd(exchange.clone(), symbol))
         .collect();
       symbol_diff.extend(remove);
       symbol_diff.extend(add);

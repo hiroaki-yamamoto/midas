@@ -19,10 +19,11 @@ use ::history::kvs::{CUR_SYNC_PROG_KVS_BUILDER, NUM_TO_FETCH_KVS_BUILDER};
 use ::history::pubsub::{FetchStatusEventPubSub, HistChartDateSplitPubSub};
 use ::kvs::redis;
 use ::kvs::traits::symbol::Get;
-use ::rpc::entities::{Exchanges, Status};
-use ::rpc::historical::{
-  HistoryFetchRequest as RPCHistFetchReq, Progress, StatusCheckRequest,
-};
+use ::rpc::exchanges::Exchanges;
+use ::rpc::history_fetch_request::HistoryFetchRequest as RPCHistFetchReq;
+use ::rpc::progress::Progress;
+use ::rpc::status::Status;
+use ::rpc::status_check_request::StatusCheckRequest;
 use ::subscribe::nats::Client as Nats;
 use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
 use ::symbols::traits::SymbolReader as SymbolReaderTrait;
@@ -115,7 +116,7 @@ impl Service {
           return None;
         }).map(|(size, cur, symbol): (i64, i64, Arc<String>)| {
           return Progress {
-            exchange: Exchanges::Binance as i32,
+            exchange: Box::new(Exchanges::Binance),
             symbol: symbol.as_ref().clone(),
             size,
             cur

@@ -7,12 +7,11 @@ use ::futures::future::{try_join_all, FutureExt};
 use ::log::{as_error, error, info, warn};
 use ::tokio::time::sleep;
 
-use ::errors::{ObserverError, UnknownExchangeError};
 use ::kvs::redis::AsyncCommands as Commands;
 use ::kvs::traits::last_checked::{Get, ListOp, Remove, Set};
 use ::kvs::WriteOption;
 use ::random::generate_random_txt;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 
 use ::errors::ObserverResult;
 
@@ -100,7 +99,7 @@ where
       .exchange_type_kvs_set
       .set(
         node_id.clone().into(),
-        exchange.as_str_name().into(),
+        exchange.as_str().into(),
         WriteOption::default()
           .duration(Duration::from_secs(30).into())
           .non_existent_only(true)
@@ -122,8 +121,7 @@ where
       self.node_kvs_list.lrange(node_id.clone(), 0, -1).await?;
     let exchange: String =
       self.exchange_type_kvs_get.get(node_id.clone()).await?;
-    let exchange = Exchanges::from_str_name(&exchange)
-      .ok_or::<ObserverError>(UnknownExchangeError::new(exchange).into())?;
+    let exchange = exchange.parse()?;
     let _: Vec<_> = try_join_all([
       self.node_kvs_del.del(Arc::new([node_id.clone()])),
       self.exchange_type_kvs_del.del(Arc::new([node_id.clone()])),

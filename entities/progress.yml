@@ -6,5 +6,5 @@ members:
   exchange:
     use: Exchanges
   symbol: string
-  size: string
-  cur: string
+  size: i64
+  cur: i64

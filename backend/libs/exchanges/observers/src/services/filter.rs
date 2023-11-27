@@ -7,7 +7,7 @@ use ::errors::KVSResult;
 use ::futures::stream::{iter, BoxStream, StreamExt};
 use ::kvs::redis::AsyncCommands as Commands;
 use ::kvs::traits::last_checked::ListOp;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 
 use super::NodeIndexer;
 
@@ -37,7 +37,7 @@ where
 
   pub async fn get_handling_symbol_at_exchange(
     &self,
-    exchange: Exchanges,
+    exchange: Box<Exchanges>,
   ) -> KVSResult<BoxStream<Arc<String>>> {
     let nodes = self
       .indexer
@@ -59,7 +59,7 @@ where
 
   pub async fn get_overflowed_nodes(
     &self,
-    exchange: Exchanges,
+    exchange: Box<Exchanges>,
     num_symbols: usize,
   ) -> KVSResult<Vec<Arc<String>>> {
     let nodes: Vec<Arc<String>> = self
