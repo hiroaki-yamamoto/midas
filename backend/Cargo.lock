@@ -558,6 +558,7 @@ dependencies = [
  "log",
  "mongodb",
  "reqwest",
+ "rpc",
  "tokio",
  "warp",
  "warp_utils",
