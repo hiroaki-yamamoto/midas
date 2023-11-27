@@ -1,7 +1,7 @@
 use ::std::convert::TryFrom;
 
 use ::errors::UnknownExchangeError;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 
 use crate::binance::entities::Kline as BinanceKline;
 

@@ -39,7 +39,8 @@
 			"config",
 			"keychain",
 			"warp_utils",
-			"client"
+			"client",
+			"history"
 		],
 		"yaml.schemas": {
 			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [
