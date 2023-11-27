@@ -37,7 +37,8 @@
 			"backend_entities",
 			"bot",
 			"config",
-			"keychain"
+			"keychain",
+			"warp_utils"
 		],
 		"yaml.schemas": {
 			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [

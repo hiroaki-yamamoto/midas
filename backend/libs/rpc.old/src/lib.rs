@@ -4,7 +4,6 @@ pub mod entities;
 mod entities_impl;
 pub mod historical;
 pub mod keychain;
-pub mod rejection_handler;
 pub mod symbols;
 
 use ::std::convert::TryFrom;
