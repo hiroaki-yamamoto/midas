@@ -6,7 +6,7 @@ use ::tokio::signal::unix as signal;
 use ::config::{Config, DEFAULT_CONFIG_PATH};
 use ::observers::binance;
 use ::observers::traits::TradeObserver as TradeObserverTrait;
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 
 #[derive(Debug, Parser)]
 #[clap(author = "Hiroaki Yamamoto")]
