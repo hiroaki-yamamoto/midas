@@ -38,7 +38,8 @@
 			"bot",
 			"config",
 			"keychain",
-			"warp_utils"
+			"warp_utils",
+			"client"
 		],
 		"yaml.schemas": {
 			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [

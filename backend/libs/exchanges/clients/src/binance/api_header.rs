@@ -3,7 +3,7 @@ use ::std::convert::TryFrom;
 use ::async_trait::async_trait;
 use ::mongodb::bson::oid::ObjectId;
 use ::reqwest::header::{HeaderMap, HeaderName};
-use ::rpc::entities::Exchanges;
+use ::rpc::exchanges::Exchanges;
 
 use ::entities::APIKeyInner;
 use ::errors::{APIHeaderResult, ObjectNotFound};
