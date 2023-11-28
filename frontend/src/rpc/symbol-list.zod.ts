@@ -5,3 +5,5 @@ import { SymbolInfo } from './symbol-info.zod.ts';
 export const SymbolList = z.object({
   symbols: z.array(z.lazy(() => SymbolInfo)),
 });
+
+export type SymbolList = z.infer<typeof SymbolList>;

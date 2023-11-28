@@ -8,3 +8,5 @@ export const Bookticker = z.object({
   id: z.string(),
   symbol: z.string(),
 });
+
+export type Bookticker = z.infer<typeof Bookticker>;

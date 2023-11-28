@@ -8,3 +8,5 @@ export const Progress = z.object({
   size: z.number().max(9223372036854775807).min(-9223372036854775808),
   symbol: z.string(),
 });
+
+export type Progress = z.infer<typeof Progress>;

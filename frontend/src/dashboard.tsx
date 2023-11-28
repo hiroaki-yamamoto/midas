@@ -3,9 +3,6 @@ import OverAllGraph from './graph-overall/view';
 import { IData } from './graph-overall/data.interface.ts';
 import { ILegend } from './graph-overall/legend.interface.ts';
 import { Bot } from './rpc/bot.zod.ts';
-import { z } from 'zod';
-
-type Bot = z.infer<typeof Bot>;
 
 function Dashboard() {
 

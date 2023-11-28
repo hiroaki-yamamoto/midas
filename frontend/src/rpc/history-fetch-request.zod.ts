@@ -9,3 +9,5 @@ export const HistoryFetchRequest = z.object({
   start: z.lazy(() => Timestamp),
   symbol: z.string(),
 });
+
+export type HistoryFetchRequest = z.infer<typeof HistoryFetchRequest>;

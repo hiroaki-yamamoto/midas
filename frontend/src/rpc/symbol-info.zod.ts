@@ -15,3 +15,5 @@ export const SymbolInfo = z.object({
   symbol: z.string(),
   symbol_type: z.lazy(() => SymbolType),
 });
+
+export type SymbolInfo = z.infer<typeof SymbolInfo>;

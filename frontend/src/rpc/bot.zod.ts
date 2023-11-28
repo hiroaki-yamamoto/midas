@@ -12,3 +12,5 @@ export const Bot = z.object({
   name: z.string(),
   trading_amount: z.string(),
 });
+
+export type Bot = z.infer<typeof Bot>;

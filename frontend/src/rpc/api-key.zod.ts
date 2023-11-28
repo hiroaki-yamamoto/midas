@@ -9,3 +9,5 @@ export const ApiKey = z.object({
   prv_key: z.string(),
   pub_key: z.string(),
 });
+
+export type ApiKey = z.infer<typeof ApiKey>;

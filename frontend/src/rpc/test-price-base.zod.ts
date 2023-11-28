@@ -8,3 +8,5 @@ export const TestPriceBase = z.enum([
   'Open',
   'OpenCloseMid',
 ]);
+
+export type TestPriceBase = z.infer<typeof TestPriceBase>;
