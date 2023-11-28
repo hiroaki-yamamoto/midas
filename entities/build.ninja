@@ -2,7 +2,7 @@ rule backend
   command = ../deps/egen/bin/egen -i $in -j yaml -o ../backend/libs/rpc/src -p rust
 
 rule frontend
-  command = ../deps/egen/bin/egen -i $in -j yaml -o ../frontend/src/app/rpc -p zod-ts
+  command = ../deps/egen/bin/egen -i $in -j yaml -o ../frontend/src/rpc -p zod-ts
 
 build ./../backend/libs/rpc/src/progress.rs: backend ./progress.yml
 build ./../frontend/src/rpc/progress.ts: frontend ./progress.yml
