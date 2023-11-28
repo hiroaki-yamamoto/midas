@@ -2,7 +2,10 @@ import style from './dashboard.module.scss';
 import OverAllGraph from './graph-overall/view';
 import { IData } from './graph-overall/data.interface.ts';
 import { ILegend } from './graph-overall/legend.interface.ts';
-import { Bot } from './rpc/bot_pb';
+import { Bot } from './rpc/bot.zod.ts';
+import { z } from 'zod';
+
+type Bot = z.infer<typeof Bot>;
 
 function Dashboard() {
 
@@ -37,9 +40,10 @@ function Dashboard() {
   const bots: Bot[] = (() => {
     let bots: Bot[] = [];
     for (let i = 0; i < 5; i++) {
-      const info = new Bot();
-      info.setId(`test-bot-${i}`);
-      info.setName(`Test Bot ${i}`);
+      const info = Bot.parse({
+        id: `test-bot-${i}`,
+        name: `Test Bot ${i}`,
+      });
       bots = bots.concat(info);
     }
     return bots;
