@@ -3,6 +3,8 @@ import OverAllGraph from './graph-overall/view';
 import { IData } from './graph-overall/data.interface.ts';
 import { ILegend } from './graph-overall/legend.interface.ts';
 import { Bot } from './rpc/bot.zod.ts';
+import { Exchanges } from './rpc/exchanges.zod.ts';
+import { dateToTimestamp } from './timestamp-utils.ts';
 
 function Dashboard() {
 
@@ -36,17 +38,24 @@ function Dashboard() {
 
   const bots: Bot[] = (() => {
     let bots: Bot[] = [];
+    const baseTime = new Date(
+      (new Date()).getTime() - 36000000,
+    ); // 10 hours ago
     for (let i = 0; i < 5; i++) {
+      const time = dateToTimestamp(new Date(baseTime.getTime() + 3600000 * i));
       const info = Bot.parse({
+        base_currency: 'USDT',
+        condition: 'ACTIVE',
+        created_at: time,
+        exchange: Exchanges.enum.Binance,
         id: `test-bot-${i}`,
         name: `Test Bot ${i}`,
+        trading_amount: (Math.random() * 10000).toFixed(2).toString(),
       });
       bots = bots.concat(info);
     }
     return bots;
   })();
-
-  console.log(bots);
 
   return (
     <>
