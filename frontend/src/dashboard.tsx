@@ -1,3 +1,9 @@
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Typography from '@mui/material/Typography';
+
 import style from './dashboard.module.scss';
 import OverAllGraph from './graph-overall/view';
 import { IData } from './graph-overall/data.interface.ts';
@@ -41,7 +47,7 @@ function Dashboard() {
     const baseTime = new Date(
       (new Date()).getTime() - 36000000,
     ); // 10 hours ago
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       const time = dateToTimestamp(new Date(baseTime.getTime() + 3600000 * i));
       const info = Bot.parse({
         base_currency: 'USDT',
@@ -57,6 +63,20 @@ function Dashboard() {
     return bots;
   })();
 
+  const botsAccordions = bots.map((bot) => {
+    return (
+      <Accordion key={bot.id}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}>
+          <Typography>{bot.name}</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          {bot.id}
+        </AccordionDetails>
+      </Accordion>
+    );
+  });
+
   return (
     <>
       <section>
@@ -69,6 +89,7 @@ function Dashboard() {
         <header className={style['dashboard-header']}>
           <h1>Bots</h1>
         </header>
+        {botsAccordions}
       </section>
     </>
   );
