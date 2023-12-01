@@ -4,7 +4,7 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Typography from '@mui/material/Typography';
 
-import { Bot } from './rpc/bot.zod.ts';
+import { Bot } from '../rpc/bot.zod.ts';
 
 function BotPanel(props: { bot: Bot }) {
   return (
