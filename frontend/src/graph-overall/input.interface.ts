@@ -1,4 +1,4 @@
-import { ILegend } from './legend.interface';
+import { ILegend } from '../graph-legend.interface';
 import { IData } from './data.interface';
 
 export interface Input {

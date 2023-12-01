@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 
-export default function DateGraph() {
+export default function ProfitGraph() {
   const ref = useRef(null);
   // useEffect(() => {
   //   const graph = new Graph(input.legend, input.data);

@@ -9,14 +9,15 @@ import {
 import am5themes_Animated from '@amcharts/amcharts5/themes/Animated';
 import am5themes_Dark from '@amcharts/amcharts5/themes/Dark';
 
-import { ILegend } from './legend.interface';
+import { IGraphLegend } from '../graph-legend.interface';
 import { IData } from './data.interface';
+import { IGraph } from '../graph.interface';
 
-export class Graph {
-  public legend: ILegend[];
+export class Graph implements IGraph {
+  public legend: IGraphLegend[];
   public data: IData[];
 
-  constructor(legend: ILegend[], data: IData[]) {
+  constructor(legend: IGraphLegend[], data: IData[]) {
     this.legend = legend;
     this.data = data;
   }
