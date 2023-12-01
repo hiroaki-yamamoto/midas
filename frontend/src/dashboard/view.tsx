@@ -1,11 +1,11 @@
 import style from './dashboard.module.scss';
-import OverAllGraph from './graph-overall/view';
-import { IData } from './graph-overall/data.interface.ts';
-import { ILegend } from './graph-overall/legend.interface.ts';
-import { Bot } from './rpc/bot.zod.ts';
-import { Exchanges } from './rpc/exchanges.zod.ts';
-import { dateToTimestamp } from './timestamp-utils.ts';
-import BotPanel from './bot-panel.tsx';
+import OverAllGraph from '../graph-overall/view.tsx';
+import { IData } from '../graph-overall/data.interface.ts';
+import { ILegend } from '../graph-overall/legend.interface.ts';
+import { Bot } from '../rpc/bot.zod.ts';
+import { Exchanges } from '../rpc/exchanges.zod.ts';
+import { dateToTimestamp } from '../timestamp-utils.ts';
+import BotPanel from '../bot-panel.tsx';
 
 function Dashboard() {
 
