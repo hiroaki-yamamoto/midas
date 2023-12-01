@@ -5,7 +5,7 @@ import { ILegend } from '../graph-overall/legend.interface.ts';
 import { Bot } from '../rpc/bot.zod.ts';
 import { Exchanges } from '../rpc/exchanges.zod.ts';
 import { dateToTimestamp } from '../timestamp-utils.ts';
-import BotPanel from '../bot-panel/bot-panel.tsx';
+import BotPanel from '../bot-panel/view.tsx';
 
 function Dashboard() {
 
@@ -60,7 +60,7 @@ function Dashboard() {
 
   const botsAccordions = bots.map((bot) => {
     return (
-      <BotPanel bot={bot} />
+      <BotPanel bot={bot} key={bot.id} />
     );
   });
 

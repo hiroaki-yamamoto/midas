@@ -8,15 +8,14 @@ import { Bot } from '../rpc/bot.zod.ts';
 
 function BotPanel(props: { bot: Bot }) {
   return (
-    <Accordion key={props.bot.id}>
-      <AccordionSummary
-        expandIcon={<ExpandMoreIcon />}>
+    <Accordion>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Typography>{props.bot.name}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <section>
           <header>
-            <h2>Profit Graph</h2>
+            <h3>Profit Graph</h3>
           </header>
         </section>
       </AccordionDetails>
