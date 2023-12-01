@@ -1,9 +1,3 @@
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import Typography from '@mui/material/Typography';
-
 import style from './dashboard.module.scss';
 import OverAllGraph from './graph-overall/view';
 import { IData } from './graph-overall/data.interface.ts';
@@ -11,6 +5,7 @@ import { ILegend } from './graph-overall/legend.interface.ts';
 import { Bot } from './rpc/bot.zod.ts';
 import { Exchanges } from './rpc/exchanges.zod.ts';
 import { dateToTimestamp } from './timestamp-utils.ts';
+import BotPanel from './bot-panel.tsx';
 
 function Dashboard() {
 
@@ -65,15 +60,7 @@ function Dashboard() {
 
   const botsAccordions = bots.map((bot) => {
     return (
-      <Accordion key={bot.id}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}>
-          <Typography>{bot.name}</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          {bot.id}
-        </AccordionDetails>
-      </Accordion>
+      <BotPanel bot={bot} />
     );
   });
 
