@@ -2,58 +2,58 @@ rule backend
   command = ../deps/egen/bin/egen -i $in -j yaml -o ../backend/libs/rpc/src -p rust
 
 rule frontend
-  command = ../deps/egen/bin/egen -i $in -j yaml -o ../frontend/src/app/rpc -p zod-ts
+  command = ../deps/egen/bin/egen -i $in -j yaml -o ../frontend/src/rpc -p zod-ts
 
 build ./../backend/libs/rpc/src/progress.rs: backend ./progress.yml
-build ./../frontend/src/app/rpc/progress.ts: frontend ./progress.yml
+build ./../frontend/src/rpc/progress.ts: frontend ./progress.yml
 
 build ./../backend/libs/rpc/src/api_rename.rs: backend ./api_rename.yml
-build ./../frontend/src/app/rpc/api_rename.ts: frontend ./api_rename.yml
+build ./../frontend/src/rpc/api_rename.ts: frontend ./api_rename.yml
 
 build ./../backend/libs/rpc/src/status.rs: backend ./status.yml
-build ./../frontend/src/app/rpc/status.ts: frontend ./status.yml
+build ./../frontend/src/rpc/status.ts: frontend ./status.yml
 
 build ./../backend/libs/rpc/src/base_symbols.rs: backend ./base_symbols.yml
-build ./../frontend/src/app/rpc/base_symbols.ts: frontend ./base_symbols.yml
+build ./../frontend/src/rpc/base_symbols.ts: frontend ./base_symbols.yml
 
 build ./../backend/libs/rpc/src/symbol_list.rs: backend ./symbol_list.yml
-build ./../frontend/src/app/rpc/symbol_list.ts: frontend ./symbol_list.yml
+build ./../frontend/src/rpc/symbol_list.ts: frontend ./symbol_list.yml
 
 build ./../backend/libs/rpc/src/test_price_base.rs: backend ./test_price_base.yml
-build ./../frontend/src/app/rpc/test_price_base.ts: frontend ./test_price_base.yml
+build ./../frontend/src/rpc/test_price_base.ts: frontend ./test_price_base.yml
 
 build ./../backend/libs/rpc/src/api_key.rs: backend ./api_key.yml
-build ./../frontend/src/app/rpc/api_key.ts: frontend ./api_key.yml
+build ./../frontend/src/rpc/api_key.ts: frontend ./api_key.yml
 
 build ./../backend/libs/rpc/src/bookticker.rs: backend ./bookticker.yml
-build ./../frontend/src/app/rpc/bookticker.ts: frontend ./bookticker.yml
+build ./../frontend/src/rpc/bookticker.ts: frontend ./bookticker.yml
 
 build ./../backend/libs/rpc/src/insert_one_result.rs: backend ./insert_one_result.yml
-build ./../frontend/src/app/rpc/insert_one_result.ts: frontend ./insert_one_result.yml
+build ./../frontend/src/rpc/insert_one_result.ts: frontend ./insert_one_result.yml
 
 build ./../backend/libs/rpc/src/timestamp.rs: backend ./timestamp.yml
-build ./../frontend/src/app/rpc/timestamp.ts: frontend ./timestamp.yml
+build ./../frontend/src/rpc/timestamp.ts: frontend ./timestamp.yml
 
 build ./../backend/libs/rpc/src/exchanges.rs: backend ./exchanges.yml
-build ./../frontend/src/app/rpc/exchanges.ts: frontend ./exchanges.yml
+build ./../frontend/src/rpc/exchanges.ts: frontend ./exchanges.yml
 
 build ./../backend/libs/rpc/src/symbol_info.rs: backend ./symbol_info.yml
-build ./../frontend/src/app/rpc/symbol_info.ts: frontend ./symbol_info.yml
+build ./../frontend/src/rpc/symbol_info.ts: frontend ./symbol_info.yml
 
 build ./../backend/libs/rpc/src/api_key_list.rs: backend ./api_key_list.yml
-build ./../frontend/src/app/rpc/api_key_list.ts: frontend ./api_key_list.yml
+build ./../frontend/src/rpc/api_key_list.ts: frontend ./api_key_list.yml
 
 build ./../backend/libs/rpc/src/symbol_type.rs: backend ./symbol_type.yml
-build ./../frontend/src/app/rpc/symbol_type.ts: frontend ./symbol_type.yml
+build ./../frontend/src/rpc/symbol_type.ts: frontend ./symbol_type.yml
 
 build ./../backend/libs/rpc/src/status_check_request.rs: backend ./status_check_request.yml
-build ./../frontend/src/app/rpc/status_check_request.ts: frontend ./status_check_request.yml
+build ./../frontend/src/rpc/status_check_request.ts: frontend ./status_check_request.yml
 
 build ./../backend/libs/rpc/src/history_fetch_request.rs: backend ./history_fetch_request.yml
-build ./../frontend/src/app/rpc/history_fetch_request.ts: frontend ./history_fetch_request.yml
+build ./../frontend/src/rpc/history_fetch_request.ts: frontend ./history_fetch_request.yml
 
 build ./../backend/libs/rpc/src/bot.rs: backend ./bot.yml
-build ./../frontend/src/app/rpc/bot.ts: frontend ./bot.yml
+build ./../frontend/src/rpc/bot.ts: frontend ./bot.yml
 
 build ./../backend/libs/rpc/src/trigger_type.rs: backend ./trigger_type.yml
-build ./../frontend/src/app/rpc/trigger_type.ts: frontend ./trigger_type.yml
+build ./../frontend/src/rpc/trigger_type.ts: frontend ./trigger_type.yml
