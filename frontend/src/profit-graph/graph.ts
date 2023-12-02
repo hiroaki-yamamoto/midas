@@ -34,7 +34,7 @@ export class Graph implements IGraph {
 
   public draw(ref: HTMLElement | null): () => void {
     if (!ref) {
-      return this.dispose;
+      return this.dispose();
     }
     const root = Root.new(ref);
     this.root = root;
@@ -56,7 +56,7 @@ export class Graph implements IGraph {
     const cursor = chart.get('cursor');
     if (!cursor) {
       console.error('Cursor is not defined');
-      return this.dispose;
+      return this.dispose();
     }
     cursor.lineY.set('visible', false);
 
@@ -104,12 +104,14 @@ export class Graph implements IGraph {
     });
     legend.data.setAll(chart.series.values);
     chart.appear(1000, 100);
-    return this.dispose;
+    return this.dispose();
   }
 
-  public dispose(): void {
-    if (this.root) {
-      this.root.dispose();
-    }
+  public dispose(): () => void {
+    return () => {
+      if (this.root) {
+        this.root.dispose();
+      }
+    };
   }
 }
