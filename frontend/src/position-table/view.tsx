@@ -1,9 +1,11 @@
-import { useState, MouseEvent } from 'react';
+import { useState, MouseEvent, useMemo } from 'react';
 
 import TableContainer from '@mui/material/TableContainer';
 import TableCell from '@mui/material/TableCell';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableRow from '@mui/material/TableRow';
 
 import { Position } from '../rpc/position.zod';
 
@@ -46,7 +48,9 @@ const TableHeader = (input: {
   });
 };
 
-export function PositionTable(input: { positions: Position }) {
+export function PositionTable(input: { positions: Position[] }) {
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [order, setOrder] = useState<Direction>(Direction.Asc);
   const [orderBy, setOrderBy] = useState<TableHeaderLabel>('Symbol');
   const onSortRequest = (
@@ -57,6 +61,37 @@ export function PositionTable(input: { positions: Position }) {
     setOrder(isAsc ? Direction.Desc : Direction.Asc);
     setOrderBy(property);
   };
+  const positions = useMemo(() => {
+    return input.positions.sort((a, b) => {
+      const isAsc = order === Direction.Asc;
+      switch (orderBy) {
+        case 'Symbol':
+          return isAsc
+            ? a.symbol.localeCompare(b.symbol)
+            : b.symbol.localeCompare(a.symbol);
+        case 'Trading Amount':
+          return isAsc
+            ? parseFloat(a.trading_amount) - parseFloat(b.trading_amount)
+            : parseFloat(b.trading_amount) - parseFloat(a.trading_amount);
+        case 'Valuation':
+          return isAsc
+            ? parseFloat(a.valuation) - parseFloat(b.valuation)
+            : parseFloat(b.valuation) - parseFloat(a.valuation);
+        case 'Profit Amount':
+          return isAsc
+            ? parseFloat(a.profit_amount) - parseFloat(b.profit_amount)
+            : parseFloat(b.profit_amount) - parseFloat(a.profit_amount);
+        case 'Profit %':
+          return isAsc
+            ? parseFloat(a.profit_percent) - parseFloat(b.profit_percent)
+            : parseFloat(b.profit_percent) - parseFloat(a.profit_percent);
+        default:
+          return 0;
+      }
+    }).slice(
+      page * rowsPerPage, page * rowsPerPage * 2
+    );
+  }, [input, order, orderBy, page, rowsPerPage]);
   return (
     <TableContainer>
       <Table>
@@ -64,6 +99,21 @@ export function PositionTable(input: { positions: Position }) {
           onSortRequest={onSortRequest}
           order={order}
           orderBy={orderBy} />
+        <TableBody>
+          {
+            positions.map((pos) => {
+              return (
+                <TableRow key={pos.id} hover>
+                  <TableCell>{pos.symbol}</TableCell>
+                  <TableCell>{pos.trading_amount}</TableCell>
+                  <TableCell>{pos.valuation}</TableCell>
+                  <TableCell>{pos.profit_amount}</TableCell>
+                  <TableCell>{pos.profit_percent}</TableCell>
+                </TableRow>
+              );
+            })
+          }
+        </TableBody>
       </Table>
     </TableContainer>
   );

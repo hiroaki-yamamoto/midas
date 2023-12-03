@@ -10,3 +10,5 @@ members:
   valuation: string
   status:
     use: PositionStatus
+  profit_amount: string
+  profit_percent: string

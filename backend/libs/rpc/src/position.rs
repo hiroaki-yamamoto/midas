@@ -5,6 +5,8 @@ use super::position_status::PositionStatus;
 pub struct Position {
   pub bot_id: String,
   pub id: String,
+  pub profit_amount: String,
+  pub profit_percent: String,
   pub status: Box<PositionStatus>,
   pub symbol: String,
   pub trading_amount: String,
