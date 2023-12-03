@@ -1,11 +1,13 @@
-import { useState, MouseEvent, useMemo } from 'react';
+import { useState, MouseEvent, useMemo, ChangeEvent } from 'react';
 
+import Box from '@mui/material/Box';
 import TableContainer from '@mui/material/TableContainer';
 import TableCell from '@mui/material/TableCell';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
+import TablePagination from '@mui/material/TablePagination';
 
 import { Position } from '../rpc/position.zod';
 
@@ -54,13 +56,21 @@ export function PositionTable(input: { positions: Position[] }) {
   const [order, setOrder] = useState<Direction>(Direction.Asc);
   const [orderBy, setOrderBy] = useState<TableHeaderLabel>('Symbol');
   const onSortRequest = (
-    event: MouseEvent<unknown>,
+    _event: MouseEvent<unknown>,
     property: TableHeaderLabel
   ) => {
     const isAsc = orderBy === property && order === Direction.Asc;
     setOrder(isAsc ? Direction.Desc : Direction.Asc);
     setOrderBy(property);
   };
+  const onChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+  const onChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   const positions = useMemo(() => {
     return input.positions.sort((a, b) => {
       const isAsc = order === Direction.Asc;
@@ -92,29 +102,38 @@ export function PositionTable(input: { positions: Position[] }) {
       page * rowsPerPage, page * rowsPerPage * 2
     );
   }, [input, order, orderBy, page, rowsPerPage]);
+
   return (
-    <TableContainer>
-      <Table>
-        <TableHeader
-          onSortRequest={onSortRequest}
-          order={order}
-          orderBy={orderBy} />
-        <TableBody>
-          {
-            positions.map((pos) => {
-              return (
-                <TableRow key={pos.id} hover>
-                  <TableCell>{pos.symbol}</TableCell>
-                  <TableCell>{pos.trading_amount}</TableCell>
-                  <TableCell>{pos.valuation}</TableCell>
-                  <TableCell>{pos.profit_amount}</TableCell>
-                  <TableCell>{pos.profit_percent}</TableCell>
-                </TableRow>
-              );
-            })
-          }
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <Box>
+      <TableContainer>
+        <Table>
+          <TableHeader
+            onSortRequest={onSortRequest}
+            order={order}
+            orderBy={orderBy} />
+          <TableBody>
+            {
+              positions.map((pos) => {
+                return (
+                  <TableRow key={pos.id} hover>
+                    <TableCell>{pos.symbol}</TableCell>
+                    <TableCell>{pos.trading_amount}</TableCell>
+                    <TableCell>{pos.valuation}</TableCell>
+                    <TableCell>{pos.profit_amount}</TableCell>
+                    <TableCell>{pos.profit_percent}</TableCell>
+                  </TableRow>
+                );
+              })
+            }
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25, 50]}
+        component='div' count={positions.length}
+        rowsPerPage={rowsPerPage} page={page}
+        onPageChange={onChangePage}
+        onRowsPerPageChange={onChangeRowsPerPage} />
+    </Box>
   );
 }
