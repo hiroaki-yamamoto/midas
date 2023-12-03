@@ -1,0 +1,7 @@
+type: enum
+rust:
+  derive: [Clone, PartialEq, "::serde::Serialize", "::serde::Deserialize"]
+  attrs: ['serde(rename_all = "camelCase")']
+members:
+  - OPEN
+  - CLOSE

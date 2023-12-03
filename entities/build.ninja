@@ -10,6 +10,9 @@ build ./../frontend/src/rpc/progress.ts: frontend ./progress.yml
 build ./../backend/libs/rpc/src/api_rename.rs: backend ./api_rename.yml
 build ./../frontend/src/rpc/api_rename.ts: frontend ./api_rename.yml
 
+build ./../backend/libs/rpc/src/position_status.rs: backend ./position_status.yml
+build ./../frontend/src/rpc/position_status.ts: frontend ./position_status.yml
+
 build ./../backend/libs/rpc/src/status.rs: backend ./status.yml
 build ./../frontend/src/rpc/status.ts: frontend ./status.yml
 
@@ -36,6 +39,9 @@ build ./../frontend/src/rpc/timestamp.ts: frontend ./timestamp.yml
 
 build ./../backend/libs/rpc/src/exchanges.rs: backend ./exchanges.yml
 build ./../frontend/src/rpc/exchanges.ts: frontend ./exchanges.yml
+
+build ./../backend/libs/rpc/src/position.rs: backend ./position.yml
+build ./../frontend/src/rpc/position.ts: frontend ./position.yml
 
 build ./../backend/libs/rpc/src/symbol_info.rs: backend ./symbol_info.yml
 build ./../frontend/src/rpc/symbol_info.ts: frontend ./symbol_info.yml
