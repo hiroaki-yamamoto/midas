@@ -49,7 +49,11 @@ const TableHeader = (input: {
   );
 };
 
-export function PositionTable(input: { positions: Position[] }) {
+export function PositionTable(input: {
+  positions: Position[],
+  onPageChanged?: (page: number) => void,
+  onRowsPerPageChanged?: (rowsPerPage: number) => void,
+}) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [order, setOrder] = useState<Direction>(Direction.Asc);
@@ -64,10 +68,17 @@ export function PositionTable(input: { positions: Position[] }) {
   };
   const onChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
+    if (input.onPageChanged) {
+      input.onPageChanged(newPage);
+    }
   };
   const onChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+    const rowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(rowsPerPage);
     setPage(0);
+    if (input.onRowsPerPageChanged) {
+      input.onRowsPerPageChanged(rowsPerPage);
+    }
   };
 
   const positions = useMemo(() => {

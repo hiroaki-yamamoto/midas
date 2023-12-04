@@ -1,4 +1,6 @@
-import { SyntheticEvent, useState, useRef, useEffect, useMemo } from 'react';
+import {
+  SyntheticEvent, useState, useRef, useEffect, useMemo, useCallback
+} from 'react';
 
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -15,13 +17,10 @@ import { PositionTable } from '../position-table/view.tsx';
 import { Ctrl } from './controller.ts';
 
 export const PositionTab = (input: { bot: Bot }) => {
+  // Swipe panel related controls
   const [index, setIndex] = useState(0);
   const [swiper, setSwiper] = useState<Swiper | null>(null);
 
-  const [openPos, setOpenPos] = useState<Position[]>([]);
-  const [closePos, setClosePos] = useState<Position[]>([]);
-
-  const ctrl = useMemo(() => new Ctrl(input.bot), [input.bot]);
   const swiperRef = useRef(null);
   const onChangeIndex = (_event: SyntheticEvent, index: number) => {
     setIndex(index);
@@ -32,6 +31,8 @@ export const PositionTab = (input: { bot: Bot }) => {
       return;
     }
     const swiper = new Swiper(swiperRef.current, {
+      allowTouchMove: false,
+      autoHeight: true,
       on: {
         slideChange: (sw) => setIndex(sw.activeIndex),
       },
@@ -39,10 +40,24 @@ export const PositionTab = (input: { bot: Bot }) => {
     setSwiper(swiper);
     return () => { swiper.destroy(); };
   }, [setIndex, swiperRef, setSwiper]);
+  const rerender = useCallback(() => {
+    setTimeout(() => {
+      swiper?.update();
+    }, 0);
+  }, [swiper]);
+
+  // Position table related controls
+  const [openPos, setOpenPos] = useState<Position[]>([]);
+  const [closePos, setClosePos] = useState<Position[]>([]);
+  const ctrl = useMemo(() => new Ctrl(input.bot), [input.bot]);
   useEffect(() => {
-    ctrl.getPositions(PositionStatus.enum.OPEN).then(setOpenPos);
+    ctrl.getPositions(PositionStatus.enum.OPEN).then((pos) => {
+      setOpenPos(pos);
+      rerender();
+    });
     ctrl.getPositions(PositionStatus.enum.CLOSE).then(setClosePos);
-  }, [setOpenPos, setClosePos, ctrl]);
+  }, [setOpenPos, setClosePos, ctrl, rerender]);
+
   return (
     <Box>
       <Tabs value={index} onChange={onChangeIndex}>
@@ -52,10 +67,14 @@ export const PositionTab = (input: { bot: Bot }) => {
       <div className='swiper' ref={swiperRef}>
         <div className="swiper-wrapper">
           <div className="swiper-slide">
-            <PositionTable positions={openPos} />
+            <PositionTable
+              positions={openPos}
+              onRowsPerPageChanged={rerender} />
           </div>
           <div className="swiper-slide">
-            <PositionTable positions={closePos} />
+            <PositionTable
+              positions={closePos}
+              onRowsPerPageChanged={rerender} />
           </div>
         </div>
       </div>
