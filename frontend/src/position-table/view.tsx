@@ -10,17 +10,7 @@ import TableRow from '@mui/material/TableRow';
 import TablePagination from '@mui/material/TablePagination';
 
 import { Position } from '../rpc/position.zod';
-
-const TableHeaderLabel = [
-  'Symbol', 'Trading Amount', 'Valuation', 'Profit Amount', 'Profit %'
-];
-type TableHeaderLabel =
-  'Symbol' | 'Trading Amount' | 'Valuation' | 'Profit Amount' | 'Profit %';
-
-enum Direction {
-  Asc = 'asc',
-  Desc = 'desc',
-}
+import { TableHeaderLabel, Direction } from './entities';
 
 const TableHeader = (input: {
   orderBy: TableHeaderLabel,
