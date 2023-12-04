@@ -4,6 +4,12 @@ rust:
   attrs: ['serde(rename_all = "camelCase")']
 members:
   id: string
+  entry_at:
+    use: Timestamp
+  exit_at:
+    optional: true
+    type:
+      use: Timestamp
   bot_id: string
   symbol: string
   trading_amount: string
