@@ -8,6 +8,7 @@ import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
 import TablePagination from '@mui/material/TablePagination';
+import TableHead from '@mui/material/TableHead';
 
 import { Position } from '../rpc/position.zod';
 import { TableHeaderLabel, Direction } from './entities';
@@ -24,20 +25,28 @@ const TableHeader = (input: {
       input.onSortRequest(event, prop);
     };
   };
-  return TableHeaderLabel.map((header) => {
-    const direction = input.orderBy === header ? input.order : 'asc';
-    return (
-      <TableCell key={header}
-        sortDirection={direction}>
-        <TableSortLabel
-          active={input.orderBy === header}
-          direction={direction}
-          onClick={sortHandler(header as TableHeaderLabel)}>
-          {header}
-        </TableSortLabel>
-      </TableCell>
-    );
-  });
+  return (
+    <TableHead>
+      <TableRow>
+        {
+          TableHeaderLabel.map((header) => {
+            const direction = input.orderBy === header ? input.order : 'asc';
+            return (
+              <TableCell key={header}
+                sortDirection={direction}>
+                <TableSortLabel
+                  active={input.orderBy === header}
+                  direction={direction}
+                  onClick={sortHandler(header as TableHeaderLabel)}>
+                  {header}
+                </TableSortLabel>
+              </TableCell>
+            );
+          })
+        }
+      </TableRow>
+    </TableHead>
+  );
 };
 
 export function PositionTable(input: { positions: Position[] }) {
@@ -62,7 +71,7 @@ export function PositionTable(input: { positions: Position[] }) {
   };
 
   const positions = useMemo(() => {
-    return input.positions.sort((a, b) => {
+    const pos = input.positions.sort((a, b) => {
       const isAsc = order === Direction.Asc;
       switch (orderBy) {
         case 'Symbol':
@@ -89,8 +98,10 @@ export function PositionTable(input: { positions: Position[] }) {
           return 0;
       }
     }).slice(
-      page * rowsPerPage, page * rowsPerPage * 2
+      page * rowsPerPage, (page + 1) * rowsPerPage
     );
+
+    return pos;
   }, [input, order, orderBy, page, rowsPerPage]);
 
   return (
@@ -102,26 +113,31 @@ export function PositionTable(input: { positions: Position[] }) {
             order={order}
             orderBy={orderBy} />
           <TableBody>
-            {
-              positions.map((pos) => {
-                return (
-                  <TableRow key={pos.id} hover>
-                    <TableCell>{pos.symbol}</TableCell>
-                    <TableCell>{pos.trading_amount}</TableCell>
-                    <TableCell>{pos.valuation}</TableCell>
-                    <TableCell>{pos.profit_amount}</TableCell>
-                    <TableCell>{pos.profit_percent}</TableCell>
-                  </TableRow>
-                );
-              })
-            }
+            {positions.map((pos) => {
+              return (
+                <TableRow key={pos.id} hover>
+                  <TableCell>{pos.symbol}</TableCell>
+                  <TableCell>{pos.trading_amount}</TableCell>
+                  <TableCell>{pos.valuation}</TableCell>
+                  <TableCell>{pos.profit_amount}</TableCell>
+                  <TableCell>{pos.profit_percent}</TableCell>
+                </TableRow>
+              );
+            })}
+            {(positions.length < 1) && (
+              <TableRow>
+                <TableCell colSpan={5}>No positions</TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
       <TablePagination
         rowsPerPageOptions={[5, 10, 25, 50]}
-        component='div' count={positions.length}
-        rowsPerPage={rowsPerPage} page={page}
+        component='div'
+        count={input.positions.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
         onPageChange={onChangePage}
         onRowsPerPageChange={onChangeRowsPerPage} />
     </Box>
