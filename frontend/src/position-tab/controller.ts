@@ -14,7 +14,7 @@ export class Ctrl {
     return new Promise((resolve) => {
       let positions: Position[] = [];
       const time = new Date();
-      for (let i = 0; i < 523; i++) {
+      for (let i = 0; i < 175; i++) {
         const entry_at = new Date(time.getTime());
         entry_at.setDate(time.getDate() - i);
 

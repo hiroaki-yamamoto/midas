@@ -24,7 +24,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ThemeProvider theme={theme}>
       <AppBar position="static" enableColorOnDark>
         <Toolbar>
-          <Typography variant="h6" component="h6">Midas</Typography>
+          <Typography variant="h6" component="h6">
+            Midas
+          </Typography>
         </Toolbar>
       </AppBar>
       <div className={style.container}>

@@ -1,3 +1,9 @@
+import { Link } from 'react-router-dom';
+
+import Fab from '@mui/material/Fab';
+import AddIcon from '@mui/icons-material/Add';
+import Tooltip from '@mui/material/Tooltip';
+
 import style from './dashboard.module.scss';
 import OverAllGraph from '../graph-overall/view.tsx';
 import { IData } from '../graph-overall/data.interface.ts';
@@ -73,8 +79,15 @@ function Dashboard() {
         <OverAllGraph legend={legend} data={data} />
       </section>
       <section>
-        <header className={style['dashboard-header']}>
+        <header className={style['bot-header']}>
           <h1>Bots</h1>
+          <Tooltip title='Add'>
+            <Link to={`new-bot`}>
+              <Fab color="primary" aria-label="add" size="medium">
+                <AddIcon />
+              </Fab>
+            </Link>
+          </Tooltip>
         </header>
         {botsAccordions}
       </section>
