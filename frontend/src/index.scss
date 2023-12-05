@@ -1,6 +1,8 @@
 @import '@fontsource/roboto';
 @import '@fontsource/material-icons';
 
+$normal-font-color: #FAFAFB;
+
 :root {
   font-family:
     Roboto, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -9,7 +11,7 @@
 
   color-scheme: light dark;
   background-color: #212122;
-  color: #FAFAFB;
+  color: $normal-font-color;
   min-height: 100%;
 
   font-synthesis: none;
@@ -17,6 +19,10 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+}
+
+a {
+  color: $normal-font-color;
 }
 
 body {

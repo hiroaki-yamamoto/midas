@@ -1,14 +1,21 @@
 import { createBrowserRouter } from 'react-router-dom';
-import App from './dashboard/view.tsx';
+import { Dashboard } from './dashboard/view.tsx';
 import { BotEditor } from './bot-editor/view.tsx';
+import { Root } from './root/view.tsx';
 
 export const routing = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: <Root />,
+    children: [
+      {
+        path: '/',
+        element: <Dashboard />,
+      },
+      {
+        path: '/new-bot',
+        element: <BotEditor />,
+      }
+    ],
   },
-  {
-    path: '/new-bot',
-    element: <BotEditor />,
-  }
 ]);

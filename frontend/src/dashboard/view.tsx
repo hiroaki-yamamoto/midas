@@ -13,7 +13,7 @@ import { Exchanges } from '../rpc/exchanges.zod.ts';
 import { dateToTimestamp } from '../timestamp-utils.ts';
 import BotPanel from '../bot-panel/view.tsx';
 
-function Dashboard() {
+export function Dashboard() {
 
   const legend: IGraphLegend[] = [
     {
@@ -94,5 +94,3 @@ function Dashboard() {
     </>
   );
 }
-
-export default Dashboard;
