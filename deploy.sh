@@ -3,9 +3,10 @@
 
 set -e
 
-buildFrontendProto() {
-  cd proto
-  ./build.sh
+buildFrontendEntities() {
+  cd entities
+  ./config.sh
+  ninja
   cd -
 }
 
@@ -25,8 +26,8 @@ deploy() {
   skaffold run --build-concurrency=0
 }
 
-echo "Generating proto code to typescript"
-buildFrontendProto
+echo "Generating Entities code to typescript"
+buildFrontendEntities
 echo "Building Backend"
 buildBackend
 echo "Building Frontend"
