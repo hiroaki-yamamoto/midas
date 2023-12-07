@@ -9,13 +9,24 @@ export class Http {
     fetch('/token/csrf', {
       method: 'HEAD',
       credentials: 'same-origin'
-    }).then((resp) => {
-      const cookieTxt = resp.headers.get('set-cookie');
+    }).then(() => {
+      const cookieTxt = document.cookie;
       if (!cookieTxt) {
         throw new Error('No CSRF token');
       }
       const parsed = parse(cookieTxt);
       this.csrfToken = parsed[this.csrf_cookie_name];
+      console.log("CSRF token: ", this.csrfToken);
     });
+  }
+
+  public async get(url: string): Promise<Response> {
+    const headers = new Headers();
+    if (this.csrfToken) {
+      headers.append(this.csrf_header_name, this.csrfToken);
+    }
+    return await fetch(
+      url, { method: 'GET', credentials: 'same-origin', headers, }
+    );
   }
 }
