@@ -44,6 +44,9 @@ dependencies:
   '@mui/x-data-grid':
     specifier: ^6.18.2
     version: 6.18.2(@mui/material@5.14.19)(@mui/system@5.14.19)(@types/react@18.2.39)(react-dom@18.2.0)(react@18.2.0)
+  cookie:
+    specifier: ^0.6.0
+    version: 0.6.0
   google-protobuf:
     specifier: ^3.21.2
     version: 3.21.2
@@ -82,6 +85,9 @@ devDependencies:
   '@types/amcharts':
     specifier: ^3.21.11
     version: 3.21.11
+  '@types/cookie':
+    specifier: ^0.6.0
+    version: 0.6.0
   '@types/react':
     specifier: ^18.2.39
     version: 18.2.39
@@ -1149,6 +1155,10 @@ packages:
     resolution: {integrity: sha512-c4DdveXoxYIQdGI1ZLxdIf+fd7KltJgSRuHf/7ylBOH/9SZo6LW8LaFVyucSMrdh2jCJPOUlwlK1b2Jsn6MH/g==}
     dev: true
 
+  /@types/cookie@0.6.0:
+    resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
+    dev: true
+
   /@types/d3-array@3.2.0:
     resolution: {integrity: sha512-tjU8juPSfhMnu6mJZPOCVVGba4rZoE0tjHDPb81PYwA8CzbaFscGjgkUM7juUJu6iWA1cCVWNEVwxZ5HN9Jj8Q==}
     dev: false
@@ -1820,6 +1830,11 @@ packages:
 
   /convert-source-map@1.9.0:
     resolution: {integrity: sha512-ASFBup0Mz1uyiIjANan1jzLQami9z1PoYSZCiiYW2FczPbenXc45FZdBZLzOT+r6+iciuEModtmCti+hjaAk0A==}
+    dev: false
+
+  /cookie@0.6.0:
+    resolution: {integrity: sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw==}
+    engines: {node: '>= 0.6'}
     dev: false
 
   /core-util-is@1.0.3:
