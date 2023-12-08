@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 
-import { editor as monaco } from 'monaco-editor';
+import { editor as monaco, languages as monacoLang, Uri } from 'monaco-editor';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
@@ -36,6 +36,35 @@ self.MonacoEnvironment = {
 export const Editor = (input: EditorInput) => {
   const container = useRef<HTMLDivElement>(null);
   const [editor, setEditor] = useState<monaco.IStandaloneCodeEditor>();
+  useEffect(() => {
+    const code = input.definition;
+    if (!editor || !code) {
+      return;
+    }
+    const ts = monacoLang.typescript;
+    // validation settings
+    ts.javascriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: true,
+      noSyntaxValidation: false
+    });
+
+    // compiler options
+    ts.javascriptDefaults.setCompilerOptions({
+      target: ts.ScriptTarget.ES2015,
+      allowNonTsExtensions: true
+    });
+
+    // Model creation
+    const uri = 'ts:bot-condition.d.ts';
+    const extraLib = ts.javascriptDefaults.addExtraLib(code, uri);
+    const model = monaco.createModel(
+      code, 'typescript', Uri.parse(uri),
+    );
+    return () => {
+      model.dispose();
+      extraLib.dispose();
+    };
+  }, [editor, input.definition]);
   useEffect(() => {
     if (editor) {
       return;
