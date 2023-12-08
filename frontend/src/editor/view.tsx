@@ -1,6 +1,6 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 
-import { editor as monaco, languages as monacoLang, Uri } from 'monaco-editor';
+import { editor as monaco } from 'monaco-editor';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
@@ -9,6 +9,7 @@ import TsWorker from
   'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 
 import { EditorInput } from './interface';
+import { Ctrl } from './controller';
 import style from './style.module.scss';
 
 self.MonacoEnvironment = {
@@ -34,47 +35,33 @@ self.MonacoEnvironment = {
 };
 
 export const Editor = (input: EditorInput) => {
+  const controller = useMemo(() => new Ctrl(), []);
   const container = useRef<HTMLDivElement>(null);
   const [editor, setEditor] = useState<monaco.IStandaloneCodeEditor>();
   useEffect(() => {
-    const code = input.definition;
-    if (!editor || !code) {
+    if (!input.definition) {
       return;
     }
-    const ts = monacoLang.typescript;
-    // validation settings
-    ts.javascriptDefaults.setDiagnosticsOptions({
-      noSemanticValidation: true,
-      noSyntaxValidation: false
-    });
-
-    // compiler options
-    ts.javascriptDefaults.setCompilerOptions({
-      target: ts.ScriptTarget.ES2015,
-      allowNonTsExtensions: true
-    });
-
-    // Model creation
-    const uri = 'ts:bot-condition.d.ts';
-    const extraLib = ts.javascriptDefaults.addExtraLib(code, uri);
-    const model = monaco.createModel(
-      code, 'typescript', Uri.parse(uri),
-    );
-    return () => {
-      model.dispose();
-      extraLib.dispose();
-    };
-  }, [editor, input.definition]);
+    switch (input.language) {
+      case 'typescript':
+        controller.setTsDefModel(input.definition);
+        break;
+    }
+  }, [input, controller]);
   useEffect(() => {
-    if (editor) {
+    if (!input.value) {
       return;
     }
-    setEditor(monaco.create(container.current!, {
-      value: input.value,
-      language: input.language,
-      theme: 'vs-dark',
-    }));
-  }, [container, input, editor]);
+    if (editor) {
+      editor.setValue(input.value);
+    } else {
+      setEditor(monaco.create(container.current!, {
+        language: input.language,
+        value: input.value,
+        theme: 'vs-dark',
+      }));
+    }
+  }, [container, input, editor, setEditor]);
   return (
     <div ref={container} className={style.editor}></div>
   );
