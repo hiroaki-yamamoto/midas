@@ -8,7 +8,7 @@ pub struct Bot {
   pub condition: String,
   pub created_at: Box<Timestamp>,
   pub exchange: Box<Exchanges>,
-  pub id: String,
+  pub id: Option<String>,
   pub name: String,
   pub trading_amount: String,
 }

@@ -12,7 +12,7 @@
         <mat-label i18n>Exchange</mat-label>
         <mat-select (selectionChange)="exchangeChanged()" formControlName="exchange" required>
           <mat-option *ngFor="let exchange of exchanges" [value]="exchange">
-            {{ exchange | exchangePipe | titlecase }}
+            {{ exchange | titlecase }}
           </mat-option>
         </mat-select>
       </mat-form-field>

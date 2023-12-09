@@ -9,8 +9,8 @@ import { FormGroup, FormControl } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { SymbolService, IBaseCurrencies } from '../resources/symbol.service';
-import { Exchanges } from '../rpc/entities_pb';
-import { Bot } from '../rpc/bot_pb';
+import { Exchanges } from '../../rpc/exchanges.zod';
+import { Bot } from '../../rpc/bot.zod';
 
 import { faSave } from '@fortawesome/free-solid-svg-icons';
 
@@ -30,7 +30,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   };
   public baseCurrencies: IBaseCurrencies = { symbols: [] };
   public baseCurrencyEnabled = false;
-  public exchanges = Object.values(Exchanges);
+  public exchanges = Object.values(Exchanges.enum);
   public saveIcon = faSave;
 
   private extraLib: monaco.IDisposable;
@@ -116,16 +116,15 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       if (form.status === 'INVALID') {
         return;
       }
-      const model = new Bot();
-      model.setName(this.form.get('name').value);
-      model.setExchange(this.form.get('exchange').value);
-      model.setBaseCurrency(this.form.get('baseCurrency').value);
-      model.setTradingAmount(this.form.get('tradingAmount').value);
-      model.setCondition(this.form.get('condition').value);
+      const model = Bot.parse({
+        name: this.form.get('name').value,
+        exchange: this.form.get('exchange').value,
+        baseCurrency: this.form.get('baseCurrency').value,
+        tradingAmount: this.form.get('tradingAmount').value,
+        condition: this.form.get('condition').value,
+      });
 
-      console.log(model.toObject());
-
-      this.http.post('/bot/', model.toObject()).subscribe(() => {
+      this.http.post('/bot/', model).subscribe(() => {
         this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });
       });
     }

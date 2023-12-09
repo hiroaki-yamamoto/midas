@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Exchanges } from './rpc/entities_pb';
+import { Exchanges } from '../rpc/exchanges.zod';
 
 @Component({
   selector: 'app-root',
@@ -9,7 +9,7 @@ import { Exchanges } from './rpc/entities_pb';
 })
 export class AppComponent {
   public readonly exchanges = Object.values(Exchanges);
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   preventCSRF() {
     this.http.head('/token/csrf').subscribe();

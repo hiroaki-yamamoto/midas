@@ -39,7 +39,6 @@ import { KeychainService } from './resources/keychain.service';
 import { BookTickerComponent } from './info/book-ticker/book-ticker.component';
 import { KeychainComponent } from './keychain/keychain.component';
 import { EditDialogComponent } from './keychain/edit-dialog/edit-dialog.component';
-import { ExchangePipePipe } from './rpc/exchange-pipe.pipe';
 import { DeleteWarnComponent } from './keychain/delete-warn/delete-warn.component';
 import { BotEditorComponent } from './bot-editor/bot-editor.component';
 import { DateGraphComponent } from './date-graph/date-graph.component';
@@ -54,7 +53,6 @@ import { MonacoEditorComponent } from './monaco-editor/monaco-editor.component';
     BookTickerComponent,
     KeychainComponent,
     EditDialogComponent,
-    ExchangePipePipe,
     DeleteWarnComponent,
     BotPanelComponent,
     BotEditorComponent,
