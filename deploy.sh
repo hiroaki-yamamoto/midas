@@ -22,6 +22,12 @@ buildFrontend() {
   cd -
 }
 
+buildOldFrontend() {
+  cd frontend.old
+  pnpm run build
+  cd -
+}
+
 deploy() {
   skaffold run --build-concurrency=0
 }
@@ -32,6 +38,8 @@ echo "Building Backend"
 buildBackend
 echo "Building Frontend"
 buildFrontend
+echo "Building Old Frontend"
+buildOldFrontend
 echo "Deploying"
 deploy
 echo "Done"

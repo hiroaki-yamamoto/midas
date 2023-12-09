@@ -5,8 +5,12 @@
     <li>
       <button mat-button i18n [matMenuTriggerFor]="syncMenu">Sync</button>
       <mat-menu #syncMenu>
-        <a mat-menu-item mat-button i18n *ngFor="let exchange of exchanges" routerLink="/sync/{{ exchange }}">{{
-          exchange | exchangePipe | titlecase }}</a>
+        <a mat-menu-item
+          i18n
+          *ngFor="let exchange of exchanges" routerLink="/sync/{{ exchange }}"
+        >
+          {{exchange | exchangePipe | titlecase }}
+        </a>
       </mat-menu>
     </li>
     <li><a mat-button i18n routerLink="/info">Info</a></li>

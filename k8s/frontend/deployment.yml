@@ -14,19 +14,19 @@ spec:
         app: frontend
     spec:
       containers:
-      - image: frontend
-        name: frontend
-        resources:
-          requests:
-            cpu: 2m
-            memory: 1Mi
-          limits:
-            cpu: 1000m
-            memory: 1Gi
-        volumeMounts:
-          - name: svc-cert
-            mountPath: "/etc/certs/svc"
-            readOnly: true
+        - image: old-frontend
+          name: frontend
+          resources:
+            requests:
+              cpu: 2m
+              memory: 1Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          volumeMounts:
+            - name: svc-cert
+              mountPath: "/etc/certs/svc"
+              readOnly: true
       volumes:
         - name: svc-cert
           secret:

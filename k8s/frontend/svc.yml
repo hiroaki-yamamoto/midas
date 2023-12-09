@@ -4,10 +4,10 @@ metadata:
   name: frontend
 spec:
   ports:
-  - name: https
-    port: 443
-    protocol: TCP
-    targetPort: 50000
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 50000
   selector:
     app: frontend
   type: NodePort
