@@ -14,28 +14,28 @@ errors = { path = "../errors" }
 kvs = { path = "../kvs" }
 rpc = { path = "../rpc" }
 
-mongodb = { version = "2.4.0", default-features = false, features = [
+mongodb = { version = "2.7.1", default-features = false, features = [
   "async-std-runtime",
 ] }
 serde = { version = "1.0.152", features = ["derive"] }
-serde_yaml = "0.9.17"
-clap = { version = "4.3.0", features = ["derive"] }
-reqwest = { version = "0.11.14", features = [
+serde_yaml = "0.9.27"
+clap = { version = "4.4.10", features = ["derive"] }
+reqwest = { version = "0.11.22", features = [
   "gzip",
   "brotli",
   "json",
   "rustls-tls",
 ] }
-redis = { version = "0.23.0", features = ["connection-manager", "tokio-comp"] }
+redis = { version = "0.24.0", features = ["connection-manager", "tokio-comp"] }
 json_env_logger2 = { version = "0.2.1", features = [
   "iso-timestamps",
   "backtrace",
 ] }
-tokio = { version = "1.25.0", features = [
+tokio = { version = "1.34.0", features = [
   "macros",
   "rt",
   "rt-multi-thread",
   "signal",
   "time",
 ] }
-libc = "0.2.139"
+libc = "0.2.150"
