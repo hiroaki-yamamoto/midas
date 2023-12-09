@@ -39,8 +39,8 @@ impl ToString for Exchanges {
 impl FromStr for Exchanges {
   type Err = UnknownExchangeError;
   fn from_str(s: &str) -> Result<Self, Self::Err> {
-    match s {
-      "Binance" => Ok(Exchanges::Binance),
+    match s.to_lowercase().as_str() {
+      "binance" => Ok(Exchanges::Binance),
       _ => Err(UnknownExchangeError::new(s.to_string())),
     }
   }
