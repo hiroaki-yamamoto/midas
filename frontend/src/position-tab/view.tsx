@@ -29,7 +29,6 @@ export const PositionTab = (input: { bot: Bot }) => {
   const ctrl = useMemo(() => new Ctrl(input.bot), [input.bot]);
   const rerender = useCallback(() => {
     swiper.then((sw) => {
-      console.log(sw);
       setTimeout(() => {
         sw.update();
       }, 0);
