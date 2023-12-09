@@ -21,7 +21,7 @@ round = { path = "../../round" }
 kvs = { path = "../../kvs" }
 
 async-trait = "0.1.74"
-futures = "0.3.26"
+futures = "0.3.29"
 rand = "0.8.5"
 mongodb = { version = "2.7.1", default-features = false, features = [
   "async-std-runtime",
