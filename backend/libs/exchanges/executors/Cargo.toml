@@ -23,7 +23,7 @@ writers = { path = "../../writers" }
 
 async-stream = "0.3.5"
 async-trait = "0.1.74"
-futures = "0.3.26"
+futures = "0.3.29"
 mongodb = { version = "2.7.1", default-features = false, features = [
   "async-std-runtime",
 ] }

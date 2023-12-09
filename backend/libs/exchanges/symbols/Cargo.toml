@@ -18,7 +18,7 @@ clients = { path = "../clients" }
 writers = { path = "../../writers" }
 
 async-trait = "0.1.74"
-futures = "0.3.26"
+futures = "0.3.29"
 mongodb = { version = "2.7.1", default-features = false, features = [
   "async-std-runtime",
 ] }
