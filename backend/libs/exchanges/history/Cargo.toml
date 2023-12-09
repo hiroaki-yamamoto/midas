@@ -30,7 +30,7 @@ rmp-serde = "1.1.2"
 serde_qs = "0.12.0"
 url = "2.5.0"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-tokio = { version = "1.34.0", features = [
+tokio = { version = "1.35.0", features = [
   "macros",
   "rt",
   "rt-multi-thread",
