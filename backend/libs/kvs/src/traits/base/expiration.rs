@@ -15,7 +15,7 @@ pub trait Expiration: Base + ChannelName {
     key: Arc<String>,
     dur: Duration,
   ) -> KVSResult<bool> {
-    let dur_mils = dur.as_millis() as usize;
+    let dur_mils = dur.as_millis() as i64;
     let mut cmd = self.__commands__();
     let channel_name = self.__channel_name__(key);
     if cmd
