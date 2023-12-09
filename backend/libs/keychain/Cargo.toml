@@ -15,7 +15,7 @@ entities = { path = "../entities" }
 writers = { path = "../writers" }
 
 futures = "0.3.26"
-mongodb = { version = "2.4.0", default-features = false, features = [
+mongodb = { version = "2.7.1", default-features = false, features = [
   "async-std-runtime",
 ] }
-rmp-serde = "1.1.1"
+rmp-serde = "1.1.2"

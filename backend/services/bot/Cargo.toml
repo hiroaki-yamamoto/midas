@@ -15,18 +15,18 @@ access_logger = { path = "../../libs/access_logger" }
 warp_utils = { path = "../../libs/warp_utils" }
 rpc = { path = "../../libs/rpc" }
 
-warp = { version = "0.3.3", features = ["tls"] }
-mongodb = { version = "2.4.0", default-features = false, features = [
+warp = { version = "0.3.6", features = ["tls"] }
+mongodb = { version = "2.7.1", default-features = false, features = [
   "async-std-runtime",
 ] }
-reqwest = { version = "0.11.14", features = [
+reqwest = { version = "0.11.22", features = [
   "gzip",
   "brotli",
   "json",
   "rustls-tls",
   "cookies",
 ] }
-tokio = { version = "1.25.0", features = [
+tokio = { version = "1.34.0", features = [
   "macros",
   "rt",
   "rt-multi-thread",
@@ -34,6 +34,6 @@ tokio = { version = "1.25.0", features = [
 ] }
 futures = "0.3.26"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-clap = { version = "4.3.0", features = ["derive"] }
-libc = "0.2.139"
+clap = { version = "4.4.10", features = ["derive"] }
+libc = "0.2.150"
 http = "1.0.0"
