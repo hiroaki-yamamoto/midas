@@ -52,8 +52,12 @@ impl TryFrom<RPCBot> for Bot {
     let trading_amount = value.trading_amount;
     let trading_amount =
       cast_f_from_txt("trading_amount", trading_amount.as_str())?;
+    let id = value
+      .id
+      .map(|id| bson::oid::ObjectId::from_str(&id).ok())
+      .flatten();
     return Ok(Self {
-      id: bson::oid::ObjectId::from_str(value.id.as_str()).ok(),
+      id,
       name: value.name,
       base_currency: value.base_currency,
       exchange,
@@ -68,7 +72,7 @@ impl TryFrom<RPCBot> for Bot {
 impl From<Bot> for RPCBot {
   fn from(value: Bot) -> Self {
     return Self {
-      id: value.id.map(|id| id.to_hex()).unwrap_or("".to_string()),
+      id: value.id.map(|id| id.to_hex()),
       name: value.name,
       base_currency: value.base_currency,
       exchange: value.exchange,
