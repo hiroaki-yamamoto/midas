@@ -14,7 +14,7 @@ spec:
         app: frontend
     spec:
       containers:
-        - image: old-frontend
+        - image: frontend
           name: frontend
           resources:
             requests:

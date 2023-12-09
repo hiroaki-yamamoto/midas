@@ -7,9 +7,6 @@ build:
     - image: frontend
       context: frontend
       docker: {}
-    - image: old-frontend
-      context: frontend.old
-      docker: {}
     - image: historical-service
       context: backend
       docker:

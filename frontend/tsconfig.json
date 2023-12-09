@@ -1,33 +1,26 @@
 {
+  "compileOnSave": false,
   "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
+    "baseUrl": "./",
+    "outDir": "./dist/out-tsc",
+    "sourceMap": true,
+    "declaration": false,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "target": "ES2022",
     "lib": [
-      "ES2020",
-      "DOM",
-      "DOM.Iterable"
+      "ES2022",
+      "dom"
     ],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "types": [
+      "@angular/localize",
+    ]
   },
-  "include": [
-    "src"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    }
-  ]
+  "angularCompilerOptions": {
+    "fullTemplateTypeCheck": true,
+    "strictInjectionParameters": true
+  }
 }
