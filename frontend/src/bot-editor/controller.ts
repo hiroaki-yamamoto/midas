@@ -9,31 +9,21 @@ export class Ctrl {
     setDefCode: Dispatch<SetStateAction<string>>,
     setCond: Dispatch<SetStateAction<string>>,
   ) {
-    this.http.get('/bot-condition.d.ts')
-      .then((resp) => {
-        if (!resp.body) {
-          throw new Error('Failed to fetch bot condition def. file: No body.');
-        }
-        resp.text().then((txt) => {
-          if (!txt) {
-            return;
-          }
-          this.defCode += txt;
-          setDefCode(this.defCode);
-        });
-      });
-    this.http.get('/bot-condition.ts')
-      .then((resp) => {
-        if (!resp.body) {
-          throw new Error('Failed to fetch bot condition def. file: No body.');
-        }
-        resp.text().then((txt) => {
-          if (!txt) {
-            return;
-          }
-          this.value += txt;
-          setCond(this.value);
-        });
-      });
+    this.http.csrfPromise.then(() => {
+      return Promise.all([
+        this.http.get('/bot-condition.d.ts'),
+        this.http.get('/bot-condition.ts'),
+      ]);
+    }).then(([defResp, valueResp]) => {
+      return Promise.all([defResp.text(), valueResp.text()]);
+    }).then(([defCode, value]) => {
+      this.defCode += defCode;
+      setDefCode(this.defCode);
+      this.value += value;
+      setCond(this.value);
+    }).catch((err) => {
+      console.error(err);
+      return;
+    });
   }
 }
