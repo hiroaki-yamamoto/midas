@@ -15,11 +15,11 @@ access_logger = { path = "../../libs/access_logger" }
 subscribe = { path = "../../libs/subscribe" }
 warp_utils = { path = "../../libs/warp_utils" }
 
-clap = { version = "4.4.10", features = ["derive"] }
+clap = { version = "4.4.11", features = ["derive"] }
 mongodb = { version = "2.7.1", default-features = false, features = [
   "async-std-runtime",
 ] }
-tokio = { version = "1.34.0", features = [
+tokio = { version = "1.35.0", features = [
   "macros",
   "rt",
   "rt-multi-thread",
