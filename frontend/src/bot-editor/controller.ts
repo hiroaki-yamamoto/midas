@@ -9,12 +9,10 @@ export class Ctrl {
     setDefCode: Dispatch<SetStateAction<string>>,
     setCond: Dispatch<SetStateAction<string>>,
   ) {
-    this.http.csrfPromise.then(() => {
-      return Promise.all([
-        this.http.get('/bot-condition.d.ts'),
-        this.http.get('/bot-condition.ts'),
-      ]);
-    }).then(([defResp, valueResp]) => {
+    Promise.all([
+      this.http.get('/bot-condition.d.ts'),
+      this.http.get('/bot-condition.ts'),
+    ]).then(([defResp, valueResp]) => {
       return Promise.all([defResp.text(), valueResp.text()]);
     }).then(([defCode, value]) => {
       this.defCode += defCode;
