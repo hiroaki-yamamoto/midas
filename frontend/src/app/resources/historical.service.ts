@@ -1,20 +1,21 @@
 import { Injectable, OnDestroy } from '@angular/core';
 
 import { MidasSocket } from '../websocket';
-import { Progress, HistoryFetchRequest } from '../rpc/historical_pb'
+import { Progress } from '../../rpc/progress.zod';
+import { HistoryFetchRequest } from '../../rpc/history-fetch-request.zod';
 
 @Injectable({
   providedIn: 'root'
 })
 export class HistoricalService implements OnDestroy {
-  public readonly progress: Map<string, Progress.AsObject>;
+  public readonly progress: Map<string, Progress>;
   private socket: MidasSocket;
 
   constructor() {
     this.progress = new Map();
     this.socket = new MidasSocket('/historical/subscribe');
     this.socket.addEventListener('message', (ev) => {
-      const obj = JSON.parse(ev.data) as Progress.AsObject;
+      const obj = Progress.parse(JSON.parse(ev.data));
       this.progress.set(obj.symbol, obj);
     });
     this.socket.addEventListener('error', (ev) => {
@@ -30,7 +31,7 @@ export class HistoricalService implements OnDestroy {
   }
 
   sync(req: HistoryFetchRequest): void {
-    return this.socket.send(JSON.stringify(req.toObject()));
+    return this.socket.send(JSON.stringify(req));
   }
 
   deleteProgress(symbol: string) {
