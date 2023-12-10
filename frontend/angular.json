@@ -30,10 +30,6 @@
               "zone.js"
             ],
             "tsConfig": "tsconfig.app.json",
-            "optimization": true,
-            "aot": false,
-            "buildOptimizer": false,
-            "sourceMap": true,
             "assets": [
               "src/favicon.ico",
               "src/assets",
@@ -75,8 +71,11 @@
           },
           "configurations": {
             "production": {
-              "outputHashing": "all",
+              "optimization": true,
+              "aot": false,
+              "buildOptimizer": false,
               "sourceMap": false,
+              "outputHashing": "all",
               "preserveSymlinks": true,
               "namedChunks": false,
               "extractLicenses": true,
@@ -95,9 +94,12 @@
               ]
             },
             "development": {
-              "optimization": false,
-              "extractLicenses": false,
-              "sourceMap": true
+              "outputHashing": "all",
+              "optimization": true,
+              "aot": false,
+              "buildOptimizer": false,
+              "sourceMap": true,
+              "extractLicenses": false
             }
           }
         },
