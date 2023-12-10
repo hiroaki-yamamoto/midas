@@ -1,6 +1,6 @@
-import { Component} from '@angular/core';
+import { Component } from '@angular/core';
 
-import { Exchanges } from '../rpc/entities_pb';
+import { Exchanges } from '../../rpc/exchanges.zod';
 
 @Component({
   selector: 'app-info',
@@ -8,14 +8,5 @@ import { Exchanges } from '../rpc/entities_pb';
   styleUrls: ['./info.component.scss']
 })
 export class InfoComponent {
-  public exchanges: string[];
-
-  constructor() {
-    this.exchanges = Object
-      .keys(Exchanges)
-      .map(
-        (upperName) => upperName[0].toUpperCase() +
-          upperName.substr(1).toLowerCase()
-      );
-  }
+  public exchanges = Exchanges.enum;
 }

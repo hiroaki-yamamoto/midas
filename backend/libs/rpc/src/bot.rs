@@ -5,7 +5,7 @@ use super::timestamp::Timestamp;
 #[serde(rename_all = "camelCase")]
 pub struct Bot {
   pub base_currency: String,
-  pub condition: String,
+  pub condition: Option<String>,
   pub created_at: Option<Box<Timestamp>>,
   pub exchange: Box<Exchanges>,
   pub id: Option<String>,

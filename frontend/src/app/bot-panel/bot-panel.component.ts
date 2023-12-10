@@ -8,7 +8,9 @@ import {
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 
-import { Bot, Position } from '../rpc/bot_pb';
+import { Bot } from '../../rpc/bot.zod';
+import { Position } from '../../rpc/position.zod';
+import { PositionStatus } from '../../rpc/position-status.zod';
 import { IGraphStats } from './interfaces';
 import { BrowserOnlyService } from '../browser-only.service';
 import { ISeries } from '../date-graph/date-graph.component';
@@ -71,33 +73,35 @@ export class BotPanelComponent implements OnInit {
   open() {
     for (let i = 0; i < 20; i++) {
       const id = `test-cur-position-${i}`;
-      const pos = new Position();
-      pos.setId(id);
-      pos.setBotid(this.bot.getId());
-      pos.setSymbol('TESTUSDT');
-      pos.setTradingAmount(Math.random().toString());
-      pos.setValuation(
-        (parseFloat(pos.getTradingAmount()) + (
+      const tradingAmount = Math.random();
+      const pos = Position.parse({
+        id,
+        botId: this.bot.id,
+        symbol: 'TESTUSDT',
+        tradingAmount: tradingAmount.toString(),
+        valuation: (tradingAmount + (
           ((Math.round(Math.random() * 10) & 0x01) ? 1 : - 1) *
           Math.random()
-        )).toString()
-      );
+        )),
+        status: PositionStatus.enum.OPEN,
+      });
       this.currentPositions.data = this.currentPositions.data.concat(pos);
     }
 
     for (let i = 0; i < 20; i++) {
-      const id = `test-cur-position-${i}`;
-      const pos = new Position();
-      pos.setId(id);
-      pos.setBotid(this.bot.getId());
-      pos.setSymbol('TESTUSDT');
-      pos.setTradingAmount(Math.random().toString());
-      pos.setValuation(
-        (parseFloat(pos.getTradingAmount()) + (
+      const id = `test-arc-position-${i}`;
+      const tradingAmount = Math.random();
+      const pos = Position.parse({
+        id,
+        botId: this.bot.id,
+        symbol: 'TESTUSDT',
+        tradingAmount: tradingAmount.toString(),
+        valuation: (tradingAmount + (
           ((Math.round(Math.random() * 10) & 0x01) ? 1 : - 1) *
           Math.random()
-        )).toString()
-      );
+        )),
+        status: PositionStatus.enum.CLOSE,
+      });
       this.archivedPositions.data = this.archivedPositions.data.concat(pos);
     }
   }

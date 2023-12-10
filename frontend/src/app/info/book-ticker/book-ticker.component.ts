@@ -3,7 +3,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort'
 
-import { BookTicker } from '../../rpc/bookticker_pb';
+import { Bookticker as BookTicker } from '../../../rpc/bookticker.zod';
 import { TradeObserverService } from '../../resources/trade-observer.service';
 
 @Component({

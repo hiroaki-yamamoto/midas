@@ -20,4 +20,6 @@ members:
   exchange: { use: Exchanges }
   base_currency: string
   trading_amount: string
-  condition: string
+  condition:
+    optional: true
+    type: string

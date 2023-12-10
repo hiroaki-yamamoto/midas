@@ -1,4 +1,4 @@
-import { APIKey } from '../../rpc/keychain_pb';
+import { ApiKey as APIKey } from '../../../rpc/api-key.zod';
 
 export enum RespType {
   DELETE,
@@ -9,5 +9,5 @@ export enum RespType {
 export interface EditDialogData {
   type: RespType,
   index?: number,
-  data?: APIKey.AsObject;
+  data?: APIKey;
 }

@@ -3,7 +3,8 @@ import {
   OnInit,
 } from '@angular/core';
 
-import { Bot } from '../rpc/bot_pb';
+import { Bot } from '../../rpc/bot.zod';
+import { Exchanges } from '../../rpc/exchanges.zod';
 import { ISeries } from '../date-graph/date-graph.component'
 
 interface IGraphData {
@@ -51,9 +52,13 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     for (let i = 0; i < 5; i++) {
-      const info = new Bot();
-      info.setId(`test-bot-${i}`);
-      info.setName(`Test Bot ${i}`);
+      const info = Bot.parse({
+        id: `test-bot-${i}`,
+        name: `Test Bot ${i}`,
+        exchange: Exchanges.enum.Binance,
+        baseCurrency: 'USDT',
+        tradingAmount: '12000',
+      });
       this.botsInfo = this.botsInfo.concat(info);
     }
   }
