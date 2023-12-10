@@ -7,7 +7,7 @@ import { DeleteWarnComponent } from './delete-warn/delete-warn.component';
 import { RespType, EditDialogData } from './edit-dialog/edit-dialog-data'
 
 import { KeychainService } from '../resources/keychain.service';
-import { APIKey } from '../rpc/keychain_pb';
+import { ApiKey as APIKey } from '../../rpc/api-key.zod';
 
 @Component({
   selector: 'app-keychain',
@@ -39,13 +39,8 @@ export class KeychainComponent {
           if (result.index >= 0) {
             this.keychain.rename(result.index, result.data.label).subscribe();
           } else {
-            const key = new APIKey();
-            key.setExchange(result.data.exchange);
-            key.setLabel(result.data.label);
-            key.setPubKey(result.data.pubKey);
-            key.setPrvKey(result.data.prvKey);
-            const payload = key.toObject();
-            this.keychain.add(payload).subscribe();
+            const key = APIKey.parse(result.data);
+            this.keychain.add(key).subscribe();
           }
           break;
         case RespType.DELETE:

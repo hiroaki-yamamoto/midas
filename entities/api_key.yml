@@ -6,7 +6,9 @@ rust:
 typescript:
   rename: camelCase
 members:
-  id: string
+  id:
+    optional: true
+    type: string
   exchange: { use: Exchanges }
   label: string
   pub_key: string

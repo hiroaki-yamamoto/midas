@@ -3,33 +3,35 @@ import { map, tap, catchError } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-import { APIKey, APIKeyList, APIRename } from '../rpc/keychain_pb';
-import { InsertOneResult } from '../rpc/entities_pb';
+import { ApiKey as APIKey } from '../../rpc/api-key.zod';
+import { ApiKeyList as APIKeyList } from '../../rpc/api-key-list.zod';
+import { ApiRename as APIRename } from '../../rpc/api-rename.zod';
+import { InsertOneResult } from '../../rpc/insert-one-result.zod';
 
 @Injectable({
   providedIn: 'root'
 })
 export class KeychainService {
   private readonly endpoint = '/keychain';
-  public keys: APIKey.AsObject[] = [];
+  public keys: APIKey[] = [];
 
   constructor(private http: HttpClient) { }
 
-  fetch(): Observable<APIKey.AsObject[]> {
+  fetch(): Observable<APIKey[]> {
     return this.http
       .get(`${this.endpoint}/`)
       .pipe(
-        map((value: APIKeyList.AsObject) => value.keysList),
-        tap((value: APIKey.AsObject[]) => {
+        map((value: APIKeyList) => value.keys),
+        tap((value: APIKey[]) => {
           this.keys = value;
         })
       );
   }
 
-  add(payload: APIKey.AsObject) {
+  add(payload: APIKey) {
     return this.http
       .post(`${this.endpoint}/`, payload)
-      .pipe(tap((res: InsertOneResult.AsObject) => {
+      .pipe(tap((res: InsertOneResult) => {
         const api = { ...payload };
         api.prvKey = ('*').repeat(16);
         api.id = res.id;
@@ -38,7 +40,7 @@ export class KeychainService {
   }
 
   rename(index: number, label: string) {
-    const payload: APIRename.AsObject = { label }
+    const payload: APIRename = { label }
     return this.http
       .patch(`${this.endpoint}/${this.keys[index].id}`, payload)
       .pipe(tap(() => {
