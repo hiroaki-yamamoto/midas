@@ -45,7 +45,8 @@
 			"keychain",
 			"warp_utils",
 			"client",
-			"history"
+			"history",
+			"csrf"
 		],
 		"yaml.schemas": {
 			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [

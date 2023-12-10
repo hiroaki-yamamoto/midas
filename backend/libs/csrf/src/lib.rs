@@ -1,7 +1,7 @@
 mod errors;
 
 use ::cookie::time::Duration as TimeDuration;
-use ::cookie::CookieBuilder;
+use ::cookie::{CookieBuilder, SameSite};
 use ::hyper::header::SET_COOKIE;
 use ::random::generate_random_txt;
 use ::warp::http::Method;
@@ -126,6 +126,7 @@ impl CSRF {
         .max_age(TimeDuration::new(3600, 0))
         .http_only(false)
         .secure(true)
+        .same_site(SameSite::Lax)
         .path("/")
         .build();
         match req_cookie {
