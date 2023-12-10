@@ -6,28 +6,28 @@ import { MatPaginator } from '@angular/material/paginator';
 
 import { faRotate } from '@fortawesome/free-solid-svg-icons';
 
-import { Exchanges } from '../rpc/entities_pb';
-import { SymbolInfo } from '../rpc/symbols_pb';
-import { HistoryFetchRequest } from '../rpc/historical_pb';
-import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
+import { Exchanges } from '../../rpc/exchanges.zod';
+import { SymbolInfo } from '../../rpc/symbol-info.zod';
+import { HistoryFetchRequest } from '../../rpc/history-fetch-request.zod';
+import { Timestamp } from '../../rpc/timestamp.zod';
 
 import { HistoricalService } from '../resources/historical.service';
 
 @Injectable({ providedIn: 'root' })
 class SymbolSyncHandler {
-  public symbols: MatTableDataSource<SymbolInfo.AsObject>;
+  public symbols: MatTableDataSource<SymbolInfo>;
   public syncButtonEnabled;
   public ignoreSyncBtnReEnable: boolean;
 
   constructor(public progSock: HistoricalService) {
-    this.symbols = new MatTableDataSource<SymbolInfo.AsObject>();
+    this.symbols = new MatTableDataSource<SymbolInfo>();
     this.syncButtonEnabled = true;
     this.ignoreSyncBtnReEnable = false;
   }
   public setPaginator(paginator: MatPaginator) {
     this.symbols.paginator = paginator;
   }
-  public next(symbols: { symbols: SymbolInfo.AsObject[] }) {
+  public next(symbols: { symbols: SymbolInfo[] }) {
     this.symbols.data = Array.from(new Set(symbols.symbols));
   }
   public error(e) {
@@ -64,7 +64,7 @@ export class SyncComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.curRoute.paramMap.subscribe((params: ParamMap) => {
-      this.exchange = parseInt(params.get('exchange'), 10) as Exchanges;
+      this.exchange = Exchanges.parse(parseInt(params.get('exchange'), 10));
       this.syncHandler.ignoreSyncBtnReEnable = true;
       this.http.get(`/symbol/currencies/${this.exchange}`)
         .subscribe(this.syncHandler);
@@ -92,12 +92,17 @@ export class SyncComponent implements OnInit, AfterViewInit {
   }
 
   public sync(symbol: string): void {
+    const now = new Date();
     this.syncHandler.progSock.progress.set(symbol, null);
-    const req = new HistoryFetchRequest();
-    req.setExchange(this.exchange);
-    req.setSymbol(symbol);
-    req.setStart(new Timestamp());
-    req.setEnd(Timestamp.fromDate(new Date()));
+    const req = HistoryFetchRequest.parse({
+      exchange: this.exchange,
+      symbol,
+      start: Timestamp.parse({ nanos: 0, secs: 0 }),
+      end: Timestamp.parse({
+        secs: now.getTime() / 1000,
+        nanos: now.getMilliseconds() * 1000000
+      }),
+    });
     this.syncHandler.progSock.sync(req);
   }
 
