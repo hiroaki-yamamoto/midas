@@ -64,7 +64,7 @@ impl From<APIKey> for Result<RPCAPIKey, String> {
     let inner = value.inner().clone();
     let exchange: Exchanges = value.into();
     return Ok(RPCAPIKey {
-      id: inner.id.map(|oid| oid.to_hex()).unwrap_or(String::from("")),
+      id: inner.id.map(|oid| oid.to_hex()),
       exchange: exchange.into(),
       label: inner.label,
       pub_key: inner.pub_key,
@@ -78,7 +78,7 @@ impl TryFrom<RPCAPIKey> for APIKey {
   fn try_from(value: RPCAPIKey) -> Result<Self, Self::Error> {
     let exchange: APIKey = match value.exchange.as_ref() {
       Exchanges::Binance => APIKey::Binance(APIKeyInner {
-        id: ObjectId::parse_str(&value.id).ok(),
+        id: value.id.map(|id| ObjectId::parse_str(id).ok()).flatten(),
         label: value.label,
         pub_key: value.pub_key,
         prv_key: value.prv_key,

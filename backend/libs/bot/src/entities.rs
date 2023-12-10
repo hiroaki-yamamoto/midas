@@ -56,13 +56,18 @@ impl TryFrom<RPCBot> for Bot {
       .id
       .map(|id| bson::oid::ObjectId::from_str(&id).ok())
       .flatten();
+    let cond_ts = value.condition.ok_or(ParseError::new(
+      Some("condition"),
+      None,
+      Some("Missing condition script"),
+    ))?;
     return Ok(Self {
       id,
       name: value.name,
       base_currency: value.base_currency,
       exchange,
       created_at: bson::DateTime::now(),
-      cond_ts: value.condition,
+      cond_ts,
       cond_js: None,
       trading_amount,
     });
@@ -78,7 +83,7 @@ impl From<Bot> for RPCBot {
       exchange: value.exchange,
       created_at: Some(Box::new(value.created_at.to_chrono().into())),
       trading_amount: value.trading_amount.to_string(),
-      condition: value.cond_ts,
+      condition: Some(value.cond_ts),
     };
   }
 }
