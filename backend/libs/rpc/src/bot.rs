@@ -6,7 +6,7 @@ use super::timestamp::Timestamp;
 pub struct Bot {
   pub base_currency: String,
   pub condition: String,
-  pub created_at: Box<Timestamp>,
+  pub created_at: Option<Box<Timestamp>>,
   pub exchange: Box<Exchanges>,
   pub id: Option<String>,
   pub name: String,

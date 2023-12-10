@@ -7,6 +7,8 @@ rust:
     - "::serde::Deserialize"
   attrs:
     - 'serde(rename_all = "camelCase")'
+typescript:
+  rename: camelCase
 members:
   keys:
     array:

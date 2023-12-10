@@ -8,6 +8,8 @@ rust:
     - serde::Deserialize
   attrs:
     - 'serde(rename_all = "camelCase")'
+typescript:
+  rename: camelCase
 members:
   code: u32
   message: string

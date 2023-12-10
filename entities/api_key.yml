@@ -3,6 +3,8 @@ rust:
   derive: [Clone, PartialEq, "::serde::Serialize", "::serde::Deserialize"]
   attrs:
     - 'serde(rename_all = "camelCase")'
+typescript:
+  rename: camelCase
 members:
   id: string
   exchange: { use: Exchanges }
