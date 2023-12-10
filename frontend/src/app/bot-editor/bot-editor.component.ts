@@ -116,13 +116,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       if (form.status === 'INVALID') {
         return;
       }
-      const model = Bot.parse({
-        name: this.form.get('name').value,
-        exchange: this.form.get('exchange').value,
-        baseCurrency: this.form.get('baseCurrency').value,
-        tradingAmount: this.form.get('tradingAmount').value,
-        condition: this.form.get('condition').value,
-      });
+      const model = Bot.parse(this.form.value);
 
       this.http.post('/bot/', model).subscribe(() => {
         this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });
