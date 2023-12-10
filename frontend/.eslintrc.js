@@ -20,7 +20,6 @@ module.exports = {
         ],
         quotes: ['error', 'single', { allowTemplateLiterals: true }],
         '@typescript-eslint/no-misused-promises': ['error'],
-        '@typescript-eslint/no-explicit-any': ['warn'],
       },
     },
     {

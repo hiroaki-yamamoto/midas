@@ -21,7 +21,7 @@ export class MonacoEditorComponent implements AfterViewInit, ControlValueAccesso
   private editor: monaco.editor.IStandaloneCodeEditor;
   private value: string = '';
   private registerOnChangeFn: (string) => void;
-  private registerOnTouchedFn: any;
+  private registerOnTouchedFn: () => void;
   @ViewChild('monacoContainer') private container: ElementRef;
   @Input() public language; string;
 
@@ -50,11 +50,11 @@ export class MonacoEditorComponent implements AfterViewInit, ControlValueAccesso
     this.value = value || '';
   }
 
-  registerOnChange(fn: any): void {
+  registerOnChange(fn: (string) => void): void {
     this.registerOnChangeFn = fn;
   }
 
-  registerOnTouched(fn: any): void {
+  registerOnTouched(fn: () => void): void {
     this.registerOnTouchedFn = fn;
   }
 }
