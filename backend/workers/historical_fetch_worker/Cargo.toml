@@ -17,15 +17,15 @@ subscribe = { path = "../../libs/subscribe" }
 history = { path = "../../libs/exchanges/history" }
 
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-tokio = { version = "1.34.0", features = [
+tokio = { version = "1.35.0", features = [
   "rt",
   "rt-multi-thread",
   "macros",
   "signal",
 ] }
-clap = { version = "4.4.10", features = ["derive"] }
+clap = { version = "4.4.11", features = ["derive"] }
 mongodb = { version = "2.7.1", default-features = false, features = [
   "async-std-runtime",
 ] }
-futures = "0.3.26"
+futures = "0.3.29"
 libc = "0.2.150"
