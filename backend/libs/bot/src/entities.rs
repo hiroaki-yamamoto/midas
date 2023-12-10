@@ -76,7 +76,7 @@ impl From<Bot> for RPCBot {
       name: value.name,
       base_currency: value.base_currency,
       exchange: value.exchange,
-      created_at: Box::new(value.created_at.to_chrono().into()),
+      created_at: Some(Box::new(value.created_at.to_chrono().into())),
       trading_amount: value.trading_amount.to_string(),
       condition: value.cond_ts,
     };
