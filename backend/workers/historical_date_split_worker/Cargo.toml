@@ -28,4 +28,4 @@ mongodb = { version = "2.7.1", default-features = false, features = [
   "async-std-runtime",
 ] }
 futures = "0.3.29"
-libc = "0.2.150"
+libc = "0.2.151"
