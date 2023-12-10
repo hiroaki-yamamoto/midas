@@ -6,7 +6,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { EditDialogData, RespType } from './edit-dialog-data';
 import { KeychainService } from '../../resources/keychain.service';
-import { Exchanges } from '../../rpc/entities_pb';
+import { Exchanges } from '../../../rpc/exchanges.zod';
 
 export interface EditDialogOption {
   index?: number,
@@ -22,7 +22,7 @@ export class EditDialogComponent implements OnInit {
   public form: FormGroup;
   public trash = faTrashAlt;
   public RespType = RespType;
-  public exchanges = Exchanges;
+  public exchanges = Exchanges.enum;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public option: EditDialogOption,
@@ -46,7 +46,7 @@ export class EditDialogComponent implements OnInit {
       prvKey: new FormControl('', onlyNewValidation)
     });
     if (this.isNew) {
-      this.form.get('exchange').setValue(Exchanges.BINANCE);
+      this.form.get('exchange').setValue(Exchanges.enum.Binance);
     } else {
       this.form.get('pubKey').disable();
       this.form.get('prvKey').disable();
