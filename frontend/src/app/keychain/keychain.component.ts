@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 
 import { MatDialog } from '@angular/material/dialog';
 
@@ -14,19 +14,17 @@ import { APIKey } from '../rpc/keychain_pb';
   templateUrl: './keychain.component.html',
   styleUrls: ['./keychain.component.scss']
 })
-export class KeychainComponent implements OnInit {
+export class KeychainComponent {
 
   constructor(
     private dialogOpener: MatDialog,
     public keychain: KeychainService,
   ) { }
 
-  ngOnInit(): void {}
-
   openEditDialog(index?: number): void {
     const dialog = this.dialogOpener.open(EditDialogComponent, {
       width: '50vw',
-      data: {index},
+      data: { index },
     });
     dialog.afterClosed().subscribe(this.editKeyPair());
   }

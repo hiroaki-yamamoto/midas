@@ -22,7 +22,7 @@ export class BookTickerComponent implements AfterViewInit {
 
   constructor(private booktickerObserver: TradeObserverService) {
     this.dataSource = new MatTableDataSource();
-    this.booktickerObserver.onChanged = (exchange: string) => {
+    this.booktickerObserver.onChanged = (/*exchange: string*/) => {
       this.dataSource.data = Object.values(
         this.booktickerObserver[this.exchange.toLowerCase()]
       );

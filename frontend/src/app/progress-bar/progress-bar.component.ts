@@ -16,7 +16,7 @@ export class ProgressBarComponent {
 
   public getPercentage(): number {
     if (this.progress) {
-      let { cur, size } = this.progress;
+      const { cur, size } = this.progress;
       return Math.min(cur / size, 1);
     } else {
       return 0;

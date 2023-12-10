@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpEvent } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 
 import { APIKey, APIKeyList, APIRename } from '../rpc/keychain_pb';
 import { InsertOneResult } from '../rpc/entities_pb';
@@ -30,7 +30,7 @@ export class KeychainService {
     return this.http
       .post(`${this.endpoint}/`, payload)
       .pipe(tap((res: InsertOneResult.AsObject) => {
-        let api = {...payload};
+        const api = { ...payload };
         api.prvKey = ('*').repeat(16);
         api.id = res.id;
         this.keys.push(api);
@@ -38,7 +38,7 @@ export class KeychainService {
   }
 
   rename(index: number, label: string) {
-    const payload: APIRename.AsObject = {label}
+    const payload: APIRename.AsObject = { label }
     return this.http
       .patch(`${this.endpoint}/${this.keys[index].id}`, payload)
       .pipe(tap(() => {

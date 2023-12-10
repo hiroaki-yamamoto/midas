@@ -10,13 +10,18 @@
     <table>
       <tr *ngFor="let item of data.data | keyvalue">
         <td>{{ item.key | titlecase }}</td>
-        <td *ngIf="item.key === 'exchange'">{{ item.value | exchangePipe | titlecase }}</td>
+        <td *ngIf="item.key === 'exchange'">
+          {{ item.value | exchangePipe | titlecase }}
+        </td>
         <td *ngIf="item.key !== 'exchange'">{{ item.value }}</td>
       </tr>
     </table>
   </div>
   <div mat-dialog-actions>
-    <button type="button" mat-raised-button [mat-dialog-close]="false" i18n color="warn">
+    <button type="button"
+      mat-raised-button
+      [mat-dialog-close]="false"
+      i18n color="warn">
       No! Keep it!
     </button>
     <button type="button" mat-button [mat-dialog-close]="true" i18n>

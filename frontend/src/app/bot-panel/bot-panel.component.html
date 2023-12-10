@@ -15,7 +15,9 @@
     <mat-tab-group>
       <mat-tab label="Active Positions">
         <div class="positions">
-          <table mat-table [dataSource]="currentPositions" class="position-table">
+          <table mat-table
+            [dataSource]="currentPositions"
+            class="position-table">
             <ng-container matColumnDef="symbol">
               <th mat-header-cell *matHeaderCellDef>Symbol</th>
               <td mat-cell *matCellDef="let item"> {{ item.getSymbol() }} </td>
@@ -23,11 +25,15 @@
 
             <ng-container matColumnDef="tradingAmount">
               <th mat-header-cell *matHeaderCellDef>Trading Amount</th>
-              <td mat-cell *matCellDef="let item">{{ item.getTradingAmount() }}</td>
+              <td mat-cell *matCellDef="let item">
+                {{ item.getTradingAmount() }}
+              </td>
             </ng-container>
             <ng-container matColumnDef="valuation">
               <th mat-header-cell *matHeaderCellDef>Valuation</th>
-              <td mat-cell *matCellDef="let item">{{ item.getValuation() }}</td>
+              <td mat-cell *matCellDef="let item">
+                {{ item.getValuation() }}
+              </td>
             </ng-container>
 
             <ng-container matColumnDef="profitAmount">
@@ -39,7 +45,10 @@
             <ng-container matColumnDef="profitPercent">
               <th mat-header-cell *matHeaderCellDef>Profit %</th>
               <td mat-cell *matCellDef="let item">
-                {{ (item.getValuation() - item.getTradingAmount()) / item.getTradingAmount() * 100 }} %
+                {{
+                  (item.getValuation() - item.getTradingAmount()) /
+                  item.getTradingAmount() * 100
+                }} %
               </td>
             </ng-container>
 
@@ -47,11 +56,17 @@
             <tr mat-row *matRowDef="let row; columns: dispCol;"></tr>
           </table>
         </div>
-        <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons #curPosPaginator></mat-paginator>
+        <mat-paginator
+          [pageSizeOptions]="[5, 10, 20]"
+          showFirstLastButtons
+          #curPosPaginator>
+        </mat-paginator>
       </mat-tab>
       <mat-tab label="Archived Positions">
         <div class="positions">
-          <table mat-table [dataSource]="archivedPositions" class="position-table">
+          <table mat-table
+            [dataSource]="archivedPositions"
+            class="position-table">
             <ng-container matColumnDef="symbol">
               <th mat-header-cell *matHeaderCellDef>Symbol</th>
               <td mat-cell *matCellDef="let item"> {{ item.getSymbol() }} </td>
@@ -59,11 +74,15 @@
 
             <ng-container matColumnDef="tradingAmount">
               <th mat-header-cell *matHeaderCellDef>Trading Amount</th>
-              <td mat-cell *matCellDef="let item">{{ item.getTradingAmount() }}</td>
+              <td mat-cell *matCellDef="let item">
+                {{ item.getTradingAmount() }}
+              </td>
             </ng-container>
             <ng-container matColumnDef="valuation">
               <th mat-header-cell *matHeaderCellDef>Valuation</th>
-              <td mat-cell *matCellDef="let item">{{ item.getValuation() }}</td>
+              <td mat-cell *matCellDef="let item">
+                {{ item.getValuation() }}
+              </td>
             </ng-container>
 
             <ng-container matColumnDef="profitAmount">
@@ -76,7 +95,10 @@
             <ng-container matColumnDef="profitPercent">
               <th mat-header-cell *matHeaderCellDef>Profit %</th>
               <td mat-cell *matCellDef="let item">
-                {{ (item.getValuation() - item.getTradingAmount()) / item.getTradingAmount() * 100 }} %
+                {{
+                  (item.getValuation() - item.getTradingAmount()) /
+                  item.getTradingAmount() * 100
+                }} %
               </td>
             </ng-container>
 
@@ -84,7 +106,8 @@
             <tr mat-row *matRowDef="let row; columns: dispCol;"></tr>
           </table>
         </div>
-        <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons #arcPosPaginator></mat-paginator>
+        <mat-paginator [pageSizeOptions]="[5, 10, 20]"
+          showFirstLastButtons #arcPosPaginator></mat-paginator>
       </mat-tab>
     </mat-tab-group>
   </section>

@@ -4,6 +4,7 @@
  * and rr = re-investment rate.
  * If you don't want re-invest, set this value to 0.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const reInvestRate = 1.0;
 
 /**
@@ -16,6 +17,7 @@ const reInvestRate = 1.0;
  * @returns {boolean} - Return true when the market has reached watchpoint, and
  *  return false otherwise.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function entryWatchPoint(current: PriceVolume): boolean {
   // Write entry watchpoint condition here.
   return false;
@@ -31,6 +33,7 @@ function entryWatchPoint(current: PriceVolume): boolean {
  * @returns {boolean} - Return true when the market has reached entrypoint, and
  *  return false otherwise.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function entryPoint(current: PriceVolume, watch: PriceVolume): boolean {
   // Write entryoiint condition here.
   return false;
@@ -47,6 +50,7 @@ function entryPoint(current: PriceVolume, watch: PriceVolume): boolean {
  * @returns {boolean} - Return true when the market has reached watchpoint, and
  *  return false otherwise.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function exitWatchPoint(current: PriceVolume): boolean {
   // Write extit watch point here.
   return false;
@@ -62,6 +66,7 @@ function exitWatchPoint(current: PriceVolume): boolean {
  * @returns {boolean} - Return true when the market has reached exit point, and
  *  return false otherwise
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function exitPoint(current: PriceVolume, watch: PriceVolume): boolean {
   // Write exit point here.
   return false;

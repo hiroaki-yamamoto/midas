@@ -144,9 +144,6 @@
             "lintFilePatterns": [
               "src/**/*.ts",
               "src/**/*.component.html"
-            ],
-            "exclude": [
-              "**/node_modules/**"
             ]
           }
         },

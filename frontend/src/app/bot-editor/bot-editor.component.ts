@@ -14,6 +14,8 @@ import { Bot } from '../../rpc/bot.zod';
 
 import { faSave } from '@fortawesome/free-solid-svg-icons';
 
+import * as monaco from 'monaco-editor';
+
 
 @Component({
   selector: 'app-bot-editor',

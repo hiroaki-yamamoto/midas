@@ -5,6 +5,7 @@ import {
 import {
   ControlValueAccessor, NG_VALUE_ACCESSOR
 } from '@angular/forms';
+import * as monaco from 'monaco-editor';
 
 @Component({
   selector: 'app-monaco-editor',
@@ -19,7 +20,7 @@ import {
 export class MonacoEditorComponent implements AfterViewInit, ControlValueAccessor {
   private editor: monaco.editor.IStandaloneCodeEditor;
   private value: string = '';
-  private registerOnChangeFn: any;
+  private registerOnChangeFn: (string) => void;
   private registerOnTouchedFn: any;
   @ViewChild('monacoContainer') private container: ElementRef;
   @Input() public language; string;
@@ -45,8 +46,8 @@ export class MonacoEditorComponent implements AfterViewInit, ControlValueAccesso
     });
   }
 
-  writeValue(value: any): void {
-    this.value = value as string || '';
+  writeValue(value: string): void {
+    this.value = value || '';
   }
 
   registerOnChange(fn: any): void {

@@ -1,1 +1,1 @@
-src/app/rpc
+src/rpc/**/*.ts

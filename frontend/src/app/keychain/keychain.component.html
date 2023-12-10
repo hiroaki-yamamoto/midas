@@ -3,14 +3,20 @@
     <h1 i18n>API Keys Setting</h1>
   </header>
   <div class="tool-buttons-container">
-    <button mat-fab color="primary" (click)="openEditDialog()" matTooltip="Add an API key">
+    <button mat-fab
+      color="primary"
+      (click)="openEditDialog()" matTooltip="Add an API key">
       <mat-icon>add</mat-icon>
     </button>
   </div>
   <mat-nav-list *ngIf="keychain.keys &amp;&amp; keychain.keys.length &gt; 0">
-    <mat-list-item *ngFor="let key of keychain.keys; index as i" (click)="openEditDialog(i)">
+    <mat-list-item
+      *ngFor="let key of keychain.keys; index as i"
+      (click)="openEditDialog(i)">
       <div mat-line>{{key.label}}</div>
-      <div mat-line>Exchange: {{ key.exchange | exchangePipe | titlecase }}</div>
+      <div mat-line>
+        Exchange: {{ key.exchange | exchangePipe | titlecase }}
+      </div>
       <div mat-line>
         PubKey: {{ key.pubKey }}
       </div>
@@ -19,7 +25,8 @@
       </div>
     </mat-list-item>
   </mat-nav-list>
-  <section class="description-no-keys" *ngIf="!keychain.keys || keychain.keys.length &lt;= 0">
+  <section class="description-no-keys"
+    *ngIf="!keychain.keys || keychain.keys.length &lt;= 0">
     <header>
       <h1 i18n>There's no any api keys...</h1>
     </header>

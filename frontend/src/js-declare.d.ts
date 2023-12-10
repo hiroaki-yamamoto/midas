@@ -1,1 +1,1 @@
-declare function require(path: string[], callback: () => any);
+declare function require(path: string[], callback: () => void);

@@ -7,7 +7,9 @@
     <mat-form-field>
       <mat-label i18n>Exchange</mat-label>
       <mat-select formControlName="exchange" [required]="isNew">
-        <mat-option *ngFor="let exc of exchanges | keyvalue" [value]="exc.value">
+        <mat-option
+          *ngFor="let exc of exchanges | keyvalue"
+          [value]="exc.value">
           {{exc.key | titlecase}}
         </mat-option>
       </mat-select>
@@ -37,17 +39,30 @@
       </mat-error>
     </mat-form-field>
     <mat-dialog-actions>
-      <button mat-raised-button type="button" color="accent" (click)="close(RespType.DELETE)" [disabled]="isNew">
+      <button
+        mat-raised-button
+        type="button"
+        color="accent"
+        (click)="close(RespType.DELETE)"
+        [disabled]="isNew">
         <fa-icon [icon]="trash"></fa-icon>
         Delete
       </button>
       <div class="seperator"></div>
-      <button type="submit" autofocus mat-button [mat-dialog-close]="form" i18n (click)="close(RespType.POST)"
+      <button type="submit"
+        autofocus
+        mat-button
+        [mat-dialog-close]="form"
+        i18n
+        (click)="close(RespType.POST)"
         [disabled]="!(form.valid &amp;&amp; form.dirty)">
         <mat-icon>done</mat-icon>
         Save
       </button>
-      <button mat-button mat-dialog-close i18n (click)="close(RespType.CANCEL)" type="button">
+      <button mat-button
+        mat-dialog-close
+        i18n
+        (click)="close(RespType.CANCEL)" type="button">
         <mat-icon>clear</mat-icon>
         Cancel
       </button>

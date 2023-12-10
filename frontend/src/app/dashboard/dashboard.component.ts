@@ -1,8 +1,6 @@
 import {
   Component,
   OnInit,
-  ViewChild,
-  ElementRef,
 } from '@angular/core';
 
 import { Bot } from '../rpc/bot_pb';

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { Exchanges } from '../rpc/entities_pb';
 
 export interface IBaseCurrencies {
-  symbols: String[],
+  symbols: string[],
 }
 
 @Injectable({

@@ -9,7 +9,7 @@
           i18n
           *ngFor="let exchange of exchanges" routerLink="/sync/{{ exchange }}"
         >
-          {{exchange | exchangePipe | titlecase }}
+          {{exchange |  titlecase }}
         </a>
       </mat-menu>
     </li>

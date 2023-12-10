@@ -8,7 +8,7 @@ import { Exchanges } from '../rpc/exchanges.zod';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  public readonly exchanges = Object.values(Exchanges);
+  public readonly exchanges = Exchanges.options;
   constructor(private http: HttpClient) { }
 
   preventCSRF() {

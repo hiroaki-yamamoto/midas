@@ -1,6 +1,8 @@
 <section>
   <header>
-    <h1 i18n>Exchange Info Syncronization: {{ exchange | exchangePipe | titlecase }}</h1>
+    <h1 i18n>
+      Exchange Info Syncronization: {{ exchange | exchangePipe | titlecase }}
+    </h1>
   </header>
   <mat-card>
     <mat-card-title i18n>Symbol Syncronization</mat-card-title>
@@ -15,7 +17,9 @@
       </p>
     </mat-card-content>
     <mat-card-actions>
-      <button i18n mat-raised-button color="primary" [disabled]="!syncHandler.syncButtonEnabled" (click)="syncSymbol()">
+      <button i18n
+        mat-raised-button color="primary"
+        [disabled]="!syncHandler.syncButtonEnabled" (click)="syncSymbol()">
         <fa-icon [icon]="rotateIcon"></fa-icon> Synchronize Symbol Information
       </button>
     </mat-card-actions>
@@ -34,24 +38,36 @@
       </mat-form-field>
       <mat-table matSort [dataSource]="syncHandler.symbols">
         <ng-container matColumnDef="symbol">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Symbol</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef mat-sort-header>
+            Symbol
+          </mat-header-cell>
           <mat-cell *matCellDef="let symbol"> {{ symbol.symbol }} </mat-cell>
         </ng-container>
         <ng-container matColumnDef="syncBtns">
           <mat-header-cell *matHeaderCellDef mat-sort-header="sync">
-            <button i18n mat-raised-button color="accent" [disabled]="isDisabledAll()" (click)="syncAll()">
+            <button i18n
+              mat-raised-button color="accent"
+              [disabled]="isDisabledAll()"
+              (click)="syncAll()">
               Sync All Symbols
             </button>
           </mat-header-cell>>
           <mat-cell *matCellDef="let symbol">
             <div *ngIf="!syncHandler.progSock.progress.has(symbol.symbol)">
-              <button i18n mat-raised-button color="primary" (click)="sync(symbol.symbol)">
+              <button i18n
+                mat-raised-button
+                color="primary"
+                (click)="sync(symbol.symbol)">
                 Sync {{ symbol.symbol }}
               </button>
             </div>
-            <div id="syncProgressBar" *ngIf="syncHandler.progSock.progress.has(symbol.symbol)">
+            <div id="syncProgressBar"
+              *ngIf="syncHandler.progSock.progress.has(symbol.symbol)">
               <app-progress-bar
-                [mode]="(syncHandler.progSock.progress.get(symbol.symbol) === null)?'indeterminate':'determinate'"
+                [mode]="
+                  (syncHandler.progSock.progress.get(symbol.symbol) === null) ?
+                  'indeterminate':'determinate'
+                "
                 [progress]="syncHandler.progSock.progress.get(symbol.symbol)">
               </app-progress-bar>
             </div>
@@ -60,7 +76,8 @@
         <mat-header-row *matHeaderRowDef="dispCol"></mat-header-row>>
         <mat-row *matRowDef="let row; columns: dispCol;"></mat-row>>
       </mat-table>
-      <mat-paginator [pageSizeOptions]="[10, 25, 50, 100, 1000]" showFirstLastButtons
+      <mat-paginator [pageSizeOptions]="[10, 25, 50, 100, 1000]"
+        showFirstLastButtons
         aria-label="Select page of periodic elements" #symbolPaginator>
       </mat-paginator>
     </div>

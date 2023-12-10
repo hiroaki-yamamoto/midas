@@ -5,7 +5,10 @@ module.exports = {
       parserOptions: {
         project: ['./tsconfig.json', './tsconfig.**.json'],
       },
-      extends: ['plugin:@angular-eslint/recommended'],
+      extends: [
+        'plugin:@typescript-eslint/recommended',
+        'plugin:@angular-eslint/recommended'
+      ],
       rules: {
         '@angular-eslint/directive-selector': [
           'error',
@@ -17,13 +20,14 @@ module.exports = {
         ],
         quotes: ['error', 'single', { allowTemplateLiterals: true }],
         '@typescript-eslint/no-misused-promises': ['error'],
+        '@typescript-eslint/no-explicit-any': ['warn'],
       },
     },
     {
       files: ['*.component.html'],
       extends: ['plugin:@angular-eslint/template/recommended'],
       rules: {
-        'max-len': ['error', { code: 140 }],
+        'max-len': ['error', { code: 79 }],
       },
     },
     {

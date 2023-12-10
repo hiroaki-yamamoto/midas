@@ -31,7 +31,7 @@ export class EditDialogComponent implements OnInit {
   ) {
     this.isNew = Boolean(
       option.index === undefined ||
-      option.index === null      ||
+      option.index === null ||
       option.index < 0
     );
   }
@@ -58,7 +58,7 @@ export class EditDialogComponent implements OnInit {
   }
 
   close(type: RespType) {
-    let respData: EditDialogData = { type };
+    const respData: EditDialogData = { type };
     if (type == RespType.POST) {
       respData.data = this.form.value;
     }

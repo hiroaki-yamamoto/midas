@@ -43,7 +43,7 @@ export class DateGraphComponent implements AfterViewInit, OnDestroy {
         am5themes_Animated.new(root),
         am5themes_Dark.new(root),
       ]);
-      let chart = root.container.children.push(
+      const chart = root.container.children.push(
         amxy.XYChart.new(root, {
           layout: root.verticalLayout,
           panY: true,
