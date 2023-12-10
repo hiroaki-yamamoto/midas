@@ -7,15 +7,13 @@ import {
 import { HttpClient } from '@angular/common/http';
 import { FormGroup, FormControl } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
+// import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { SymbolService, IBaseCurrencies } from '../resources/symbol.service';
 import { Exchanges } from '../../rpc/exchanges.zod';
 import { Bot } from '../../rpc/bot.zod';
 
 import { faSave } from '@fortawesome/free-solid-svg-icons';
-
-import * as monaco from 'monaco-editor';
-
 
 @Component({
   selector: 'app-bot-editor',

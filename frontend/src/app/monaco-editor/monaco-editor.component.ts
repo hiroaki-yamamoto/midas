@@ -5,8 +5,7 @@ import {
 import {
   ControlValueAccessor, NG_VALUE_ACCESSOR
 } from '@angular/forms';
-
-import * as monaco from 'monaco-editor';
+// import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 @Component({
   selector: 'app-monaco-editor',
