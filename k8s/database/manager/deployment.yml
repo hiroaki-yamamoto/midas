@@ -27,6 +27,10 @@ spec:
               mountPath: "/etc/certs"
               readOnly: true
           env:
+            - name: ME_CONFIG_BASICAUTH_USERNAME
+              value: admin
+            - name: ME_CONFIG_BASICAUTH_PASSWORD
+              value: admin
             - name: ME_CONFIG_MONGODB_ADMINUSERNAME
               value: admin
             - name: ME_CONFIG_MONGODB_ADMINPASSWORD

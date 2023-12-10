@@ -74,7 +74,7 @@ export class BotPanelComponent implements OnInit {
     for (let i = 0; i < 20; i++) {
       const id = `test-cur-position-${i}`;
       const tradingAmount = Math.random();
-      const pos = Position.parse({
+      const pos = Position.partial().parse({
         id,
         botId: this.bot.id,
         symbol: 'TESTUSDT',
@@ -82,7 +82,7 @@ export class BotPanelComponent implements OnInit {
         valuation: (tradingAmount + (
           ((Math.round(Math.random() * 10) & 0x01) ? 1 : - 1) *
           Math.random()
-        )),
+        )).toString(),
         status: PositionStatus.enum.OPEN,
       });
       this.currentPositions.data = this.currentPositions.data.concat(pos);
@@ -91,7 +91,7 @@ export class BotPanelComponent implements OnInit {
     for (let i = 0; i < 20; i++) {
       const id = `test-arc-position-${i}`;
       const tradingAmount = Math.random();
-      const pos = Position.parse({
+      const pos = Position.partial().parse({
         id,
         botId: this.bot.id,
         symbol: 'TESTUSDT',
@@ -99,7 +99,7 @@ export class BotPanelComponent implements OnInit {
         valuation: (tradingAmount + (
           ((Math.round(Math.random() * 10) & 0x01) ? 1 : - 1) *
           Math.random()
-        )),
+        )).toString(),
         status: PositionStatus.enum.CLOSE,
       });
       this.archivedPositions.data = this.archivedPositions.data.concat(pos);

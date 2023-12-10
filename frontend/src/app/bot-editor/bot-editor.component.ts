@@ -81,7 +81,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     this.getDefCode().subscribe((code) => {
       this.zone.runOutsideAngular(() => {
         window.require(['vs/editor/editor.main'], () => {
-          this.createMonacoModel(code);
+          this.langModel = this.createMonacoModel(code);
         });
       });
     });
