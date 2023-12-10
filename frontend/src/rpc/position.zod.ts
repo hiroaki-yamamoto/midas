@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import { PositionStatus } from './position-status.zod.ts';
-import { Timestamp } from './timestamp.zod.ts';
+import { PositionStatus } from './position-status.zod';
+import { Timestamp } from './timestamp.zod';
 
 export const Position = z.object({
   botId: z.string(),

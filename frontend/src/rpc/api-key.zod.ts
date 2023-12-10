@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { Exchanges } from './exchanges.zod.ts';
+import { Exchanges } from './exchanges.zod';
 
 export const ApiKey = z.object({
   exchange: z.lazy(() => Exchanges),

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { Exchanges } from './exchanges.zod.ts';
+import { Exchanges } from './exchanges.zod';
 
 export const StatusCheckRequest = z.object({
   exchange: z.lazy(() => Exchanges),

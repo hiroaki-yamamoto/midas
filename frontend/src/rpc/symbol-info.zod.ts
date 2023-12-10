@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import { Exchanges } from './exchanges.zod.ts';
-import { SymbolType } from './symbol-type.zod.ts';
+import { Exchanges } from './exchanges.zod';
+import { SymbolType } from './symbol-type.zod';
 
 export const SymbolInfo = z.object({
   base: z.string(),
