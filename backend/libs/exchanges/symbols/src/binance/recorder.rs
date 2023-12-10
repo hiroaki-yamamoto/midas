@@ -86,7 +86,7 @@ impl SymbolReaderTrait for SymbolWriter {
         .distinct("quoteAsset", None, None)
         .await?
         .into_iter()
-        .map(|base_bson| base_bson.to_string())
+        .filter_map(|base_bson| base_bson.as_str().map(|base| base.to_string()))
         .collect(),
     );
   }
