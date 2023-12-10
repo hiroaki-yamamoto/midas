@@ -10,7 +10,7 @@
 - op: add
   path: /spec/rules/0/http/paths
   value:
-    - path: /admin
+    - path: /admin(/|$)(.*)
       pathType: Prefix
       backend:
         service:

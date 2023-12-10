@@ -5,7 +5,7 @@ import {
   Observable,
 } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { FormGroup, FormControl } from '@angular/forms';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 // import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
@@ -29,7 +29,6 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     tabSize: 2,
   };
   public baseCurrencies: IBaseCurrencies = { symbols: [] };
-  public baseCurrencyEnabled = false;
   public exchanges = Object.values(Exchanges.enum);
   public saveIcon = faSave;
 
@@ -71,10 +70,10 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const condition = new FormControl();
     this.form = new FormGroup({
-      name: new FormControl(),
-      exchange: new FormControl(),
-      baseCurrency: new FormControl(),
-      tradingAmount: new FormControl(),
+      name: new FormControl('', [Validators.required]),
+      exchange: new FormControl('', [Validators.required]),
+      baseCurrency: new FormControl({ disabled: true }),
+      tradingAmount: new FormControl('', [Validators.required]),
       condition,
     });
     document.onkeydown = this.submit(this.form);
@@ -98,13 +97,13 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   }
 
   exchangeChanged(): void {
-    this.baseCurrencyEnabled = false;
+    this.form.get('baseCurrency').disable();
     this.symbol
       .list_base_currencies(this.form.get('exchange').value)
       .subscribe((baseCurrencies: IBaseCurrencies) => {
         this.baseCurrencies = baseCurrencies;
       });
-    this.baseCurrencyEnabled = true;
+    this.form.get('baseCurrency').enable();
   }
 
   submit(form: FormGroup): (KeyboardEvent) => void {
@@ -116,7 +115,11 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       if (form.status === 'INVALID') {
         return;
       }
-      const model = Bot.parse(this.form.value);
+      const val = form.value;
+      val.tradingAmount = val.tradingAmount.toString();
+      console.log(val);
+
+      const model = Bot.parse(val);
 
       this.http.post('/bot/', model).subscribe(() => {
         this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });

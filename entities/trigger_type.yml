@@ -11,7 +11,7 @@ rust:
     - "Ord"
     - ::serde::Serialize
     - ::serde::Deserialize
-  attrs:
-    - 'serde(rename_all = "camelCase")'
+  # attrs:
+  #   - 'serde(rename_all = "camelCase")'
 members:
   - "MANUAL"

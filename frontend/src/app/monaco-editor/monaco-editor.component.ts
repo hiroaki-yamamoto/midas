@@ -1,6 +1,6 @@
 import {
   Component, ViewChild, ElementRef, AfterViewInit,
-  NgZone, Input, forwardRef,
+  NgZone, Input, forwardRef, OnDestroy
 } from '@angular/core';
 import {
   ControlValueAccessor, NG_VALUE_ACCESSOR
@@ -17,8 +17,9 @@ import {
     multi: true
   }]
 })
-export class MonacoEditorComponent implements AfterViewInit, ControlValueAccessor {
-  private editor: monaco.editor.IStandaloneCodeEditor;
+export class MonacoEditorComponent implements
+  AfterViewInit, ControlValueAccessor, OnDestroy {
+  private editor: monaco.editor.IStandaloneCodeEditor | undefined;
   private value: string = '';
   private registerOnChangeFn: (string) => void;
   private registerOnTouchedFn: () => void;
@@ -46,6 +47,10 @@ export class MonacoEditorComponent implements AfterViewInit, ControlValueAccesso
     });
   }
 
+  ngOnDestroy(): void {
+    this.editor?.dispose();
+  }
+
   writeValue(value: string): void {
     this.value = value || '';
   }
@@ -56,5 +61,9 @@ export class MonacoEditorComponent implements AfterViewInit, ControlValueAccesso
 
   registerOnTouched(fn: () => void): void {
     this.registerOnTouchedFn = fn;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    this.editor?.updateOptions({ readOnly: isDisabled });
   }
 }

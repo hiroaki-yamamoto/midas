@@ -5,13 +5,13 @@
   <form [formGroup]="form" id="bot-edit-form">
     <mat-form-field>
       <mat-label i18n>Bot Name</mat-label>
-      <input matInput formControlName="name" required>
+      <input matInput formControlName="name">
     </mat-form-field>
     <div class="amounts">
       <mat-form-field>
         <mat-label i18n>Exchange</mat-label>
         <mat-select (selectionChange)="exchangeChanged()"
-          formControlName="exchange" required>
+          formControlName="exchange">
           <mat-option *ngFor="let exchange of exchanges" [value]="exchange">
             {{ exchange | titlecase }}
           </mat-option>
@@ -19,8 +19,7 @@
       </mat-form-field>
       <mat-form-field>
         <mat-label i18n>Base Currency</mat-label>
-        <mat-select formControlName="baseCurrency"
-          [disabled]="!baseCurrencyEnabled" required>
+        <mat-select formControlName="baseCurrency">
           <mat-option *ngFor="let currency of baseCurrencies.symbols"
             [value]="currency">
             {{ currency }}
@@ -29,7 +28,7 @@
       </mat-form-field>
       <mat-form-field>
         <mat-label i18n>Trading Amount</mat-label>
-        <input matInput type="number" formControlName="tradingAmount" required>
+        <input matInput type="number" formControlName="tradingAmount">
       </mat-form-field>
     </div>
     <mat-tab-group dynamicHeight>
