@@ -117,14 +117,13 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       }
       const val = form.value;
       val.tradingAmount = val.tradingAmount.toString();
-      console.log(val);
 
       const model = Bot.parse(val);
 
       this.http.post('/bot/', model).subscribe(() => {
         this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });
       });
-    }
+    };
   }
 
 }
