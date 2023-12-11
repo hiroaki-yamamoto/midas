@@ -63,7 +63,7 @@
     "cypress": "latest",
     "d3-path": "^3.1.0",
     "d3-shape": "^3.2.0",
-    "esbuild": "^0.19.8",
+    "esbuild": "^0.19.9",
     "eslint": "^8.55.0",
     "jasmine-core": "~5.1.1",
     "jasmine-spec-reporter": "~7.0.0",
