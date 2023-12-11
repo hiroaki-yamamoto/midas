@@ -15,7 +15,7 @@
       (click)="openEditDialog(i)">
       <div mat-line>{{key.label}}</div>
       <div mat-line>
-        Exchange: {{ key.exchange | exchangePipe | titlecase }}
+        Exchange: {{ key.exchange | titlecase }}
       </div>
       <div mat-line>
         PubKey: {{ key.pubKey }}

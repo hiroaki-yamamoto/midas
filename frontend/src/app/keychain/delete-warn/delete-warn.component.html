@@ -11,7 +11,7 @@
       <tr *ngFor="let item of data.data | keyvalue">
         <td>{{ item.key | titlecase }}</td>
         <td *ngIf="item.key === 'exchange'">
-          {{ item.value | exchangePipe | titlecase }}
+          {{ item.value | titlecase }}
         </td>
         <td *ngIf="item.key !== 'exchange'">{{ item.value }}</td>
       </tr>

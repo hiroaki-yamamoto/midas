@@ -27,7 +27,7 @@ class SymbolSyncHandler {
   public setPaginator(paginator: MatPaginator) {
     this.symbols.paginator = paginator;
   }
-  public next(symbols: { symbols: SymbolInfo[] }) {
+  public next(symbols: { symbols: SymbolInfo[]; }) {
     this.symbols.data = Array.from(new Set(symbols.symbols));
   }
   public error(e) {
@@ -37,7 +37,7 @@ class SymbolSyncHandler {
   }
   public complete() {
     if (!this.ignoreSyncBtnReEnable) {
-      setTimeout(() => { this.syncButtonEnabled = true }, 3000);
+      setTimeout(() => { this.syncButtonEnabled = true; }, 3000);
     }
     this.ignoreSyncBtnReEnable = false;
   }
@@ -64,7 +64,7 @@ export class SyncComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.curRoute.paramMap.subscribe((params: ParamMap) => {
-      this.exchange = Exchanges.parse(parseInt(params.get('exchange'), 10));
+      this.exchange = Exchanges.parse(params.get('exchange'));
       this.syncHandler.ignoreSyncBtnReEnable = true;
       this.http.get(`/symbol/currencies/${this.exchange}`)
         .subscribe(this.syncHandler);
