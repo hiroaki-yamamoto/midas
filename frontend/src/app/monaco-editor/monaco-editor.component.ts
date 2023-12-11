@@ -53,6 +53,11 @@ export class MonacoEditorComponent implements
 
   writeValue(value: string): void {
     this.value = value || '';
+    this.zone.runOutsideAngular(() => {
+      window.require(['vs/editor/editor.main'], () => {
+        this.editor?.setValue(this.value);
+      });
+    });
   }
 
   registerOnChange(fn: (string) => void): void {
