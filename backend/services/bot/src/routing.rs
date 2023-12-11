@@ -40,16 +40,19 @@ pub fn construct(
           let status = Status::new(code.clone(), &e.to_string());
           return Err(::warp::reject::custom(status));
         }
-        if let Err(e) = writer.write(&bot.unwrap()).await {
-          let code = StatusCode::INTERNAL_SERVER_ERROR;
-          let status = Status::new(code.clone(), &e.to_string());
-          return Err(::warp::reject::custom(status));
-        }
-        return Ok(());
+        return match writer.write(&bot.unwrap()).await {
+          Ok(bot) => Ok(bot),
+          Err(e) => {
+            let code = StatusCode::INTERNAL_SERVER_ERROR;
+            let status = Status::new(code.clone(), &e.to_string());
+            return Err(::warp::reject::custom(status));
+          }
+        };
       },
     )
-    .map(|_| {
-      return ::warp::reply();
+    .map(|bot: Bot| {
+      let bot: RPCBot = bot.into();
+      return ::warp::reply::json(&bot);
     });
   register.boxed()
 }
