@@ -42,7 +42,7 @@ jobs:
           name: dist.tar.zst
           path: ./frontend
       - name: "Extract Built Package"
-        run: zstd -d dist.tar.zst
+        run: tar --zstd -xvf dist.tar.zst dist
         working-directory: ./frontend
       - name: "Log into the registry"
         uses: docker/login-action@v3
