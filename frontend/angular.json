@@ -76,10 +76,8 @@
               "buildOptimizer": false,
               "sourceMap": false,
               "outputHashing": "all",
-              "preserveSymlinks": true,
               "namedChunks": false,
               "extractLicenses": true,
-              "vendorChunk": false,
               "budgets": [
                 {
                   "type": "initial",
