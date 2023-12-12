@@ -28,7 +28,7 @@ jobs:
       - name: "Upload the package"
         uses: actions/upload-artifact@v3
         with:
-          name: dist.tzst
+          name: dist.tar.zst
           path: frontend/dist.tar.zst
   docker-deploy:
     name: "Deploy Frontend to ghcr.io (Docker)"
