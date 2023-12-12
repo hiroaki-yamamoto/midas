@@ -39,10 +39,10 @@ jobs:
       - name: "Download Built Package"
         uses: actions/download-artifact@v3
         with:
-          name: dist.zst
+          name: dist.tar.zst
           path: ./frontend
       - name: "Extract Built Package"
-        run: zstd -d dist.zst
+        run: zstd -d dist.tar.zst
         working-directory: ./frontend
       - name: "Log into the registry"
         uses: docker/login-action@v3
