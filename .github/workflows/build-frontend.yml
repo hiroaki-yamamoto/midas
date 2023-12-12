@@ -30,3 +30,38 @@ jobs:
         with:
           name: dist.tzst
           path: frontend/dist.tar.zst
+  docker-deploy:
+    name: "Deploy Frontend to ghcr.io (Docker)"
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Download Built Package"
+        uses: actions/download-artifact@v3
+        with:
+          name: dist.zst
+          path: ./frontend
+      - name: "Extract Built Package"
+        run: zstd -d dist.zst
+        working-directory: ./frontend
+      - name: "Log into the registry"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract Docker metadata
+        id: docker_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/hiroaki-yamamoto/frontend
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
