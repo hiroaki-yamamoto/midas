@@ -13,14 +13,14 @@
     <mat-list-item
       *ngFor="let key of keychain.keys; index as i"
       (click)="openEditDialog(i)">
-      <div mat-line>{{key.label}}</div>
-      <div mat-line>
+      <div matListItemTitle>{{ key.label }}</div>
+      <div matListItemLine>
         Exchange: {{ key.exchange | titlecase }}
       </div>
-      <div mat-line>
+      <div matListItemLine>
         PubKey: {{ key.pubKey }}
       </div>
-      <div mat-line>
+      <div matListItemLine>
         Prvkey: {{ key.prvKey }}
       </div>
     </mat-list-item>
