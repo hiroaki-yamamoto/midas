@@ -1,0 +1,32 @@
+on: workflow_call
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: "Build Frontend"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
+      - uses: actions/cache@v3
+        with:
+          path: |
+            frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+      - name: "Install Dependencies"
+        run: pnpm i
+        working-directory: frontend
+      - name: "Build"
+        run: pnpm run build
+        working-directory: frontend
+      - name: "Compress Build"
+        run: tar --zstd -cvf dist.tar.zst dist
+        working-directory: frontend
+      - name: "Upload the package"
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist.tzst
+          path: backend/dist.tzst
