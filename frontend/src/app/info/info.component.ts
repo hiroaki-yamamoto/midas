@@ -8,5 +8,5 @@ import { Exchanges } from '../../rpc/exchanges.zod';
   styleUrls: ['./info.component.scss']
 })
 export class InfoComponent {
-  public exchanges = Exchanges.enum;
+  public exchanges = Exchanges.options;
 }
