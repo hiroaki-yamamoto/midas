@@ -248,6 +248,7 @@ impl BookTickerHandler {
               error!(error = as_serde!(error); "Request rejected");
             }
             WebsocketPayload::BookTicker(ticker) => {
+              info!(id = ticker.id; "Received bookticker info");
               let ticker = match BookTicker::<Float>::try_from(ticker) {
                 Ok(ticker) => ticker,
                 Err(e) => {

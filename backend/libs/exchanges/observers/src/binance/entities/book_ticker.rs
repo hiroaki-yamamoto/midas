@@ -10,17 +10,17 @@ use ::types::casting::cast_f_from_txt;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BookTicker<PT> {
   #[serde(rename = "u")]
-  id: u64,
+  pub id: u64,
   #[serde(rename = "s")]
-  symbol: String,
+  pub symbol: String,
   #[serde(rename = "b")]
-  bid_price: PT,
+  pub bid_price: PT,
   #[serde(rename = "B")]
-  bid_qty: PT,
+  pub bid_qty: PT,
   #[serde(rename = "a")]
-  ask_price: PT,
+  pub ask_price: PT,
   #[serde(rename = "A")]
-  ask_qty: PT,
+  pub ask_qty: PT,
 }
 
 impl TryFrom<BookTicker<String>> for BookTicker<Float> {
