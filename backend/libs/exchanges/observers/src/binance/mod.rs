@@ -1,6 +1,7 @@
 pub mod entities;
 pub(crate) mod handlers;
 mod pubsub;
+pub(crate) mod sockets;
 
 use ::std::fmt::Debug;
 use ::std::sync::Arc;
