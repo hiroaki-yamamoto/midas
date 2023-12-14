@@ -108,10 +108,5 @@ jobs:
     uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
     with:
       pkgid: trade_observer_worker
-  build-trade_observer_control_worker:
-    needs: build-libs
-    uses: hiroaki-yamamoto/midas/.github/workflows/backend-bin-template.yml@master
-    with:
-      pkgid: trade_observer_control_worker
   build-frontend:
     uses: hiroaki-yamamoto/midas/.github/workflows/build-frontend.yml@master

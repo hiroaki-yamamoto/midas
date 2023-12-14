@@ -45,9 +45,7 @@ where
   R: DeserializeOwned + Unpin,
   W: Serialize + Unpin,
 {
-  pub async fn connect(
-    endpoints: &[String],
-  ) -> WebSocketInitResult<TLSWebSocket> {
+  async fn connect(endpoints: &[String]) -> WebSocketInitResult<TLSWebSocket> {
     let mut interval = interval(Duration::from_secs(1));
     let url_index = {
       let mut rng = thread_rng();

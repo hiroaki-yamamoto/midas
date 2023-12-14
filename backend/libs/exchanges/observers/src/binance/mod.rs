@@ -1,5 +1,6 @@
 pub mod entities;
 pub(crate) mod handlers;
+pub(crate) mod interfaces;
 mod pubsub;
 pub(crate) mod sockets;
 

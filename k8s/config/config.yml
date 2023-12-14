@@ -4,9 +4,6 @@ redisURL: redis://kvs.midas.svc.cluster.local:6379/
 transpilerURL: https://transpiler.midas-svcs.svc.cluster.local:50000/
 host: "[::]:50000"
 debug: true
-observer:
-  initTriggerNodeNumbers:
-    binance: 1
 tls:
   privateKey: /etc/midas/certs/tls.key
   cert: /etc/midas/certs/tls.crt
