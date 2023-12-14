@@ -12,7 +12,7 @@ use ::tokio::join;
 pub use self::constants::{DEFAULT_CONFIG_PATH, DEFAULT_RECONNECT_INTERVAL};
 
 pub use self::cmdargs::CmdArgs;
-pub use self::config::{Config, ObserverConfig, TradeObserverInitNodeNumbers};
+pub use self::config::{Config, TradeObserverInitNodeNumbers};
 
 pub use ::mongodb::Database;
 use ::subscribe::nats::Client as Nats;

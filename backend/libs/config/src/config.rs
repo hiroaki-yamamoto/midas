@@ -16,7 +16,6 @@ use ::tokio::time::{sleep, timeout};
 use ::errors::{ConfigError, ConfigResult, MaximumAttemptExceeded};
 use ::kvs::redis::aio::MultiplexedConnection as RedisConnection;
 use ::kvs::redis::Client as RedisClient;
-use ::rpc::exchanges::Exchanges;
 use ::subscribe::nats::connect as nats_connect;
 use ::subscribe::nats::Client as Nats;
 
@@ -37,21 +36,6 @@ pub struct TradeObserverInitNodeNumbers {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ObserverConfig {
-  init_trigger_node_numbers: TradeObserverInitNodeNumbers,
-}
-
-impl ObserverConfig {
-  /// Returns the minimum number of nodes to be initialized.
-  pub fn min_node_init(&self, exchange: Exchanges) -> usize {
-    return match exchange {
-      Exchanges::Binance => self.init_trigger_node_numbers.binance,
-    };
-  }
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Config {
   pub host: String,
   #[serde(rename = "dbURL")]
@@ -63,7 +47,6 @@ pub struct Config {
   #[serde(rename = "redisURL", deserialize_with = "Config::redis_client")]
   pub redis: RedisClient,
   pub tls: TLS,
-  pub observer: ObserverConfig,
 }
 
 impl Config {
