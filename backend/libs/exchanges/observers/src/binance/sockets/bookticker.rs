@@ -31,6 +31,15 @@ impl BookTickerSocket {
 
 #[async_trait]
 impl IBookTickerSubscription for BookTickerSocket {
+  async fn has_symbol(&self, symbol: &str) -> ObserverResult<bool> {
+    for subscribed_symbols in self.symbols.values() {
+      if subscribed_symbols.iter().any(|s| s == symbol) {
+        return Ok(true);
+      }
+    }
+    return Ok(false);
+  }
+
   async fn subscribe(&mut self, symbols: &[String]) -> ObserverResult<()> {
     let payload = SubscribeRequestInner {
       id: self.param_id,
