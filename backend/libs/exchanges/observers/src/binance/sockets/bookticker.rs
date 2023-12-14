@@ -1,8 +1,10 @@
 use ::std::collections::HashMap;
 
 use ::async_trait::async_trait;
-use ::errors::{ObserverError, ObserverResult};
+use ::errors::ObserverResult;
 use ::futures::{SinkExt, Stream, StreamExt};
+
+use ::clients::binance::WS_ENDPOINT;
 use ::round::WebSocket;
 
 use crate::binance::entities::{
@@ -14,6 +16,17 @@ pub struct BookTickerSocket {
   param_id: u64,
   socket: WebSocket<WebsocketPayload, SubscribeRequest>,
   symbols: HashMap<u64, Vec<String>>,
+}
+
+impl BookTickerSocket {
+  pub async fn new() -> ObserverResult<Self> {
+    let socket = WebSocket::new(&[WS_ENDPOINT.to_string()]).await?;
+    return Ok(Self {
+      param_id: 0,
+      socket,
+      symbols: HashMap::new(),
+    });
+  }
 }
 
 #[async_trait]
@@ -59,5 +72,16 @@ impl IBookTickerSubscription for BookTickerSocket {
     self.symbols.retain(|_, v| !v.is_empty());
 
     return Ok(());
+  }
+}
+
+impl Stream for BookTickerSocket {
+  type Item = WebsocketPayload;
+
+  fn poll_next(
+    mut self: ::std::pin::Pin<&mut Self>,
+    cx: &mut ::std::task::Context<'_>,
+  ) -> ::std::task::Poll<Option<Self::Item>> {
+    return self.socket.poll_next_unpin(cx);
   }
 }
