@@ -27,6 +27,16 @@ pub struct TradeObserver {
   sockets: HashMap<u64, Arc<dyn IBookTickerSubscription + Send + Sync>>,
 }
 
+impl TradeObserver {
+  pub async fn new(broker: &Nats) -> CreateStreamResult<Self> {
+    let pubsub = BookTickerPubSub::new(&broker).await?;
+    return Ok(Self {
+      pubsub: Arc::new(pubsub),
+      sockets: HashMap::new(),
+    });
+  }
+}
+
 #[async_trait]
 impl ITradeObserver for TradeObserver {
   async fn start(&self, signal: Box<Signal>) -> ObserverResult<()> {
