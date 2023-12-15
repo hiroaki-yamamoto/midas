@@ -21,7 +21,7 @@ use ::writers::DatabaseWriter;
 
 use ::clients::binance::{APIHeader, FindKey, REST_ENDPOINTS};
 use ::observers::binance::TradeSubscriber;
-use ::observers::traits::TradeSubscriber as TradeSubscriberTrait;
+use ::observers::traits::ITradeSubscriber as TradeSubscriberTrait;
 use ::subscribe::nats::Client as Nats;
 
 use crate::traits::Executor as ExecutorTrait;

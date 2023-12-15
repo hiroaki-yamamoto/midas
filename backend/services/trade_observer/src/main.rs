@@ -15,7 +15,7 @@ use ::config::init;
 use ::csrf::{CSRFOption, CSRF};
 use ::errors::CreateStreamResult;
 use ::observers::binance;
-use ::observers::traits::TradeSubscriber as TradeSubscriberTrait;
+use ::observers::traits::ITradeSubscriber as TradeSubscriberTrait;
 use ::rpc::bookticker::Bookticker as BookTicker;
 use ::rpc::exchanges::Exchanges;
 use ::subscribe::nats::Client as Nats;

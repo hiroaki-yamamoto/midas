@@ -5,7 +5,7 @@ use ::tokio::signal::unix as signal;
 
 use ::config::{Config, DEFAULT_CONFIG_PATH};
 use ::observers::binance;
-use ::observers::traits::TradeObserver as TradeObserverTrait;
+use ::observers::traits::ITradeObserver as TradeObserverTrait;
 use ::rpc::exchanges::Exchanges;
 
 #[derive(Debug, Parser)]

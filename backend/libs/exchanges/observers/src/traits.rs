@@ -6,11 +6,11 @@ use ::entities::BookTicker;
 use ::errors::ObserverResult;
 
 #[async_trait]
-pub trait TradeObserver {
+pub trait ITradeObserver {
   async fn start(&self, signal: Box<Signal>) -> ObserverResult<()>;
 }
 
 #[async_trait]
-pub trait TradeSubscriber {
+pub trait ITradeSubscriber {
   async fn subscribe(&self) -> ObserverResult<BoxStream<'_, BookTicker>>;
 }

@@ -10,7 +10,7 @@ use ::entities::{
   BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
 };
 use ::errors::{ExecutionFailed, ExecutionResult};
-use ::observers::traits::TradeSubscriber as TradeSubscriberTrait;
+use ::observers::traits::ITradeSubscriber as TradeSubscriberTrait;
 use ::subscribe::nats::Client as Nats;
 
 use crate::traits::{
