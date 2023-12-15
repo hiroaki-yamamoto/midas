@@ -4,9 +4,7 @@ use ::std::borrow::Borrow;
 
 use ::futures::stream::{BoxStream, StreamExt};
 use ::log::warn;
-use ::rmp_serde::{
-  encode::Error as EncodeErr, from_slice as from_msgpack, to_vec as to_msgpack,
-};
+use ::rmp_serde::{from_slice as from_msgpack, to_vec as to_msgpack};
 use ::serde::de::DeserializeOwned;
 use ::serde::ser::Serialize;
 
@@ -58,18 +56,11 @@ pub trait PubSub {
     return Ok(stream.get_or_create_consumer(durable_name, cfg).await?);
   }
 
-  fn serialize<S>(entity: &S) -> Result<Bytes, EncodeErr>
-  where
-    S: Serialize,
-  {
-    return to_msgpack(entity).map(|v| Bytes::from(v));
-  }
-
   async fn publish(
     &self,
     entity: impl Borrow<Self::Output> + Send + Sync,
   ) -> PublishResult<PublishAckFuture> {
-    let msg = Self::serialize(entity.borrow())?;
+    let msg = to_msgpack(entity.borrow()).map(|v| Bytes::from(v))?;
     let res = self
       .get_ctx()
       .publish(self.get_subject().to_string(), msg)
@@ -77,14 +68,11 @@ pub trait PubSub {
     return Ok(res?);
   }
 
-  async fn raw_pull_subscribe<R>(
+  async fn raw_pull_subscribe(
     &self,
     durable_name: &str,
     stream_name: Option<&str>,
-  ) -> ConsumerResult<BoxStream<(R, Message)>>
-  where
-    R: DeserializeOwned + Send + 'life0,
-  {
+  ) -> ConsumerResult<BoxStream<(Self::Output, Message)>> {
     let consumer = self.add_consumer(durable_name, stream_name).await?;
     let msg = consumer
       .messages()
@@ -101,7 +89,7 @@ pub trait PubSub {
         return Some(msg);
       })
       .map(|msg| {
-        return (from_msgpack::<R>(&msg.payload), msg);
+        return (from_msgpack::<Self::Output>(&msg.payload), msg);
       })
       .filter_map(|(res, msg)| async {
         if let Err(ref e) = res {
