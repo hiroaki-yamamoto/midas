@@ -24,9 +24,10 @@ async fn main() {
   config.init_logger();
 
   let broker = config.nats_cli().await.unwrap();
+  let db = config.db().await.unwrap();
   let exchange: Box<dyn TradeObserverTrait> = match cmd_args.exchange {
     Exchanges::Binance => {
-      Box::new(binance::TradeObserver::new(&broker).await.unwrap())
+      Box::new(binance::TradeObserver::new(&broker, &db).await.unwrap())
     }
   };
   let sig =
