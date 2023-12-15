@@ -3,8 +3,12 @@ pub(crate) mod interfaces;
 mod pubsub;
 pub(crate) mod sockets;
 
+use ::std::collections::HashMap;
+use ::std::sync::Arc;
+
 use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
+use ::rug::Float;
 use ::subscribe::nats::client::Client as Nats;
 use ::tokio::signal::unix::Signal;
 
@@ -12,10 +16,16 @@ use ::entities::BookTicker as CommonBookTicker;
 use ::errors::{CreateStreamResult, ObserverResult};
 use ::subscribe::PubSub;
 
-use crate::binance::pubsub::BookTickerPubSub;
+use crate::binance::{
+  entities::BookTicker, interfaces::IBookTickerSubscription,
+  pubsub::BookTickerPubSub,
+};
 use crate::traits::{ITradeObserver, ITradeSubscriber};
 
-pub struct TradeObserver {}
+pub struct TradeObserver {
+  pubsub: Arc<dyn PubSub<Output = BookTicker<Float>> + Send + Sync>,
+  sockets: HashMap<u64, Arc<dyn IBookTickerSubscription + Send + Sync>>,
+}
 
 #[async_trait]
 impl ITradeObserver for TradeObserver {

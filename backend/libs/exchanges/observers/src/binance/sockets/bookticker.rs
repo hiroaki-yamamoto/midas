@@ -31,13 +31,13 @@ impl BookTickerSocket {
 
 #[async_trait]
 impl IBookTickerSubscription for BookTickerSocket {
-  async fn has_symbol(&self, symbol: &str) -> ObserverResult<bool> {
+  async fn has_symbol(&self, symbol: &str) -> bool {
     for subscribed_symbols in self.symbols.values() {
-      if subscribed_symbols.iter().any(|s| s == symbol) {
-        return Ok(true);
+      if subscribed_symbols.contains(&symbol.to_string()) {
+        return true;
       }
     }
-    return Ok(false);
+    return false;
   }
 
   async fn subscribe(&mut self, symbols: &[String]) -> ObserverResult<()> {

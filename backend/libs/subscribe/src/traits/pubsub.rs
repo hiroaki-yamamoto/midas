@@ -1,6 +1,5 @@
 use ::async_trait::async_trait;
 use ::bytes::Bytes;
-use ::std::borrow::Borrow;
 
 use ::futures::stream::{BoxStream, StreamExt};
 use ::log::warn;
@@ -21,7 +20,7 @@ use crate::natsJS::message::Message;
 
 #[async_trait]
 pub trait PubSub {
-  type Output: DeserializeOwned + Serialize + Clone + Send + Sync;
+  type Output: DeserializeOwned + Serialize + Send + Sync;
 
   fn get_client(&self) -> &Client;
   fn get_subject(&self) -> &str;
@@ -58,9 +57,9 @@ pub trait PubSub {
 
   async fn publish(
     &self,
-    entity: impl Borrow<Self::Output> + Send + Sync,
+    entity: &Self::Output,
   ) -> PublishResult<PublishAckFuture> {
-    let msg = to_msgpack(entity.borrow()).map(|v| Bytes::from(v))?;
+    let msg = to_msgpack(entity).map(|v| Bytes::from(v))?;
     let res = self
       .get_ctx()
       .publish(self.get_subject().to_string(), msg)
