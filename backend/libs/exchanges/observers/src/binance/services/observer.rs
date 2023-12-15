@@ -46,11 +46,15 @@ impl TradeObserver {
   }
 
   fn get_socket(&mut self) -> Option<&mut BookTickerSocket> {
-    let mut socket_index = self.sockets.len() - 1;
-    socket_index = if socket_index < 0 { 0 } else { socket_index };
+    let mut socket_index = self.sockets.len();
+    socket_index = if socket_index < 1 {
+      0
+    } else {
+      socket_index - 1
+    };
     let socket = self.sockets.get_mut(&socket_index);
     if let Some(socket) = socket {
-      if socket.len() < 100 {
+      if socket.len() < 100 && socket.len_socket() < 10 {
         return Some(socket);
       }
     }
