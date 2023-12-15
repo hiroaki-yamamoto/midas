@@ -22,10 +22,9 @@ use crate::natsJS::context::{Context, PublishAckFuture};
 use crate::natsJS::message::Message;
 
 #[async_trait]
-pub trait PubSub<T>
-where
-  T: DeserializeOwned + Serialize + Clone + Send + Sync + 'static,
-{
+pub trait PubSub {
+  type Output: DeserializeOwned + Serialize + Clone + Send + Sync;
+
   fn get_client(&self) -> &Client;
   fn get_subject(&self) -> &str;
   fn get_ctx(&self) -> &Context;
@@ -68,7 +67,7 @@ where
 
   async fn publish(
     &self,
-    entity: impl Borrow<T> + Send + Sync,
+    entity: impl Borrow<Self::Output> + Send + Sync,
   ) -> PublishResult<PublishAckFuture> {
     let msg = Self::serialize(entity.borrow())?;
     let res = self
@@ -118,7 +117,7 @@ where
   async fn pull_subscribe(
     &self,
     durable_name: &str,
-  ) -> ConsumerResult<BoxStream<(T, Message)>> {
+  ) -> ConsumerResult<BoxStream<(Self::Output, Message)>> {
     let stream = self.raw_pull_subscribe(durable_name, None).await?;
     return Ok(stream);
   }

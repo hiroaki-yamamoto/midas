@@ -33,7 +33,8 @@ macro_rules! pubsub {
       }
     }
 
-    impl ::subscribe::PubSub<$entity> for $name {
+    impl ::subscribe::PubSub for $name {
+      type Output = $entity;
       fn get_client(&self) -> &::subscribe::nats::client::Client {
         return &self.cli;
       }
