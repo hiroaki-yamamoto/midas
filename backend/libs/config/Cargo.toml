@@ -14,7 +14,7 @@ errors = { path = "../errors" }
 kvs = { path = "../kvs" }
 rpc = { path = "../rpc" }
 
-mongodb = { version = "2.7.1", default-features = false, features = [
+mongodb = { version = "2.8.0", default-features = false, features = [
   "async-std-runtime",
 ] }
 serde = { version = "1.0.193", features = ["derive"] }
