@@ -1,4 +1,5 @@
 use ::std::collections::HashMap;
+use ::std::ops::Drop;
 
 use ::async_trait::async_trait;
 use ::errors::ObserverResult;
@@ -65,19 +66,21 @@ impl IBookTickerSubscription for BookTickerSocket {
   }
 
   async fn unsubscribe(&mut self, symbols: &[String]) -> ObserverResult<()> {
-    let payloads: Vec<SubscribeRequest> = self
-      .symbols
+    let payloads: Vec<SubscribeRequest> = symbols
       .iter()
-      .filter(|(_, v)| {
-        symbols.iter().any(|symbol| v.iter().any(|s| s == symbol))
-      })
-      .map(|(k, _)| {
-        let payload = SubscribeRequestInner {
-          id: *k,
-          params: vec![],
+      .filter(|symbol| self.has_symbol(symbol))
+      .map(|symbol| {
+        let id = self
+          .symbols
+          .iter()
+          .find(|(_, v)| v.contains(symbol))
+          .map(|(k, _)| k)
+          .unwrap();
+        return SubscribeRequestInner {
+          id: *id,
+          params: vec![format!("{}@bookTicker", symbol)],
         }
         .into_unsubscribe();
-        return payload;
       })
       .collect();
     for payload in payloads {
@@ -101,5 +104,11 @@ impl Stream for BookTickerSocket {
     cx: &mut ::std::task::Context<'_>,
   ) -> ::std::task::Poll<Option<Self::Item>> {
     return self.socket.poll_next_unpin(cx);
+  }
+}
+
+impl Drop for BookTickerSocket {
+  fn drop(&mut self) {
+    let _ = self.socket.close();
   }
 }

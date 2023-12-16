@@ -2,7 +2,7 @@ use ::std::collections::{HashMap, HashSet};
 use ::std::sync::Arc;
 
 use ::async_trait::async_trait;
-use ::futures::stream::{BoxStream, StreamExt};
+use ::futures::future::try_join_all;
 use ::mongodb::Database;
 use ::rug::Float;
 use ::subscribe::nats::client::Client as Nats;
@@ -89,6 +89,31 @@ impl TradeObserver {
       }
     }
 
+    return Ok(());
+  }
+
+  async fn unsubscribe(&mut self, symbols: &[String]) -> ObserverResult<()> {
+    let to_remove: Vec<String> = symbols
+      .iter()
+      .filter(|symbol| {
+        self
+          .sockets
+          .values()
+          .any(|socket| socket.has_symbol(symbol))
+      })
+      .map(|symbol| symbol.to_string())
+      .collect();
+    // Send unsubscribe request.
+    try_join_all(
+      self
+        .sockets
+        .values_mut()
+        .map(|socket| socket.unsubscribe(&to_remove)),
+    )
+    .await?;
+
+    // Remove the unused sockets from manager.
+    self.sockets.retain(|_, socket| socket.len() > 0);
     return Ok(());
   }
 }
