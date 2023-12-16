@@ -53,7 +53,7 @@ jobs:
         run: tar --zstd -cvf target.tzst target
         working-directory: ./backend
       - name: "Upload the package"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: target.tzst
           path: backend/target.tzst

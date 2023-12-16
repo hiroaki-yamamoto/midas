@@ -26,7 +26,7 @@ jobs:
         run: tar --zstd -cvf dist.tar.zst dist
         working-directory: frontend
       - name: "Upload the package"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist.tar.zst
           path: frontend/dist.tar.zst
@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: "Download Built Package"
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: dist.tar.zst
           path: ./frontend

@@ -38,7 +38,7 @@ jobs:
           tar xJvf mpc.txz -C ../deps
         working-directory: ./.github
       - name: "Download Library artifacts"
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: target.tzst
           path: backend
@@ -58,7 +58,7 @@ jobs:
             target/x86_64-unknown-linux-musl/release/${{ inputs.pkgid }}
         working-directory: ./backend
       - name: "Upload the package"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.pkgid }}.zst
           path: backend/${{ inputs.pkgid }}.zst
@@ -70,7 +70,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: "Download Built Package"
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.pkgid }}.zst
           path: ./backend
