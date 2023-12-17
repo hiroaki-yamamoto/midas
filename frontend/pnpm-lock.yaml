@@ -7,7 +7,7 @@ settings:
 dependencies:
   '@amcharts/amcharts5':
     specifier: ^5.6.2
-    version: 5.6.2
+    version: 5.7.0
   '@angular/animations':
     specifier: ~17.0.6
     version: 17.0.7(@angular/core@17.0.7)
@@ -192,8 +192,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /@amcharts/amcharts5@5.6.2:
-    resolution: {integrity: sha512-dSbF7NVDrxF8jvIJQNJBCbe1k8SK8iAuRnd22FPtwh5Ku4DjZttaOeSTJkIIyMjyhkebaF/mEWk0qQIPOLBbdA==}
+  /@amcharts/amcharts5@5.7.0:
+    resolution: {integrity: sha512-1pxoJohrw43FxgYjf2vG1aWVWePFr6uWGm7WskqOcai20Y0fuldmqGLnIKt6GPTWc3ZPoAEG/PLV1U14thDybQ==}
     dependencies:
       '@types/d3': 7.4.3
       '@types/d3-chord': 3.0.6
