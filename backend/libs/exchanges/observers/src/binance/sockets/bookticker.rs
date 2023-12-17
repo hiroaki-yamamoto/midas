@@ -1,10 +1,8 @@
 use ::std::collections::HashMap;
 use ::std::ops::Drop;
-use ::std::pin::Pin;
 
 use ::async_trait::async_trait;
 use ::errors::ObserverResult;
-use ::futures::future::try_join_all;
 use ::futures::{SinkExt, Stream, StreamExt};
 
 use ::clients::binance::WS_ENDPOINT;

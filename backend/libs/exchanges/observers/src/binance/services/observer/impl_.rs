@@ -40,7 +40,7 @@ impl TradeObserver {
       socket_index - 1
     };
     let socket = self.sockets.remove(&socket_index);
-    if let Some(mut socket) = socket {
+    if let Some(socket) = socket {
       if socket.len() < 100 && socket.len_socket() < 10 {
         return Some(socket);
       } else {
