@@ -2,8 +2,10 @@ use ::std::collections::{HashMap, HashSet};
 use ::std::sync::Arc;
 
 use ::futures::future::try_join_all;
+use ::futures::StreamExt;
 use ::mongodb::Database;
 use ::subscribe::nats::client::Client as Nats;
+use ::tokio_stream::StreamMap;
 
 use ::errors::{CreateStreamResult, ObserverResult};
 use ::rpc::exchanges::Exchanges;
@@ -11,7 +13,8 @@ use ::symbols::get_reader;
 use ::symbols::pubsub::SymbolEventPubSub;
 
 use crate::binance::{
-  interfaces::IBookTickerSubscription, pubsub::BookTickerPubSub,
+  interfaces::{BookTickerStream, IBookTickerSocket},
+  pubsub::BookTickerPubSub,
   sockets::BookTickerSocket,
 };
 
@@ -26,21 +29,23 @@ impl TradeObserver {
       pubsub: Arc::new(pubsub),
       symbol_reader: Arc::from(symbol_reader),
       symbol_event: Arc::new(symbol_event),
-      sockets: HashMap::new(),
+      sockets: StreamMap::new(),
     });
   }
 
-  fn get_socket(&mut self) -> Option<&mut BookTickerSocket> {
+  fn get_socket(&mut self) -> Option<BookTickerStream> {
     let mut socket_index = self.sockets.len();
     socket_index = if socket_index < 1 {
       0
     } else {
       socket_index - 1
     };
-    let socket = self.sockets.get_mut(&socket_index);
-    if let Some(socket) = socket {
+    let socket = self.sockets.remove(&socket_index);
+    if let Some(mut socket) = socket {
       if socket.len() < 100 && socket.len_socket() < 10 {
         return Some(socket);
+      } else {
+        self.sockets.insert(socket_index, socket);
       }
     }
     return None;
@@ -68,12 +73,13 @@ impl TradeObserver {
         .map(|s| s.to_string())
         .collect();
       let socket = self.get_socket();
-      if let Some(socket) = socket {
+      if let Some(mut socket) = socket {
         socket.subscribe(&symbols).await?;
+        self.sockets.insert(self.sockets.len(), socket);
       } else {
         let mut socket = BookTickerSocket::new().await?;
         socket.subscribe(&symbols).await?;
-        self.sockets.insert(self.sockets.len(), socket);
+        self.sockets.insert(self.sockets.len(), socket.into());
       }
     }
 
@@ -102,9 +108,16 @@ impl TradeObserver {
         .map(|socket| socket.unsubscribe(&to_remove)),
     )
     .await?;
-
     // Remove the unused sockets from manager.
-    self.sockets.retain(|_, socket| socket.len() > 0);
+    let empty_socket_ids: Vec<usize> = self
+      .sockets
+      .iter()
+      .filter(|(_, socket)| socket.len() < 1)
+      .map(|(id, _)| *id)
+      .collect();
+    empty_socket_ids.iter().for_each(|id| {
+      self.sockets.remove(id);
+    });
     return Ok(());
   }
 }

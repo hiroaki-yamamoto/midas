@@ -1,8 +1,10 @@
 use ::std::collections::HashMap;
 use ::std::ops::Drop;
+use ::std::pin::Pin;
 
 use ::async_trait::async_trait;
 use ::errors::ObserverResult;
+use ::futures::future::try_join_all;
 use ::futures::{SinkExt, Stream, StreamExt};
 
 use ::clients::binance::WS_ENDPOINT;
@@ -11,7 +13,7 @@ use ::round::WebSocket;
 use crate::binance::entities::{
   SubscribeRequest, SubscribeRequestInner, WebsocketPayload,
 };
-use crate::binance::interfaces::IBookTickerSubscription;
+use crate::binance::interfaces::{BookTickerStream, IBookTickerSocket};
 
 pub struct BookTickerSocket {
   param_id: u64,
@@ -31,7 +33,7 @@ impl BookTickerSocket {
 }
 
 #[async_trait]
-impl IBookTickerSubscription for BookTickerSocket {
+impl IBookTickerSocket for BookTickerSocket {
   fn has_symbol(&self, symbol: &str) -> bool {
     for subscribed_symbols in self.symbols.values() {
       if subscribed_symbols.contains(&symbol.to_string()) {
@@ -93,6 +95,12 @@ impl IBookTickerSubscription for BookTickerSocket {
     self.symbols.retain(|_, v| !v.is_empty());
 
     return Ok(());
+  }
+}
+
+impl From<BookTickerSocket> for BookTickerStream {
+  fn from(socket: BookTickerSocket) -> Self {
+    return Box::new(socket);
   }
 }
 
