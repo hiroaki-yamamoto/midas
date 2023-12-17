@@ -1,8 +1,7 @@
-use ::std::collections::{HashMap, HashSet};
+use ::std::collections::HashSet;
 use ::std::sync::Arc;
 
 use ::futures::future::try_join_all;
-use ::futures::StreamExt;
 use ::mongodb::Database;
 use ::subscribe::nats::client::Client as Nats;
 use ::tokio_stream::StreamMap;
