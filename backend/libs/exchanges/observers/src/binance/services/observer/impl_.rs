@@ -1,36 +1,21 @@
 use ::std::collections::{HashMap, HashSet};
 use ::std::sync::Arc;
 
-use ::async_trait::async_trait;
 use ::futures::future::try_join_all;
 use ::mongodb::Database;
-use ::rug::Float;
 use ::subscribe::nats::client::Client as Nats;
-use ::tokio::signal::unix::Signal;
-use ::tokio_stream::StreamMap;
 
 use ::errors::{CreateStreamResult, ObserverResult};
 use ::rpc::exchanges::Exchanges;
-use ::subscribe::PubSub;
-use ::symbols::entities::SymbolEvent;
 use ::symbols::get_reader;
 use ::symbols::pubsub::SymbolEventPubSub;
-use ::symbols::traits::SymbolReader;
 
 use crate::binance::{
-  entities::{BookTicker, WebsocketPayload},
-  interfaces::IBookTickerSubscription,
-  pubsub::BookTickerPubSub,
+  interfaces::IBookTickerSubscription, pubsub::BookTickerPubSub,
   sockets::BookTickerSocket,
 };
-use crate::traits::ITradeObserver;
 
-pub struct TradeObserver {
-  pubsub: Arc<dyn PubSub<Output = BookTicker<Float>> + Send + Sync>,
-  sockets: HashMap<usize, BookTickerSocket>,
-  symbol_reader: Arc<dyn SymbolReader + Send + Sync>,
-  symbol_event: Arc<dyn PubSub<Output = SymbolEvent> + Send + Sync>,
-}
+use super::TradeObserver;
 
 impl TradeObserver {
   pub async fn new(broker: &Nats, db: &Database) -> CreateStreamResult<Self> {
@@ -114,13 +99,6 @@ impl TradeObserver {
 
     // Remove the unused sockets from manager.
     self.sockets.retain(|_, socket| socket.len() > 0);
-    return Ok(());
-  }
-}
-
-#[async_trait]
-impl ITradeObserver for TradeObserver {
-  async fn start(&self, signal: Box<Signal>) -> ObserverResult<()> {
     return Ok(());
   }
 }
