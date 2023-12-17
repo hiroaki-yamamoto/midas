@@ -7,7 +7,7 @@ use ::errors::ObserverResult;
 
 #[async_trait]
 pub trait ITradeObserver {
-  async fn start(&self, signal: Box<Signal>) -> ObserverResult<()>;
+  async fn start(&mut self, signal: &mut Signal) -> ObserverResult<()>;
 }
 
 #[async_trait]

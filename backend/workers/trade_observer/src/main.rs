@@ -25,14 +25,14 @@ async fn main() {
 
   let broker = config.nats_cli().await.unwrap();
   let db = config.db().await.unwrap();
-  let exchange: Box<dyn TradeObserverTrait> = match cmd_args.exchange {
+  let mut exchange: Box<dyn TradeObserverTrait> = match cmd_args.exchange {
     Exchanges::Binance => {
       Box::new(binance::TradeObserver::new(&broker, &db).await.unwrap())
     }
   };
-  let sig =
+  let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
-  if let Err(e) = exchange.start(sig.into()).await {
+  if let Err(e) = exchange.start(&mut sig).await {
     error!(error = as_error!(e); "An Error Occurred.");
   }
 }

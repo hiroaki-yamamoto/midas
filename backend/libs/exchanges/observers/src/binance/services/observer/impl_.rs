@@ -46,7 +46,10 @@ impl TradeObserver {
     return None;
   }
 
-  async fn subscribe(&mut self, symbols: &[String]) -> ObserverResult<()> {
+  pub(super) async fn subscribe(
+    &mut self,
+    symbols: &[String],
+  ) -> ObserverResult<()> {
     let not_subscribed: HashSet<String> = symbols
       .into_iter()
       .filter(|symbol| {
@@ -77,7 +80,10 @@ impl TradeObserver {
     return Ok(());
   }
 
-  async fn unsubscribe(&mut self, symbols: &[String]) -> ObserverResult<()> {
+  pub(super) async fn unsubscribe(
+    &mut self,
+    symbols: &[String],
+  ) -> ObserverResult<()> {
     let to_remove: Vec<String> = symbols
       .iter()
       .filter(|symbol| {
