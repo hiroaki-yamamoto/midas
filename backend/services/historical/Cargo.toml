@@ -23,7 +23,7 @@ kvs = { path = "../../libs/kvs" }
 
 serde = { version = "1.0.193", features = ["derive"] }
 rmp-serde = "1.1.2"
-mongodb = { version = "2.7.1", default-features = false, features = [
+mongodb = { version = "2.8.0", default-features = false, features = [
   "async-std-runtime",
 ] }
 clap = { version = "4.4.11", features = ["derive"] }
