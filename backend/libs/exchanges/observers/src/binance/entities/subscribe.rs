@@ -1,8 +1,9 @@
 use ::serde::{Deserialize, Serialize};
+use ::std::sync::Arc;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubscribeRequestInner {
-  pub id: u64,
+  pub id: Arc<String>,
   pub params: Vec<String>,
 }
 

@@ -203,6 +203,7 @@ where
         return Poll::Ready(None);
       }
       Ok(None) => {
+        cx.waker().clone().wake();
         return Poll::Pending;
       }
       Ok(Some(msg)) => {
@@ -213,9 +214,11 @@ where
         match handled_payload {
           Err(e) => {
             error!(error = as_error!(e); "Failed to decoding the payload.");
+            cx.waker().clone().wake();
             return Poll::Pending;
           }
           Ok(None) => {
+            cx.waker().clone().wake();
             return Poll::Pending;
           }
           Ok(Some(payload)) => {

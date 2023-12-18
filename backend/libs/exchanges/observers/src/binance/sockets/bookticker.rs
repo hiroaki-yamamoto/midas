@@ -1,11 +1,13 @@
 use ::std::collections::HashMap;
 use ::std::ops::Drop;
+use ::std::sync::Arc;
 use ::std::task::Poll;
 
 use ::async_trait::async_trait;
 use ::errors::{ObserverResult, ParseResult};
 use ::futures::{ready, SinkExt, Stream, StreamExt};
-use ::log::{as_error, as_serde, info};
+use ::log::{as_error, as_serde, debug, info};
+use ::random::generate_random_txt;
 use ::rug::Float;
 
 use ::clients::binance::WS_ENDPOINT;
@@ -17,19 +19,25 @@ use crate::binance::entities::{
 use crate::binance::interfaces::{BookTickerStream, IBookTickerSocket};
 
 pub struct BookTickerSocket {
-  param_id: u64,
   socket: WebSocket<WebsocketPayload, SubscribeRequest>,
-  symbols: HashMap<u64, Vec<String>>,
+  symbols: HashMap<Arc<String>, Vec<String>>,
 }
 
 impl BookTickerSocket {
   pub async fn new() -> ObserverResult<Self> {
     let socket = WebSocket::new(&[WS_ENDPOINT.to_string()]).await?;
     return Ok(Self {
-      param_id: 0,
       socket,
       symbols: HashMap::new(),
     });
+  }
+
+  fn random_id(&self) -> String {
+    let mut random_id = generate_random_txt(36);
+    while self.symbols.contains_key(&random_id) {
+      random_id = generate_random_txt(36);
+    }
+    return random_id;
   }
 
   fn parse_payload(
@@ -81,17 +89,18 @@ impl IBookTickerSocket for BookTickerSocket {
   }
 
   async fn subscribe(&mut self, symbols: &[String]) -> ObserverResult<()> {
+    let id = Arc::new(self.random_id());
     let payload = SubscribeRequestInner {
-      id: self.param_id,
+      id: id.clone(),
       params: symbols
         .iter()
         .map(|symbol| format!("{}@bookTicker", symbol))
         .collect(),
     }
     .into_subscribe();
+    debug!(payload = as_serde!(payload); "Start Subscribe");
     self.socket.send(payload).await?;
-    self.symbols.insert(self.param_id, symbols.to_vec());
-    self.param_id += 1;
+    self.symbols.insert(id, symbols.to_vec());
     return Ok(());
   }
 
@@ -107,13 +116,14 @@ impl IBookTickerSocket for BookTickerSocket {
           .map(|(k, _)| k)
           .unwrap();
         return SubscribeRequestInner {
-          id: *id,
+          id: id.clone(),
           params: vec![format!("{}@bookTicker", symbol)],
         }
         .into_unsubscribe();
       })
       .collect();
     for payload in payloads {
+      debug!(payload = as_serde!(payload); "Start Unsubscribe");
       self.socket.send(payload).await?;
     }
     // Remove symbols from the map
