@@ -163,6 +163,7 @@ where
       }
       Message::Close(_) => {
         error!("Disconnected. Re-Connecting...");
+        let _ = socket.close(None).await;
         *socket = Self::connect(endpoints).await?;
         return Ok(None);
       }
@@ -171,6 +172,37 @@ where
         return Ok(None);
       }
     }
+  }
+
+  async fn read_item(&mut self) -> Option<R> {
+    let endpoints = self.endpoints.clone();
+    let mut socket = &mut self.socket;
+    let payload = socket.next().await;
+    let payload =
+      Self::reconnect_on_error(&mut socket, endpoints.as_slice(), payload)
+        .await;
+    return match payload {
+      Err(e) => {
+        error!(
+          error = as_error!(e);
+          "Un-recoverable Error while handling server payload."
+        );
+        None
+      }
+      Ok(None) => None,
+      Ok(Some(msg)) => {
+        let handled_payload =
+          Self::handle_message(&mut socket, endpoints.as_slice(), msg).await;
+        match handled_payload {
+          Err(e) => {
+            error!(error = as_error!(e); "Failed to decoding the payload.");
+            None
+          }
+          Ok(None) => None,
+          Ok(Some(payload)) => Some(payload),
+        }
+      }
+    };
   }
 }
 
@@ -184,49 +216,8 @@ where
     mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Option<Self::Item>> {
-    let endpoints = self.endpoints.clone();
-    let mut socket = &mut self.socket;
-    let payload = ready!(socket.poll_next_unpin(cx));
-    let payload = ready!(Self::reconnect_on_error(
-      &mut socket,
-      endpoints.as_slice(),
-      payload
-    )
-    .boxed_local()
-    .poll_unpin(cx));
-    match payload {
-      Err(e) => {
-        error!(
-          error = as_error!(e);
-          "Un-recoverable Error while handling server payload."
-        );
-        return Poll::Ready(None);
-      }
-      Ok(None) => {
-        cx.waker().clone().wake();
-        return Poll::Pending;
-      }
-      Ok(Some(msg)) => {
-        let handled_payload =
-          ready!(Self::handle_message(&mut socket, endpoints.as_slice(), msg)
-            .boxed_local()
-            .poll_unpin(cx));
-        match handled_payload {
-          Err(e) => {
-            error!(error = as_error!(e); "Failed to decoding the payload.");
-            cx.waker().clone().wake();
-            return Poll::Pending;
-          }
-          Ok(None) => {
-            cx.waker().clone().wake();
-            return Poll::Pending;
-          }
-          Ok(Some(payload)) => {
-            return Poll::Ready(Some(payload));
-          }
-        }
-      }
-    }
+    let item = ready!(self.read_item().boxed_local().poll_unpin(cx));
+    return Poll::Ready(item);
   }
 }
 
