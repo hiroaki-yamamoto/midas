@@ -1,6 +1,5 @@
 use ::std::collections::HashMap;
 use ::std::ops::Drop;
-use ::std::sync::Arc;
 use ::std::task::Poll;
 
 use ::async_trait::async_trait;
@@ -20,16 +19,19 @@ use crate::binance::interfaces::{BookTickerStream, IBookTickerSocket};
 
 pub struct BookTickerSocket {
   socket: WebSocket<WebsocketPayload, SubscribeRequest>,
-  symbols: HashMap<Arc<String>, Vec<String>>,
+  symbols: HashMap<String, Vec<String>>,
+  pending: HashMap<String, Vec<String>>,
 }
 
 impl BookTickerSocket {
   pub async fn new() -> ObserverResult<Self> {
     let socket = WebSocket::new(&[WS_ENDPOINT.to_string()]).await?;
-    return Ok(Self {
+    let inst = Self {
       socket,
       symbols: HashMap::new(),
-    });
+      pending: HashMap::new(),
+    };
+    return Ok(inst);
   }
 
   fn random_id(&self) -> String {
@@ -41,7 +43,7 @@ impl BookTickerSocket {
   }
 
   fn parse_payload(
-    &self,
+    &mut self,
     payload: WebsocketPayload,
   ) -> Option<BookTicker<Float>> {
     match payload {
@@ -61,6 +63,11 @@ impl BookTickerSocket {
         info!(error=as_serde!(&error); "Error");
       }
       WebsocketPayload::Result(result) => {
+        let id = result.id.clone();
+        let symbols = self.pending.remove(&id);
+        if let Some(symbols) = symbols {
+          self.symbols.insert(id, symbols);
+        }
         info!(result=as_serde!(&result); "Result");
       }
     }
@@ -88,8 +95,18 @@ impl IBookTickerSocket for BookTickerSocket {
     return self.symbols.len();
   }
 
+  async fn resubscribe(&mut self) -> ObserverResult<()> {
+    let pending: HashMap<String, Vec<String>> = self.pending.drain().collect();
+    for (id, symbols) in pending {
+      info!(id = as_serde!(id), symbols=as_serde!(symbols); "Resubscribe");
+      let _ = self.unsubscribe(&symbols).await;
+      self.subscribe(&symbols).await?;
+    }
+    return Ok(());
+  }
+
   async fn subscribe(&mut self, symbols: &[String]) -> ObserverResult<()> {
-    let id = Arc::new(self.random_id());
+    let id = self.random_id();
     let payload = SubscribeRequestInner {
       id: id.clone(),
       params: symbols
@@ -100,7 +117,7 @@ impl IBookTickerSocket for BookTickerSocket {
     .into_subscribe();
     debug!(payload = as_serde!(payload); "Start Subscribe");
     self.socket.send(payload).await?;
-    self.symbols.insert(id, symbols.to_vec());
+    self.pending.insert(id, symbols.to_vec());
     return Ok(());
   }
 

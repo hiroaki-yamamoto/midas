@@ -66,6 +66,7 @@ impl ITradeObserver for TradeObserver {
           }
         },
         _ = sub_unsub_handle_interval.tick() => {
+          self.resubscribe().await?;
           call_subscribe = true;
           call_unsubscribe = true;
         },

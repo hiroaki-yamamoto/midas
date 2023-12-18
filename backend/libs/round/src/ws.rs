@@ -82,12 +82,9 @@ where
     });
   }
 
-  async fn close(
-    socket: &mut TLSWebSocket,
-    code: CloseCode,
-    reason: &str,
-  ) -> WSResult<()> {
-    return socket
+  async fn close(&mut self, code: CloseCode, reason: &str) -> WSResult<()> {
+    return self
+      .socket
       .close(
         CloseFrame {
           code,
@@ -98,15 +95,14 @@ where
       .await;
   }
 
-  async fn send_msg(socket: &mut TLSWebSocket, msg: Message) -> WSResult<()> {
-    let send_result = socket.send(msg).await;
-    let flush_result = socket.flush().await;
+  async fn send_msg(&mut self, msg: Message) -> WSResult<()> {
+    let send_result = self.socket.send(msg).await;
+    let flush_result = self.socket.flush().await;
     return send_result.and(flush_result);
   }
 
   async fn reconnect_on_error(
-    socket: &mut TLSWebSocket,
-    endpoints: &[String],
+    &mut self,
     payload: Option<WSResult<Message>>,
   ) -> WebsocketHandleResult<Option<Message>> {
     match payload {
@@ -115,23 +111,19 @@ where
           error = as_error!(e);
           "Error while receiving payload from server. Re-Connecting..."
         );
-        let _ = Self::close(
-          socket,
+        let _ = self.close(
           CloseCode::Abnormal,
           "Error while receiving payload from server.",
         );
-        *socket = Self::connect(endpoints).await?;
+        self.socket = Self::connect(&self.endpoints).await?;
         return Ok(None);
       }
       None => {
         error!("Received close payload from stream. Re-Connecting...");
-        let _ = Self::close(
-          socket,
-          CloseCode::Abnormal,
-          "Received close payload from stream.",
-        )
-        .await;
-        *socket = Self::connect(endpoints).await?;
+        let _ = self
+          .close(CloseCode::Abnormal, "Received close payload from stream.")
+          .await;
+        self.socket = Self::connect(&self.endpoints).await?;
         return Ok(None);
       }
       Some(Ok(msg)) => return Ok(Some(msg)),
@@ -139,8 +131,7 @@ where
   }
 
   async fn handle_message(
-    socket: &mut TLSWebSocket,
-    endpoints: &[String],
+    &mut self,
     msg: Message,
   ) -> WebsocketMessageResult<Option<R>> {
     match msg {
@@ -154,7 +145,7 @@ where
         return Ok(payload.into());
       }
       Message::Ping(payload) => {
-        let _ = Self::send_msg(socket, Message::Pong(payload)).await?;
+        let _ = self.send_msg(Message::Pong(payload)).await?;
         return Ok(None);
       }
       Message::Pong(msg) => {
@@ -163,8 +154,8 @@ where
       }
       Message::Close(_) => {
         error!("Disconnected. Re-Connecting...");
-        let _ = socket.close(None).await;
-        *socket = Self::connect(endpoints).await?;
+        let _ = self.socket.close(None).await;
+        self.socket = Self::connect(&self.endpoints).await?;
         return Ok(None);
       }
       Message::Frame(frame) => {
@@ -175,12 +166,8 @@ where
   }
 
   async fn read_item(&mut self) -> Option<R> {
-    let endpoints = self.endpoints.clone();
-    let mut socket = &mut self.socket;
-    let payload = socket.next().await;
-    let payload =
-      Self::reconnect_on_error(&mut socket, endpoints.as_slice(), payload)
-        .await;
+    let payload = self.socket.next().await;
+    let payload = self.reconnect_on_error(payload).await;
     return match payload {
       Err(e) => {
         error!(
@@ -191,8 +178,7 @@ where
       }
       Ok(None) => None,
       Ok(Some(msg)) => {
-        let handled_payload =
-          Self::handle_message(&mut socket, endpoints.as_slice(), msg).await;
+        let handled_payload = self.handle_message(msg).await;
         match handled_payload {
           Err(e) => {
             error!(error = as_error!(e); "Failed to decoding the payload.");
@@ -261,8 +247,7 @@ where
   fn start_send(mut self: Pin<&mut Self>, item: W) -> Result<(), Self::Error> {
     let payload = jsonify(&item)?;
     let msg = Message::Text(payload);
-    let socket = &mut self.socket;
 
-    return block_on(Self::send_msg(socket, msg)).map_err(|err| err.into());
+    return block_on(self.send_msg(msg)).map_err(|err| err.into());
   }
 }

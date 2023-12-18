@@ -50,6 +50,15 @@ impl TradeObserver {
     return None;
   }
 
+  pub(super) async fn resubscribe(&mut self) -> ObserverResult<()> {
+    let resubscribe_defer = self
+      .sockets
+      .iter_mut()
+      .map(|(_, socket)| socket.resubscribe());
+    try_join_all(resubscribe_defer).await?;
+    return Ok(());
+  }
+
   pub(super) async fn subscribe(
     &mut self,
     symbols: &[String],
