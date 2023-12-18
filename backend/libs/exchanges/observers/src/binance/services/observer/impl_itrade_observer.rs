@@ -69,6 +69,9 @@ impl ITradeObserver for TradeObserver {
           call_subscribe = true;
           call_unsubscribe = true;
         },
+        Some((_, payload)) = self.sockets.next() => {
+          self.pubsub.publish(&payload).await?;
+        }
       }
       if call_subscribe && !symbols_to_add.is_empty() {
         let symbols: Vec<String> = symbols_to_add.drain(..).collect();

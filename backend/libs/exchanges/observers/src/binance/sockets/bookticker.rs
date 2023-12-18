@@ -1,15 +1,18 @@
 use ::std::collections::HashMap;
 use ::std::ops::Drop;
+use ::std::task::Poll;
 
 use ::async_trait::async_trait;
-use ::errors::ObserverResult;
-use ::futures::{SinkExt, Stream, StreamExt};
+use ::errors::{ObserverResult, ParseResult};
+use ::futures::{ready, SinkExt, Stream, StreamExt};
+use ::log::{as_error, as_serde, info};
+use ::rug::Float;
 
 use ::clients::binance::WS_ENDPOINT;
 use ::round::WebSocket;
 
 use crate::binance::entities::{
-  SubscribeRequest, SubscribeRequestInner, WebsocketPayload,
+  BookTicker, SubscribeRequest, SubscribeRequestInner, WebsocketPayload,
 };
 use crate::binance::interfaces::{BookTickerStream, IBookTickerSocket};
 
@@ -27,6 +30,32 @@ impl BookTickerSocket {
       socket,
       symbols: HashMap::new(),
     });
+  }
+
+  fn parse_payload(
+    &self,
+    payload: WebsocketPayload,
+  ) -> Option<BookTicker<Float>> {
+    match payload {
+      WebsocketPayload::BookTicker(book_ticker) => {
+        let book_ticker: ParseResult<BookTicker<Float>> =
+          book_ticker.try_into();
+        return match book_ticker {
+          Ok(book_ticker) => Some(book_ticker),
+          Err(error) => {
+            info!(error=as_error!(error); "Error");
+            None
+          }
+        };
+      }
+      WebsocketPayload::Error(error) => {
+        info!(error=as_serde!(&error); "Error");
+      }
+      WebsocketPayload::Result(result) => {
+        info!(result=as_serde!(&result); "Result");
+      }
+    }
+    return None;
   }
 }
 
@@ -103,13 +132,20 @@ impl From<BookTickerSocket> for BookTickerStream {
 }
 
 impl Stream for BookTickerSocket {
-  type Item = WebsocketPayload;
+  type Item = BookTicker<Float>;
 
   fn poll_next(
     mut self: ::std::pin::Pin<&mut Self>,
     cx: &mut ::std::task::Context<'_>,
-  ) -> ::std::task::Poll<Option<Self::Item>> {
-    return self.socket.poll_next_unpin(cx);
+  ) -> Poll<Option<Self::Item>> {
+    let payload = ready!(self.socket.poll_next_unpin(cx));
+    return match payload {
+      None => Poll::Ready(None),
+      Some(payload) => {
+        let book_ticker = self.parse_payload(payload);
+        Poll::Ready(book_ticker)
+      }
+    };
   }
 }
 
