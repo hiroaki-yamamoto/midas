@@ -37,10 +37,12 @@ impl ITradeObserver for TradeObserver {
     let all_symbols: Vec<String> = all_symbols.into_iter().collect();
     self.subscribe(&all_symbols).await?;
 
+    let mut call_subscribe;
+    let mut call_unsubscribe;
     // Start Event loop
     loop {
-      let mut call_subscribe = false;
-      let mut call_unsubscribe = false;
+      call_subscribe = false;
+      call_unsubscribe = false;
       select! {
         _ = signal.recv() => {
           break;

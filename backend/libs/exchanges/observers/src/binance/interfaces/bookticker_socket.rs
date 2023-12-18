@@ -1,3 +1,5 @@
+use ::std::pin::Pin;
+
 use ::async_trait::async_trait;
 use ::errors::ObserverResult;
 use ::futures::Stream;
@@ -15,4 +17,4 @@ pub trait IBookTickerSocket: Stream<Item = BookTicker<Float>> + Unpin {
   fn len_socket(&self) -> usize;
 }
 
-pub type BookTickerStream = Box<dyn IBookTickerSocket + Send>;
+pub type BookTickerStream = Pin<Box<dyn IBookTickerSocket + Send>>;

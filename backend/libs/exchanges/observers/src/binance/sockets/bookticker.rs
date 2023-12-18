@@ -4,7 +4,8 @@ use ::std::task::Poll;
 
 use ::async_trait::async_trait;
 use ::errors::{ObserverResult, ParseResult};
-use ::futures::{ready, SinkExt, Stream, StreamExt};
+use ::futures::executor::block_on;
+use ::futures::{SinkExt, Stream, StreamExt};
 use ::log::{as_error, as_serde, debug, info};
 use ::random::generate_random_txt;
 use ::rug::Float;
@@ -155,7 +156,7 @@ impl IBookTickerSocket for BookTickerSocket {
 
 impl From<BookTickerSocket> for BookTickerStream {
   fn from(socket: BookTickerSocket) -> Self {
-    return Box::new(socket);
+    return Box::pin(socket);
   }
 }
 
@@ -164,9 +165,9 @@ impl Stream for BookTickerSocket {
 
   fn poll_next(
     mut self: ::std::pin::Pin<&mut Self>,
-    cx: &mut ::std::task::Context<'_>,
+    _: &mut ::std::task::Context<'_>,
   ) -> Poll<Option<Self::Item>> {
-    let payload = ready!(self.socket.poll_next_unpin(cx));
+    let payload = block_on(self.socket.next());
     return match payload {
       None => Poll::Ready(None),
       Some(payload) => {
