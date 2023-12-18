@@ -10,7 +10,7 @@ use ::clients::binance::REST_ENDPOINTS;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
 use ::entities::{HistoryFetchRequest, TradeTimeTrait};
 use ::errors::{FetchResult, MaximumAttemptExceeded, ValidationErr};
-use ::round::RestClient;
+use ::round_robin_client::RestClient;
 use ::rpc::exchanges::Exchanges;
 
 use super::entities::{BinancePayload, Kline, Query};

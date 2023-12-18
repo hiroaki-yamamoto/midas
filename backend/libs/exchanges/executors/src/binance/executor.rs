@@ -16,7 +16,7 @@ use ::entities::{
 };
 use ::errors::{ExecutionResult, HTTPErrors, StatusFailure};
 use ::keychain::KeyChain;
-use ::round::RestClient;
+use ::round_robin_client::RestClient;
 use ::writers::DatabaseWriter;
 
 use ::clients::binance::{APIHeader, FindKey, REST_ENDPOINTS};

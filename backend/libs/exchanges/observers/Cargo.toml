@@ -13,7 +13,7 @@ config = { path = "../../config" }
 rpc = { path = "../../rpc" }
 subscribe = { path = "../../subscribe" }
 kvs = { path = "../../kvs" }
-round = { path = "../../round" }
+round_robin_client = { path = "../../round_robin_client" }
 random = { path = "../../random" }
 
 entities = { path = "../../entities" }

@@ -10,7 +10,7 @@ use ::random::generate_random_txt;
 use ::rug::Float;
 
 use ::clients::binance::WS_ENDPOINT;
-use ::round::WebSocket;
+use ::round_robin_client::WebSocket;
 
 use crate::binance::entities::{
   BookTicker, SubscribeRequest, SubscribeRequestInner, WebsocketPayload,

@@ -1189,7 +1189,7 @@ dependencies = [
  "observers",
  "reqwest",
  "ring",
- "round",
+ "round_robin_client",
  "rpc",
  "rug",
  "serde",
@@ -1596,7 +1596,7 @@ dependencies = [
  "rand",
  "reqwest",
  "rmp-serde",
- "round",
+ "round_robin_client",
  "rpc",
  "rug",
  "serde",
@@ -2200,7 +2200,7 @@ dependencies = [
  "log",
  "mongodb",
  "rmp-serde",
- "round",
+ "round_robin_client",
  "rug",
  "serde",
  "serde_json",
@@ -2278,7 +2278,7 @@ dependencies = [
  "mongodb",
  "random",
  "rmp-serde",
- "round",
+ "round_robin_client",
  "rpc",
  "rug",
  "serde",
@@ -2770,7 +2770,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "round"
+name = "round_robin_client"
 version = "0.1.0"
 dependencies = [
  "errors",
@@ -3394,7 +3394,7 @@ dependencies = [
  "mongodb",
  "reqwest",
  "rmp-serde",
- "round",
+ "round_robin_client",
  "rpc",
  "serde",
  "serde_json",

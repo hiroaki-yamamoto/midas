@@ -11,7 +11,7 @@ types = { path = "../../types" }
 errors = { path = "../../errors" }
 rpc = { path = "../../rpc" }
 keychain = { path = "../../keychain" }
-round = { path = "../../round" }
+round_robin_client = { path = "../../round_robin_client" }
 subscribe = { path = "../../subscribe" }
 
 clients = { path = "../clients" }

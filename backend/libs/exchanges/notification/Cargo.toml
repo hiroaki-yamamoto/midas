@@ -10,7 +10,7 @@ edition = "2021"
 errors = { path = "../../errors" }
 types = { path = "../../types" }
 subscribe = { path = "../../subscribe" }
-round = { path = "../../round" }
+round_robin_client = { path = "../../round_robin_client" }
 
 clients = { path = "../clients" }
 symbols = { path = "../symbols" }
