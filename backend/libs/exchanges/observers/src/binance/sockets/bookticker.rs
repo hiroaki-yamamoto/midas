@@ -38,6 +38,7 @@ impl BookTickerSocket {
   ) -> Option<BookTicker<Float>> {
     match payload {
       WebsocketPayload::BookTicker(book_ticker) => {
+        info!(payload = as_serde!(book_ticker); "Received Payload");
         let book_ticker: ParseResult<BookTicker<Float>> =
           book_ticker.try_into();
         return match book_ticker {
