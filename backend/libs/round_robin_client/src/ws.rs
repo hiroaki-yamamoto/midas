@@ -21,8 +21,8 @@ use ::tokio_tungstenite::tungstenite::{Message, Result as WSResult};
 use futures::FutureExt;
 
 use ::errors::{
-  MaximumAttemptExceeded, WebSocketInitResult, WebsocketHandleResult,
-  WebsocketMessageResult, WebsocketSinkError,
+  MaximumAttemptExceeded, WebSocketInitResult, WebsocketMessageResult,
+  WebsocketSinkError,
 };
 use ::types::TLSWebSocket;
 
@@ -35,7 +35,6 @@ where
   W: Serialize + Unpin,
 {
   socket: TLSWebSocket,
-  endpoints: Vec<String>,
   _r: PhantomData<R>,
   _w: PhantomData<W>,
 }
@@ -76,7 +75,6 @@ where
     let socket = Self::connect(endpoints).await?;
     return Ok(Self {
       socket,
-      endpoints: endpoints.into_iter().map(|s| s.to_string()).collect(),
       _r: PhantomData,
       _w: PhantomData,
     });
@@ -99,35 +97,6 @@ where
     let send_result = self.socket.send(msg).await;
     let flush_result = self.socket.flush().await;
     return send_result.and(flush_result);
-  }
-
-  async fn reconnect_on_error(
-    &mut self,
-    payload: Option<WSResult<Message>>,
-  ) -> WebsocketHandleResult<Option<Message>> {
-    match payload {
-      Some(Err(e)) => {
-        error!(
-          error = as_error!(e);
-          "Error while receiving payload from server. Re-Connecting..."
-        );
-        let _ = self.close(
-          CloseCode::Abnormal,
-          "Error while receiving payload from server.",
-        );
-        self.socket = Self::connect(&self.endpoints).await?;
-        return Ok(None);
-      }
-      None => {
-        error!("Received close payload from stream. Re-Connecting...");
-        let _ = self
-          .close(CloseCode::Abnormal, "Received close payload from stream.")
-          .await;
-        self.socket = Self::connect(&self.endpoints).await?;
-        return Ok(None);
-      }
-      Some(Ok(msg)) => return Ok(Some(msg)),
-    }
   }
 
   async fn handle_message(
@@ -153,9 +122,8 @@ where
         return Ok(None);
       }
       Message::Close(_) => {
-        error!("Disconnected. Re-Connecting...");
+        error!("Disconnected.");
         let _ = self.socket.close(None).await;
-        self.socket = Self::connect(&self.endpoints).await?;
         return Ok(None);
       }
       Message::Frame(frame) => {
@@ -167,17 +135,9 @@ where
 
   async fn read_item(&mut self) -> Option<R> {
     let payload = self.socket.next().await;
-    let payload = self.reconnect_on_error(payload).await;
     return match payload {
-      Err(e) => {
-        error!(
-          error = as_error!(e);
-          "Un-recoverable Error while handling server payload."
-        );
-        None
-      }
-      Ok(None) => None,
-      Ok(Some(msg)) => {
+      None => None,
+      Some(Ok(msg)) => {
         let handled_payload = self.handle_message(msg).await;
         match handled_payload {
           Err(e) => {
@@ -188,7 +148,24 @@ where
           Ok(Some(payload)) => Some(payload),
         }
       }
+      Some(Err(e)) => {
+        error!(
+          error = as_error!(e);
+          "Un-recoverable Error while handling server payload."
+        );
+        None
+      }
     };
+  }
+}
+
+impl<R, W> Drop for WebSocket<R, W>
+where
+  R: DeserializeOwned + Unpin,
+  W: Serialize + Unpin,
+{
+  fn drop(&mut self) {
+    let _ = block_on(self.close(CloseCode::Normal, "Client Closed."));
   }
 }
 
