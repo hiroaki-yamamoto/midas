@@ -4,8 +4,6 @@ use ::std::task::{Context, Poll};
 use ::std::time::Duration;
 
 use ::futures::executor::block_on;
-use ::futures::future::FutureExt;
-use ::futures::ready;
 use ::futures::sink::Sink;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{Stream, StreamExt};
@@ -200,9 +198,9 @@ where
   type Item = R;
   fn poll_next(
     mut self: Pin<&mut Self>,
-    cx: &mut Context<'_>,
+    _: &mut Context<'_>,
   ) -> Poll<Option<Self::Item>> {
-    let item = ready!(self.read_item().boxed_local().poll_unpin(cx));
+    let item = block_on(self.read_item());
     return Poll::Ready(item);
   }
 }
