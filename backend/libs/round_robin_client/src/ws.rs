@@ -4,6 +4,7 @@ use ::std::task::{Context, Poll};
 use ::std::time::Duration;
 
 use ::futures::executor::block_on;
+use ::futures::ready;
 use ::futures::sink::Sink;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{Stream, StreamExt};
@@ -17,6 +18,7 @@ use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
 use ::tokio_tungstenite::tungstenite::protocol::CloseFrame;
 use ::tokio_tungstenite::tungstenite::{Message, Result as WSResult};
+use futures::FutureExt;
 
 use ::errors::{
   MaximumAttemptExceeded, WebSocketInitResult, WebsocketHandleResult,
@@ -198,9 +200,9 @@ where
   type Item = R;
   fn poll_next(
     mut self: Pin<&mut Self>,
-    _: &mut Context<'_>,
+    cx: &mut Context<'_>,
   ) -> Poll<Option<Self::Item>> {
-    let item = block_on(self.read_item());
+    let item = ready!(self.read_item().boxed_local().poll_unpin(cx));
     return Poll::Ready(item);
   }
 }

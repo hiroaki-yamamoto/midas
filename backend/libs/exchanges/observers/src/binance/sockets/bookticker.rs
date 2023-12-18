@@ -4,11 +4,12 @@ use ::std::task::Poll;
 
 use ::async_trait::async_trait;
 use ::errors::{ObserverResult, ParseResult};
-use ::futures::executor::block_on;
+use ::futures::ready;
 use ::futures::{SinkExt, Stream, StreamExt};
 use ::log::{as_error, as_serde, debug, info};
 use ::random::generate_random_txt;
 use ::rug::Float;
+use futures::FutureExt;
 
 use ::clients::binance::WS_ENDPOINT;
 use ::round_robin_client::WebSocket;
@@ -165,9 +166,9 @@ impl Stream for BookTickerSocket {
 
   fn poll_next(
     mut self: ::std::pin::Pin<&mut Self>,
-    _: &mut ::std::task::Context<'_>,
+    cx: &mut ::std::task::Context<'_>,
   ) -> Poll<Option<Self::Item>> {
-    let payload = block_on(self.socket.next());
+    let payload = ready!(self.socket.next().boxed_local().poll_unpin(cx));
     return match payload {
       None => Poll::Ready(None),
       Some(payload) => {
