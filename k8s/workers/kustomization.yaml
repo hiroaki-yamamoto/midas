@@ -9,5 +9,4 @@ resources:
   - "../config"
   - "./historical"
   - "./trade-observer"
-  - "./trade-observer-control"
   - "./notify"
