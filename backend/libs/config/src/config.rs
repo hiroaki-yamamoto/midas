@@ -11,7 +11,9 @@ use ::reqwest::{Certificate, Client};
 use ::serde::de::Error as SerdeError;
 use ::serde::{Deserialize, Deserializer};
 use ::serde_yaml::Result as YaMLResult;
+use ::tokio::io::stdout;
 use ::tokio::time::{sleep, timeout};
+use structured_logger::{async_json::new_writer, Builder};
 
 use ::errors::{ConfigError, ConfigResult, MaximumAttemptExceeded};
 use ::kvs::redis::aio::MultiplexedConnection as RedisConnection;
@@ -99,8 +101,10 @@ impl Config {
     return Ok(Self::from_stream(f)?);
   }
 
-  pub fn init_logger(&self) -> ConfigResult<()> {
-    return Ok(::tracing_log::LogTracer::init()?);
+  pub fn init_logger(&self) {
+    Builder::new()
+      .with_default_writer(new_writer(stdout()))
+      .init();
   }
 
   pub fn build_rest_client(&self) -> ConfigResult<Client> {

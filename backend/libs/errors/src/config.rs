@@ -5,7 +5,6 @@ use ::err_derive::Error;
 use ::redis::RedisError;
 use ::reqwest::Error as ReqwestErr;
 use ::serde_yaml::Error as YamlErr;
-use ::tracing_log::log_tracer::SetLoggerError;
 
 use crate::MaximumAttemptExceeded;
 
@@ -23,8 +22,6 @@ pub enum ConfigError {
   ReqwestErr(#[source] ReqwestErr),
   #[error(display = "NATS Connection Err: {}", _0)]
   ConnectError(#[source] ConnectError),
-  #[error(display = "Logger Initalization Error: {}", _0)]
-  LoggerInitError(#[source] SetLoggerError),
 }
 
 pub type ConfigResult<T> = Result<T, ConfigError>;
