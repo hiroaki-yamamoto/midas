@@ -21,7 +21,7 @@ struct CmdArgs {
 async fn main() {
   let cmd_args: CmdArgs = CmdArgs::parse();
   let config = Config::from_fpath(Some(cmd_args.config)).unwrap();
-  config.init_logger();
+  config.init_logger().unwrap();
 
   let broker = config.nats_cli().await.unwrap();
   let db = config.db().await.unwrap();

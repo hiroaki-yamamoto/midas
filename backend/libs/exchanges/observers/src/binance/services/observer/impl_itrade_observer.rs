@@ -3,6 +3,7 @@ use ::std::time::Duration;
 
 use ::async_trait::async_trait;
 use ::futures::StreamExt;
+use ::log::info;
 use ::tokio::select;
 use ::tokio::signal::unix::Signal;
 use ::tokio::time::interval;
@@ -18,6 +19,7 @@ use super::TradeObserver;
 #[async_trait]
 impl ITradeObserver for TradeObserver {
   async fn start(&mut self, signal: &mut Signal) -> ObserverResult<()> {
+    info!("[HELLO] Start Trade Observer");
     // Pre-subscription symbols from symbol event
     let symbol_event = self.symbol_event.clone();
     let mut symbol_event =
@@ -40,6 +42,7 @@ impl ITradeObserver for TradeObserver {
     let mut call_subscribe;
     let mut call_unsubscribe;
     // Start Event loop
+    info!("Start Event Loop");
     loop {
       call_subscribe = false;
       call_unsubscribe = false;

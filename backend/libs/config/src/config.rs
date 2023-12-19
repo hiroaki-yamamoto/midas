@@ -99,8 +99,8 @@ impl Config {
     return Ok(Self::from_stream(f)?);
   }
 
-  pub fn init_logger(&self) {
-    ::json_env_logger2::init();
+  pub fn init_logger(&self) -> ConfigResult<()> {
+    return Ok(::tracing_log::LogTracer::init()?);
   }
 
   pub fn build_rest_client(&self) -> ConfigResult<Client> {

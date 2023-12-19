@@ -27,7 +27,7 @@ where
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   let args: CmdArgs = CmdArgs::parse();
   let cfg = Config::from_fpath(Some(args.config)).unwrap();
-  cfg.init_logger();
+  cfg.init_logger().unwrap();
   let (db, broker) = join!(cfg.db(), cfg.nats_cli());
   let db = db.unwrap();
   let broker = broker.unwrap();

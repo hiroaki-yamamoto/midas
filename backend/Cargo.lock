@@ -741,7 +741,6 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "errors",
- "json_env_logger2",
  "kvs",
  "libc",
  "log",
@@ -753,6 +752,8 @@ dependencies = [
  "serde_yaml",
  "subscribe",
  "tokio",
+ "tracing",
+ "tracing-log",
 ]
 
 [[package]]
@@ -1064,15 +1065,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "env_logger"
-version = "0.9.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a12e6657c4c97ebab115a42dcee77225f7f482cdd841cf7088c657a42e9e00e7"
-dependencies = [
- "log",
-]
-
-[[package]]
 name = "equivalent"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1128,6 +1120,7 @@ dependencies = [
  "serde_yaml",
  "tokio",
  "tokio-tungstenite 0.21.0",
+ "tracing-log",
  "url",
  "warp",
 ]
@@ -1881,20 +1874,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cee9c64da59eae3b50095c18d3e74f8b73c0b86d2792824ff01bbce68ba229ca"
 dependencies = [
  "wasm-bindgen",
-]
-
-[[package]]
-name = "json_env_logger2"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c7e71ad9bc3cde3ac35a75ec4bd7e49b0628a6478524b1656af04d593ceb13b"
-dependencies = [
- "backtrace",
- "chrono",
- "env_logger",
- "kv-log-macro",
- "log",
- "serde_json",
 ]
 
 [[package]]
@@ -3713,6 +3692,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
 dependencies = [
  "once_cell",
+ "valuable",
+]
+
+[[package]]
+name = "tracing-log"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee855f1f400bd0e5c02d150ae5de3840039a3f54b025156404e34c23c03f47c3"
+dependencies = [
+ "log",
+ "once_cell",
+ "tracing-core",
 ]
 
 [[package]]
@@ -3955,6 +3946,12 @@ dependencies = [
  "getrandom",
  "serde",
 ]
+
+[[package]]
+name = "valuable"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
 
 [[package]]
 name = "value-bag"
