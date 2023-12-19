@@ -9,7 +9,6 @@ use ::futures::{SinkExt, Stream, StreamExt};
 use ::log::{as_error, as_serde, debug, info};
 use ::random::generate_random_txt;
 use ::rug::Float;
-use futures::FutureExt;
 
 use ::clients::binance::WS_ENDPOINT;
 use ::round_robin_client::WebSocket;
@@ -168,7 +167,7 @@ impl Stream for BookTickerSocket {
     mut self: ::std::pin::Pin<&mut Self>,
     cx: &mut ::std::task::Context<'_>,
   ) -> Poll<Option<Self::Item>> {
-    let payload = ready!(self.socket.next().boxed_local().poll_unpin(cx));
+    let payload = ready!(self.socket.poll_next_unpin(cx));
     return match payload {
       None => Poll::Ready(None),
       Some(payload) => {

@@ -133,11 +133,9 @@ where
     }
   }
 
-  async fn read_item(&mut self) -> Option<R> {
-    let payload = self.socket.next().await;
+  async fn read_item(&mut self, payload: WSResult<Message>) -> Option<R> {
     return match payload {
-      None => None,
-      Some(Ok(msg)) => {
+      Ok(msg) => {
         let handled_payload = self.handle_message(msg).await;
         match handled_payload {
           Err(e) => {
@@ -148,7 +146,7 @@ where
           Ok(Some(payload)) => Some(payload),
         }
       }
-      Some(Err(e)) => {
+      Err(e) => {
         error!(
           error = as_error!(e);
           "Un-recoverable Error while handling server payload."
@@ -179,8 +177,14 @@ where
     mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Option<Self::Item>> {
-    let item = ready!(self.read_item().boxed_local().poll_unpin(cx));
-    return Poll::Ready(item);
+    let payload = ready!(self.socket.poll_next_unpin(cx));
+    return match payload {
+      Some(msg) => {
+        let item = ready!(self.read_item(msg).boxed_local().poll_unpin(cx));
+        Poll::Ready(item)
+      }
+      None => Poll::Ready(None),
+    };
   }
 }
 
