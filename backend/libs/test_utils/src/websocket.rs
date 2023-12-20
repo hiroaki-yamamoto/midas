@@ -1,10 +1,12 @@
 use ::std::sync::Arc;
+use ::std::time::Duration;
 
 use ::futures::{SinkExt, StreamExt};
 use ::rand::Rng;
 use ::serde::Serialize;
 use ::serde_json::to_string as jsonify;
 use ::tokio::sync::oneshot::{channel, Sender};
+use ::tokio::time::timeout;
 use ::warp::ws::Message;
 use ::warp::Filter;
 
@@ -66,7 +68,11 @@ where
           for payload in payloads.iter() {
             let _ = websocket.send(payload.clone()).await;
             let _ = websocket.flush().await;
-            let msg = websocket.next().await.unwrap().unwrap();
+            let msg = timeout(Duration::from_secs(1), websocket.next())
+              .await
+              .unwrap()
+              .unwrap()
+              .unwrap();
             assert!(msg.is_pong());
           }
         },

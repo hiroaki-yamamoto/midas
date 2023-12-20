@@ -45,7 +45,8 @@
 			"warp_utils",
 			"client",
 			"history",
-			"csrf"
+			"csrf",
+			"test_utils"
 		],
 		"yaml.schemas": {
 			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [
