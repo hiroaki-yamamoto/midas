@@ -5,12 +5,13 @@ use ::std::task::Poll;
 use ::async_trait::async_trait;
 use ::errors::{ObserverResult, ParseResult};
 use ::futures::ready;
-use ::futures::{SinkExt, Stream, StreamExt};
+use ::futures::{FutureExt, SinkExt, Stream};
 use ::log::{as_error, as_serde, debug, info};
 use ::random::generate_random_txt;
 use ::rug::Float;
 
 use ::clients::binance::WS_ENDPOINT;
+use ::round_robin_client::interfaces::IWebSocketStream;
 use ::round_robin_client::WebSocket;
 
 use crate::binance::entities::{
@@ -167,7 +168,7 @@ impl Stream for BookTickerSocket {
     mut self: ::std::pin::Pin<&mut Self>,
     cx: &mut ::std::task::Context<'_>,
   ) -> Poll<Option<Self::Item>> {
-    let payload = ready!(self.socket.poll_next_unpin(cx));
+    let payload = ready!(self.socket.next().poll_unpin(cx));
     return match payload {
       None => Poll::Ready(None),
       Some(payload) => {

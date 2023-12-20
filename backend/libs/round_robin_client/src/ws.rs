@@ -7,7 +7,7 @@ use ::async_trait::async_trait;
 use ::futures::executor::block_on;
 use ::futures::sink::Sink;
 use ::futures::sink::SinkExt;
-use ::futures::stream::StreamExt;
+use ::futures::stream::{Stream, StreamExt};
 use ::log::{as_display, error, info, warn};
 use ::rand::thread_rng;
 use ::rand::Rng;
@@ -19,6 +19,7 @@ use ::tokio_tungstenite::tungstenite::{
   protocol::frame::coding::CloseCode, protocol::CloseFrame, Error as WSError,
   Message, Result as WSResult,
 };
+use futures::FutureExt;
 
 use ::errors::{
   MaximumAttemptExceeded, WebSocketInitResult, WebsocketMessageResult,
@@ -134,6 +135,19 @@ where
       }
     }
   }
+
+  async fn next_item(&mut self) -> WebsocketMessageResult<Option<R>> {
+    let payload = self.socket.next().await;
+    return match payload {
+      None => {
+        return Err(WSError::AlreadyClosed.into());
+      }
+      Some(payload) => {
+        let payload = payload?;
+        self.handle_message(payload).await
+      }
+    };
+  }
 }
 
 impl<R, W> Drop for WebSocket<R, W>
@@ -154,16 +168,31 @@ where
 {
   type Item = R;
   async fn next(&mut self) -> WebsocketMessageResult<Option<Self::Item>> {
-    let payload = self.socket.next().await;
-    return match payload {
-      None => {
-        return Err(WSError::AlreadyClosed.into());
-      }
-      Some(payload) => {
-        let payload = payload?;
-        self.handle_message(payload).await
-      }
-    };
+    return self.next_item().await;
+  }
+}
+
+impl<R, W> Stream for WebSocket<R, W>
+where
+  R: DeserializeOwned + Unpin,
+  W: Serialize + Unpin,
+{
+  type Item = R;
+  fn poll_next(
+    mut self: Pin<&mut Self>,
+    cx: &mut Context<'_>,
+  ) -> Poll<Option<Self::Item>> {
+    let payload = self.next_item().boxed_local().poll_unpin(cx);
+    if let Poll::Ready(payload) = payload {
+      return match payload {
+        Ok(payload) => Poll::Ready(payload),
+        Err(err) => {
+          error!(error = as_display!(err); "Error while polling websocket stream.");
+          Poll::Ready(None)
+        }
+      };
+    }
+    return Poll::Pending;
   }
 }
 
