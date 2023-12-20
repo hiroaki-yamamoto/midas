@@ -5,11 +5,10 @@ use ::std::time::Duration;
 
 use ::async_trait::async_trait;
 use ::futures::executor::block_on;
-use ::futures::ready;
 use ::futures::sink::Sink;
 use ::futures::sink::SinkExt;
-use ::futures::stream::{Stream, StreamExt};
-use ::log::{as_display, as_error, error, info, warn};
+use ::futures::stream::StreamExt;
+use ::log::{as_display, error, info, warn};
 use ::rand::thread_rng;
 use ::rand::Rng;
 use ::serde::{de::DeserializeOwned, ser::Serialize};
@@ -20,7 +19,6 @@ use ::tokio_tungstenite::tungstenite::{
   protocol::frame::coding::CloseCode, protocol::CloseFrame, Error as WSError,
   Message, Result as WSResult,
 };
-use futures::FutureExt;
 
 use ::errors::{
   MaximumAttemptExceeded, WebSocketInitResult, WebsocketMessageResult,
