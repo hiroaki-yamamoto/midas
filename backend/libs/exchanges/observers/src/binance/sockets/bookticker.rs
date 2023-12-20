@@ -4,14 +4,13 @@ use ::std::task::Poll;
 
 use ::async_trait::async_trait;
 use ::errors::{ObserverResult, ParseResult};
-use ::futures::ready;
 use ::futures::{SinkExt, Stream, StreamExt};
 use ::log::{as_error, as_serde, debug, info};
 use ::random::generate_random_txt;
 use ::rug::Float;
 
 use ::clients::binance::WS_ENDPOINT;
-use ::round_robin_client::WebSocket;
+use ::round_robin_client::{entities::WSMessageDetail, WebSocket};
 
 use crate::binance::entities::{
   BookTicker, SubscribeRequest, SubscribeRequestInner, WebsocketPayload,
@@ -43,25 +42,26 @@ impl BookTickerSocket {
     return random_id;
   }
 
-  fn parse_payload(
+  fn parse_payload_inner(
     &mut self,
     payload: WebsocketPayload,
-  ) -> Option<BookTicker<Float>> {
+  ) -> WSMessageDetail<BookTicker<Float>> {
     match payload {
       WebsocketPayload::BookTicker(book_ticker) => {
         info!(payload = as_serde!(book_ticker); "Received Payload");
         let book_ticker: ParseResult<BookTicker<Float>> =
           book_ticker.try_into();
         return match book_ticker {
-          Ok(book_ticker) => Some(book_ticker),
+          Ok(book_ticker) => WSMessageDetail::EntityReceived(book_ticker),
           Err(error) => {
             info!(error=as_error!(error); "Error");
-            None
+            WSMessageDetail::Continue
           }
         };
       }
       WebsocketPayload::Error(error) => {
         info!(error=as_serde!(&error); "Error");
+        WSMessageDetail::Continue
       }
       WebsocketPayload::Result(result) => {
         let id = result.id.clone();
@@ -70,9 +70,23 @@ impl BookTickerSocket {
           self.symbols.insert(id, symbols);
         }
         info!(result=as_serde!(&result); "Result");
+        WSMessageDetail::Continue
       }
     }
-    return None;
+  }
+
+  fn parse_payload(
+    &mut self,
+    payload: WSMessageDetail<WebsocketPayload>,
+  ) -> Option<WSMessageDetail<BookTicker<Float>>> {
+    return match payload {
+      WSMessageDetail::Continue => Some(WSMessageDetail::Continue),
+      WSMessageDetail::Disconnected => Some(WSMessageDetail::Disconnected),
+      WSMessageDetail::EntityReceived(payload) => {
+        let parsed = self.parse_payload_inner(payload);
+        Some(parsed)
+      }
+    };
   }
 }
 
@@ -161,20 +175,22 @@ impl From<BookTickerSocket> for BookTickerStream {
 }
 
 impl Stream for BookTickerSocket {
-  type Item = BookTicker<Float>;
+  type Item = WSMessageDetail<BookTicker<Float>>;
 
   fn poll_next(
     mut self: ::std::pin::Pin<&mut Self>,
     cx: &mut ::std::task::Context<'_>,
   ) -> Poll<Option<Self::Item>> {
-    let payload = ready!(self.socket.poll_next_unpin(cx));
-    return match payload {
-      None => Poll::Ready(None),
-      Some(payload) => {
-        let book_ticker = self.parse_payload(payload);
-        Poll::Ready(book_ticker)
-      }
-    };
+    if let Poll::Ready(payload) = self.socket.poll_next_unpin(cx) {
+      return match payload {
+        None => Poll::Ready(None),
+        Some(payload) => {
+          let book_ticker = self.parse_payload(payload);
+          Poll::Ready(book_ticker)
+        }
+      };
+    }
+    return Poll::Pending;
   }
 }
 
