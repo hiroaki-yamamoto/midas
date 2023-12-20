@@ -3,7 +3,6 @@ use ::std::pin::Pin;
 use ::std::task::{Context, Poll};
 use ::std::time::Duration;
 
-use ::async_trait::async_trait;
 use ::futures::executor::block_on;
 use ::futures::sink::Sink;
 use ::futures::sink::SinkExt;
@@ -28,7 +27,6 @@ use ::errors::{
 use ::types::TLSWebSocket;
 
 use crate::entities::WSMessageDetail as MsgDetail;
-use crate::interfaces::IWebSocketStream;
 
 /// WebSocket Client.
 /// R = Read Entity
@@ -158,18 +156,6 @@ where
 {
   fn drop(&mut self) {
     let _ = block_on(self.close(CloseCode::Normal, "Client Closed."));
-  }
-}
-
-#[async_trait]
-impl<R, W> IWebSocketStream for WebSocket<R, W>
-where
-  R: DeserializeOwned + Unpin + Send,
-  W: Serialize + Unpin + Send,
-{
-  type Item = R;
-  async fn next(&mut self) -> WebsocketMessageResult<MsgDetail<Self::Item>> {
-    return self.next_item().await;
   }
 }
 

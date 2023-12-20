@@ -46,7 +46,8 @@
 			"client",
 			"history",
 			"csrf",
-			"test_utils"
+			"test_utils",
+			"round_robin_websocket"
 		],
 		"yaml.schemas": {
 			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [
