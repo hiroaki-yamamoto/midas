@@ -1,3 +1,4 @@
+pub mod interfaces;
 mod rest;
 mod ws;
 

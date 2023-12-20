@@ -3,6 +3,7 @@ use ::std::pin::Pin;
 use ::std::task::{Context, Poll};
 use ::std::time::Duration;
 
+use ::async_trait::async_trait;
 use ::futures::executor::block_on;
 use ::futures::ready;
 use ::futures::sink::Sink;
@@ -15,9 +16,10 @@ use ::serde::{de::DeserializeOwned, ser::Serialize};
 use ::serde_json::{from_str as json_parse, to_string as jsonify};
 use ::tokio::time::interval;
 use ::tokio_tungstenite::connect_async;
-use ::tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
-use ::tokio_tungstenite::tungstenite::protocol::CloseFrame;
-use ::tokio_tungstenite::tungstenite::{Message, Result as WSResult};
+use ::tokio_tungstenite::tungstenite::{
+  protocol::frame::coding::CloseCode, protocol::CloseFrame, Error as WSError,
+  Message, Result as WSResult,
+};
 use futures::FutureExt;
 
 use ::errors::{
@@ -25,6 +27,8 @@ use ::errors::{
   WebsocketSinkError,
 };
 use ::types::TLSWebSocket;
+
+use crate::interfaces::IWebSocketStream;
 
 /// WebSocket Client.
 /// R = Read Entity
@@ -132,29 +136,6 @@ where
       }
     }
   }
-
-  async fn read_item(&mut self, payload: WSResult<Message>) -> Option<R> {
-    return match payload {
-      Ok(msg) => {
-        let handled_payload = self.handle_message(msg).await;
-        match handled_payload {
-          Err(e) => {
-            error!(error = as_error!(e); "Failed to decoding the payload.");
-            None
-          }
-          Ok(None) => None,
-          Ok(Some(payload)) => Some(payload),
-        }
-      }
-      Err(e) => {
-        error!(
-          error = as_error!(e);
-          "Un-recoverable Error while handling server payload."
-        );
-        None
-      }
-    };
-  }
 }
 
 impl<R, W> Drop for WebSocket<R, W>
@@ -167,23 +148,23 @@ where
   }
 }
 
-impl<R, W> Stream for WebSocket<R, W>
+#[async_trait]
+impl<R, W> IWebSocketStream for WebSocket<R, W>
 where
-  R: DeserializeOwned + Unpin,
-  W: Serialize + Unpin,
+  R: DeserializeOwned + Unpin + Send,
+  W: Serialize + Unpin + Send,
 {
   type Item = R;
-  fn poll_next(
-    mut self: Pin<&mut Self>,
-    cx: &mut Context<'_>,
-  ) -> Poll<Option<Self::Item>> {
-    let payload = ready!(self.socket.poll_next_unpin(cx));
+  async fn next(&mut self) -> WebsocketMessageResult<Option<Self::Item>> {
+    let payload = self.socket.next().await;
     return match payload {
-      Some(msg) => {
-        let item = ready!(self.read_item(msg).boxed_local().poll_unpin(cx));
-        Poll::Ready(item)
+      None => {
+        return Err(WSError::AlreadyClosed.into());
       }
-      None => Poll::Ready(None),
+      Some(payload) => {
+        let payload = payload?;
+        self.handle_message(payload).await
+      }
     };
   }
 }
