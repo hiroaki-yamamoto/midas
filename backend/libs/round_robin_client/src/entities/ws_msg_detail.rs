@@ -1,6 +1,7 @@
 use ::serde::Serialize;
 
 #[derive(Debug, Serialize)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum WSMessageDetail<T> {
   /// The entity is actually received.
   EntityReceived(T),
