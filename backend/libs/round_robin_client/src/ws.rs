@@ -27,6 +27,7 @@ use ::errors::{
 };
 use ::types::TLSWebSocket;
 
+use crate::entities::WSMessageDetail as MsgDetail;
 use crate::interfaces::IWebSocketStream;
 
 /// WebSocket Client.
@@ -105,38 +106,38 @@ where
   async fn handle_message(
     &mut self,
     msg: Message,
-  ) -> WebsocketMessageResult<Option<R>> {
+  ) -> WebsocketMessageResult<MsgDetail<R>> {
     match msg {
       Message::Text(text) => {
         let payload: R = json_parse(text.as_str())?;
-        return Ok(payload.into());
+        return Ok(MsgDetail::EntityReceived(payload));
       }
       Message::Binary(blob) => {
         let payload = String::from_utf8(blob)?;
         let payload: R = json_parse(&payload)?;
-        return Ok(payload.into());
+        return Ok(MsgDetail::EntityReceived(payload));
       }
       Message::Ping(payload) => {
         let _ = self.send_msg(Message::Pong(payload)).await?;
-        return Ok(None);
+        return Ok(MsgDetail::Continue);
       }
       Message::Pong(msg) => {
         info!(message = String::from_utf8_lossy(&msg); "Received Pong Message");
-        return Ok(None);
+        return Ok(MsgDetail::Continue);
       }
       Message::Close(_) => {
         error!("Disconnected.");
         let _ = self.socket.close(None).await;
-        return Ok(None);
+        return Ok(MsgDetail::Disconnected);
       }
       Message::Frame(frame) => {
         warn!(frame = as_display!(frame); "Received Unexpected Frame Message");
-        return Ok(None);
+        return Ok(MsgDetail::Continue);
       }
     }
   }
 
-  async fn next_item(&mut self) -> WebsocketMessageResult<Option<R>> {
+  async fn next_item(&mut self) -> WebsocketMessageResult<MsgDetail<R>> {
     let payload = self.socket.next().await;
     return match payload {
       None => {
@@ -167,7 +168,7 @@ where
   W: Serialize + Unpin + Send,
 {
   type Item = R;
-  async fn next(&mut self) -> WebsocketMessageResult<Option<Self::Item>> {
+  async fn next(&mut self) -> WebsocketMessageResult<MsgDetail<Self::Item>> {
     return self.next_item().await;
   }
 }
@@ -177,7 +178,7 @@ where
   R: DeserializeOwned + Unpin,
   W: Serialize + Unpin,
 {
-  type Item = R;
+  type Item = MsgDetail<R>;
   fn poll_next(
     mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
@@ -185,7 +186,7 @@ where
     let payload = self.next_item().boxed_local().poll_unpin(cx);
     if let Poll::Ready(payload) = payload {
       return match payload {
-        Ok(payload) => Poll::Ready(payload),
+        Ok(payload) => Poll::Ready(Some(payload)),
         Err(err) => {
           error!(error = as_display!(err); "Error while polling websocket stream.");
           Poll::Ready(None)

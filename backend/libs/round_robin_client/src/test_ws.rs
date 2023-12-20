@@ -11,6 +11,7 @@ use ::warp::ws::Message;
 use ::warp::Filter;
 
 // use crate::interfaces::IWebSocketStream;
+use crate::entities::WSMessageDetail as MsgDetail;
 
 use super::WebSocket;
 
@@ -78,8 +79,13 @@ async fn test_ws() {
   while let Some(payload) =
     timeout(Duration::from_secs(1), ws.next()).await.unwrap()
   {
-    received.push(payload);
-    if received.len() == payloads.len() {
+    if let MsgDetail::EntityReceived(payload) = payload {
+      received.push(payload);
+    } else {
+      println!("payload: {:?}", payload);
+      panic!("Unexpected payload");
+    }
+    if received.len() >= payloads.len() {
       break;
     }
   }
