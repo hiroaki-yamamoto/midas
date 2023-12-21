@@ -9,6 +9,7 @@ use ::tokio::signal::unix::Signal;
 use ::tokio::time::interval;
 
 use ::errors::ObserverResult;
+use ::round_robin_client::entities::WSMessageDetail;
 use ::rpc::exchanges::Exchanges;
 use ::symbols::entities::SymbolEvent;
 
@@ -76,7 +77,19 @@ impl ITradeObserver for TradeObserver {
           call_unsubscribe = true;
         },
         Some((_, payload)) = self.sockets.next() => {
-          self.pubsub.publish(&payload).await?;
+          match payload {
+            WSMessageDetail::EntityReceived(payload) => {
+              self.pubsub.publish(&payload).await?;
+            },
+            WSMessageDetail::Continue => {
+              info!("Continue");
+              continue;
+            },
+            WSMessageDetail::Disconnected => {
+              info!("Disconnected");
+              break;
+            }
+          }
         }
       }
       if call_subscribe && !symbols_to_add.is_empty() {
