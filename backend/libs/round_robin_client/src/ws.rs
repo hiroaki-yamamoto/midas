@@ -4,20 +4,20 @@ use ::std::task::{Context, Poll};
 use ::std::time::Duration;
 
 use ::futures::executor::block_on;
-use ::futures::ready;
 use ::futures::sink::Sink;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{Stream, StreamExt};
-use ::log::{as_display, as_error, error, info, warn};
+use ::log::{as_display, error, info, warn};
 use ::rand::thread_rng;
 use ::rand::Rng;
 use ::serde::{de::DeserializeOwned, ser::Serialize};
 use ::serde_json::{from_str as json_parse, to_string as jsonify};
 use ::tokio::time::interval;
 use ::tokio_tungstenite::connect_async;
-use ::tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
-use ::tokio_tungstenite::tungstenite::protocol::CloseFrame;
-use ::tokio_tungstenite::tungstenite::{Message, Result as WSResult};
+use ::tokio_tungstenite::tungstenite::{
+  protocol::frame::coding::CloseCode, protocol::CloseFrame, Error as WSError,
+  Message, Result as WSResult,
+};
 use futures::FutureExt;
 
 use ::errors::{
@@ -25,6 +25,8 @@ use ::errors::{
   WebsocketSinkError,
 };
 use ::types::TLSWebSocket;
+
+use crate::entities::WSMessageDetail as MsgDetail;
 
 /// WebSocket Client.
 /// R = Read Entity
@@ -102,56 +104,46 @@ where
   async fn handle_message(
     &mut self,
     msg: Message,
-  ) -> WebsocketMessageResult<Option<R>> {
+  ) -> WebsocketMessageResult<MsgDetail<R>> {
     match msg {
       Message::Text(text) => {
         let payload: R = json_parse(text.as_str())?;
-        return Ok(payload.into());
+        return Ok(MsgDetail::EntityReceived(payload));
       }
       Message::Binary(blob) => {
         let payload = String::from_utf8(blob)?;
         let payload: R = json_parse(&payload)?;
-        return Ok(payload.into());
+        return Ok(MsgDetail::EntityReceived(payload));
       }
       Message::Ping(payload) => {
         let _ = self.send_msg(Message::Pong(payload)).await?;
-        return Ok(None);
+        return Ok(MsgDetail::Continue);
       }
       Message::Pong(msg) => {
         info!(message = String::from_utf8_lossy(&msg); "Received Pong Message");
-        return Ok(None);
+        return Ok(MsgDetail::Continue);
       }
       Message::Close(_) => {
         error!("Disconnected.");
         let _ = self.socket.close(None).await;
-        return Ok(None);
+        return Ok(MsgDetail::Disconnected);
       }
       Message::Frame(frame) => {
         warn!(frame = as_display!(frame); "Received Unexpected Frame Message");
-        return Ok(None);
+        return Ok(MsgDetail::Continue);
       }
     }
   }
 
-  async fn read_item(&mut self, payload: WSResult<Message>) -> Option<R> {
+  async fn next_item(&mut self) -> WebsocketMessageResult<MsgDetail<R>> {
+    let payload = self.socket.next().await;
     return match payload {
-      Ok(msg) => {
-        let handled_payload = self.handle_message(msg).await;
-        match handled_payload {
-          Err(e) => {
-            error!(error = as_error!(e); "Failed to decoding the payload.");
-            None
-          }
-          Ok(None) => None,
-          Ok(Some(payload)) => Some(payload),
-        }
+      None => {
+        return Err(WSError::AlreadyClosed.into());
       }
-      Err(e) => {
-        error!(
-          error = as_error!(e);
-          "Un-recoverable Error while handling server payload."
-        );
-        None
+      Some(payload) => {
+        let payload = payload?;
+        self.handle_message(payload).await
       }
     };
   }
@@ -172,19 +164,22 @@ where
   R: DeserializeOwned + Unpin,
   W: Serialize + Unpin,
 {
-  type Item = R;
+  type Item = MsgDetail<R>;
   fn poll_next(
     mut self: Pin<&mut Self>,
     cx: &mut Context<'_>,
   ) -> Poll<Option<Self::Item>> {
-    let payload = ready!(self.socket.poll_next_unpin(cx));
-    return match payload {
-      Some(msg) => {
-        let item = ready!(self.read_item(msg).boxed_local().poll_unpin(cx));
-        Poll::Ready(item)
-      }
-      None => Poll::Ready(None),
-    };
+    let payload = self.next_item().boxed_local().poll_unpin(cx);
+    if let Poll::Ready(payload) = payload {
+      return match payload {
+        Ok(payload) => Poll::Ready(Some(payload)),
+        Err(err) => {
+          error!(error = as_display!(err); "Error while polling websocket stream.");
+          Poll::Ready(None)
+        }
+      };
+    }
+    return Poll::Pending;
   }
 }
 

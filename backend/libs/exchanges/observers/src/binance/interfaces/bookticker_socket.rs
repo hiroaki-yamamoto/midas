@@ -5,10 +5,14 @@ use ::errors::ObserverResult;
 use ::futures::Stream;
 use ::rug::Float;
 
+use ::round_robin_client::entities::WSMessageDetail;
+
 use crate::binance::entities::BookTicker;
 
 #[async_trait]
-pub trait IBookTickerSocket: Stream<Item = BookTicker<Float>> + Unpin {
+pub trait IBookTickerSocket:
+  Stream<Item = WSMessageDetail<BookTicker<Float>>> + Unpin
+{
   fn has_symbol(&self, symbol: &str) -> bool;
   async fn resubscribe(&mut self) -> ObserverResult<()>;
   async fn subscribe(&mut self, symbols: &[String]) -> ObserverResult<()>;
