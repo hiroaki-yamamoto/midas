@@ -33,6 +33,17 @@ impl BookTickerSocket {
     return Ok(inst);
   }
 
+  #[cfg(test)]
+  pub(super) async fn new(url: String) -> ObserverResult<Self> {
+    let socket = WebSocket::new(&[url]).await?;
+    let inst = Self {
+      socket,
+      symbols: Vec::new(),
+      id: generate_random_txt(36),
+    };
+    return Ok(inst);
+  }
+
   fn parse_payload_inner(
     &mut self,
     payload: WebsocketPayload,
