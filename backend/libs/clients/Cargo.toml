@@ -7,11 +7,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-types = { path = "../../types" }
-errors = { path = "../../errors" }
-entities = { path = "../../entities" }
-keychain = { path = "../../keychain" }
-rpc = { path = "../../rpc" }
+types = { path = "../types" }
+errors = { path = "../errors" }
+entities = { path = "../entities" }
+keychain = { path = "../keychain" }
+rpc = { path = "../rpc" }
 
 reqwest = "0.11.22"
 mongodb = { version = "2.8.0", default-features = false, features = [

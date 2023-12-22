@@ -13,7 +13,7 @@ rpc = { path = "../../libs/rpc" }
 kvs = { path = "../../libs/kvs" }
 subscribe = { path = "../../libs/subscribe" }
 
-history = { path = "../../libs/exchanges/history" }
+history = { path = "../../libs/history" }
 date_splitter = { path = "../../libs/date_splitter" }
 
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }

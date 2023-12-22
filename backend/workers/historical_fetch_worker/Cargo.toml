@@ -14,7 +14,7 @@ rpc = { path = "../../libs/rpc" }
 kvs = { path = "../../libs/kvs" }
 subscribe = { path = "../../libs/subscribe" }
 
-history = { path = "../../libs/exchanges/history" }
+history = { path = "../../libs/history" }
 
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 tokio = { version = "1.35.0", features = [

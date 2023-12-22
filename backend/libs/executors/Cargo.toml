@@ -7,19 +7,17 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-types = { path = "../../types" }
-errors = { path = "../../errors" }
-rpc = { path = "../../rpc" }
-keychain = { path = "../../keychain" }
-round_robin_client = { path = "../../round_robin_client" }
-subscribe = { path = "../../subscribe" }
-
+types = { path = "../types" }
+errors = { path = "../errors" }
+rpc = { path = "../rpc" }
+keychain = { path = "../keychain" }
+round_robin_client = { path = "../round_robin_client" }
+subscribe = { path = "../subscribe" }
 clients = { path = "../clients" }
 history = { path = "../history" }
 observers = { path = "../observers" }
-
-entities = { path = "../../entities" }
-writers = { path = "../../writers" }
+entities = { path = "../entities" }
+writers = { path = "../writers" }
 
 async-stream = "0.3.5"
 async-trait = "0.1.74"
