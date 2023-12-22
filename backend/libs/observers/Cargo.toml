@@ -7,17 +7,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-errors = { path = "../../errors" }
-types = { path = "../../types" }
-config = { path = "../../config" }
-rpc = { path = "../../rpc" }
-subscribe = { path = "../../subscribe" }
-kvs = { path = "../../kvs" }
-round_robin_client = { path = "../../round_robin_client" }
-random = { path = "../../random" }
-
-entities = { path = "../../entities" }
-
+errors = { path = "../errors" }
+types = { path = "../types" }
+config = { path = "../config" }
+rpc = { path = "../rpc" }
+subscribe = { path = "../subscribe" }
+kvs = { path = "../kvs" }
+round_robin_client = { path = "../round_robin_client" }
+random = { path = "../random" }
+entities = { path = "../entities" }
 clients = { path = "../clients" }
 symbols = { path = "../symbols" }
 
@@ -43,4 +41,4 @@ rug = { version = "1.22.0", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.1", features = ["force-cross"] }
 
 [dev-dependencies]
-test_utils = { path = "../../test_utils" }
+test_utils = { path = "../test_utils" }

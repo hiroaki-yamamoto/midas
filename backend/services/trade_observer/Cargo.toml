@@ -7,7 +7,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-observers = { path = "../../libs/exchanges/observers" }
+observers = { path = "../../libs/observers" }
 config = { path = "../../libs/config" }
 rpc = { path = "../../libs/rpc" }
 csrf = { path = "../../libs/csrf" }

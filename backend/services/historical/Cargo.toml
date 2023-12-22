@@ -16,9 +16,9 @@ subscribe = { path = "../../libs/subscribe" }
 errors = { path = "../../libs/errors" }
 warp_utils = { path = "../../libs/warp_utils" }
 
-history = { path = "../../libs/exchanges/history" }
+history = { path = "../../libs/history" }
 entities = { path = "../../libs/entities" }
-symbols = { path = "../../libs/exchanges/symbols" }
+symbols = { path = "../../libs/symbols" }
 kvs = { path = "../../libs/kvs" }
 
 serde = { version = "1.0.193", features = ["derive"] }

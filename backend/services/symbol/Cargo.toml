@@ -8,7 +8,7 @@ edition = "2021"
 
 [dependencies]
 rpc = { path = "../../libs/rpc" }
-symbols = { path = "../../libs/exchanges/symbols" }
+symbols = { path = "../../libs/symbols" }
 types = { path = "../../libs/types" }
 errors = { path = "../../libs/errors" }
 config = { path = "../../libs/config" }
