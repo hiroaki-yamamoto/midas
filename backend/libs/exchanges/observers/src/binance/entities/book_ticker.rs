@@ -7,7 +7,7 @@ use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
 use ::types::casting::cast_f_from_txt;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BookTicker<PT> {
   #[serde(rename = "u")]
   pub id: u64,
@@ -40,6 +40,20 @@ impl TryFrom<BookTicker<String>> for BookTicker<Float> {
       ask_price,
       ask_qty,
     });
+  }
+}
+
+#[cfg(test)]
+impl From<BookTicker<Float>> for BookTicker<String> {
+  fn from(value: BookTicker<Float>) -> Self {
+    return Self {
+      id: value.id,
+      symbol: value.symbol,
+      bid_price: value.bid_price.to_string_radix(10, None),
+      bid_qty: value.bid_qty.to_string_radix(10, None),
+      ask_price: value.ask_price.to_string_radix(10, None),
+      ask_qty: value.ask_qty.to_string_radix(10, None),
+    };
   }
 }
 

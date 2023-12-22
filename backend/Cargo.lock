@@ -2264,6 +2264,7 @@ dependencies = [
  "serde_json",
  "subscribe",
  "symbols",
+ "test_utils",
  "tokio",
  "tokio-stream",
  "tokio-tungstenite 0.21.0",
@@ -3146,6 +3147,14 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "sign"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "ring",
 ]
 
 [[package]]

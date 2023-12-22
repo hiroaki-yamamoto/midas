@@ -34,7 +34,7 @@ impl BookTickerSocket {
   }
 
   #[cfg(test)]
-  pub(super) async fn new(url: String) -> ObserverResult<Self> {
+  pub(crate) async fn test_new(url: String) -> ObserverResult<Self> {
     let socket = WebSocket::new(&[url]).await?;
     let inst = Self {
       socket,

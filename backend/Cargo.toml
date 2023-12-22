@@ -5,5 +5,17 @@ strip = true
 
 [workspace]
 resolver = "2"
-members = ["libs/exchanges/*", "libs/*", "services/*", "workers/*"]
+members = [
+  "libs/exchanges/clients",
+  "libs/exchanges/executors",
+  "libs/exchanges/history",
+  "libs/exchanges/notification",
+  "libs/exchanges/observers",
+  "libs/exchanges/sign",
+  "libs/exchanges/symbols",
+  # "libs/exchanges/*",
+  "libs/*",
+  "services/*",
+  "workers/*",
+]
 exclude = ["libs/exchanges", "services/transpiler"]
