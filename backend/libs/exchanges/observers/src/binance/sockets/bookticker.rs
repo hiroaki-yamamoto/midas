@@ -1,9 +1,8 @@
-use ::std::collections::HashMap;
 use ::std::ops::Drop;
 use ::std::task::Poll;
 
 use ::async_trait::async_trait;
-use ::errors::{ObserverResult, ParseResult};
+use ::errors::{ObserverError, ObserverResult, ParseResult};
 use ::futures::{SinkExt, Stream, StreamExt};
 use ::log::{as_error, as_serde, debug, info};
 use ::random::generate_random_txt;
@@ -19,8 +18,8 @@ use crate::binance::interfaces::{BookTickerStream, IBookTickerSocket};
 
 pub struct BookTickerSocket {
   socket: WebSocket<WebsocketPayload, SubscribeRequest>,
-  symbols: HashMap<String, Vec<String>>,
-  pending: HashMap<String, Vec<String>>,
+  symbols: Vec<String>,
+  id: String,
 }
 
 impl BookTickerSocket {
@@ -28,18 +27,10 @@ impl BookTickerSocket {
     let socket = WebSocket::new(&[WS_ENDPOINT.to_string()]).await?;
     let inst = Self {
       socket,
-      symbols: HashMap::new(),
-      pending: HashMap::new(),
+      symbols: Vec::new(),
+      id: generate_random_txt(36),
     };
     return Ok(inst);
-  }
-
-  fn random_id(&self) -> String {
-    let mut random_id = generate_random_txt(36);
-    while self.symbols.contains_key(&random_id) {
-      random_id = generate_random_txt(36);
-    }
-    return random_id;
   }
 
   fn parse_payload_inner(
@@ -64,12 +55,7 @@ impl BookTickerSocket {
         WSMessageDetail::Continue
       }
       WebsocketPayload::Result(result) => {
-        let id = result.id.clone();
-        let symbols = self.pending.remove(&id);
-        if let Some(symbols) = symbols {
-          self.symbols.insert(id, symbols);
-        }
-        info!(result=as_serde!(&result); "Result");
+        info!(result=as_serde!(&result); "Unexpected Result");
         WSMessageDetail::Continue
       }
     }
@@ -93,37 +79,16 @@ impl BookTickerSocket {
 #[async_trait]
 impl IBookTickerSocket for BookTickerSocket {
   fn has_symbol(&self, symbol: &str) -> bool {
-    for subscribed_symbols in self.symbols.values() {
-      if subscribed_symbols.contains(&symbol.to_string()) {
-        return true;
-      }
-    }
-    return false;
+    return self.symbols.contains(&symbol.to_string());
   }
 
   fn len(&self) -> usize {
-    let len: usize = self.symbols.values().fold(0, |acc, lst| acc + lst.len());
-    return len;
-  }
-
-  fn len_socket(&self) -> usize {
     return self.symbols.len();
   }
 
-  async fn resubscribe(&mut self) -> ObserverResult<()> {
-    let pending: HashMap<String, Vec<String>> = self.pending.drain().collect();
-    for (id, symbols) in pending {
-      info!(id = as_serde!(id), symbols=as_serde!(symbols); "Resubscribe");
-      let _ = self.unsubscribe(&symbols).await;
-      self.subscribe(&symbols).await?;
-    }
-    return Ok(());
-  }
-
   async fn subscribe(&mut self, symbols: &[String]) -> ObserverResult<()> {
-    let id = self.random_id();
     let payload = SubscribeRequestInner {
-      id: id.clone(),
+      id: self.id.clone(),
       params: symbols
         .iter()
         .map(|symbol| format!("{}@bookTicker", symbol))
@@ -132,8 +97,19 @@ impl IBookTickerSocket for BookTickerSocket {
     .into_subscribe();
     debug!(payload = as_serde!(payload); "Start Subscribe");
     self.socket.send(payload).await?;
-    self.pending.insert(id, symbols.to_vec());
-    return Ok(());
+    let result = self.socket.next().await;
+    if let Some(WSMessageDetail::EntityReceived(WebsocketPayload::Result(
+      result,
+    ))) = &result
+    {
+      if result.id == self.id {
+        info!(result=as_serde!(&result); "Subscribed.");
+        return Ok(());
+      }
+    }
+    self.symbols.append(&mut symbols.to_vec());
+    debug!(result = as_serde!(result); "Failed to subscribe.");
+    return Err(ObserverError::Other("Failed to subscribe.".to_string()));
   }
 
   async fn unsubscribe(&mut self, symbols: &[String]) -> ObserverResult<()> {
@@ -141,17 +117,11 @@ impl IBookTickerSocket for BookTickerSocket {
       .iter()
       .filter(|symbol| self.has_symbol(symbol))
       .map(|symbol| {
-        let id = self
-          .symbols
-          .iter()
-          .find(|(_, v)| v.contains(symbol))
-          .map(|(k, _)| k)
-          .unwrap();
-        return SubscribeRequestInner {
-          id: id.clone(),
+        SubscribeRequestInner {
+          id: self.id.clone(),
           params: vec![format!("{}@bookTicker", symbol)],
         }
-        .into_unsubscribe();
+        .into_unsubscribe()
       })
       .collect();
     for payload in payloads {
@@ -159,10 +129,7 @@ impl IBookTickerSocket for BookTickerSocket {
       self.socket.send(payload).await?;
     }
     // Remove symbols from the map
-    for subscribed_symbols in self.symbols.values_mut() {
-      subscribed_symbols.retain(|symbol| !symbols.contains(symbol));
-    }
-    self.symbols.retain(|_, v| !v.is_empty());
+    self.symbols.retain(|symbol| !symbols.contains(symbol));
 
     return Ok(());
   }

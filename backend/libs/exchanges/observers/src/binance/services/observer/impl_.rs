@@ -12,8 +12,7 @@ use ::symbols::get_reader;
 use ::symbols::pubsub::SymbolEventPubSub;
 
 use crate::binance::{
-  interfaces::{BookTickerStream, IBookTickerSocket},
-  pubsub::BookTickerPubSub,
+  interfaces::IBookTickerSocket, pubsub::BookTickerPubSub,
   sockets::BookTickerSocket,
 };
 
@@ -30,33 +29,6 @@ impl TradeObserver {
       symbol_event: Arc::new(symbol_event),
       sockets: StreamMap::new(),
     });
-  }
-
-  fn get_socket(&mut self) -> Option<BookTickerStream> {
-    let mut socket_index = self.sockets.len();
-    socket_index = if socket_index < 1 {
-      0
-    } else {
-      socket_index - 1
-    };
-    let socket = self.sockets.remove(&socket_index);
-    if let Some(socket) = socket {
-      if socket.len() < 100 && socket.len_socket() < 10 {
-        return Some(socket);
-      } else {
-        self.sockets.insert(socket_index, socket);
-      }
-    }
-    return None;
-  }
-
-  pub(super) async fn resubscribe(&mut self) -> ObserverResult<()> {
-    let resubscribe_defer = self
-      .sockets
-      .iter_mut()
-      .map(|(_, socket)| socket.resubscribe());
-    try_join_all(resubscribe_defer).await?;
-    return Ok(());
   }
 
   pub(super) async fn subscribe(
@@ -80,15 +52,9 @@ impl TradeObserver {
         .take(10)
         .map(|s| s.to_string())
         .collect();
-      let socket = self.get_socket();
-      if let Some(mut socket) = socket {
-        socket.subscribe(&symbols).await?;
-        self.sockets.insert(self.sockets.len(), socket);
-      } else {
-        let mut socket = BookTickerSocket::new().await?;
-        socket.subscribe(&symbols).await?;
-        self.sockets.insert(self.sockets.len(), socket.into());
-      }
+      let mut socket = BookTickerSocket::new().await?;
+      socket.subscribe(&symbols).await?;
+      self.sockets.insert(self.sockets.len(), socket.into());
     }
 
     return Ok(());

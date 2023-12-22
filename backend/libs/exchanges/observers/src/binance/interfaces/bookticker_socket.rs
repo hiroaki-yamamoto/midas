@@ -14,11 +14,9 @@ pub trait IBookTickerSocket:
   Stream<Item = WSMessageDetail<BookTicker<Float>>> + Unpin
 {
   fn has_symbol(&self, symbol: &str) -> bool;
-  async fn resubscribe(&mut self) -> ObserverResult<()>;
   async fn subscribe(&mut self, symbols: &[String]) -> ObserverResult<()>;
   async fn unsubscribe(&mut self, symbols: &[String]) -> ObserverResult<()>;
   fn len(&self) -> usize;
-  fn len_socket(&self) -> usize;
 }
 
 pub type BookTickerStream = Pin<Box<dyn IBookTickerSocket + Send>>;
