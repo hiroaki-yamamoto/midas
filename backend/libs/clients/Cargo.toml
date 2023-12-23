@@ -13,8 +13,8 @@ entities = { path = "../entities" }
 keychain = { path = "../keychain" }
 rpc = { path = "../rpc" }
 
-reqwest = "0.11.22"
+reqwest = "0.11.23"
 mongodb = { version = "2.8.0", default-features = false, features = [
   "async-std-runtime",
 ] }
-async-trait = "0.1.74"
+async-trait = "0.1.75"

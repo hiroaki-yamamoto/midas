@@ -17,7 +17,7 @@ history = { path = "../../libs/history" }
 date_splitter = { path = "../../libs/date_splitter" }
 
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-tokio = { version = "1.35.0", features = [
+tokio = { version = "1.35.1", features = [
   "rt",
   "rt-multi-thread",
   "macros",
