@@ -107,15 +107,18 @@ where
   ) -> WebsocketMessageResult<MsgDetail<R>> {
     match msg {
       Message::Text(text) => {
+        info!(payload = text; "Received Text Message");
         let payload: R = json_parse(text.as_str())?;
         return Ok(MsgDetail::EntityReceived(payload));
       }
       Message::Binary(blob) => {
+        info!(payload = String::from_utf8_lossy(&blob); "Received Binary Message");
         let payload = String::from_utf8(blob)?;
         let payload: R = json_parse(&payload)?;
         return Ok(MsgDetail::EntityReceived(payload));
       }
       Message::Ping(payload) => {
+        info!(message = String::from_utf8_lossy(&payload); "Received Ping Message");
         let _ = self.send_msg(Message::Pong(payload)).await?;
         return Ok(MsgDetail::Continue);
       }
