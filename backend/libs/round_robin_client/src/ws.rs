@@ -118,12 +118,12 @@ where
         return Ok(MsgDetail::EntityReceived(payload));
       }
       Message::Ping(payload) => {
-        info!(message = String::from_utf8_lossy(&payload); "Received Ping Message");
+        info!(payload = String::from_utf8_lossy(&payload); "Received Ping Message");
         let _ = self.send_msg(Message::Pong(payload)).await?;
         return Ok(MsgDetail::Continue);
       }
-      Message::Pong(msg) => {
-        info!(message = String::from_utf8_lossy(&msg); "Received Pong Message");
+      Message::Pong(payload) => {
+        info!(payload = String::from_utf8_lossy(&payload); "Received Pong Message");
         return Ok(MsgDetail::Continue);
       }
       Message::Close(_) => {
