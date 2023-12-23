@@ -3,7 +3,7 @@ use ::std::time::Duration;
 
 use ::async_trait::async_trait;
 use ::futures::StreamExt;
-use ::log::info;
+use ::log::{as_serde, info};
 use ::tokio::select;
 use ::tokio::signal::unix::Signal;
 use ::tokio::time::interval;
@@ -78,6 +78,7 @@ impl ITradeObserver for TradeObserver {
         Some((_, payload)) = self.sockets.next() => {
           match payload {
             WSMessageDetail::EntityReceived(payload) => {
+              info!(bookTicker = as_serde!(payload); "Received BookTicker");
               self.pubsub.publish(&payload).await?;
             },
             WSMessageDetail::Continue => {
