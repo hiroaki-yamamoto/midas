@@ -747,14 +747,11 @@ dependencies = [
  "mongodb",
  "redis",
  "reqwest",
- "rpc",
  "serde",
  "serde_yaml",
  "structured-logger",
  "subscribe",
  "tokio",
- "tracing",
- "tracing-log",
 ]
 
 [[package]]
@@ -2245,12 +2242,10 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "clients",
- "config",
  "entities",
  "errors",
  "futures",
  "gmp-mpfr-sys",
- "kvs",
  "log",
  "mongodb",
  "random",
@@ -3727,18 +3722,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
 dependencies = [
  "once_cell",
- "valuable",
-]
-
-[[package]]
-name = "tracing-log"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee855f1f400bd0e5c02d150ae5de3840039a3f54b025156404e34c23c03f47c3"
-dependencies = [
- "log",
- "once_cell",
- "tracing-core",
 ]
 
 [[package]]
@@ -3981,12 +3964,6 @@ dependencies = [
  "getrandom",
  "serde",
 ]
-
-[[package]]
-name = "valuable"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
 
 [[package]]
 name = "value-bag"
