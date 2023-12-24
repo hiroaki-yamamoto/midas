@@ -33,7 +33,7 @@ async fn test_ws() {
   ];
   let (sig, port) = setup_server(&payloads);
   let mut ws: WebSocket<SamplePayload, ()> =
-    WebSocket::new(&[format!("ws://127.0.0.1:{}", port)])
+    WebSocket::new(&[format!("ws://127.0.0.1:{}", port).as_str()])
       .await
       .unwrap();
   let mut received: Vec<SamplePayload> = Vec::new();
@@ -68,7 +68,7 @@ async fn test_ping_pong() {
   ];
   let (sig, port) = setup_ping_server(&payloads);
   let mut ws: WebSocket<SamplePayload, ()> =
-    WebSocket::new(&[format!("ws://127.0.0.1:{}", port)])
+    WebSocket::new(&[format!("ws://127.0.0.1:{}", port).as_str()])
       .await
       .unwrap();
   let mut received: Vec<MsgDetail<_>> = Vec::new();

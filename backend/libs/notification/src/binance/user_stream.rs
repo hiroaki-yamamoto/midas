@@ -257,7 +257,7 @@ impl UserStreamTrait for UserStream {
         Some((listen_key, _)) = listen_key_sub.next() => {
           let me = me.lock().await;
           let socket = match me.init_websocket(
-            format!("{}/{}", WS_ENDPOINT, listen_key.listen_key)
+            format!("{}/{}", WS_ENDPOINT[0], listen_key.listen_key)
           ).await {
             Err(e) => {
               warn!(error = as_display!(e); "Switching Protocol Failed");

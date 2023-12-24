@@ -46,7 +46,7 @@ where
   R: DeserializeOwned + Unpin,
   W: Serialize + Unpin,
 {
-  async fn connect(endpoints: &[String]) -> WebSocketInitResult<TLSWebSocket> {
+  async fn connect(endpoints: &[&str]) -> WebSocketInitResult<TLSWebSocket> {
     let mut interval = interval(Duration::from_secs(1));
     let url_index = {
       let mut rng = thread_rng();
@@ -73,7 +73,7 @@ where
     return Err(MaximumAttemptExceeded.into());
   }
 
-  pub async fn new(endpoints: &[String]) -> WebSocketInitResult<Self> {
+  pub async fn new(endpoints: &[&str]) -> WebSocketInitResult<Self> {
     let socket = Self::connect(endpoints).await?;
     return Ok(Self {
       socket,

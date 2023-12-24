@@ -55,7 +55,7 @@ async fn test_bookticker_socket_receive() {
   let fixture = setup_payload_fixture(&correct);
   let (sig, port) = setup_server(&fixture);
   let mut socket =
-    BookTickerSocket::test_new(format!("ws://127.0.0.1:{}", port))
+    BookTickerSocket::test_new(format!("ws://127.0.0.1:{}", port).as_str())
       .await
       .unwrap();
   let mut result: Vec<BookTicker<Float>> = Vec::new();

@@ -24,7 +24,7 @@ pub struct BookTickerSocket {
 
 impl BookTickerSocket {
   pub async fn new() -> ObserverResult<Self> {
-    let socket = WebSocket::new(&[WS_ENDPOINT.to_string()]).await?;
+    let socket = WebSocket::new(WS_ENDPOINT).await?;
     let inst = Self {
       socket,
       symbols: Vec::new(),
@@ -34,7 +34,7 @@ impl BookTickerSocket {
   }
 
   #[cfg(test)]
-  pub(crate) async fn test_new(url: String) -> ObserverResult<Self> {
+  pub(crate) async fn test_new(url: &str) -> ObserverResult<Self> {
     let socket = WebSocket::new(&[url]).await?;
     let inst = Self {
       socket,
