@@ -14,7 +14,8 @@ use ::round_robin_client::{entities::WSMessageDetail, WebSocket};
 use crate::binance::entities::{
   BookTicker, SubscribeRequest, SubscribeRequestInner, WebsocketPayload,
 };
-use crate::binance::interfaces::{BookTickerStream, IBookTickerSocket};
+
+use super::interfaces::{BookTickerStream, IBookTickerSocket};
 
 pub struct BookTickerSocket {
   socket: WebSocket<WebsocketPayload, SubscribeRequest>,

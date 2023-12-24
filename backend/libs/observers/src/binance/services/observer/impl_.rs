@@ -13,8 +13,8 @@ use ::symbols::get_reader;
 use ::symbols::pubsub::SymbolEventPubSub;
 
 use crate::binance::{
-  interfaces::IBookTickerSocket, pubsub::BookTickerPubSub,
-  sockets::BookTickerSocket,
+  pubsub::BookTickerPubSub, sockets::BookTickerSocket,
+  sockets::IBookTickerSocket,
 };
 
 use super::TradeObserver;

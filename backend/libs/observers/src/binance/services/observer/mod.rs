@@ -10,7 +10,7 @@ use ::subscribe::PubSub;
 use ::symbols::entities::SymbolEvent;
 use ::symbols::traits::SymbolReader;
 
-use crate::binance::{entities::BookTicker, interfaces::BookTickerStream};
+use crate::binance::{entities::BookTicker, sockets::BookTickerStream};
 
 pub struct TradeObserver {
   pubsub: Arc<dyn PubSub<Output = BookTicker<Float>> + Send + Sync>,
