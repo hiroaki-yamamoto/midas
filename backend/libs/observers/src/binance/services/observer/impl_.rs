@@ -7,6 +7,7 @@ use ::subscribe::nats::client::Client as Nats;
 use ::tokio_stream::StreamMap;
 
 use ::errors::{CreateStreamResult, ObserverResult};
+use ::random::generate_random_txt;
 use ::rpc::exchanges::Exchanges;
 use ::symbols::get_reader;
 use ::symbols::pubsub::SymbolEventPubSub;
@@ -54,7 +55,11 @@ impl TradeObserver {
         .collect();
       let mut socket = BookTickerSocket::new().await?;
       socket.subscribe(&symbols).await?;
-      self.sockets.insert(self.sockets.len(), socket.into());
+      let mut id = generate_random_txt(16);
+      while self.sockets.contains_key(&id) {
+        id = generate_random_txt(16);
+      }
+      self.sockets.insert(generate_random_txt(16), socket.into());
     }
 
     return Ok(());
@@ -83,11 +88,11 @@ impl TradeObserver {
     )
     .await?;
     // Remove the unused sockets from manager.
-    let empty_socket_ids: Vec<usize> = self
+    let empty_socket_ids: Vec<String> = self
       .sockets
       .iter()
       .filter(|(_, socket)| socket.len() < 1)
-      .map(|(id, _)| *id)
+      .map(|(id, _)| id.to_string())
       .collect();
     empty_socket_ids.iter().for_each(|id| {
       self.sockets.remove(id);

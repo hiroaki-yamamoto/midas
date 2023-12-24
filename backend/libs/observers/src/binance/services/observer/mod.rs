@@ -14,7 +14,7 @@ use crate::binance::{entities::BookTicker, interfaces::BookTickerStream};
 
 pub struct TradeObserver {
   pubsub: Arc<dyn PubSub<Output = BookTicker<Float>> + Send + Sync>,
-  sockets: StreamMap<usize, BookTickerStream>,
+  sockets: StreamMap<String, BookTickerStream>,
   symbol_reader: Arc<dyn SymbolReader + Send + Sync>,
   symbol_event: Arc<dyn PubSub<Output = SymbolEvent> + Send + Sync>,
 }
