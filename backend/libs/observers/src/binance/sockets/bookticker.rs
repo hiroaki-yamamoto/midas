@@ -166,7 +166,7 @@ impl Stream for BookTickerSocket {
   ) -> Poll<Option<Self::Item>> {
     if let Poll::Ready(payload) = self.socket.poll_next_unpin(cx) {
       return match payload {
-        None => Poll::Ready(None),
+        None => Poll::Ready(Some(WSMessageDetail::Disconnected)),
         Some(payload) => {
           let book_ticker = self.parse_payload(payload);
           Poll::Ready(book_ticker)
