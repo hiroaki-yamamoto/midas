@@ -89,6 +89,10 @@ impl BookTickerSocket {
 
 #[async_trait]
 impl IBookTickerSocket for BookTickerSocket {
+  fn symbols(&self) -> &[String] {
+    return &self.symbols;
+  }
+
   fn has_symbol(&self, symbol: &str) -> bool {
     return self.symbols.contains(&symbol.to_string());
   }

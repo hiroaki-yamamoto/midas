@@ -13,6 +13,7 @@ use crate::binance::entities::BookTicker;
 pub trait IBookTickerSocket:
   Stream<Item = WSMessageDetail<BookTicker<Float>>> + Unpin
 {
+  fn symbols(&self) -> &[String];
   fn has_symbol(&self, symbol: &str) -> bool;
   async fn subscribe(&mut self, symbols: &[String]) -> ObserverResult<()>;
   async fn unsubscribe(&mut self, symbols: &[String]) -> ObserverResult<()>;
