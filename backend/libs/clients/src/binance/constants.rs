@@ -5,6 +5,6 @@ pub const REST_ENDPOINTS: &[&str] = &[
   "https://api3.binance.com",
 ];
 pub const WS_ENDPOINT: &[&str] = &[
-  "wss://stream.binance.com:9443",
-  "wss://stream.binance.com:443",
+  "wss://stream.binance.com:9443/ws",
+  "wss://stream.binance.com:443/ws",
 ];

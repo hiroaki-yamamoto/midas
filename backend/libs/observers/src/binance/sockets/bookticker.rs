@@ -102,7 +102,7 @@ impl IBookTickerSocket for BookTickerSocket {
       id: self.id.clone(),
       params: symbols
         .iter()
-        .map(|symbol| format!("{}@bookTicker", symbol))
+        .map(|symbol| format!("{}@bookTicker", symbol.to_lowercase()))
         .collect(),
     }
     .into_subscribe();
@@ -130,7 +130,7 @@ impl IBookTickerSocket for BookTickerSocket {
       .map(|symbol| {
         SubscribeRequestInner {
           id: self.id.clone(),
-          params: vec![format!("{}@bookTicker", symbol)],
+          params: vec![format!("{}@bookTicker", symbol.to_lowercase())],
         }
         .into_unsubscribe()
       })
