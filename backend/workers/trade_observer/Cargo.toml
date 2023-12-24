@@ -20,7 +20,7 @@ tokio = { version = "1.35.1", features = [
   "macros",
 ] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-futures = "0.3.29"
+futures = "0.3.30"
 libc = "0.2.151"
 mongodb = { version = "2.8.0", default-features = false, features = [
   "async-std-runtime",

@@ -27,7 +27,7 @@ tokio = { version = "1.35.1", features = [
 ] }
 warp = { version = "0.3.6", features = ["tls"] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-futures = "0.3.29"
+futures = "0.3.30"
 serde = { version = "1.0.193", features = ["derive"] }
 libc = "0.2.151"
 num-traits = "0.2.17"
