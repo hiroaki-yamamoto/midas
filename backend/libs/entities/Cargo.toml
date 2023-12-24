@@ -11,7 +11,7 @@ rpc = { path = "../rpc" }
 types = { path = "../types" }
 errors = { path = "../errors" }
 
-futures-core = "0.3.29"
+futures-core = "0.3.30"
 num-traits = "0.2.17"
 serde = { version = "1.0.193", features = ["derive"] }
 bson = "2.8.1"
