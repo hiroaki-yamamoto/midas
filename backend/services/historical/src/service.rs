@@ -29,6 +29,7 @@ use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
 use ::symbols::traits::SymbolReader as SymbolReaderTrait;
 use ::symbols::types::ListSymbolStream;
 
+use crate::context::Context;
 use crate::errors::ServiceResult;
 
 type ProgressKVS =
@@ -36,11 +37,7 @@ type ProgressKVS =
 
 #[derive(Debug, Clone)]
 pub struct Service {
-  num_obj_kvs_get: ProgressKVS,
-  sync_prog_kvs_get: ProgressKVS,
-  status: FetchStatusEventPubSub,
-  splitter: HistChartDateSplitPubSub,
-  db: Database,
+  context: Arc<Context>,
 }
 
 impl Service {
@@ -58,10 +55,10 @@ impl Service {
       .await
       .map_err(|err| err.into());
     let redis_con = redis_con?;
-    let num_obj_kvs_get =
+    let num_obj_kvs =
       Arc::new(NUM_TO_FETCH_KVS_BUILDER.build(redis_con.clone()));
-    let sync_prog_kvs_get =
-      Arc::new(CUR_SYNC_PROG_KVS_BUILDER.build(redis_con));
+    let sync_prog_kvs = Arc::new(CUR_SYNC_PROG_KVS_BUILDER.build(redis_con));
+    let context = Arc::new(Context::new(num_obj_kvs));
     let ret = Self {
       status: status?,
       splitter: splitter?,
