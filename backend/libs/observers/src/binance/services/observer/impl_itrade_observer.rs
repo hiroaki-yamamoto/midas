@@ -3,7 +3,7 @@ use ::std::time::Duration;
 
 use ::async_trait::async_trait;
 use ::futures::StreamExt;
-use ::log::{as_serde, info};
+use ::log::{as_error, as_serde, error, info};
 use ::tokio::select;
 use ::tokio::signal::unix::Signal;
 use ::tokio::time::interval;
@@ -89,7 +89,9 @@ impl ITradeObserver for TradeObserver {
               match payload {
                 WSMessageDetail::EntityReceived(payload) => {
                   info!(bookTicker = as_serde!(payload); "Received BookTicker");
-                  let _ = self.pubsub.publish(&payload).await;
+                  if let Err(e) = self.pubsub.publish(&payload).await {
+                    error!(error = as_error!(e); "Publish BookTicker Error");
+                  }
                 },
                 WSMessageDetail::Continue => {
                   info!("Continue");
@@ -97,7 +99,9 @@ impl ITradeObserver for TradeObserver {
                 },
                 WSMessageDetail::Disconnected => {
                   info!("Disconnected. Reconnecting...");
-                  let _ = self.reconnect(id).await;
+                  if let Err(e) = self.reconnect(id).await {
+                    error!(error = as_error!(e); "Reconnect Error");
+                  }
                   break;
                 }
               }
@@ -111,11 +115,15 @@ impl ITradeObserver for TradeObserver {
       }
       if call_subscribe && !symbols_to_add.is_empty() {
         let symbols: Vec<String> = symbols_to_add.drain(..).collect();
-        let _ = self.subscribe(&symbols).await;
+        if let Err(e) = self.subscribe(&symbols).await {
+          error!(error = as_error!(e); "Subscribing Failed");
+        }
       }
       if call_unsubscribe && !symbols_to_del.is_empty() {
         let symbols: Vec<String> = symbols_to_del.drain(..).collect();
-        let _ = self.unsubscribe(&symbols).await;
+        if let Err(e) = self.unsubscribe(&symbols).await {
+          error!(error = as_error!(e); "Unsubscribing Failed");
+        }
       }
     }
     return Ok(());
