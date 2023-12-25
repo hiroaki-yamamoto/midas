@@ -10,23 +10,22 @@ use ::warp::ws::Message;
 
 use ::entities::HistoryFetchRequest;
 use ::history::entities::FetchStatusChanged;
-use ::kvs::redis::aio::MultiplexedConnection;
-use ::kvs::traits::symbol::Get;
 use ::rpc::exchanges::Exchanges;
 use ::rpc::progress::Progress;
 use ::rpc::status::Status;
 use ::subscribe::PubSub;
 use ::symbols::traits::SymbolReader;
 
-type ProgressKVS =
-  Arc<dyn Get<Commands = MultiplexedConnection, Value = i64> + Send + Sync>;
+use super::types::ProgressKVS;
+use crate::services::ISocketResponseService;
 
 pub struct Context {
-  num_obj: ProgressKVS,
-  sync_prog: ProgressKVS,
-  status: Arc<dyn PubSub<Output = FetchStatusChanged> + Send + Sync>,
-  splitter: Arc<dyn PubSub<Output = HistoryFetchRequest> + Send + Sync>,
-  symbol_reader: Arc<dyn SymbolReader + Send + Sync>,
+  pub num_obj: ProgressKVS,
+  pub sync_prog: ProgressKVS,
+  pub status: Arc<dyn PubSub<Output = FetchStatusChanged> + Send + Sync>,
+  pub splitter: Arc<dyn PubSub<Output = HistoryFetchRequest> + Send + Sync>,
+  pub symbol_reader: Arc<dyn SymbolReader + Send + Sync>,
+  pub socket_response: Arc<dyn ISocketResponseService + Send + Sync>,
 }
 
 impl Context {
@@ -36,6 +35,7 @@ impl Context {
     status: Arc<dyn PubSub<Output = FetchStatusChanged> + Send + Sync>,
     splitter: Arc<dyn PubSub<Output = HistoryFetchRequest> + Send + Sync>,
     symbol_reader: Arc<dyn SymbolReader + Send + Sync>,
+    socket_response: Arc<dyn ISocketResponseService + Send + Sync>,
   ) -> Self {
     Self {
       num_obj,
@@ -43,6 +43,7 @@ impl Context {
       status,
       splitter,
       symbol_reader,
+      socket_response,
     }
   }
 

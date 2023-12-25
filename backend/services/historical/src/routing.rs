@@ -1,7 +1,9 @@
+use ::std::pin::Pin;
 use ::std::sync::Arc;
 
+use ::futures::future::try_join;
 use ::futures::stream::BoxStream;
-use ::futures::{SinkExt, StreamExt};
+use ::futures::{Sink, SinkExt, StreamExt};
 use ::http::StatusCode;
 use ::mongodb::Database;
 use ::serde_json::{from_slice as parse_json, to_string as jsonify};
@@ -10,6 +12,7 @@ use ::tokio::{join, select};
 use ::warp::filters::BoxedFilter;
 use ::warp::reject::{custom as cus_rej, Rejection};
 use ::warp::ws::{Message, WebSocket, Ws};
+use ::warp::Error as WarpErr;
 use ::warp::{Filter, Reply};
 use kvs::redis::aio::MultiplexedConnection;
 
@@ -31,11 +34,12 @@ use ::symbols::types::ListSymbolStream;
 
 use crate::context::Context;
 use crate::errors::ServiceResult;
+use crate::services::SocketResponseService;
 
 type ProgressKVS =
   Arc<dyn Get<Commands = MultiplexedConnection, Value = i64> + Send + Sync>;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Service {
   context: Arc<Context>,
 }
@@ -46,10 +50,8 @@ impl Service {
     redis_cli: &redis::Client,
     db: &Database,
   ) -> ServiceResult<Self> {
-    let (status, splitter) = join!(
-      FetchStatusEventPubSub::new(nats),
-      HistChartDateSplitPubSub::new(nats)
-    );
+    let status = Arc::new(FetchStatusEventPubSub::new(nats).await?);
+    let splitter = Arc::new(HistChartDateSplitPubSub::new(nats).await?);
     let redis_con: KVSResult<MultiplexedConnection> = redis_cli
       .get_multiplexed_async_connection()
       .await
@@ -58,14 +60,20 @@ impl Service {
     let num_obj_kvs =
       Arc::new(NUM_TO_FETCH_KVS_BUILDER.build(redis_con.clone()));
     let sync_prog_kvs = Arc::new(CUR_SYNC_PROG_KVS_BUILDER.build(redis_con));
-    let context = Arc::new(Context::new(num_obj_kvs));
-    let ret = Self {
-      status: status?,
-      splitter: splitter?,
-      db: db.clone(),
-      num_obj_kvs_get,
-      sync_prog_kvs_get,
-    };
+    let symbol_reader = Arc::new(BinanceSymbolWriter::new(db).await);
+    let soc_resp = Arc::new(SocketResponseService::new(
+      num_obj_kvs.clone(),
+      sync_prog_kvs.clone(),
+    ));
+    let context = Arc::new(Context::new(
+      num_obj_kvs,
+      sync_prog_kvs,
+      status,
+      splitter,
+      symbol_reader,
+      soc_resp,
+    ));
+    let ret = Self { context };
     return Ok(ret);
   }
 
@@ -74,72 +82,24 @@ impl Service {
   }
 
   fn websocket(&self) -> BoxedFilter<(impl Reply,)> {
-    let me = self.clone();
+    let ctx = self.context.clone();
     return ::warp::path("subscribe")
-      .map(move || {
-        return me.clone();
-      })
-      .and_then(|me: Self| async move {
-        let writer = BinanceSymbolWriter::new(&me.db).await;
-        let symbols = writer.list_trading().await.map_err(|err| {
-          return cus_rej(Status::new(
-            StatusCode::SERVICE_UNAVAILABLE,
-            &format!("(DB, Symbol): {}", err)
-          ));
-        })?;
-        let size = me.num_obj_kvs_get.clone();
-        let cur = me.sync_prog_kvs_get.clone();
-        return Ok::<_, Rejection>((me, size, cur, symbols));
-      })
-      .and_then(|(me, size, cur, symbol): (
-        Self,
-        ProgressKVS, ProgressKVS,
-        ListSymbolStream,
-      )| async move {
-        let (clos_size, clos_cur) = (size.clone(), cur.clone());
-        let prog = symbol.map(move |symbol| {
-          return (symbol.symbol, clos_size.clone(), clos_cur.clone());
-        }).filter_map(|(sym, size, cur)| async move {
-          let exchange_name: Arc<String> = Exchanges::Binance.as_str().to_lowercase().into();
-          let sym: Arc<String> = sym.into();
-          let size = size.get(exchange_name.clone(), sym.clone());
-          let cur = cur.get(exchange_name.clone(), sym.clone());
-          let (size, cur) = join!(size, cur);
-          if let Some(size) = size.ok() {
-            if let Some(cur) = cur.ok() {
-              return Some((size, cur, sym));
-            }
-          }
-          return None;
-        }).map(|(size, cur, symbol): (i64, i64, Arc<String>)| {
-          return Progress {
-            exchange: Box::new(Exchanges::Binance),
-            symbol: symbol.as_ref().clone(),
-            size,
-            cur
-          };
-        }).filter_map(|prog: Progress| async move {
-          return jsonify(&prog).ok();
-        }).map(|payload: String| {
-          return Message::text(payload);
-        }).boxed();
-        return Ok::<_, Rejection>((me, size, cur, prog));
+      .and_then(||async {
+        return Ok((ctx.clone(), ctx.get_init_prog_stream(Exchanges::Binance).await?));
       })
       .untuple_one()
       .and(::warp::ws())
       .map(|
-        me: Self,
-        size: ProgressKVS,
-        cur: ProgressKVS,
-        mut start_prog: BoxStream<'static, Message>,
+        ctx: Arc<Context>,
+        start_prog: BoxStream<'_, Message>,
         ws: Ws
       | {
         return ws.on_upgrade(|mut sock: WebSocket| async move {
           while let Some(payload) = start_prog.next().await {
             let _ = sock.feed(payload).await;
           }
-          let _ = sock.flush();
-          let subsc = me.status.pull_subscribe("historyService").await;
+          let _ = sock.flush().await;
+          let subsc = ctx.status.pull_subscribe("historyService").await;
           match subsc {
             Err(e) => {
               let msg = format!(
@@ -152,26 +112,7 @@ impl Service {
             Ok(mut resp) => loop {
               select! {
                 Some((item, _)) = resp.next() => {
-                  let exchange: Arc<String> = item
-                    .exchange
-                    .as_str()
-                    .to_lowercase()
-                    .into();
-                  let symbol: Arc<String> = item.symbol.into();
-                  let size = size.get(exchange.clone(), symbol.clone()).await.unwrap_or(0);
-                  let cur = cur.get(exchange.clone(), symbol.clone()).await.unwrap_or(0);
-                  let prog = Progress {
-                    exchange: Box::new(item.exchange),
-                    symbol: symbol.as_ref().clone(),
-                    size,
-                    cur
-                  };
-                  let payload = jsonify(&prog).unwrap_or(String::from(
-                    "Failed to serialize the progress data.",
-                  ));
-                  let payload = Message::text(payload);
-                  let _ = sock.send(payload).await;
-                  let _ = sock.flush().await;
+                  ctx.socket_response.handle(&item, Box::pin(sock)).await;
                 },
                 Some(Ok(msg)) = sock.next() => {
                   if msg.is_close() {

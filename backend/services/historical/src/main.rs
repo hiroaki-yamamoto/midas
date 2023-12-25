@@ -1,6 +1,8 @@
 mod context;
 mod errors;
-mod service;
+mod routing;
+mod services;
+mod types;
 
 use ::futures::FutureExt;
 use ::log::{info, warn};
@@ -10,7 +12,7 @@ use ::config::init;
 use ::csrf::{CSRFOption, CSRF};
 use ::warp_utils::handle_rejection;
 
-use crate::service::Service;
+use crate::routing::Service;
 
 #[tokio::main]
 async fn main() {

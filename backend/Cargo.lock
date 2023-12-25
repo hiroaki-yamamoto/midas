@@ -1541,6 +1541,7 @@ name = "historical_service"
 version = "0.1.0"
 dependencies = [
  "access_logger",
+ "async-trait",
  "clap",
  "config",
  "csrf",
