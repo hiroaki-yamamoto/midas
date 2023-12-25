@@ -1,18 +1,12 @@
-use ::std::pin::Pin;
 use ::std::sync::Arc;
 
-use ::futures::future::try_join;
 use ::futures::stream::BoxStream;
-use ::futures::{Sink, SinkExt, StreamExt};
-use ::http::StatusCode;
+use ::futures::{SinkExt, StreamExt};
 use ::mongodb::Database;
 use ::serde_json::{from_slice as parse_json, to_string as jsonify};
-use ::subscribe::PubSub;
-use ::tokio::{join, select};
+use ::tokio::select;
 use ::warp::filters::BoxedFilter;
-use ::warp::reject::{custom as cus_rej, Rejection};
 use ::warp::ws::{Message, WebSocket, Ws};
-use ::warp::Error as WarpErr;
 use ::warp::{Filter, Reply};
 use kvs::redis::aio::MultiplexedConnection;
 
@@ -25,12 +19,9 @@ use ::kvs::traits::symbol::Get;
 use ::rpc::exchanges::Exchanges;
 use ::rpc::history_fetch_request::HistoryFetchRequest as RPCHistFetchReq;
 use ::rpc::progress::Progress;
-use ::rpc::status::Status;
 use ::rpc::status_check_request::StatusCheckRequest;
 use ::subscribe::nats::Client as Nats;
 use ::symbols::binance::recorder::SymbolWriter as BinanceSymbolWriter;
-use ::symbols::traits::SymbolReader as SymbolReaderTrait;
-use ::symbols::types::ListSymbolStream;
 
 use crate::context::Context;
 use crate::errors::ServiceResult;
