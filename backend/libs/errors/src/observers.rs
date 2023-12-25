@@ -1,6 +1,7 @@
 use ::async_nats::jetstream::context::CreateStreamError as NatsCreateStreamError;
 use ::err_derive::Error;
 use ::mongodb::error::Error as DBErr;
+use ::serde::Serialize;
 use ::tokio::sync::mpsc::error::SendError;
 use ::tokio::sync::oneshot::error::RecvError;
 use ::tokio::task::JoinError;
@@ -10,6 +11,18 @@ use crate::kvs::KVSError;
 use crate::pubsub::{ConsumerError, PublishError};
 use crate::unknown::UnknownExchangeError;
 use crate::websocket::{WebsocketInitError, WebsocketSinkError};
+
+#[derive(Debug, Serialize, Error)]
+#[error(display = "Socket Not Found. id: {}", id)]
+pub struct SocketNotFound {
+  id: String,
+}
+
+impl SocketNotFound {
+  pub fn new(id: String) -> Self {
+    Self { id }
+  }
+}
 
 #[derive(Debug, Error)]
 pub enum ObserverError {
@@ -37,6 +50,8 @@ pub enum ObserverError {
   UnknownExchangeError(#[source] UnknownExchangeError),
   #[error(display = "Parallel Join Error: {}", _0)]
   JoinError(#[source] JoinError),
+  #[error(display = "Socket Not Found: {}", _0)]
+  SocketNotFound(#[source] SocketNotFound),
   #[error(display = "Unhandled Error: {}", _0)]
   Other(String),
 }

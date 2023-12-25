@@ -34,7 +34,7 @@ pub use keychain::{KeyChainError, KeyChainResult};
 pub use kvs::{KVSError, KVSResult};
 pub use notification::{NotificationError, NotificationResult};
 pub use object::ObjectNotFound;
-pub use observers::{ObserverError, ObserverResult};
+pub use observers::{ObserverError, ObserverResult, SocketNotFound};
 pub use parse::{ParseError, ParseResult};
 pub use pubsub::{
   ConsumerError, ConsumerResult, CreateStreamResult, PublishError,

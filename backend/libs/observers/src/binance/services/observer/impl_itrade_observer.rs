@@ -51,23 +51,31 @@ impl ITradeObserver for TradeObserver {
         _ = signal.recv() => {
           break;
         }
-        Some((symbol_event, _)) = symbol_event.next() => {
-          match symbol_event {
-            SymbolEvent::Add(symbol) => {
-              if symbol.exchange == Exchanges::Binance.into() {
-                symbols_to_add.push(symbol.symbol);
+        event = symbol_event.next() => {
+          match event {
+            Some((symbol_event, _)) => {
+              match symbol_event {
+                SymbolEvent::Add(symbol) => {
+                  if symbol.exchange == Exchanges::Binance.into() {
+                    symbols_to_add.push(symbol.symbol);
+                  }
+                  if symbols_to_add.len() > 10 {
+                    call_subscribe = true;
+                  }
+                }
+                SymbolEvent::Remove(symbol) => {
+                  if symbol.exchange == Exchanges::Binance.into() {
+                    symbols_to_del.push(symbol.symbol);
+                  }
+                  if symbols_to_del.len() > 10 {
+                    call_unsubscribe = true;
+                  }
+                }
               }
-              if symbols_to_add.len() > 10 {
-                call_subscribe = true;
-              }
-            }
-            SymbolEvent::Remove(symbol) => {
-              if symbol.exchange == Exchanges::Binance.into() {
-                symbols_to_del.push(symbol.symbol);
-              }
-              if symbols_to_del.len() > 10 {
-                call_unsubscribe = true;
-              }
+            },
+            None => {
+              info!("Symbol Event Stream Closed");
+              break;
             }
           }
         },
@@ -75,30 +83,39 @@ impl ITradeObserver for TradeObserver {
           call_subscribe = true;
           call_unsubscribe = true;
         },
-        Some((_, payload)) = self.sockets.next() => {
+        payload = self.sockets.next() => {
           match payload {
-            WSMessageDetail::EntityReceived(payload) => {
-              info!(bookTicker = as_serde!(payload); "Received BookTicker");
-              self.pubsub.publish(&payload).await?;
-            },
-            WSMessageDetail::Continue => {
-              info!("Continue");
-              continue;
-            },
-            WSMessageDetail::Disconnected => {
-              info!("Disconnected");
+            Some((id, payload)) => {
+              match payload {
+                WSMessageDetail::EntityReceived(payload) => {
+                  info!(bookTicker = as_serde!(payload); "Received BookTicker");
+                  let _ = self.pubsub.publish(&payload).await;
+                },
+                WSMessageDetail::Continue => {
+                  info!("Continue");
+                  continue;
+                },
+                WSMessageDetail::Disconnected => {
+                  info!("Disconnected. Reconnecting...");
+                  let _ = self.reconnect(id).await;
+                  break;
+                }
+              }
+            }
+            None => {
+              info!("Socket Stream Closed");
               break;
             }
           }
-        }
+        },
       }
       if call_subscribe && !symbols_to_add.is_empty() {
         let symbols: Vec<String> = symbols_to_add.drain(..).collect();
-        self.subscribe(&symbols).await?;
+        let _ = self.subscribe(&symbols).await;
       }
       if call_unsubscribe && !symbols_to_del.is_empty() {
         let symbols: Vec<String> = symbols_to_del.drain(..).collect();
-        self.unsubscribe(&symbols).await?;
+        let _ = self.unsubscribe(&symbols).await;
       }
     }
     return Ok(());

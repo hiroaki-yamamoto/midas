@@ -6,7 +6,7 @@ use ::mongodb::Database;
 use ::subscribe::nats::client::Client as Nats;
 use ::tokio_stream::StreamMap;
 
-use ::errors::{CreateStreamResult, ObserverResult};
+use ::errors::{CreateStreamResult, ObserverResult, SocketNotFound};
 use ::random::generate_random_txt;
 use ::rpc::exchanges::Exchanges;
 use ::symbols::get_reader;
@@ -63,6 +63,12 @@ impl TradeObserver {
     }
 
     return Ok(());
+  }
+
+  pub(super) async fn reconnect(&mut self, id: String) -> ObserverResult<()> {
+    let socket = self.sockets.remove(&id).ok_or(SocketNotFound::new(id))?;
+    let symbols = socket.symbols();
+    return self.subscribe(symbols).await;
   }
 
   pub(super) async fn unsubscribe(
