@@ -2,22 +2,20 @@ use ::std::sync::Arc;
 
 use ::futures::future::{try_join, TryFutureExt};
 use ::futures::stream::{BoxStream, StreamExt};
-use ::http::StatusCode;
 use ::log::{as_error, warn};
 use ::serde_json::to_string as jsonify;
-use ::warp::reject::{custom as cus_rej, Rejection};
 use ::warp::ws::Message;
 
 use ::entities::HistoryFetchRequest;
 use ::history::entities::FetchStatusChanged;
 use ::rpc::exchanges::Exchanges;
 use ::rpc::progress::Progress;
-use ::rpc::status::Status;
 use ::subscribe::PubSub;
 use ::symbols::traits::SymbolReader;
 
 use super::types::ProgressKVS;
-use crate::services::ISocketResponseService;
+use crate::errors::ServiceResult;
+use crate::services::{ISocketRequestService, ISocketResponseService};
 
 pub struct Context {
   pub num_obj: ProgressKVS,
@@ -26,6 +24,7 @@ pub struct Context {
   pub splitter: Arc<dyn PubSub<Output = HistoryFetchRequest> + Send + Sync>,
   pub symbol_reader: Arc<dyn SymbolReader + Send + Sync>,
   pub socket_response: Arc<dyn ISocketResponseService + Send + Sync>,
+  pub socket_request: Arc<dyn ISocketRequestService + Send + Sync>,
 }
 
 impl Context {
@@ -36,6 +35,7 @@ impl Context {
     splitter: Arc<dyn PubSub<Output = HistoryFetchRequest> + Send + Sync>,
     symbol_reader: Arc<dyn SymbolReader + Send + Sync>,
     socket_response: Arc<dyn ISocketResponseService + Send + Sync>,
+    socket_request: Arc<dyn ISocketRequestService + Send + Sync>,
   ) -> Self {
     Self {
       num_obj,
@@ -44,13 +44,14 @@ impl Context {
       splitter,
       symbol_reader,
       socket_response,
+      socket_request,
     }
   }
 
   pub async fn get_init_prog_stream(
     &self,
     exchange: Exchanges,
-  ) -> Result<BoxStream<Message>, Rejection> {
+  ) -> ServiceResult<BoxStream<Message>> {
     let ret = self
       .symbol_reader
       .list_trading()
@@ -89,12 +90,6 @@ impl Context {
             return Message::text(payload);
           })
           .boxed();
-      })
-      .map_err(|err| {
-        return cus_rej(Status::new(
-          StatusCode::SERVICE_UNAVAILABLE,
-          &format!("(DB, Symbol): {}", err),
-        ));
       })
       .await?;
     return Ok(ret);

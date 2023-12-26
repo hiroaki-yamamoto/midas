@@ -1,4 +1,5 @@
 mod context;
+mod entities;
 mod errors;
 mod routing;
 mod services;

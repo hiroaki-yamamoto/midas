@@ -1,11 +1,9 @@
-use ::std::pin::Pin;
 use ::std::sync::Arc;
 
 use ::async_trait::async_trait;
-use ::futures::sink::{Sink, SinkExt};
+use ::futures::sink::SinkExt;
 use ::serde_json::to_string as jsonify;
-use ::warp::ws::Message;
-use ::warp::Error as WarpErr;
+use ::warp::ws::{Message, WebSocket};
 
 use ::rpc::progress::Progress;
 
@@ -29,22 +27,14 @@ impl SocketResponseService {
 
 #[async_trait]
 pub trait ISocketResponseService {
-  async fn handle(
-    &self,
-    item: &FetchStatusChanged,
-    websink: Pin<Box<dyn Sink<Message, Error = WarpErr> + Send>>,
-  );
+  async fn handle(&self, item: &FetchStatusChanged, websink: &mut WebSocket);
 }
 
 #[async_trait]
 impl ISocketResponseService for SocketResponseService {
-  async fn handle(
-    &self,
-    item: &FetchStatusChanged,
-    websink: Pin<Box<dyn Sink<Message, Error = WarpErr> + Send>>,
-  ) {
+  async fn handle(&self, item: &FetchStatusChanged, websink: &mut WebSocket) {
     let exchange: Arc<String> = item.exchange.as_str().to_lowercase().into();
-    let symbol: Arc<String> = item.symbol.into();
+    let symbol: Arc<String> = Arc::new(item.symbol.clone());
     let size = self
       .num_obj
       .get(exchange.clone(), symbol.clone())
