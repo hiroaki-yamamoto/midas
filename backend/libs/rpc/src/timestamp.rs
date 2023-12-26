@@ -1,5 +1,5 @@
 
-#[derive(Clone, PartialEq, ::serde::Serialize, ::serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, ::serde::Serialize, ::serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Timestamp {
   pub nanos: u32,
