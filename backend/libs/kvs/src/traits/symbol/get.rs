@@ -15,7 +15,7 @@ pub trait Get: Base + ChannelName {
     &self,
     exchange: Arc<String>,
     symbol: Arc<String>,
-  ) -> KVSResult<Self::Value> {
+  ) -> KVSResult<Option<Self::Value>> {
     let channel_name = self.channel_name(exchange, symbol);
     return Ok(self.__commands__().get(channel_name.as_ref()).await?);
   }

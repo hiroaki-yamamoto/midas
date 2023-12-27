@@ -8,7 +8,7 @@ use crate::traits::base::Get as Base;
 
 #[async_trait]
 pub trait Get: Base {
-  async fn get(&self, key: Arc<String>) -> KVSResult<Self::Value> {
+  async fn get(&self, key: Arc<String>) -> KVSResult<Option<Self::Value>> {
     return self.__get__(key).await;
   }
 }

@@ -68,7 +68,14 @@ impl Context {
             )
             .await;
             return match size_cur {
-              Ok((size, cur)) => Some((size, cur, sym)),
+              Ok((size, cur)) => {
+                let size_cur_pair = size.zip(cur);
+                if let Some((size, cur)) = size_cur_pair {
+                  Some((size, cur, sym))
+                } else {
+                  None
+                }
+              }
               Err(err) => {
                 warn!(
                   error = as_error!(err),
@@ -83,7 +90,7 @@ impl Context {
           .map(|(size, cur, symbol)| {
             return Progress {
               exchange: Box::new(Exchanges::Binance),
-              symbol: symbol.as_ref().clone(),
+              symbol: symbol.to_string(),
               size,
               cur,
             };

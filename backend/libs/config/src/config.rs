@@ -61,9 +61,9 @@ impl Config {
   }
 
   pub async fn redis(&self) -> ConfigResult<RedisConnection> {
-    for _ in 0..10 {
+    for _ in 0..60 {
       match timeout(
-        Duration::from_secs(10),
+        Duration::from_secs(1),
         self.redis.get_multiplexed_async_connection(),
       )
       .await

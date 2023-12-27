@@ -2,7 +2,7 @@ use ::std::sync::Arc;
 
 use ::futures::{SinkExt, StreamExt};
 use ::kvs::redis::aio::MultiplexedConnection;
-use ::log::{as_error, warn};
+use ::log::{as_error, error};
 use ::mongodb::Database;
 use ::tokio::select;
 use ::warp::filters::BoxedFilter;
@@ -87,7 +87,7 @@ impl Service {
                 }
               }
               Err(err) => {
-                warn!(error = as_error!(err); "Failed to get progress for initalization.");
+                error!(error = as_error!(err); "Failed to get progress for initalization.");
               }
             }
             let subsc = ctx.status.pull_subscribe("historyService").await;
@@ -103,14 +103,16 @@ impl Service {
               Ok(mut resp) => loop {
                 select! {
                   Some((item, _)) = resp.next() => {
-                    ctx.socket_response.handle(&item, &mut sock).await;
+                    if let Err(e) = ctx.socket_response.handle(&item, &mut sock).await {
+                      error!(error = as_error!(e); "Failed send the progress response");
+                    }
                   },
                   Some(Ok(msg)) = sock.next() => {
                     if msg.is_close() {
                       break;
                     }
                     if let Err(e) = ctx.socket_request.handle(&msg, &mut sock).await {
-                      warn!(error = as_error!(e); "Failed to handle the request.");
+                      error!(error = as_error!(e); "Failed to handle the request.");
                     }
                   },
                 }
