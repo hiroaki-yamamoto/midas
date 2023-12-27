@@ -2,7 +2,7 @@ use ::std::sync::Arc;
 
 use ::futures::future::{try_join, TryFutureExt};
 use ::futures::stream::{BoxStream, StreamExt};
-use ::log::{as_error, warn};
+use ::log::{as_error, as_serde, warn};
 use ::serde_json::to_string as jsonify;
 use ::warp::ws::Message;
 
@@ -70,7 +70,12 @@ impl Context {
             return match size_cur {
               Ok((size, cur)) => Some((size, cur, sym)),
               Err(err) => {
-                warn!(error = as_error!(err); "Failed to get progress");
+                warn!(
+                  error = as_error!(err),
+                  exchange = as_serde!(exchange_name),
+                  symbol = as_serde!(sym);
+                  "Failed to get progress"
+                );
                 None
               }
             };
