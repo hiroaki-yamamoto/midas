@@ -11,7 +11,6 @@ pub mod position;
 pub mod position_status;
 pub mod progress;
 pub mod status;
-pub mod status_check_request;
 pub mod symbol_info;
 pub mod symbol_list;
 pub mod symbol_type;

@@ -52,9 +52,6 @@ build ./../frontend/src/rpc/api_key_list.ts: frontend ./api_key_list.yml
 build ./../backend/libs/rpc/src/symbol_type.rs: backend ./symbol_type.yml
 build ./../frontend/src/rpc/symbol_type.ts: frontend ./symbol_type.yml
 
-build ./../backend/libs/rpc/src/status_check_request.rs: backend ./status_check_request.yml
-build ./../frontend/src/rpc/status_check_request.ts: frontend ./status_check_request.yml
-
 build ./../backend/libs/rpc/src/history_fetch_request.rs: backend ./history_fetch_request.yml
 build ./../frontend/src/rpc/history_fetch_request.ts: frontend ./history_fetch_request.yml
 

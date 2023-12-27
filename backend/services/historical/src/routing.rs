@@ -47,11 +47,7 @@ impl Service {
       num_obj_kvs.clone(),
       sync_prog_kvs.clone(),
     ));
-    let sock_req = Arc::new(SocketRequestService::new(
-      splitter.clone(),
-      num_obj_kvs.clone(),
-      sync_prog_kvs.clone(),
-    ));
+    let sock_req = Arc::new(SocketRequestService::new(splitter.clone()));
     let context = Arc::new(Context::new(
       num_obj_kvs,
       sync_prog_kvs,
@@ -111,7 +107,7 @@ impl Service {
                     if msg.is_close() {
                       break;
                     }
-                    if let Err(e) = ctx.socket_request.handle(&msg, &mut sock).await {
+                    if let Err(e) = ctx.socket_request.handle(&msg).await {
                       error!(error = as_error!(e); "Failed to handle the request.");
                     }
                   },
