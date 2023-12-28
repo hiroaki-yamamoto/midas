@@ -45,7 +45,8 @@
 			"csrf",
 			"test_utils",
 			"round_robin_client",
-			"position"
+			"position",
+			"notification"
 		],
 		"yaml.schemas": {
 			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [
