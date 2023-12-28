@@ -6,3 +6,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+rpc = { path = "../rpc" }
+types = { path = "../types" }
+errors = { path = "../errors" }
+
+log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
+serde = { version = "1.0.193", features = ["derive", "rc"] }
+rug = { version = "1.22.0", features = ["serde"] }
+mongodb = { version = "2.8.0", default-features = false, features = [
+  "async-std-runtime",
+  "bson-chrono-0_4",
+] }

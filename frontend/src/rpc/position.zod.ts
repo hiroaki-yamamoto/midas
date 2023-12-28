@@ -4,16 +4,15 @@ import { PositionStatus } from './position-status.zod';
 import { Timestamp } from './timestamp.zod';
 
 export const Position = z.object({
+  amount: z.string(),
   botId: z.string(),
   entryAt: z.lazy(() => Timestamp),
+  entryPrice: z.string(),
   exitAt: z.lazy(() => Timestamp).optional(),
+  exitPrice: z.string().optional(),
   id: z.string(),
-  profitAmount: z.string(),
-  profitPercent: z.string(),
   status: z.lazy(() => PositionStatus),
   symbol: z.string(),
-  tradingAmount: z.string(),
-  valuation: z.string(),
 });
 
 export type Position = z.infer<typeof Position>;

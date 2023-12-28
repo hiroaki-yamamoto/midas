@@ -14,9 +14,11 @@ members:
       use: Timestamp
   bot_id: string
   symbol: string
-  trading_amount: string
-  valuation: string
+  entry_price:
+    type: string
+  exit_price:
+    type: string
+    optional: true
+  amount: string
   status:
     use: PositionStatus
-  profit_amount: string
-  profit_percent: string
