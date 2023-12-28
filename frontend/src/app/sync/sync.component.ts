@@ -99,8 +99,8 @@ export class SyncComponent implements OnInit, AfterViewInit {
       symbol,
       start: Timestamp.parse({ nanos: 0, secs: 0 }),
       end: Timestamp.parse({
-        secs: now.getTime() / 1000,
-        nanos: now.getMilliseconds() * 1000000
+        secs: parseInt((now.getTime() / 1000).toString(), 10),
+        nanos: parseInt((now.getMilliseconds() * 1000000).toString(), 10),
       }),
     });
     this.syncHandler.progSock.sync(req);
