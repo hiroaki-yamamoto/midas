@@ -32,9 +32,6 @@
 			"pubsub",
 			"kvs",
 			"debug",
-			"historical_service",
-			"historical_date_split_worker",
-			"historical_fetch_worker",
 			"frontend",
 			"intermediate_entities",
 			"deps",
@@ -47,7 +44,8 @@
 			"history",
 			"csrf",
 			"test_utils",
-			"round_robin_websocket"
+			"round_robin_client",
+			"position"
 		],
 		"yaml.schemas": {
 			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [
