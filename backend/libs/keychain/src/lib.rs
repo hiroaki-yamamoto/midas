@@ -1,6 +1,7 @@
 mod interfaces;
 pub mod pubsub;
 
+use ::async_trait::async_trait;
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::oid::ObjectId;
@@ -40,11 +41,11 @@ impl KeyChain {
     ret.update_indices(&["exchange"]).await;
     return Ok(ret);
   }
+}
 
-  pub async fn push(
-    &self,
-    api_key: APIKey,
-  ) -> KeyChainResult<Option<ObjectId>> {
+#[async_trait]
+impl IKeyChain for KeyChain {
+  async fn push(&self, api_key: APIKey) -> KeyChainResult<Option<ObjectId>> {
     let result = self.col.insert_one(&api_key, None).await?;
     let id = result.inserted_id.as_object_id();
     let mut api_key = api_key.clone();
@@ -54,7 +55,7 @@ impl KeyChain {
     return Ok(id.clone());
   }
 
-  pub async fn rename_label(
+  async fn rename_label(
     &self,
     id: ObjectId,
     label: &str,
@@ -72,7 +73,7 @@ impl KeyChain {
     return Ok(());
   }
 
-  pub async fn list(
+  async fn list(
     &self,
     filter: Document,
   ) -> KeyChainResult<BoxStream<'_, APIKey>> {
@@ -85,7 +86,7 @@ impl KeyChain {
     return Ok(stream);
   }
 
-  pub async fn get(
+  async fn get(
     &self,
     exchange: Exchanges,
     id: ObjectId,
@@ -103,7 +104,7 @@ impl KeyChain {
     return Ok(key);
   }
 
-  pub async fn delete(&self, id: ObjectId) -> KeyChainResult<()> {
+  async fn delete(&self, id: ObjectId) -> KeyChainResult<()> {
     if let Some(doc) =
       self.col.find_one_and_delete(doc! {"_id": id}, None).await?
     {

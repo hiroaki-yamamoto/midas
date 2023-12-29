@@ -7,7 +7,7 @@ use ::rpc::exchanges::Exchanges;
 
 use ::entities::APIKeyInner;
 use ::errors::{APIHeaderResult, ObjectNotFound};
-use ::keychain::KeyChain;
+use ::keychain::{IKeyChain, KeyChain};
 
 #[async_trait]
 pub trait FindKey {

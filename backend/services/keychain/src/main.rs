@@ -9,7 +9,7 @@ use ::warp::Filter;
 use ::access_logger::log;
 use ::config::init;
 use ::csrf::{CSRFOption, CSRF};
-use ::keychain::{APIKey, KeyChain};
+use ::keychain::{APIKey, IKeyChain, KeyChain};
 use ::rpc::api_key::ApiKey as RPCAPIKey;
 use ::rpc::api_key_list::ApiKeyList as RPCAPIKeyList;
 use ::rpc::api_rename::ApiRename;
