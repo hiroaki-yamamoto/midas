@@ -1,3 +1,4 @@
+use ::std::sync::Arc;
 use ::std::time::Duration as StdDur;
 
 use ::async_stream::try_stream;
@@ -15,25 +16,27 @@ use ::entities::{
   BookTicker, ExecutionSummary, Order, OrderInner, OrderOption,
 };
 use ::errors::{ExecutionResult, HTTPErrors, StatusFailure};
-use ::keychain::KeyChain;
+use ::keychain::{BinanceSigner, IKeyChain, KeyChain};
 use ::round_robin_client::RestClient;
 use ::writers::DatabaseWriter;
 
-use ::clients::binance::{APIHeader, FindKey, REST_ENDPOINTS};
+use ::clients::binance::{APIHeader, REST_ENDPOINTS};
 use ::observers::binance::TradeSubscriber;
 use ::observers::traits::ITradeSubscriber as TradeSubscriberTrait;
 use ::subscribe::nats::Client as Nats;
 
 use crate::traits::Executor as ExecutorTrait;
 
+use super::interfaces::INewOrderRequestMaker;
+use super::services::NewOrderRequestMaker;
+
 use super::entities::{
   CancelOrderRequest, OrderRequest, OrderResponse, OrderResponseType,
   OrderType, Side,
 };
 
-#[derive(Debug, Clone)]
 pub struct Executor {
-  keychain: KeyChain,
+  req_maker: Arc<dyn INewOrderRequestMaker + Send + Sync>,
   broker: Nats,
   db: Database,
   positions: Collection<OrderResponse<Float, DateTime>>,
@@ -42,11 +45,14 @@ pub struct Executor {
 
 impl Executor {
   pub async fn new(broker: &Nats, db: Database) -> ExecutionResult<Self> {
-    let keychain = KeyChain::new(broker, db.clone()).await?;
+    let keychain = Arc::new(KeyChain::new(broker, db.clone()).await?);
+    let signer = Arc::new(BinanceSigner::new(keychain.clone()));
+    let req_maker = Arc::new(NewOrderRequestMaker::new(signer.clone()));
+
     let positions = db.collection("binance.positions");
     let me = Self {
       broker: broker.clone(),
-      keychain,
+      req_maker,
       db,
       positions,
       cli: RestClient::new(
@@ -70,11 +76,6 @@ impl Executor {
 }
 
 impl APIHeader for Executor {}
-impl FindKey for Executor {
-  fn get_keychain(&self) -> &KeyChain {
-    return &self.keychain;
-  }
-}
 
 impl DatabaseWriter for Executor {
   fn get_database(&self) -> &Database {
@@ -111,61 +112,13 @@ impl ExecutorTrait for Executor {
     order_option: Option<OrderOption>,
   ) -> ExecutionResult<ObjectId> {
     let pos_gid = ObjectId::new();
-    let api_key = self.get_api_key(api_key_id).await?;
     let header = self.get_pub_header(&api_key)?;
-    let order_type = order_option
-      .clone()
-      .map(|_| {
-        price
-          .as_ref()
-          .map(|_| OrderType::Limit)
-          .unwrap_or(OrderType::Market)
-      })
-      .unwrap_or(OrderType::Market);
     let resp_defers: Vec<BoxFuture<ExecutionResult<usize>>> =
-      order_option
-        .map(|o| {
-          o.calc_trading_amounts(budget)
-            .into_iter()
-            .enumerate()
-            .map(|(index, tr_amount)| {
-              let mut order = OrderRequest::<i64>::new(
-                symbol.clone(),
-                Side::Buy,
-                order_type.clone(),
-              );
-              if o.iceberg {
-                order = order.iceberg_qty(Some(tr_amount.to_string()));
-              } else {
-                order = order.quantity(Some(tr_amount.to_string()));
-              }
-              if order_type == OrderType::Limit {
-                order = order.price(Some(
-                  o.calc_order_price(price.clone().unwrap(), index)
-                    .to_string(),
-                ));
-              }
-              order =
-                order.order_response_type(Some(OrderResponseType::RESULT));
-              return order;
-            })
-            .collect::<Vec<OrderRequest<i64>>>()
-        })
-        .unwrap_or_else(|| {
-          let mut order =
-            OrderRequest::<i64>::new(symbol, Side::Buy, order_type.clone())
-              .order_response_type(Some(OrderResponseType::RESULT));
-          if order_type == OrderType::Limit {
-            order = order.price(price.map(|p| p.to_string()));
-          }
-          return vec![order];
-        })
+      self
+        .req_maker
+        .build(api_key_id, symbol, budget, price, order_option)
+        .await?
         .into_iter()
-        .map(|order| {
-          let qs = to_qs(&order).unwrap();
-          let signature = api_key.sign(qs.as_str());
-          return format!("{}&signature={}", qs, signature);
-        })
         .map(|qs| {
           let header = header.clone();
           let mut cli = self.cli.clone();

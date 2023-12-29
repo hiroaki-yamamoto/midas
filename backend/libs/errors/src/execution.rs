@@ -11,7 +11,7 @@ use ::std::io::Error as IOError;
 
 use crate::{
   APIHeaderErrors, HTTPErrors, KeyChainError, ObjectNotFound, ObserverError,
-  ParseError, StatusFailure,
+  ParseError, SignerError, StatusFailure,
 };
 
 #[derive(Debug, Clone, Error)]
@@ -52,6 +52,8 @@ pub enum ExecutionErrors {
   NATSStreamCreationError(#[source] CreateStreamError),
   #[error(display = "Keychain Reference Error: {}", _0)]
   KeyChainError(#[source] KeyChainError),
+  #[error(display = "Signing Error: {}", _0)]
+  SignerError(#[source] SignerError),
   #[error(display = "Observer Error: {}", _0)]
   ObserverError(#[source] ObserverError),
 }

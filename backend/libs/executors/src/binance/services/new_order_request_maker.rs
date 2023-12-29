@@ -1,11 +1,13 @@
 use ::std::sync::Arc;
 
+use ::async_trait::async_trait;
+use ::futures::future::{try_join_all, TryFutureExt};
 use ::mongodb::bson::oid::ObjectId;
 use ::rug::Float;
-use ::serde_qs::{to_string as to_qs, Error as QsErr};
+use ::serde_qs::to_string as to_qs;
 
 use ::entities::OrderOption;
-use ::errors::ExecutionResult;
+use ::errors::{ExecutionErrors, ExecutionResult};
 use ::keychain::ISigner;
 
 use super::super::{
@@ -59,8 +61,9 @@ impl RequestMaker {
   }
 }
 
+#[async_trait]
 impl INewOrderRequestMaker for RequestMaker {
-  fn build(
+  async fn build(
     &self,
     api_key_id: ObjectId,
     symbol: String,
@@ -81,14 +84,17 @@ impl INewOrderRequestMaker for RequestMaker {
         }
         return vec![order];
       });
-    let req: Result<Vec<String>, QsErr> = req
+    let req: Result<Vec<_>, ExecutionErrors> = req
       .iter()
       .map(|order| {
         let qs = to_qs(order)?;
-        let sign = self.signer.sign(api_key_id, qs);
-        return Ok(format!("{}&signature={}", qs, sign));
+        let sign = self.signer.sign(api_key_id, qs).map_ok(|sign| {
+          return format!("{}&signature={}", qs, sign);
+        });
+        return Ok(sign);
       })
       .collect();
+    let req = try_join_all(req?).await;
     return Ok(req?);
   }
 }

@@ -1,11 +1,13 @@
+use ::async_trait::async_trait;
 use ::mongodb::bson::oid::ObjectId;
 use ::rug::Float;
 
 use ::entities::OrderOption;
 use ::errors::ExecutionResult;
 
+#[async_trait]
 pub trait INewOrderRequestMaker {
-  fn build(
+  async fn build(
     &self,
     api_key_id: ObjectId,
     symbol: String,
