@@ -1,3 +1,4 @@
+mod interfaces;
 pub mod pubsub;
 
 use ::futures::stream::BoxStream;
@@ -13,7 +14,9 @@ use ::subscribe::PubSub;
 use ::errors::KeyChainResult;
 use ::rpc::exchanges::Exchanges;
 
+pub use crate::interfaces::IKeyChain;
 pub use ::entities::APIKey;
+
 use ::entities::APIKeyEvent;
 use ::writers::DatabaseWriter as DBWriterTrait;
 
