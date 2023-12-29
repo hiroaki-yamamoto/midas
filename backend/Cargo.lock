@@ -1184,6 +1184,7 @@ dependencies = [
  "rug",
  "serde",
  "serde_qs",
+ "sign",
  "subscribe",
  "tokio",
  "types",

@@ -2,6 +2,7 @@ mod backtest;
 pub mod entities;
 mod executor;
 mod front_test;
+mod interfaces;
 mod services;
 
 pub use self::backtest::Executor as BackTestExecutor;
