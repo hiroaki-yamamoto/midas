@@ -46,7 +46,8 @@
 			"test_utils",
 			"round_robin_client",
 			"position",
-			"notification"
+			"notification",
+			"sign"
 		],
 		"yaml.schemas": {
 			"https://raw.githubusercontent.com/hiroaki-yamamoto/egen/master/definition.schema.json": [

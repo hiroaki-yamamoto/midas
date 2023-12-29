@@ -3162,6 +3162,7 @@ name = "sign"
 version = "0.1.0"
 dependencies = [
  "bytes",
+ "entities",
  "ring",
 ]
 
