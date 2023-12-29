@@ -1,11 +1,19 @@
 use ::async_trait::async_trait;
 use ::futures::stream::BoxStream;
 use ::mongodb::bson::{oid::ObjectId, Document};
-use ::mongodb::error::Result as DBResult;
 
 use ::entities::APIKey;
-use ::errors::KeyChainResult;
+use ::errors::{KeyChainResult, SignerResult};
 use ::rpc::exchanges::Exchanges;
+
+#[async_trait]
+pub trait ISigner {
+  async fn sign(
+    &self,
+    api_key_id: ObjectId,
+    body: String,
+  ) -> SignerResult<String>;
+}
 
 #[async_trait]
 pub trait IKeyChain {
@@ -20,6 +28,6 @@ pub trait IKeyChain {
     &self,
     exchange: Exchanges,
     id: ObjectId,
-  ) -> DBResult<Option<APIKey>>;
+  ) -> KeyChainResult<Option<APIKey>>;
   async fn delete(&self, id: ObjectId) -> KeyChainResult<()>;
 }

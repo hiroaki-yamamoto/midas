@@ -47,7 +47,6 @@
 			"round_robin_client",
 			"position",
 			"notification",
-			"sign",
 			"executor"
 		],
 		"yaml.schemas": {

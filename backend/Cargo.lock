@@ -1184,7 +1184,6 @@ dependencies = [
  "rug",
  "serde",
  "serde_qs",
- "sign",
  "subscribe",
  "tokio",
  "types",
@@ -1878,10 +1877,12 @@ name = "keychain"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "bytes",
  "entities",
  "errors",
  "futures",
  "mongodb",
+ "ring",
  "rmp-serde",
  "rpc",
  "subscribe",
@@ -3156,15 +3157,6 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
-]
-
-[[package]]
-name = "sign"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "entities",
- "ring",
 ]
 
 [[package]]

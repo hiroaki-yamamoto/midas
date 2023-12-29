@@ -1,11 +1,12 @@
 use ::std::sync::Arc;
 
+use ::mongodb::bson::oid::ObjectId;
 use ::rug::Float;
 use ::serde_qs::{to_string as to_qs, Error as QsErr};
 
 use ::entities::OrderOption;
 use ::errors::ExecutionResult;
-use ::sign::ISigner;
+use ::keychain::ISigner;
 
 use super::super::{
   entities::{OrderRequest, OrderResponseType, OrderType, Side},
@@ -61,6 +62,7 @@ impl RequestMaker {
 impl INewOrderRequestMaker for RequestMaker {
   fn build(
     &self,
+    api_key_id: ObjectId,
     symbol: String,
     budget: Float,
     price: Option<Float>,
@@ -83,7 +85,7 @@ impl INewOrderRequestMaker for RequestMaker {
       .iter()
       .map(|order| {
         let qs = to_qs(order)?;
-        let sign = self.signer.sign(qs);
+        let sign = self.signer.sign(api_key_id, qs);
         return Ok(format!("{}&signature={}", qs, sign));
       })
       .collect();
