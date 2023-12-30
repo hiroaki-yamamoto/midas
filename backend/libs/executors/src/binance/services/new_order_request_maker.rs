@@ -21,11 +21,11 @@ impl RequestMaker {
 
   fn create_order_requests(
     &self,
-    symbol: String,
-    budget: Float,
-    price: Option<Float>,
+    symbol: &str,
+    budget: &Float,
+    price: &Option<Float>,
     order_option: OrderOption,
-    order_type: OrderType,
+    order_type: &OrderType,
   ) -> Vec<OrderRequest<i64>> {
     let req = order_option
       .calc_trading_amounts(budget)
@@ -33,7 +33,7 @@ impl RequestMaker {
       .enumerate()
       .map(move |(index, tr_amount)| {
         let mut order = OrderRequest::<i64>::new(
-          symbol.clone(),
+          symbol.to_string(),
           Side::Buy,
           order_type.clone(),
         );
@@ -42,12 +42,12 @@ impl RequestMaker {
         } else {
           order = order.quantity(Some(tr_amount.to_string()));
         }
-        if order_type == OrderType::Limit {
-          order = order.price(Some(
-            order_option
-              .calc_order_price(price.clone().unwrap(), index)
-              .to_string(),
-          ));
+        if let Some(price) = price {
+          if order_type == &OrderType::Limit {
+            order = order.price(Some(
+              order_option.calc_order_price(price, index).to_string(),
+            ));
+          }
         }
         order = order.order_response_type(Some(OrderResponseType::RESULT));
         return order;
@@ -66,16 +66,21 @@ impl INewOrderRequestMaker for RequestMaker {
     price: Option<Float>,
     order_option: Option<OrderOption>,
   ) -> ExecutionResult<Vec<String>> {
-    let order_type =
-      price.map(|_| OrderType::Limit).unwrap_or(OrderType::Market);
+    let order_type = price
+      .as_ref()
+      .map(|_| OrderType::Limit)
+      .unwrap_or(OrderType::Market);
     let req = order_option
-      .map(|o| self.create_order_requests(symbol, budget, price, o, order_type))
-      .unwrap_or_else(|| {
+      .map(|o| {
+        let symbol = symbol.clone();
+        self.create_order_requests(&symbol, &budget, &price, o, &order_type)
+      })
+      .unwrap_or_else(move || {
         let mut order =
           OrderRequest::<i64>::new(symbol, Side::Buy, order_type.clone())
             .order_response_type(Some(OrderResponseType::RESULT));
         if order_type == OrderType::Limit {
-          order = order.price(price.map(|p| p.to_string()));
+          order = order.price(price.as_ref().map(|p| p.to_string()));
         }
         return vec![order];
       });

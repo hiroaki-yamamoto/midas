@@ -17,9 +17,9 @@ use ::tokio_tungstenite::tungstenite::{
 };
 
 use ::clients::binance::{APIHeader, REST_ENDPOINTS, WS_ENDPOINT};
-use ::entities::{APIKey, APIKeyEvent, APIKeyInner};
 use ::errors::{MaximumAttemptExceeded, NotificationResult, WebsocketError};
 use ::keychain::pubsub::APIKeyPubSub;
+use ::keychain::{APIKey, APIKeyEvent, APIKeyInner};
 use ::round_robin_client::RestClient;
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;

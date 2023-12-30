@@ -32,11 +32,11 @@ impl OrderOption {
   stateful_setter!(price_ratio, Float);
   stateful_setter!(amount_multiplyer, Float);
 
-  pub fn calc_order_price(&self, price: Float, num: usize) -> Float {
+  pub fn calc_order_price(&self, price: &Float, num: usize) -> Float {
     return price * self.price_ratio.clone().pow(num);
   }
 
-  pub fn calc_trading_amounts(&self, budget: Float) -> Vec<Float> {
+  pub fn calc_trading_amounts(&self, budget: &Float) -> Vec<Float> {
     let init_amount =
       budget / self.amount_multiplyer.clone().pow(self.num_ladder as usize);
     let mut ret = vec![];

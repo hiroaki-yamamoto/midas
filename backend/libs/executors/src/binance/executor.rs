@@ -16,8 +16,9 @@ use ::entities::{
   BookTicker, ExecutionSummary, Order, OrderInner, OrderOption,
 };
 use ::errors::{ExecutionResult, HTTPErrors, StatusFailure};
-use ::keychain::{BinanceSigner, IKeyChain, KeyChain};
+use ::keychain::{IKeyChain, KeyChain};
 use ::round_robin_client::RestClient;
+use ::rpc::exchanges::Exchanges;
 use ::writers::DatabaseWriter;
 
 use ::clients::binance::{APIHeader, REST_ENDPOINTS};
@@ -31,11 +32,11 @@ use super::interfaces::INewOrderRequestMaker;
 use super::services::NewOrderRequestMaker;
 
 use super::entities::{
-  CancelOrderRequest, OrderRequest, OrderResponse, OrderResponseType,
-  OrderType, Side,
+  CancelOrderRequest, OrderRequest, OrderResponse, OrderType, Side,
 };
 
 pub struct Executor {
+  keychain: Arc<dyn IKeyChain + Send + Sync>,
   req_maker: Arc<dyn INewOrderRequestMaker + Send + Sync>,
   broker: Nats,
   db: Database,
@@ -46,11 +47,11 @@ pub struct Executor {
 impl Executor {
   pub async fn new(broker: &Nats, db: Database) -> ExecutionResult<Self> {
     let keychain = Arc::new(KeyChain::new(broker, db.clone()).await?);
-    let signer = Arc::new(BinanceSigner::new(keychain.clone()));
-    let req_maker = Arc::new(NewOrderRequestMaker::new(signer.clone()));
+    let req_maker = Arc::new(NewOrderRequestMaker::new());
 
     let positions = db.collection("binance.positions");
     let me = Self {
+      keychain,
       broker: broker.clone(),
       req_maker,
       db,
@@ -111,12 +112,13 @@ impl ExecutorTrait for Executor {
     budget: Float,
     order_option: Option<OrderOption>,
   ) -> ExecutionResult<ObjectId> {
+    let api_key = self.keychain.get(Exchanges::Binance, api_key_id).await?;
     let pos_gid = ObjectId::new();
-    let header = self.get_pub_header(&api_key)?;
+    let header = self.get_pub_header(&api_key.inner())?;
     let resp_defers: Vec<BoxFuture<ExecutionResult<usize>>> =
       self
         .req_maker
-        .build(api_key_id, symbol, budget, price, order_option)
+        .build(&api_key, symbol, budget, price, order_option)
         .await?
         .into_iter()
         .map(|qs| {
@@ -164,7 +166,7 @@ impl ExecutorTrait for Executor {
     api_key_id: ObjectId,
     gid: ObjectId,
   ) -> ExecutionResult<ExecutionSummary> {
-    let api_key = self.get_api_key(api_key_id).await?;
+    let api_key = self.keychain.get(Exchanges::Binance, api_key_id).await?;
     let mut positions = self
       .positions
       .find(doc! {"positionGroupId": gid}, None)
@@ -184,7 +186,11 @@ impl ExecutorTrait for Executor {
           let req =
             CancelOrderRequest::<i64>::new(symbol).order_id(Some(order_id));
           let qs = to_qs(&req)?;
-          let qs = format!("{}&signature={}", qs, api_key.sign(&qs));
+          let qs = format!(
+            "{}&signature={}",
+            qs,
+            api_key.sign(Exchanges::Binance, &qs)
+          );
           let resp = cli.delete(None, Some(qs)).await?;
           let status = resp.status();
           if !status.is_success() {
@@ -217,7 +223,8 @@ impl ExecutorTrait for Executor {
         )
         .quantity(Some(qty_to_reverse.to_string()));
         let qs = to_qs(&req)?;
-        let qs = format!("{}&signature={}", qs, api_key.sign(&qs));
+        let qs =
+          format!("{}&signature={}", qs, api_key.sign(Exchanges::Binance, &qs));
         let pos: Order = pos.clone().into();
         let pos_pur_price: OrderInner = pos.clone().sum();
         position_reverse_vec.push({

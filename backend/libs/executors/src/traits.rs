@@ -111,11 +111,11 @@ pub trait TestExecutor {
         qty: budget / price.clone(),
       }],
       Some(v) => v
-        .calc_trading_amounts(budget)
+        .calc_trading_amounts(&budget)
         .into_iter()
         .enumerate()
         .map(|(index, amount)| {
-          let order_price = v.calc_order_price(price.clone(), index);
+          let order_price = v.calc_order_price(&price, index);
           OrderInner {
             price: order_price.clone(),
             qty: amount / order_price,

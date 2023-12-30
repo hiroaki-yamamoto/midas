@@ -20,6 +20,6 @@ pub trait IKeyChain {
     &self,
     exchange: Exchanges,
     id: ObjectId,
-  ) -> KeyChainResult<Option<APIKey>>;
+  ) -> KeyChainResult<APIKey>;
   async fn delete(&self, id: ObjectId) -> KeyChainResult<()>;
 }

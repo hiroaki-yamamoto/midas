@@ -8,7 +8,7 @@ use ::mongodb::{Collection, Database};
 use ::subscribe::nats::Client;
 use ::subscribe::PubSub;
 
-use ::errors::KeyChainResult;
+use ::errors::{KeyChainResult, ObjectNotFound};
 use ::rpc::exchanges::Exchanges;
 
 use ::writers::DatabaseWriter as DBWriterTrait;
@@ -84,7 +84,7 @@ impl IKeyChain for KeyChain {
     &self,
     exchange: Exchanges,
     id: ObjectId,
-  ) -> KeyChainResult<Option<APIKey>> {
+  ) -> KeyChainResult<APIKey> {
     let key = self
       .col
       .find_one(
@@ -94,8 +94,12 @@ impl IKeyChain for KeyChain {
         },
         None,
       )
-      .await?;
-    return Ok(key);
+      .await?
+      .ok_or(ObjectNotFound::new(format!(
+        "APIKey (ID: {})",
+        id.to_string()
+      )));
+    return Ok(key?);
   }
 
   async fn delete(&self, id: ObjectId) -> KeyChainResult<()> {

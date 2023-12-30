@@ -1,7 +1,7 @@
 use ::async_trait::async_trait;
 
-use ::entities::APIKeyInner;
 use ::errors::NotificationResult;
+use ::keychain::APIKeyInner;
 
 #[async_trait]
 pub trait UserStream {
