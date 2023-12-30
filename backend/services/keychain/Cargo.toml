@@ -15,7 +15,7 @@ access_logger = { path = "../../libs/access_logger" }
 subscribe = { path = "../../libs/subscribe" }
 warp_utils = { path = "../../libs/warp_utils" }
 
-clap = { version = "4.4.11", features = ["derive"] }
+clap = { version = "4.4.12", features = ["derive"] }
 mongodb = { version = "2.8.0", default-features = false, features = [
   "async-std-runtime",
 ] }
