@@ -30,7 +30,7 @@ pub use empty::EmptyError;
 pub use execution::{ExecutionErrors, ExecutionFailed, ExecutionResult};
 pub use history::{FetchErr, FetchResult, WriterErr, WriterResult};
 pub use initialize::InitError;
-pub use keychain::{KeyChainError, KeyChainResult, SignerError, SignerResult};
+pub use keychain::{KeyChainError, KeyChainResult};
 pub use kvs::{KVSError, KVSResult};
 pub use notification::{NotificationError, NotificationResult};
 pub use object::ObjectNotFound;

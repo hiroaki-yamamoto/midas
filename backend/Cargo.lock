@@ -697,7 +697,6 @@ name = "clients"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "entities",
  "errors",
  "keychain",
  "mongodb",
@@ -1878,13 +1877,13 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "bytes",
- "entities",
  "errors",
  "futures",
  "mongodb",
  "ring",
  "rmp-serde",
  "rpc",
+ "serde",
  "subscribe",
  "types",
  "writers",

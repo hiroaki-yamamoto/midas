@@ -1,6 +1,8 @@
 use ::std::convert::TryFrom;
 
-use ::bson::oid::ObjectId;
+use ::bytes::Bytes;
+use ::mongodb::bson::oid::ObjectId;
+use ::ring::hmac;
 use ::serde::{Deserialize, Serialize};
 
 use ::errors::ParseError;
@@ -32,6 +34,17 @@ impl APIKey {
   pub fn inner_mut(&mut self) -> &mut APIKeyInner {
     match self {
       APIKey::Binance(inner) => inner,
+    }
+  }
+  pub fn sign(&self, exchange: Exchanges, msg: &str) -> String {
+    match exchange {
+      Exchanges::Binance => {
+        let key = self.inner();
+        let prv_key = hmac::Key::new(hmac::HMAC_SHA256, key.prv_key.as_bytes());
+        let tag = hmac::sign(&prv_key, msg.as_bytes());
+        let signature = Bytes::copy_from_slice(tag.as_ref());
+        return format!("{:x}", signature);
+      }
     }
   }
 }

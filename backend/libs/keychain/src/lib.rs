@@ -1,10 +1,9 @@
-mod binance_signer;
+mod entities;
 mod interfaces;
 mod keychain;
 pub mod pubsub;
 
-pub use ::entities::APIKey;
+pub use crate::entities::{APIKey, APIKeyEvent, APIKeyInner};
 
-pub use crate::binance_signer::Signer as BinanceSigner;
-pub use crate::interfaces::{IKeyChain, ISigner};
+pub use crate::interfaces::IKeyChain;
 pub use crate::keychain::KeyChain;

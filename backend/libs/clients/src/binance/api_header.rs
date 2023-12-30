@@ -2,8 +2,8 @@ use ::std::convert::TryFrom;
 
 use ::reqwest::header::{HeaderMap, HeaderName};
 
-use ::entities::APIKeyInner;
 use ::errors::APIHeaderResult;
+use ::keychain::APIKeyInner;
 
 pub trait APIHeader {
   fn get_pub_header(

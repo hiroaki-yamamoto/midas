@@ -11,11 +11,9 @@ use ::subscribe::PubSub;
 use ::errors::KeyChainResult;
 use ::rpc::exchanges::Exchanges;
 
-use ::entities::APIKey;
-
-use ::entities::APIKeyEvent;
 use ::writers::DatabaseWriter as DBWriterTrait;
 
+use crate::entities::{APIKey, APIKeyEvent};
 use crate::interfaces::IKeyChain;
 use crate::pubsub::APIKeyPubSub;
 

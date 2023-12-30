@@ -9,7 +9,6 @@ edition = "2021"
 [dependencies]
 types = { path = "../types" }
 errors = { path = "../errors" }
-entities = { path = "../entities" }
 keychain = { path = "../keychain" }
 rpc = { path = "../rpc" }
 

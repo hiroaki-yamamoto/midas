@@ -2,18 +2,10 @@ use ::async_trait::async_trait;
 use ::futures::stream::BoxStream;
 use ::mongodb::bson::{oid::ObjectId, Document};
 
-use ::entities::APIKey;
-use ::errors::{KeyChainResult, SignerResult};
+use ::errors::KeyChainResult;
 use ::rpc::exchanges::Exchanges;
 
-#[async_trait]
-pub trait ISigner {
-  async fn sign(
-    &self,
-    api_key_id: ObjectId,
-    body: String,
-  ) -> SignerResult<String>;
-}
+use crate::entities::APIKey;
 
 #[async_trait]
 pub trait IKeyChain {

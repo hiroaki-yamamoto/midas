@@ -1,27 +1,22 @@
-use ::std::sync::Arc;
-
 use ::async_trait::async_trait;
-use ::futures::future::{try_join_all, TryFutureExt};
-use ::mongodb::bson::oid::ObjectId;
 use ::rug::Float;
 use ::serde_qs::to_string as to_qs;
 
 use ::entities::OrderOption;
-use ::errors::{ExecutionErrors, ExecutionResult};
-use ::keychain::ISigner;
+use ::errors::ExecutionResult;
+use ::keychain::APIKey;
+use ::rpc::exchanges::Exchanges;
 
 use super::super::{
   entities::{OrderRequest, OrderResponseType, OrderType, Side},
   interfaces::INewOrderRequestMaker,
 };
 
-pub struct RequestMaker {
-  signer: Arc<dyn ISigner + Send + Sync>,
-}
+pub struct RequestMaker;
 
 impl RequestMaker {
-  pub fn new(signer: Arc<dyn ISigner + Send + Sync>) -> Self {
-    Self { signer }
+  pub fn new() -> Self {
+    return Self {};
   }
 
   fn create_order_requests(
@@ -65,7 +60,7 @@ impl RequestMaker {
 impl INewOrderRequestMaker for RequestMaker {
   async fn build(
     &self,
-    api_key_id: ObjectId,
+    api_key: &APIKey,
     symbol: String,
     budget: Float,
     price: Option<Float>,
@@ -84,17 +79,14 @@ impl INewOrderRequestMaker for RequestMaker {
         }
         return vec![order];
       });
-    let req: Result<Vec<_>, ExecutionErrors> = req
+    let req: ExecutionResult<Vec<String>> = req
       .iter()
       .map(|order| {
         let qs = to_qs(order)?;
-        let sign = self.signer.sign(api_key_id, qs).map_ok(|sign| {
-          return format!("{}&signature={}", qs, sign);
-        });
-        return Ok(sign);
+        let sign = api_key.sign(Exchanges::Binance, &qs);
+        return Ok(format!("{}&signature={}", qs, sign));
       })
       .collect();
-    let req = try_join_all(req?).await;
     return Ok(req?);
   }
 }
