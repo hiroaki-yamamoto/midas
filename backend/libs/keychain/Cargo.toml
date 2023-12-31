@@ -20,5 +20,5 @@ mongodb = { version = "2.8.0", default-features = false, features = [
   "async-std-runtime",
 ] }
 rmp-serde = "1.1.2"
-async-trait = "0.1.75"
+async-trait = "0.1.76"
 serde = { version = "1.0.193", features = ["derive", "rc"] }
