@@ -1176,6 +1176,7 @@ dependencies = [
  "log",
  "mongodb",
  "observers",
+ "position",
  "reqwest",
  "ring",
  "round_robin_client",
@@ -2176,6 +2177,7 @@ dependencies = [
  "keychain",
  "log",
  "mongodb",
+ "position",
  "rmp-serde",
  "round_robin_client",
  "rug",
@@ -2475,6 +2477,7 @@ dependencies = [
 name = "position"
 version = "0.1.0"
 dependencies = [
+ "entities",
  "errors",
  "log",
  "mongodb",

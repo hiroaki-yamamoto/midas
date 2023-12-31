@@ -3,9 +3,10 @@ use ::serde::{Deserialize, Serialize};
 use ::std::time::SystemTime;
 use ::types::stateful_setter;
 
-use super::order_type::OrderType;
+use ::position::binance::entities::{OrderType, Side};
+
 use super::resp_type::OrderResponseType;
-use super::side::Side;
+
 use super::tif::TimeInForce;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

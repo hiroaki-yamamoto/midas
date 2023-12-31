@@ -9,6 +9,7 @@ edition = "2021"
 rpc = { path = "../rpc" }
 types = { path = "../types" }
 errors = { path = "../errors" }
+entities = { path = "../entities" }
 
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 serde = { version = "1.0.193", features = ["derive", "rc"] }

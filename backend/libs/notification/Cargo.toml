@@ -17,6 +17,7 @@ history = { path = "../history" }
 executors = { path = "../executors" }
 entities = { path = "../entities" }
 keychain = { path = "../keychain" }
+position = { path = "../position" }
 
 async-trait = "0.1.75"
 rmp-serde = "1.1.2"

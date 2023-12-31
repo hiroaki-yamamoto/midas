@@ -7,7 +7,8 @@ use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
 
 use ::entities::{Order as CommonOrder, OrderInner as CommonOrderInner};
-use ::executors::binance::entities::{OrderStatus, Side};
+use ::executors::binance::entities::OrderStatus;
+use ::position::binance::entities::Side;
 
 use ::errors::{NotificationError, ParseError};
 use ::types::casting::{cast_datetime_from_i64, cast_f_from_txt};

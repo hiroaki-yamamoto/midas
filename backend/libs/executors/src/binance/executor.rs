@@ -24,6 +24,7 @@ use ::writers::DatabaseWriter;
 use ::clients::binance::{APIHeader, REST_ENDPOINTS};
 use ::observers::binance::TradeSubscriber;
 use ::observers::traits::ITradeSubscriber as TradeSubscriberTrait;
+use ::position::binance::entities::{OrderResponse, OrderType, Side};
 use ::subscribe::nats::Client as Nats;
 
 use crate::traits::Executor as ExecutorTrait;
@@ -31,9 +32,7 @@ use crate::traits::Executor as ExecutorTrait;
 use super::interfaces::INewOrderRequestMaker;
 use super::services::NewOrderRequestMaker;
 
-use super::entities::{
-  CancelOrderRequest, OrderRequest, OrderResponse, OrderType, Side,
-};
+use super::entities::{CancelOrderRequest, OrderRequest};
 
 pub struct Executor {
   keychain: Arc<dyn IKeyChain + Send + Sync>,
