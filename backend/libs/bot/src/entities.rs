@@ -8,6 +8,8 @@ use ::types::casting::cast_f_from_txt;
 
 use ::errors::ParseError;
 use ::rpc::bot::Bot as RPCBot;
+use ::rpc::bot_mode::BotMode;
+use ::rpc::bot_status::BotStatus;
 use ::rpc::exchanges::Exchanges;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -15,6 +17,8 @@ pub struct Bot {
   #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
   pub id: Option<bson::oid::ObjectId>,
   pub name: String,
+  pub mode: BotMode,
+  pub status: BotStatus,
   pub base_currency: String,
   pub exchange: Box<Exchanges>,
   pub created_at: bson::DateTime,
@@ -36,6 +40,8 @@ impl Bot {
       id,
       name,
       base_currency,
+      mode: BotMode::BackTest,
+      status: BotStatus::Stopped,
       exchange: Box::new(exchange),
       trading_amount,
       created_at: bson::DateTime::now(),
@@ -65,6 +71,8 @@ impl TryFrom<RPCBot> for Bot {
       id,
       name: value.name,
       base_currency: value.base_currency,
+      mode: *value.mode,
+      status: *value.status,
       exchange,
       created_at: bson::DateTime::now(),
       cond_ts,
@@ -79,6 +87,8 @@ impl From<Bot> for RPCBot {
     return Self {
       id: value.id.map(|id| id.to_hex()),
       name: value.name,
+      mode: Box::new(value.mode),
+      status: Box::new(value.status),
       base_currency: value.base_currency,
       exchange: value.exchange,
       created_at: Some(Box::new(value.created_at.to_chrono().into())),

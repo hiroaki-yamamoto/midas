@@ -6,6 +6,8 @@ typescript:
   rename: camelCase
 members:
   id: string
+  mode:
+    use: BotMode
   entry_at:
     use: Timestamp
   exit_at:

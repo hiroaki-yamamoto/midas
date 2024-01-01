@@ -4,6 +4,8 @@ pub mod api_rename;
 pub mod base_symbols;
 pub mod bookticker;
 pub mod bot;
+pub mod bot_mode;
+pub mod bot_status;
 pub mod exchanges;
 pub mod history_fetch_request;
 pub mod insert_one_result;

@@ -1,0 +1,8 @@
+type: enum
+rust:
+  derive:
+    [Clone, Debug, PartialEq, "::serde::Serialize", "::serde::Deserialize"]
+  # attrs: ['serde(rename_all = "camelCase")']
+members:
+  - Stopped
+  - Running

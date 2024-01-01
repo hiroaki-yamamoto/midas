@@ -13,6 +13,10 @@ members:
   id:
     optional: true
     type: string
+  status:
+    use: BotStatus
+  mode:
+    use: BotMode
   created_at:
     optional: true
     type: { use: Timestamp }

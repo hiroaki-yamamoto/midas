@@ -1,3 +1,4 @@
+use super::bot_mode::BotMode;
 use super::position_status::PositionStatus;
 use super::timestamp::Timestamp;
 
@@ -11,6 +12,7 @@ pub struct Position {
   pub exit_at: Option<Box<Timestamp>>,
   pub exit_price: Option<String>,
   pub id: String,
+  pub mode: Box<BotMode>,
   pub status: Box<PositionStatus>,
   pub symbol: String,
 }

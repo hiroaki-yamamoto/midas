@@ -1,3 +1,5 @@
+use super::bot_mode::BotMode;
+use super::bot_status::BotStatus;
 use super::exchanges::Exchanges;
 use super::timestamp::Timestamp;
 
@@ -9,6 +11,8 @@ pub struct Bot {
   pub created_at: Option<Box<Timestamp>>,
   pub exchange: Box<Exchanges>,
   pub id: Option<String>,
+  pub mode: Box<BotMode>,
   pub name: String,
+  pub status: Box<BotStatus>,
   pub trading_amount: String,
 }
