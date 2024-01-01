@@ -11,7 +11,6 @@ use ::entities::{
 };
 use ::errors::{ExecutionFailed, ExecutionResult};
 use ::observers::traits::ITradeSubscriber as TradeSubscriberTrait;
-use ::rpc::bot::Bot;
 use ::subscribe::nats::Client as Nats;
 
 use crate::traits::{
@@ -91,7 +90,7 @@ impl ExecutorTrait for Executor {
 
   async fn create_order(
     &mut self,
-    _: &Bot,
+    _: ObjectId,
     _: ObjectId,
     _: String,
     _: Option<Float>,
@@ -105,7 +104,7 @@ impl ExecutorTrait for Executor {
 
   async fn remove_order(
     &mut self,
-    _: &Bot,
+    _: ObjectId,
     _: ObjectId,
     _: ObjectId,
   ) -> ExecutionResult<ExecutionSummary> {

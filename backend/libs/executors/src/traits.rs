@@ -21,7 +21,7 @@ pub trait Executor {
 
   async fn create_order(
     &mut self,
-    bot: &Bot,
+    bot_id: ObjectId,
     api_key_id: ObjectId,
     symbol: String,
     price: Option<Float>,
@@ -31,7 +31,7 @@ pub trait Executor {
 
   async fn remove_order(
     &mut self,
-    bot: &Bot,
+    bot_id: ObjectId,
     api_key_id: ObjectId,
     id: ObjectId,
   ) -> ExecutionResult<ExecutionSummary>;

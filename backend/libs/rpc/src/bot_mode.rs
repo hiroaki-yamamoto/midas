@@ -3,5 +3,5 @@
 pub enum BotMode {
   BackTest,
   ForwardTest,
-  RealPart,
+  Live,
 }

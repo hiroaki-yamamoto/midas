@@ -17,6 +17,8 @@ use super::{Fill, OrderType, Side};
 pub struct OrderResponse<FT, DT> {
   #[serde(rename = "_id", default = "::mongodb::bson::oid::ObjectId::new")]
   pub id: ObjectId,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub gid: Option<ObjectId>,
   pub symbol: String,
   pub order_id: i64,
   pub order_list_id: i64,
@@ -50,6 +52,7 @@ impl TryFrom<OrderResponse<String, i64>> for OrderResponse<Float, DateTime> {
   fn try_from(from: OrderResponse<String, i64>) -> Result<Self, Self::Error> {
     return Ok(OrderResponse::<Float, DateTime> {
       id: from.id,
+      gid: from.gid,
       symbol: from.symbol,
       order_id: from.order_id,
       order_list_id: from.order_list_id,

@@ -8,8 +8,7 @@ use ::mongodb::Database;
 use ::rug::Float;
 
 use ::rpc::{
-  bot::Bot, exchanges::Exchanges,
-  test_price_base::TestPriceBase as BackTestPriceBase,
+  exchanges::Exchanges, test_price_base::TestPriceBase as BackTestPriceBase,
 };
 
 use ::entities::{
@@ -107,7 +106,7 @@ impl ExecutorTrait for Executor {
 
   async fn create_order(
     &mut self,
-    _: &Bot,
+    _: ObjectId,
     _: ObjectId,
     _: String,
     _: Option<Float>,
@@ -121,7 +120,7 @@ impl ExecutorTrait for Executor {
 
   async fn remove_order(
     &mut self,
-    _: &Bot,
+    _: ObjectId,
     _: ObjectId,
     _: ObjectId,
   ) -> ExecutionResult<ExecutionSummary> {

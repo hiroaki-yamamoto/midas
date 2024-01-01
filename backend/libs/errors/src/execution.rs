@@ -11,7 +11,7 @@ use ::std::io::Error as IOError;
 
 use crate::{
   APIHeaderErrors, HTTPErrors, KeyChainError, ObjectNotFound, ObserverError,
-  ParseError, StatusFailure,
+  ParseError, PositionError, StatusFailure,
 };
 
 #[derive(Debug, Clone, Error)]
@@ -54,6 +54,8 @@ pub enum ExecutionErrors {
   KeyChainError(#[source] KeyChainError),
   #[error(display = "Observer Error: {}", _0)]
   ObserverError(#[source] ObserverError),
+  #[error(display = "Position Error: {}", _0)]
+  PositionError(#[source] PositionError),
 }
 
 pub type ExecutionResult<T> = Result<T, ExecutionErrors>;

@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const BotMode = z.enum([
   'BackTest',
   'ForwardTest',
-  'RealPart',
+  'Live',
 ]);
 
 export type BotMode = z.infer<typeof BotMode>;

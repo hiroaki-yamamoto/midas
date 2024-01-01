@@ -29,7 +29,7 @@ use ::position::{
   entities::Position, interfaces::IPositionRepo, services::PositionRepo,
 };
 use ::round_robin_client::RestClient;
-use ::rpc::{bot::Bot, exchanges::Exchanges};
+use ::rpc::{bot_mode::BotMode, exchanges::Exchanges};
 use ::subscribe::nats::Client as Nats;
 
 use crate::traits::Executor as ExecutorTrait;
@@ -95,15 +95,16 @@ impl ExecutorTrait for Executor {
   }
   async fn create_order(
     &mut self,
-    bot: &Bot,
+    bot_id: ObjectId,
     api_key_id: ObjectId,
     symbol: String,
     price: Option<Float>,
     budget: Float,
     order_option: Option<OrderOption>,
   ) -> ExecutionResult<ObjectId> {
+    let position_group = Position::new(bot_id, BotMode::Live, &symbol);
+    self.position_repo.save(&[position_group]).await?;
     let api_key = self.keychain.get(Exchanges::Binance, api_key_id).await?;
-    let position_group = Position::new(bot.id, bot.mode, &symbol);
     let header = self.get_pub_header(&api_key.inner())?;
     let resp_defers: Vec<BoxFuture<ExecutionResult<usize>>> =
       self
@@ -119,21 +120,15 @@ impl ExecutorTrait for Executor {
           };
         })
         .map(|fut| {
-          let pos = self.positions.clone();
+          let repo = self.order_resp_repo.clone();
           return fut
             .then(|(resp, cli)| async move {
               let resp = resp?;
               let payload: OrderResponse<String, i64> = resp.json().await?;
               let mut payload =
                 OrderResponse::<Float, DateTime>::try_from(payload)?;
-              payload.position_group_id = Some(pos_gid.clone());
-              let _ = pos
-                .update_one(
-                  doc! {"orderId": payload.order_id},
-                  UpdateModifications::Document(to_document(&payload)?),
-                  UpdateOptions::builder().upsert(true).build(),
-                )
-                .await;
+              payload.gid = Some(position_group.entry_gid);
+              repo.save(&[payload]).await?;
               return Ok(cli.get_state());
             })
             .boxed();
@@ -147,13 +142,13 @@ impl ExecutorTrait for Executor {
     let res_err = result.into_iter().find(|item| item.is_err());
     return match res_err {
       Some(e) => Err(e.unwrap_err()),
-      None => Ok(pos_gid),
+      None => Ok(position_group.entry_gid),
     };
   }
 
   async fn remove_order(
     &mut self,
-    bot: &Bot,
+    bot_id: ObjectId,
     api_key_id: ObjectId,
     gid: ObjectId,
   ) -> ExecutionResult<ExecutionSummary> {

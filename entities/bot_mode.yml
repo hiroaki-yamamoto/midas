@@ -9,4 +9,4 @@ rust:
 members:
   - "BackTest"
   - "ForwardTest"
-  - "RealPart"
+  - "Live"
