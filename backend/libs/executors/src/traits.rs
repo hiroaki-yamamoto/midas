@@ -9,6 +9,7 @@ use ::entities::{
   BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
 };
 use ::errors::ExecutionFailed;
+use ::rpc::bot::Bot;
 
 use ::errors::ExecutionResult;
 
@@ -20,6 +21,7 @@ pub trait Executor {
 
   async fn create_order(
     &mut self,
+    bot: &Bot,
     api_key_id: ObjectId,
     symbol: String,
     price: Option<Float>,
@@ -29,6 +31,7 @@ pub trait Executor {
 
   async fn remove_order(
     &mut self,
+    bot: &Bot,
     api_key_id: ObjectId,
     id: ObjectId,
   ) -> ExecutionResult<ExecutionSummary>;

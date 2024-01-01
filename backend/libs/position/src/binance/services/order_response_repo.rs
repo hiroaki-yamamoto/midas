@@ -17,7 +17,7 @@ pub struct OrderResponseRepo {
 
 impl OrderResponseRepo {
   pub async fn new(db: Database) -> Self {
-    let col = db.collection("order_responses");
+    let col = db.collection("binance.positions");
     let me = Self { db, col };
     let _ = me
       .update_indices(&[

@@ -8,23 +8,28 @@ use ::futures::stream::BoxStream;
 use ::futures::{FutureExt, StreamExt};
 use ::mongodb::bson::{doc, oid::ObjectId, to_document, DateTime};
 use ::mongodb::options::{UpdateModifications, UpdateOptions};
-use ::mongodb::{Collection, Database};
+use ::mongodb::Database;
 use ::rug::Float;
 use ::serde_qs::to_string as to_qs;
 
+use ::clients::binance::{APIHeader, REST_ENDPOINTS};
 use ::entities::{
   BookTicker, ExecutionSummary, Order, OrderInner, OrderOption,
 };
 use ::errors::{ExecutionResult, HTTPErrors, StatusFailure};
 use ::keychain::{IKeyChain, KeyChain};
-use ::round_robin_client::RestClient;
-use ::rpc::exchanges::Exchanges;
-use ::writers::DatabaseWriter;
-
-use ::clients::binance::{APIHeader, REST_ENDPOINTS};
 use ::observers::binance::TradeSubscriber;
 use ::observers::traits::ITradeSubscriber as TradeSubscriberTrait;
-use ::position::binance::entities::{OrderResponse, OrderType, Side};
+use ::position::binance::{
+  entities::{OrderResponse, OrderType, Side},
+  interfaces::IOrderResponseRepo,
+  services::OrderResponseRepo,
+};
+use ::position::{
+  entities::Position, interfaces::IPositionRepo, services::PositionRepo,
+};
+use ::round_robin_client::RestClient;
+use ::rpc::{bot::Bot, exchanges::Exchanges};
 use ::subscribe::nats::Client as Nats;
 
 use crate::traits::Executor as ExecutorTrait;
@@ -37,24 +42,25 @@ use super::entities::{CancelOrderRequest, OrderRequest};
 pub struct Executor {
   keychain: Arc<dyn IKeyChain + Send + Sync>,
   req_maker: Arc<dyn INewOrderRequestMaker + Send + Sync>,
+  position_repo: Arc<dyn IPositionRepo + Send + Sync>,
+  order_resp_repo: Arc<dyn IOrderResponseRepo + Send + Sync>,
   broker: Nats,
-  db: Database,
-  positions: Collection<OrderResponse<Float, DateTime>>,
   cli: RestClient,
 }
 
 impl Executor {
   pub async fn new(broker: &Nats, db: Database) -> ExecutionResult<Self> {
-    let keychain = Arc::new(KeyChain::new(broker, db.clone()).await?);
-    let req_maker = Arc::new(NewOrderRequestMaker::new());
+    let keychain = KeyChain::new(broker, db.clone()).await?;
+    let req_maker = NewOrderRequestMaker::new();
+    let position_repo = PositionRepo::new(db.clone()).await;
+    let order_resp_repo = OrderResponseRepo::new(db.clone()).await;
 
-    let positions = db.collection("binance.positions");
     let me = Self {
-      keychain,
+      keychain: Arc::new(keychain),
+      req_maker: Arc::new(req_maker),
+      position_repo: Arc::new(position_repo),
+      order_resp_repo: Arc::new(order_resp_repo),
       broker: broker.clone(),
-      req_maker,
-      db,
-      positions,
       cli: RestClient::new(
         REST_ENDPOINTS
           .into_iter()
@@ -64,27 +70,11 @@ impl Executor {
         StdDur::from_secs(5),
       )?,
     };
-    me.update_indices(&[
-      "orderId",
-      "clientOrderId",
-      "settlementGid",
-      "positionGroupId",
-    ])
-    .await;
     return Ok(me);
   }
 }
 
 impl APIHeader for Executor {}
-
-impl DatabaseWriter for Executor {
-  fn get_database(&self) -> &Database {
-    return &self.db;
-  }
-  fn get_col_name(&self) -> &str {
-    return self.positions.name();
-  }
-}
 
 #[async_trait]
 impl ExecutorTrait for Executor {
@@ -105,6 +95,7 @@ impl ExecutorTrait for Executor {
   }
   async fn create_order(
     &mut self,
+    bot: &Bot,
     api_key_id: ObjectId,
     symbol: String,
     price: Option<Float>,
@@ -112,7 +103,7 @@ impl ExecutorTrait for Executor {
     order_option: Option<OrderOption>,
   ) -> ExecutionResult<ObjectId> {
     let api_key = self.keychain.get(Exchanges::Binance, api_key_id).await?;
-    let pos_gid = ObjectId::new();
+    let position_group = Position::new(bot.id, bot.mode, &symbol);
     let header = self.get_pub_header(&api_key.inner())?;
     let resp_defers: Vec<BoxFuture<ExecutionResult<usize>>> =
       self
@@ -162,6 +153,7 @@ impl ExecutorTrait for Executor {
 
   async fn remove_order(
     &mut self,
+    bot: &Bot,
     api_key_id: ObjectId,
     gid: ObjectId,
   ) -> ExecutionResult<ExecutionSummary> {

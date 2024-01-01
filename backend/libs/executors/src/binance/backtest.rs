@@ -7,8 +7,10 @@ use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::Database;
 use ::rug::Float;
 
-use ::rpc::exchanges::Exchanges;
-use ::rpc::test_price_base::TestPriceBase as BackTestPriceBase;
+use ::rpc::{
+  bot::Bot, exchanges::Exchanges,
+  test_price_base::TestPriceBase as BackTestPriceBase,
+};
 
 use ::entities::{
   BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
@@ -105,6 +107,7 @@ impl ExecutorTrait for Executor {
 
   async fn create_order(
     &mut self,
+    _: &Bot,
     _: ObjectId,
     _: String,
     _: Option<Float>,
@@ -118,6 +121,7 @@ impl ExecutorTrait for Executor {
 
   async fn remove_order(
     &mut self,
+    _: &Bot,
     _: ObjectId,
     _: ObjectId,
   ) -> ExecutionResult<ExecutionSummary> {
