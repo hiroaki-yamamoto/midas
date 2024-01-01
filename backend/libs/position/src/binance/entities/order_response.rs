@@ -15,14 +15,8 @@ use super::{Fill, OrderType, Side};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderResponse<FT, DT> {
-  #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
-  pub id: Option<ObjectId>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub position_group_id: Option<ObjectId>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub settlement_gid: Option<ObjectId>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub bot_id: Option<ObjectId>,
+  #[serde(rename = "_id", default = "::mongodb::bson::oid::ObjectId::new")]
+  pub id: ObjectId,
   pub symbol: String,
   pub order_id: i64,
   pub order_list_id: i64,
@@ -56,9 +50,6 @@ impl TryFrom<OrderResponse<String, i64>> for OrderResponse<Float, DateTime> {
   fn try_from(from: OrderResponse<String, i64>) -> Result<Self, Self::Error> {
     return Ok(OrderResponse::<Float, DateTime> {
       id: from.id,
-      position_group_id: from.position_group_id,
-      settlement_gid: from.settlement_gid,
-      bot_id: from.bot_id,
       symbol: from.symbol,
       order_id: from.order_id,
       order_list_id: from.order_list_id,
