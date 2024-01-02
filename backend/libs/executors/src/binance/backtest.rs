@@ -122,7 +122,6 @@ impl ExecutorTrait for Executor {
     &mut self,
     _: ObjectId,
     _: ObjectId,
-    _: ObjectId,
   ) -> ExecutionResult<ExecutionSummary> {
     return Err(
       ExecutionFailed::new("Call remove_position from TestExecutorTrait.")

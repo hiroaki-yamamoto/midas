@@ -95,10 +95,7 @@ impl IKeyChain for KeyChain {
         None,
       )
       .await?
-      .ok_or(ObjectNotFound::new(format!(
-        "APIKey (ID: {})",
-        id.to_string()
-      )));
+      .ok_or(ObjectNotFound::new("APIKey", id.to_hex().as_str()));
     return Ok(key?);
   }
 

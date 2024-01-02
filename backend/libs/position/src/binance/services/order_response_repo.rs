@@ -1,12 +1,16 @@
 use ::async_trait::async_trait;
 use ::errors::PositionResult;
+use ::futures::stream::{BoxStream, StreamExt, TryStreamExt};
 use ::mongodb::bson::{doc, oid::ObjectId, to_document, DateTime};
 use ::mongodb::options::UpdateOptions;
 use ::mongodb::results::UpdateResult;
 use ::mongodb::{Collection, Database};
 use ::rug::Float;
 
+use ::errors::PositionError;
 use ::writers::DatabaseWriter;
+
+use crate::entities::Position;
 
 use super::super::{entities::OrderResponse, interfaces::IOrderResponseRepo};
 
@@ -44,7 +48,7 @@ impl DatabaseWriter for OrderResponseRepo {
 impl IOrderResponseRepo for OrderResponseRepo {
   async fn save(
     &self,
-    order_response: &[OrderResponse<Float, DateTime>],
+    order_response: &[&OrderResponse<Float, DateTime>],
   ) -> PositionResult<UpdateResult> {
     let ids: Vec<ObjectId> =
       order_response.iter().map(|p| p.id.clone()).collect();
@@ -60,5 +64,18 @@ impl IOrderResponseRepo for OrderResponseRepo {
         )
         .await?,
     );
+  }
+
+  async fn find_by_entry_position(
+    &self,
+    position: &Position,
+  ) -> PositionResult<BoxStream<PositionResult<OrderResponse<Float, DateTime>>>>
+  {
+    let order_resp_stream = self
+      .col
+      .find(doc! {"gid": position.entry_gid}, None)
+      .await?
+      .map_err(|e| PositionError::from(e));
+    return Ok(order_resp_stream.boxed());
   }
 }

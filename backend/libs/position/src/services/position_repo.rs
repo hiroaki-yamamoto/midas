@@ -4,7 +4,7 @@ use ::mongodb::options::UpdateOptions;
 use ::mongodb::results::UpdateResult;
 use ::mongodb::{Collection, Database};
 
-use ::errors::PositionResult;
+use ::errors::{ObjectNotFound, PositionResult};
 use ::writers::DatabaseWriter;
 
 use crate::entities::Position;
@@ -37,7 +37,7 @@ impl DatabaseWriter for PositionRepo {
 
 #[async_trait]
 impl IPositionRepo for PositionRepo {
-  async fn save(&self, position: &[Position]) -> PositionResult<UpdateResult> {
+  async fn save(&self, position: &[&Position]) -> PositionResult<UpdateResult> {
     let ids: Vec<ObjectId> = position.iter().map(|p| p.id.clone()).collect();
     return Ok(
       self
@@ -51,5 +51,14 @@ impl IPositionRepo for PositionRepo {
         )
         .await?,
     );
+  }
+
+  async fn get(&self, id: &ObjectId) -> PositionResult<Position> {
+    let position = self
+      .col
+      .find_one(doc! { "_id": id }, None)
+      .await?
+      .ok_or(ObjectNotFound::new("Position", id.to_hex().as_str()))?;
+    return Ok(position);
   }
 }

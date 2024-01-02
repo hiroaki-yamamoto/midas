@@ -2480,6 +2480,7 @@ dependencies = [
  "async-trait",
  "entities",
  "errors",
+ "futures",
  "log",
  "mongodb",
  "rpc",

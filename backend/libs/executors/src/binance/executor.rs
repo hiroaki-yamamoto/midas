@@ -6,8 +6,8 @@ use ::async_trait::async_trait;
 use ::futures::future::{join, join_all, BoxFuture};
 use ::futures::stream::BoxStream;
 use ::futures::{FutureExt, StreamExt};
-use ::mongodb::bson::{doc, oid::ObjectId, to_document, DateTime};
-use ::mongodb::options::{UpdateModifications, UpdateOptions};
+use ::log::{as_error, as_serde, error};
+use ::mongodb::bson::{oid::ObjectId, DateTime};
 use ::mongodb::Database;
 use ::rug::Float;
 use ::serde_qs::to_string as to_qs;
@@ -103,7 +103,7 @@ impl ExecutorTrait for Executor {
     order_option: Option<OrderOption>,
   ) -> ExecutionResult<ObjectId> {
     let position_group = Position::new(bot_id, BotMode::Live, &symbol);
-    self.position_repo.save(&[position_group]).await?;
+    self.position_repo.save(&[&position_group]).await?;
     let api_key = self.keychain.get(Exchanges::Binance, api_key_id).await?;
     let header = self.get_pub_header(&api_key.inner())?;
     let resp_defers: Vec<BoxFuture<ExecutionResult<usize>>> =
@@ -121,14 +121,15 @@ impl ExecutorTrait for Executor {
         })
         .map(|fut| {
           let repo = self.order_resp_repo.clone();
+          let gid = position_group.entry_gid.clone();
           return fut
-            .then(|(resp, cli)| async move {
+            .then(move |(resp, cli)| async move {
               let resp = resp?;
               let payload: OrderResponse<String, i64> = resp.json().await?;
               let mut payload =
                 OrderResponse::<Float, DateTime>::try_from(payload)?;
-              payload.gid = Some(position_group.entry_gid);
-              repo.save(&[payload]).await?;
+              payload.gid = Some(gid);
+              repo.save(&[&payload]).await?;
               return Ok(cli.get_state());
             })
             .boxed();
@@ -148,20 +149,30 @@ impl ExecutorTrait for Executor {
 
   async fn remove_order(
     &mut self,
-    bot_id: ObjectId,
     api_key_id: ObjectId,
     gid: ObjectId,
   ) -> ExecutionResult<ExecutionSummary> {
     let api_key = self.keychain.get(Exchanges::Binance, api_key_id).await?;
-    let mut positions = self
-      .positions
-      .find(doc! {"positionGroupId": gid}, None)
-      .await?
-      .filter_map(|pos| async { pos.ok() })
-      .boxed();
+    let position = self.position_repo.get(&gid).await?;
+    let mut order_resp_cur = self
+      .order_resp_repo
+      .find_by_entry_position(&position)
+      .await?;
     let mut order_cancel_vec = vec![];
     let mut position_reverse_vec = vec![];
-    while let Some(pos) = positions.next().await {
+    while let Some(pos_result) = order_resp_cur.next().await {
+      let pos = match pos_result {
+        Ok(pos) => pos,
+        Err(e) => {
+          error!(
+            error = as_error!(e),
+            gid = gid.to_hex(),
+            exchange = as_serde!(Exchanges::Binance);
+            "Error occured on retriving the order response from DB. Skipping..."
+          );
+          continue;
+        }
+      };
       // Cancel Order
       let symbol = pos.symbol.clone();
       let order_id = pos.order_id.clone();

@@ -9,7 +9,6 @@ use ::entities::{
   BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
 };
 use ::errors::ExecutionFailed;
-use ::rpc::bot::Bot;
 
 use ::errors::ExecutionResult;
 
@@ -31,7 +30,6 @@ pub trait Executor {
 
   async fn remove_order(
     &mut self,
-    bot_id: ObjectId,
     api_key_id: ObjectId,
     id: ObjectId,
   ) -> ExecutionResult<ExecutionSummary>;
