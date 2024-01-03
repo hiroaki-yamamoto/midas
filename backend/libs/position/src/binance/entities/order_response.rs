@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use log::error;
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
-use rug::Float;
+use rug::{float::Round, Float};
 use serde::{Deserialize, Serialize};
 
 use ::entities::Order;
@@ -94,23 +94,29 @@ impl<DT> From<&OrderResponse<Float, DT>> for Order {
 }
 
 impl OrderResponse<Float, DateTime> {
-  fn calculate_sum_fills(&self, fills: &[Fill<Float>]) -> Float {
-    let sum_fills = fills.iter().fold(Float::with_val(128, 0), |acc, fill| {
-      return acc + &fill.qty;
-    });
+  pub fn sum_filled_qty(&self) -> Float {
+    let sum_fills = match self.fills {
+      Some(ref fills) => {
+        fills.iter().fold(Float::with_val(128, 0), |acc, fill| {
+          return acc + &fill.qty;
+        })
+      }
+      None => Float::with_val(128, 0),
+    };
     return sum_fills;
   }
 
   pub fn check_filled(&self) -> bool {
-    let fill_pair = self.orig_qty.as_ref().zip(self.fills.as_ref());
-    if let Some((orig_qty, fills)) = fill_pair {
+    if let Some(orig_qty) = self.orig_qty.as_ref() {
       let prec: u32 = 10000;
-      let sum_fills = (self.calculate_sum_fills(&fills) * prec)
-        .round()
-        .to_integer();
-      let orig_qty = Float::with_val(128, orig_qty * prec).round().to_integer();
-      return sum_fills.as_ref().zip(orig_qty.as_ref()).is_some()
-        && sum_fills == orig_qty;
+      let sum_fills =
+        (self.sum_filled_qty() * prec).to_integer_round(Round::Down);
+      let orig_qty =
+        Float::with_val(128, orig_qty * prec).to_integer_round(Round::Down);
+      let fills_pair = sum_fills.as_ref().zip(orig_qty.as_ref());
+      if let Some(((sum_fills, _), (orig_qty, _))) = fills_pair {
+        return sum_fills == orig_qty;
+      }
     }
     return false;
   }

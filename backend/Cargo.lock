@@ -1111,6 +1111,7 @@ dependencies = [
  "redis",
  "reqwest",
  "rmp-serde",
+ "rug",
  "serde",
  "serde_json",
  "serde_qs",

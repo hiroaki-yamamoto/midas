@@ -1,3 +1,6 @@
+use ::std::convert::From;
+use ::std::io::Error as IOError;
+
 use ::async_nats::jetstream::context::CreateStreamError;
 use ::err_derive::Error;
 use ::mongodb::bson::ser::Error as BSONEncodeErr;
@@ -5,9 +8,8 @@ use ::mongodb::error::Error as DBErr;
 use ::reqwest::header::InvalidHeaderName;
 use ::reqwest::header::InvalidHeaderValue;
 use ::reqwest::Error as ReqwestErr;
+use ::rug::Float;
 use ::serde_qs::Error as QueryError;
-use ::std::convert::From;
-use ::std::io::Error as IOError;
 
 use crate::{
   APIHeaderErrors, HTTPErrors, KeyChainError, ObjectNotFound, ObserverError,
@@ -58,6 +60,8 @@ pub enum ExecutionErrors {
   PositionError(#[source] PositionError),
   #[error(display = "The order already filled")]
   OrderFilled,
+  #[error(display = "Invalid Qty {}", _0)]
+  InvalidQty(Float),
 }
 
 pub type ExecutionResult<T> = Result<T, ExecutionErrors>;

@@ -1,3 +1,4 @@
+use ::std::ops::Not;
 use ::std::str::FromStr;
 
 use ::serde::{Deserialize, Serialize};
@@ -23,6 +24,20 @@ impl FromStr for Side {
       }
       _ => {
         return Err(ParseError::new(Some(s), None::<&str>, None::<&str>));
+      }
+    };
+  }
+}
+
+impl Not for Side {
+  type Output = Self;
+  fn not(self) -> Self::Output {
+    match self {
+      Self::Buy => {
+        return Self::Sell;
+      }
+      Self::Sell => {
+        return Self::Buy;
       }
     };
   }
