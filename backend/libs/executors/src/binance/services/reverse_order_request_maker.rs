@@ -31,7 +31,7 @@ impl IReverseOrderRequestMaker for RequestMaker {
       .to_integer_round(Round::Down)
       .ok_or(ExecutionErrors::InvalidQty(sum_qty))?
       .0;
-    let side = order.side.unwrap_or(Side::Buy);
+    let side = order.side.as_ref().unwrap_or(&Side::Buy).clone();
     let req =
       OrderRequest::<i64>::new(order.symbol.clone(), !side, OrderType::Market)
         .quantity(Some(qty.to_string()));

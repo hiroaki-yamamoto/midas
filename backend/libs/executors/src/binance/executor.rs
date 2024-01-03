@@ -10,7 +10,6 @@ use ::log::{as_error, as_serde, error};
 use ::mongodb::bson::{oid::ObjectId, DateTime};
 use ::mongodb::Database;
 use ::rug::Float;
-use ::serde_qs::to_string as to_qs;
 
 use ::clients::binance::{APIHeader, REST_ENDPOINTS};
 use ::entities::{
@@ -21,8 +20,7 @@ use ::keychain::{IKeyChain, KeyChain};
 use ::observers::binance::TradeSubscriber;
 use ::observers::traits::ITradeSubscriber as TradeSubscriberTrait;
 use ::position::binance::{
-  entities::{OrderResponse, OrderType, Side},
-  interfaces::IOrderResponseRepo,
+  entities::OrderResponse, interfaces::IOrderResponseRepo,
   services::OrderResponseRepo,
 };
 use ::position::{
@@ -34,15 +32,18 @@ use ::subscribe::nats::Client as Nats;
 
 use crate::traits::Executor as ExecutorTrait;
 
-use super::interfaces::{ICancelOrderRequestMaker, INewOrderRequestMaker};
-use super::services::{CancelOrderRequestMaker, NewOrderRequestMaker};
-
-use super::entities::{CancelOrderRequest, OrderRequest};
+use super::interfaces::{
+  ICancelOrderRequestMaker, INewOrderRequestMaker, IReverseOrderRequestMaker,
+};
+use super::services::{
+  CancelOrderRequestMaker, NewOrderRequestMaker, ReverseOrderRequestMaker,
+};
 
 pub struct Executor {
   keychain: Arc<dyn IKeyChain + Send + Sync>,
   new_order_request_maker: Arc<dyn INewOrderRequestMaker + Send + Sync>,
   cancel_request_maker: Arc<dyn ICancelOrderRequestMaker + Send + Sync>,
+  reverse_request_maker: Arc<dyn IReverseOrderRequestMaker + Send + Sync>,
   position_repo: Arc<dyn IPositionRepo + Send + Sync>,
   order_resp_repo: Arc<dyn IOrderResponseRepo + Send + Sync>,
   broker: Nats,
@@ -54,6 +55,7 @@ impl Executor {
     let keychain = KeyChain::new(broker, db.clone()).await?;
     let new_order_request_maker = NewOrderRequestMaker::new();
     let cancel_request_maker = CancelOrderRequestMaker::new();
+    let reverse_request_maker = ReverseOrderRequestMaker::new();
     let position_repo = PositionRepo::new(db.clone()).await;
     let order_resp_repo = OrderResponseRepo::new(db.clone()).await;
 
@@ -61,6 +63,7 @@ impl Executor {
       keychain: Arc::new(keychain),
       new_order_request_maker: Arc::new(new_order_request_maker),
       cancel_request_maker: Arc::new(cancel_request_maker),
+      reverse_request_maker: Arc::new(reverse_request_maker),
       position_repo: Arc::new(position_repo),
       order_resp_repo: Arc::new(order_resp_repo),
       broker: broker.clone(),
@@ -181,8 +184,9 @@ impl ExecutorTrait for Executor {
       order_cancel_vec.push({
         let api_key = api_key.clone();
         let mut cli = self.cli.clone();
+        let pos = pos.clone();
         async move {
-          let qs = maker.build(&api_key, pos.clone().as_ref())?;
+          let qs = maker.build(&api_key, pos.as_ref())?;
           let resp = cli.delete(None, Some(qs)).await?;
           let status = resp.status();
           if !status.is_success() {
@@ -201,25 +205,14 @@ impl ExecutorTrait for Executor {
           return Ok((resp, cli.get_state()));
         }
       });
-      if let Some(fills) = &pos.fills {
+      if pos.fills.is_some() {
         // Sell the position
-        let qty_to_reverse = fills
-          .into_iter()
-          .map(|item| &item.qty)
-          .fold(Float::with_val(128, 0.0), |acc, v| acc + v);
-        let req = OrderRequest::<i64>::new(
-          symbol.clone(),
-          Side::Sell,
-          OrderType::Market,
-        )
-        .quantity(Some(qty_to_reverse.to_string()));
-        let qs = to_qs(&req)?;
-        let qs =
-          format!("{}&signature={}", qs, api_key.sign(Exchanges::Binance, &qs));
-        let pos: Order = pos.clone().into();
+        let qs = self.reverse_request_maker.build(&api_key, pos.as_ref())?;
+        let pos: Order = pos.as_ref().into();
         let pos_pur_price: OrderInner = pos.clone().sum();
         position_reverse_vec.push({
           let mut cli = self.cli.clone();
+          let order_resp_repo = self.order_resp_repo.clone();
           async move {
             let resp = cli.post(None, Some(&qs)).await?;
             let status = resp.status();
@@ -240,9 +233,11 @@ impl ExecutorTrait for Executor {
               .json()
               .await
               .map_err(|e| HTTPErrors::RequestFailure(e))?;
-            let rev_order_resp =
+            let mut rev_order_resp =
               OrderResponse::<Float, DateTime>::try_from(rev_order_resp)?;
-            let rev_order_resp: Order = rev_order_resp.into();
+            rev_order_resp.gid = Some(position.exit_gid.clone());
+            let _ = order_resp_repo.save(&[&rev_order_resp]).await?;
+            let rev_order_resp: Order = (&rev_order_resp).into();
             let rev_pos_price: OrderInner = rev_order_resp.sum();
             return Ok((pos_pur_price, rev_pos_price, cli.get_state()));
           }
