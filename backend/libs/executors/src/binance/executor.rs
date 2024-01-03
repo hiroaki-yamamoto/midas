@@ -177,8 +177,6 @@ impl ExecutorTrait for Executor {
       };
       let pos = Arc::new(pos);
       // Cancel Order
-      let symbol = pos.symbol.clone();
-      let order_id = pos.order_id.clone();
       let maker = self.cancel_request_maker.clone();
       order_cancel_vec.push({
         let api_key = api_key.clone();
@@ -203,7 +201,6 @@ impl ExecutorTrait for Executor {
           return Ok((resp, cli.get_state()));
         }
       });
-      let symbol = pos.symbol.clone();
       if let Some(fills) = &pos.fills {
         // Sell the position
         let qty_to_reverse = fills

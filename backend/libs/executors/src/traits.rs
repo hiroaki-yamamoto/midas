@@ -124,7 +124,7 @@ pub trait TestExecutor {
         })
         .collect(),
     };
-    let orders = Order::new(symbol, orders);
+    let orders = Order::new(&symbol, &orders);
     let mut order_dict = self.get_orders();
     order_dict.insert(id.clone(), orders);
     self.set_orders(order_dict);
