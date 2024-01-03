@@ -19,7 +19,7 @@ pub struct Fill<FT> {
 }
 
 impl Fill<Float> {
-  pub fn as_order_inner(&self, side: Side) -> OrderInner {
+  pub fn as_order_inner(&self, side: &Side) -> OrderInner {
     let qty = match side {
       Side::Sell => {
         ((self.price.clone() * &self.qty) - &self.commission) / &self.price

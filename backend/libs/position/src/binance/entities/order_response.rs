@@ -76,22 +76,42 @@ impl TryFrom<OrderResponse<String, i64>> for OrderResponse<Float, DateTime> {
   }
 }
 
-impl<DT> From<OrderResponse<Float, DT>> for Order {
-  fn from(from: OrderResponse<Float, DT>) -> Self {
-    let side = from.side;
+impl<DT> From<&OrderResponse<Float, DT>> for Order {
+  fn from(from: &OrderResponse<Float, DT>) -> Self {
+    let side = from.side.as_ref();
     let inner = from
       .fills
+      .as_ref()
       .map(|fills| {
         fills
-          .clone()
-          .into_iter()
-          .map(|fill| fill.as_order_inner(side.clone().unwrap_or(Side::Buy)))
+          .iter()
+          .map(|fill| fill.as_order_inner(side.unwrap_or(&Side::Buy)))
           .collect()
       })
       .unwrap_or(vec![]);
-    return Self {
-      symbol: from.symbol,
-      inner,
-    };
+    return Self::new(&from.symbol, &inner);
+  }
+}
+
+impl OrderResponse<Float, DateTime> {
+  fn calculate_sum_fills(&self, fills: &[Fill<Float>]) -> Float {
+    let sum_fills = fills.iter().fold(Float::with_val(128, 0), |acc, fill| {
+      return acc + &fill.qty;
+    });
+    return sum_fills;
+  }
+
+  pub fn check_filled(&self) -> bool {
+    let fill_pair = self.orig_qty.as_ref().zip(self.fills.as_ref());
+    if let Some((orig_qty, fills)) = fill_pair {
+      let prec: u32 = 10000;
+      let sum_fills = (self.calculate_sum_fills(&fills) * prec)
+        .round()
+        .to_integer();
+      let orig_qty = Float::with_val(128, orig_qty * prec).round().to_integer();
+      return sum_fills.as_ref().zip(orig_qty.as_ref()).is_some()
+        && sum_fills == orig_qty;
+    }
+    return false;
   }
 }

@@ -56,6 +56,8 @@ pub enum ExecutionErrors {
   ObserverError(#[source] ObserverError),
   #[error(display = "Position Error: {}", _0)]
   PositionError(#[source] PositionError),
+  #[error(display = "The order already filled")]
+  OrderFilled,
 }
 
 pub type ExecutionResult<T> = Result<T, ExecutionErrors>;

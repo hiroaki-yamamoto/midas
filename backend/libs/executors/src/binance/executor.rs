@@ -34,14 +34,15 @@ use ::subscribe::nats::Client as Nats;
 
 use crate::traits::Executor as ExecutorTrait;
 
-use super::interfaces::INewOrderRequestMaker;
-use super::services::NewOrderRequestMaker;
+use super::interfaces::{ICancelOrderRequestMaker, INewOrderRequestMaker};
+use super::services::{CancelOrderRequestMaker, NewOrderRequestMaker};
 
 use super::entities::{CancelOrderRequest, OrderRequest};
 
 pub struct Executor {
   keychain: Arc<dyn IKeyChain + Send + Sync>,
-  req_maker: Arc<dyn INewOrderRequestMaker + Send + Sync>,
+  new_order_request_maker: Arc<dyn INewOrderRequestMaker + Send + Sync>,
+  cancel_request_maker: Arc<dyn ICancelOrderRequestMaker + Send + Sync>,
   position_repo: Arc<dyn IPositionRepo + Send + Sync>,
   order_resp_repo: Arc<dyn IOrderResponseRepo + Send + Sync>,
   broker: Nats,
@@ -51,13 +52,15 @@ pub struct Executor {
 impl Executor {
   pub async fn new(broker: &Nats, db: Database) -> ExecutionResult<Self> {
     let keychain = KeyChain::new(broker, db.clone()).await?;
-    let req_maker = NewOrderRequestMaker::new();
+    let new_order_request_maker = NewOrderRequestMaker::new();
+    let cancel_request_maker = CancelOrderRequestMaker::new();
     let position_repo = PositionRepo::new(db.clone()).await;
     let order_resp_repo = OrderResponseRepo::new(db.clone()).await;
 
     let me = Self {
       keychain: Arc::new(keychain),
-      req_maker: Arc::new(req_maker),
+      new_order_request_maker: Arc::new(new_order_request_maker),
+      cancel_request_maker: Arc::new(cancel_request_maker),
       position_repo: Arc::new(position_repo),
       order_resp_repo: Arc::new(order_resp_repo),
       broker: broker.clone(),
@@ -108,7 +111,7 @@ impl ExecutorTrait for Executor {
     let header = self.get_pub_header(&api_key.inner())?;
     let resp_defers: Vec<BoxFuture<ExecutionResult<usize>>> =
       self
-        .req_maker
+        .new_order_request_maker
         .build(&api_key, symbol, budget, price, order_option)?
         .into_iter()
         .map(|qs| {
@@ -172,21 +175,16 @@ impl ExecutorTrait for Executor {
           continue;
         }
       };
+      let pos = Arc::new(pos);
       // Cancel Order
       let symbol = pos.symbol.clone();
       let order_id = pos.order_id.clone();
+      let maker = self.cancel_request_maker.clone();
       order_cancel_vec.push({
         let api_key = api_key.clone();
         let mut cli = self.cli.clone();
         async move {
-          let req =
-            CancelOrderRequest::<i64>::new(symbol).order_id(Some(order_id));
-          let qs = to_qs(&req)?;
-          let qs = format!(
-            "{}&signature={}",
-            qs,
-            api_key.sign(Exchanges::Binance, &qs)
-          );
+          let qs = maker.build(&api_key, pos.clone().as_ref())?;
           let resp = cli.delete(None, Some(qs)).await?;
           let status = resp.status();
           if !status.is_success() {

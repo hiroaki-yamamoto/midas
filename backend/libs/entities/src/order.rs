@@ -57,8 +57,11 @@ pub struct Order {
 }
 
 impl Order {
-  pub fn new(symbol: String, inner: Vec<OrderInner>) -> Self {
-    return Self { symbol, inner };
+  pub fn new(symbol: &str, inner: &[OrderInner]) -> Self {
+    return Self {
+      symbol: symbol.to_string(),
+      inner: inner.to_vec(),
+    };
   }
 
   pub fn sum(&self) -> OrderInner {
