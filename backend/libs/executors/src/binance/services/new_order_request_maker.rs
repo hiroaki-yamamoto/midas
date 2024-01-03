@@ -1,4 +1,3 @@
-use ::async_trait::async_trait;
 use ::rug::Float;
 use ::serde_qs::to_string as to_qs;
 
@@ -57,9 +56,8 @@ impl RequestMaker {
   }
 }
 
-#[async_trait]
 impl INewOrderRequestMaker for RequestMaker {
-  async fn build(
+  fn build(
     &self,
     api_key: &APIKey,
     symbol: String,

@@ -9,8 +9,8 @@ pub struct OrderInner {
 impl Default for OrderInner {
   fn default() -> Self {
     return Self {
-      price: Float::with_val(32, 0.0),
-      qty: Float::with_val(32, 0.0),
+      price: Float::with_val(128, 0.0),
+      qty: Float::with_val(128, 0.0),
     };
   }
 }
@@ -64,8 +64,8 @@ impl Order {
   pub fn sum(&self) -> OrderInner {
     return self.inner.clone().into_iter().fold(
       OrderInner {
-        price: Float::with_val(32, 0.0),
-        qty: Float::with_val(32, 0.0),
+        price: Float::with_val(128, 0.0),
+        qty: Float::with_val(128, 0.0),
       },
       |acc, item| acc + item,
     );

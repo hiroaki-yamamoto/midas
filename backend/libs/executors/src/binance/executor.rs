@@ -109,8 +109,7 @@ impl ExecutorTrait for Executor {
     let resp_defers: Vec<BoxFuture<ExecutionResult<usize>>> =
       self
         .req_maker
-        .build(&api_key, symbol, budget, price, order_option)
-        .await?
+        .build(&api_key, symbol, budget, price, order_option)?
         .into_iter()
         .map(|qs| {
           let header = header.clone();
@@ -212,7 +211,7 @@ impl ExecutorTrait for Executor {
         let qty_to_reverse = fills
           .into_iter()
           .map(|item| &item.qty)
-          .fold(Float::with_val(32, 0.0), |acc, v| acc + v);
+          .fold(Float::with_val(128, 0.0), |acc, v| acc + v);
         let req = OrderRequest::<i64>::new(
           symbol.clone(),
           Side::Sell,

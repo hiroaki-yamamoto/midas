@@ -17,8 +17,8 @@ impl Default for OrderOption {
     return Self {
       iceberg: false,
       num_ladder: 1,
-      price_ratio: Float::with_val(32, 0.0),
-      amount_multiplyer: Float::with_val(32, 1.0),
+      price_ratio: Float::with_val(128, 0.0),
+      amount_multiplyer: Float::with_val(128, 1.0),
     };
   }
 }

@@ -27,7 +27,7 @@ pub fn cast_f_from_txt(fld_name: &str, value: &str) -> ParseResult<Float> {
       Some(e.to_string().as_str()),
     );
   })?;
-  return Ok(Float::with_val(32, parsed));
+  return Ok(Float::with_val(128, parsed));
 }
 
 pub fn cast_f(fld_name: &str, value: &Value) -> ParseResult<Float> {
