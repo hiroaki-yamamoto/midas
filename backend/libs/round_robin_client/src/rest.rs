@@ -13,7 +13,7 @@ use ::reqwest::{
 macro_rules! method {
   ($method_name: ident, $method: path) => {
     pub async fn $method_name<T>(
-      &mut self,
+      &self,
       headers: Option<HeaderMap>,
       query: Option<T>,
     ) -> ::errors::HTTPResult<Resp>
