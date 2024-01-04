@@ -1,6 +1,7 @@
 use ::async_trait::async_trait;
 use ::futures::stream::BoxStream;
 use ::mongodb::bson::{oid::ObjectId, Document};
+use ::reqwest::header::HeaderMap;
 
 use ::errors::KeyChainResult;
 use ::rpc::exchanges::Exchanges;
@@ -22,4 +23,16 @@ pub trait IKeyChain {
     id: ObjectId,
   ) -> KeyChainResult<APIKey>;
   async fn delete(&self, id: ObjectId) -> KeyChainResult<()>;
+}
+
+pub trait IQueryStringSigner {
+  fn append_sign(&self, key: &APIKey, qs: &str) -> String;
+}
+
+pub trait IHeaderSigner {
+  fn append_sign(
+    &self,
+    key: &APIKey,
+    header: &mut HeaderMap,
+  ) -> KeyChainResult<()>;
 }

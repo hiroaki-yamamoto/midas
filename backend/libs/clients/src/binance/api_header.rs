@@ -5,6 +5,7 @@ use ::reqwest::header::{HeaderMap, HeaderName};
 use ::errors::APIHeaderResult;
 use ::keychain::APIKeyInner;
 
+#[deprecated(note = "Will be replaced with ::keychain::HeaderSigner trait")]
 pub trait APIHeader {
   fn get_pub_header(
     &self,

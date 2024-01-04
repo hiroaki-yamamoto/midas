@@ -1,7 +1,9 @@
-use ::err_derive::Error;
-
-use ::mongodb::error::Error as DBErr;
 use ::std::io::Error as IOErr;
+
+use ::err_derive::Error;
+use ::mongodb::error::Error as DBErr;
+use ::reqwest::header::{InvalidHeaderName, InvalidHeaderValue};
+use ::serde_qs::Error as QSErr;
 
 use crate::object::ObjectNotFound;
 use crate::PublishError;
@@ -19,6 +21,12 @@ pub enum KeyChainError {
   PublishError(#[source] PublishError),
   #[error(display = "Key Not Found: {}", _0)]
   KeyNotFound(#[source] ObjectNotFound),
+  #[error(display = "Query String Encoding Error: {}", _0)]
+  QSErr(#[source] QSErr),
+  #[error(display = "Invalid Header Name: {}", _0)]
+  InvalidHeaderName(#[source] InvalidHeaderName),
+  #[error(display = "Invalid Header Value: {}", _0)]
+  InvalidHeaderValue(#[source] InvalidHeaderValue),
 }
 
 pub type KeyChainResult<T> = Result<T, KeyChainError>;
