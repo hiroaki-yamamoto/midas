@@ -3,7 +3,7 @@ use ::std::time::Duration as StdDur;
 
 use ::async_stream::try_stream;
 use ::async_trait::async_trait;
-use ::futures::future::{join, join_all, BoxFuture};
+use ::futures::future::{join, try_join_all, BoxFuture};
 use ::futures::stream::BoxStream;
 use ::futures::{FutureExt, StreamExt};
 use ::log::{as_error, as_serde, error};
@@ -15,7 +15,7 @@ use ::clients::binance::{APIHeader, REST_ENDPOINTS};
 use ::entities::{
   BookTicker, ExecutionSummary, Order, OrderInner, OrderOption,
 };
-use ::errors::{ExecutionResult, HTTPErrors, StatusFailure};
+use ::errors::{ExecutionErrors, ExecutionResult, HTTPErrors, StatusFailure};
 use ::keychain::{IKeyChain, KeyChain};
 use ::observers::binance::TradeSubscriber;
 use ::observers::traits::ITradeSubscriber as TradeSubscriberTrait;
@@ -140,16 +140,12 @@ impl ExecutorTrait for Executor {
             .boxed();
         })
         .collect();
-    let result = join_all(resp_defers).await;
-    let state = result.iter().filter_map(|res| res.as_ref().ok()).max();
+    let result = try_join_all(resp_defers).await?;
+    let state = result.iter().max();
     if let Some(state) = state {
       self.cli.set_state(*state);
     }
-    let res_err = result.into_iter().find(|item| item.is_err());
-    return match res_err {
-      Some(e) => Err(e.unwrap_err()),
-      None => Ok(position_group.entry_gid),
-    };
+    return Ok(position_group.entry_gid);
   }
 
   async fn remove_order(
@@ -190,17 +186,14 @@ impl ExecutorTrait for Executor {
           let resp = cli.delete(None, Some(qs)).await?;
           let status = resp.status();
           if !status.is_success() {
-            return Err(
-              StatusFailure {
-                url: Some(resp.url().to_string()),
-                code: status.as_u16(),
-                text: resp
-                  .text()
-                  .await
-                  .unwrap_or("Failed to get the text".to_string()),
-              }
-              .into(),
-            );
+            return Err(ExecutionErrors::from(StatusFailure {
+              url: Some(resp.url().to_string()),
+              code: status.as_u16(),
+              text: resp
+                .text()
+                .await
+                .unwrap_or("Failed to get the text".to_string()),
+            }));
           }
           return Ok((resp, cli.get_state()));
         }
@@ -217,17 +210,14 @@ impl ExecutorTrait for Executor {
             let resp = cli.post(None, Some(&qs)).await?;
             let status = resp.status();
             if !status.is_success() {
-              return Err(
-                StatusFailure {
-                  url: Some(resp.url().to_string()),
-                  code: status.as_u16(),
-                  text: resp
-                    .text()
-                    .await
-                    .unwrap_or("Failed to get the text".to_string()),
-                }
-                .into(),
-              );
+              return Err(ExecutionErrors::from(StatusFailure {
+                url: Some(resp.url().to_string()),
+                code: status.as_u16(),
+                text: resp
+                  .text()
+                  .await
+                  .unwrap_or("Failed to get the text".to_string()),
+              }));
             }
             let rev_order_resp: OrderResponse<String, i64> = resp
               .json()
@@ -244,18 +234,14 @@ impl ExecutorTrait for Executor {
         });
       };
     }
-    let (order_res, position_res) =
-      join(join_all(order_cancel_vec), join_all(position_reverse_vec)).await;
-    let order_state = order_res
-      .iter()
-      .filter_map(|res| res.as_ref().ok())
-      .map(|(_, state)| *state)
-      .max();
-    let pos_state = position_res
-      .iter()
-      .filter_map(|res| res.as_ref().ok())
-      .map(|(_, _, state)| *state)
-      .max();
+    let (cancel_resp, reverse_resp) = join(
+      try_join_all(order_cancel_vec),
+      try_join_all(position_reverse_vec),
+    )
+    .await;
+    let (cancel_resp, reverse_resp) = (cancel_resp?, reverse_resp?);
+    let order_state = cancel_resp.iter().map(|(_, state)| *state).max();
+    let pos_state = reverse_resp.iter().map(|(_, _, state)| *state).max();
     if let Some(state) = order_state {
       self.cli.set_state(state);
     }
@@ -264,18 +250,9 @@ impl ExecutorTrait for Executor {
         self.cli.set_state(state);
       }
     }
-    for order_res in order_res {
-      if order_res.is_err() {
-        return Err(order_res.err().unwrap());
-      }
-    }
     let mut pur_order = OrderInner::default();
     let mut sell_order = OrderInner::default();
-    for position_res in position_res {
-      let (pur, sell, _) = match position_res {
-        Err(e) => return Err(e),
-        Ok(o) => o,
-      };
+    for (pur, sell, _) in reverse_resp.iter() {
       pur_order += pur;
       sell_order += sell;
     }
