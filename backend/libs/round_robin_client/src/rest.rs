@@ -1,3 +1,5 @@
+use ::std::sync::atomic::{AtomicUsize, Ordering};
+use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::serde::Serialize;
@@ -25,16 +27,17 @@ macro_rules! method {
 
 #[derive(Debug)]
 pub struct RestClient {
-  state: usize,
-  urls: Vec<Url>,
+  state: AtomicUsize,
+  urls: Arc<Vec<Url>>,
   cli: Client,
 }
 
 impl Clone for RestClient {
   fn clone(&self) -> Self {
+    let state = (self.state.load(Ordering::Relaxed) + 1) % self.urls.len();
     return Self {
       urls: self.urls.clone(),
-      state: (self.state + 1) % self.urls.len(),
+      state: AtomicUsize::new(state),
       cli: self.cli.clone(),
     };
   }
@@ -47,17 +50,17 @@ impl RestClient {
     req_timeout: Duration,
   ) -> ReqRes<Self> {
     return Ok(Self {
-      urls,
+      urls: Arc::new(urls),
       cli: Client::builder()
         .connect_timeout(con_timeout)
         .timeout(req_timeout)
         .build()?,
-      state: 0,
+      state: AtomicUsize::new(0),
     });
   }
 
   async fn request<T>(
-    &mut self,
+    &self,
     method: Method,
     headers: Option<HeaderMap>,
     query: Option<T>,
@@ -66,7 +69,7 @@ impl RestClient {
     T: Serialize,
   {
     for c in 0..self.urls.len() {
-      let index = (self.state + c) % self.urls.len();
+      let index = (self.get_state() + c) % self.urls.len();
       let url = self.urls[index].clone();
       let mut req = self.cli.request(method.clone(), url.clone());
       if let Some(query) = &query {
@@ -82,7 +85,7 @@ impl RestClient {
           continue;
         }
       }
-      self.state = index;
+      self.set_state(index);
       return Ok(resp?);
     }
     return Err(MaximumAttemptExceeded {}.into());
@@ -94,14 +97,14 @@ impl RestClient {
   method!(put, Method::PUT);
 
   pub fn get_current_url(&self) -> &Url {
-    return &self.urls[self.state];
+    return &self.urls[self.get_state()];
   }
 
   pub fn get_state(&self) -> usize {
-    return self.state;
+    return self.state.load(Ordering::Relaxed);
   }
 
-  pub fn set_state(&mut self, state: usize) {
-    self.state = state % self.urls.len();
+  pub fn set_state(&self, state: usize) {
+    self.state.store(state % self.urls.len(), Ordering::Relaxed);
   }
 }
