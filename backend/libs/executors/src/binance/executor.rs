@@ -1,5 +1,4 @@
 use ::std::sync::Arc;
-use ::std::time::Duration as StdDur;
 
 use ::async_stream::try_stream;
 use ::async_trait::async_trait;
@@ -11,11 +10,11 @@ use ::mongodb::bson::{oid::ObjectId, DateTime};
 use ::mongodb::Database;
 use ::rug::Float;
 
-use ::clients::binance::{APIHeader, REST_ENDPOINTS};
 use ::entities::{
   BookTicker, ExecutionSummary, Order, OrderInner, OrderOption,
 };
 use ::errors::{ExecutionErrors, ExecutionResult, HTTPErrors, StatusFailure};
+use ::keychain::binance::APIKeySigner;
 use ::keychain::{IKeyChain, KeyChain};
 use ::observers::binance::TradeSubscriber;
 use ::observers::traits::ITradeSubscriber as TradeSubscriberTrait;
@@ -26,17 +25,18 @@ use ::position::binance::{
 use ::position::{
   entities::Position, interfaces::IPositionRepo, services::PositionRepo,
 };
-use ::round_robin_client::RestClient;
 use ::rpc::{bot_mode::BotMode, exchanges::Exchanges};
 use ::subscribe::nats::Client as Nats;
 
 use crate::traits::Executor as ExecutorTrait;
 
 use super::interfaces::{
-  ICancelOrderRequestMaker, INewOrderRequestMaker, IReverseOrderRequestMaker,
+  ICancelOrderRequestMaker, INewOrderRequestMaker, IOrderClient,
+  IReverseOrderRequestMaker,
 };
 use super::services::{
-  CancelOrderRequestMaker, NewOrderRequestMaker, ReverseOrderRequestMaker,
+  CancelOrderRequestMaker, NewOrderRequestMaker, OrderClient,
+  ReverseOrderRequestMaker,
 };
 
 pub struct Executor {
@@ -46,8 +46,8 @@ pub struct Executor {
   reverse_request_maker: Arc<dyn IReverseOrderRequestMaker + Send + Sync>,
   position_repo: Arc<dyn IPositionRepo + Send + Sync>,
   order_resp_repo: Arc<dyn IOrderResponseRepo + Send + Sync>,
+  cli: Arc<dyn IOrderClient + Send + Sync>,
   broker: Nats,
-  cli: RestClient,
 }
 
 impl Executor {
@@ -58,6 +58,8 @@ impl Executor {
     let reverse_request_maker = ReverseOrderRequestMaker::new();
     let position_repo = PositionRepo::new(db.clone()).await;
     let order_resp_repo = OrderResponseRepo::new(db.clone()).await;
+    let signer = Arc::new(APIKeySigner::new());
+    let cli = OrderClient::new(signer.clone(), signer.clone())?;
 
     let me = Self {
       keychain: Arc::new(keychain),
@@ -67,20 +69,11 @@ impl Executor {
       position_repo: Arc::new(position_repo),
       order_resp_repo: Arc::new(order_resp_repo),
       broker: broker.clone(),
-      cli: RestClient::new(
-        REST_ENDPOINTS
-          .into_iter()
-          .filter_map(|&url| format!("{}/api/v3/order", url).parse().ok())
-          .collect(),
-        StdDur::from_secs(5),
-        StdDur::from_secs(5),
-      )?,
+      cli: Arc::new(cli),
     };
     return Ok(me);
   }
 }
-
-impl APIHeader for Executor {}
 
 #[async_trait]
 impl ExecutorTrait for Executor {
