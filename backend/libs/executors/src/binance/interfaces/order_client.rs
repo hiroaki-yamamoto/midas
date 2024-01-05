@@ -6,7 +6,7 @@ use ::errors::ExecutionResult;
 use ::keychain::APIKey;
 use ::position::binance::entities::OrderResponse;
 
-use super::super::entities::OrderRequest;
+use super::super::entities::{CancelOrderRequest, OrderRequest};
 
 #[async_trait]
 pub trait IOrderClient {
@@ -18,6 +18,6 @@ pub trait IOrderClient {
   async fn cancel_order(
     &self,
     api_key: &APIKey,
-    order_id: &str,
-  ) -> ExecutionResult<()>;
+    req: &CancelOrderRequest<i64>,
+  ) -> ExecutionResult<OrderResponse<Float, DateTime>>;
 }
