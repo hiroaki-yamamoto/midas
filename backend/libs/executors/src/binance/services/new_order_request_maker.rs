@@ -1,11 +1,7 @@
 use ::rug::Float;
-use ::serde_qs::to_string as to_qs;
 
 use ::entities::OrderOption;
-use ::errors::ExecutionResult;
-use ::keychain::APIKey;
 use ::position::binance::entities::{OrderType, Side};
-use ::rpc::exchanges::Exchanges;
 
 use super::super::{
   entities::{OrderRequest, OrderResponseType},

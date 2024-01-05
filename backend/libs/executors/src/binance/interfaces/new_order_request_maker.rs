@@ -1,7 +1,6 @@
 use ::rug::Float;
 
 use ::entities::OrderOption;
-use ::errors::ExecutionResult;
 
 use crate::binance::entities::OrderRequest;
 
