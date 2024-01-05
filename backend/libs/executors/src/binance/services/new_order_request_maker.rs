@@ -59,12 +59,11 @@ impl RequestMaker {
 impl INewOrderRequestMaker for RequestMaker {
   fn build(
     &self,
-    api_key: &APIKey,
     symbol: String,
     budget: Float,
     price: Option<Float>,
     order_option: Option<OrderOption>,
-  ) -> ExecutionResult<Vec<String>> {
+  ) -> Vec<OrderRequest<i64>> {
     let order_type = price
       .as_ref()
       .map(|_| OrderType::Limit)
@@ -83,14 +82,6 @@ impl INewOrderRequestMaker for RequestMaker {
         }
         return vec![order];
       });
-    let req: ExecutionResult<Vec<String>> = req
-      .iter()
-      .map(|order| {
-        let qs = to_qs(order)?;
-        let sign = api_key.sign(Exchanges::Binance, &qs);
-        return Ok(format!("{}&signature={}", qs, sign));
-      })
-      .collect();
-    return Ok(req?);
+    return req;
   }
 }

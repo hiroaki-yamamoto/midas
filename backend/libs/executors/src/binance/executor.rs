@@ -4,7 +4,7 @@ use ::async_stream::try_stream;
 use ::async_trait::async_trait;
 use ::futures::future::{join, try_join_all, BoxFuture};
 use ::futures::stream::BoxStream;
-use ::futures::{FutureExt, StreamExt};
+use ::futures::{FutureExt, StreamExt, TryFutureExt};
 use ::log::{as_error, as_serde, error};
 use ::mongodb::bson::{oid::ObjectId, DateTime};
 use ::mongodb::Database;
@@ -104,40 +104,26 @@ impl ExecutorTrait for Executor {
     let position_group = Position::new(bot_id, BotMode::Live, &symbol);
     self.position_repo.save(&[&position_group]).await?;
     let api_key = self.keychain.get(Exchanges::Binance, api_key_id).await?;
-    let header = self.get_pub_header(&api_key.inner())?;
-    let resp_defers: Vec<BoxFuture<ExecutionResult<usize>>> =
-      self
-        .new_order_request_maker
-        .build(&api_key, symbol, budget, price, order_option)?
-        .into_iter()
-        .map(|qs| {
-          let header = header.clone();
-          let mut cli = self.cli.clone();
-          return async move {
-            (cli.post(Some(header.clone()), Some(qs)).await, cli)
-          };
-        })
-        .map(|fut| {
-          let repo = self.order_resp_repo.clone();
-          let gid = position_group.entry_gid.clone();
-          return fut
-            .then(move |(resp, cli)| async move {
-              let resp = resp?;
-              let payload: OrderResponse<String, i64> = resp.json().await?;
-              let mut payload =
-                OrderResponse::<Float, DateTime>::try_from(payload)?;
-              payload.gid = Some(gid);
-              repo.save(&[&payload]).await?;
-              return Ok(cli.get_state());
-            })
-            .boxed();
-        })
-        .collect();
-    let result = try_join_all(resp_defers).await?;
-    let state = result.iter().max();
-    if let Some(state) = state {
-      self.cli.set_state(*state);
-    }
+    let resp_defers: Vec<BoxFuture<ExecutionResult<()>>> = self
+      .new_order_request_maker
+      .build(symbol, budget, price, order_option)
+      .into_iter()
+      .map(|req| {
+        return self.cli.new_order(&api_key, &req);
+      })
+      .map(|fut| {
+        let repo = self.order_resp_repo.clone();
+        let gid = position_group.entry_gid.clone();
+        return fut
+          .and_then(move |mut payload| async move {
+            payload.gid = Some(gid);
+            repo.save(&[&payload]).await?;
+            return Ok(());
+          })
+          .boxed();
+      })
+      .collect();
+    let _ = try_join_all(resp_defers).await?;
     return Ok(position_group.entry_gid);
   }
 
