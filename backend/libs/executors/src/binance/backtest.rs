@@ -11,17 +11,13 @@ use ::rpc::{
   exchanges::Exchanges, test_price_base::TestPriceBase as BackTestPriceBase,
 };
 
-use ::entities::{
-  BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
-};
-use ::errors::{ExecutionFailed, ExecutionResult};
+use ::entities::{BookTicker, ExecutionType, Order, OrderInner};
+use ::errors::ExecutionResult;
 use ::history::binance::entities::Kline;
 use ::history::binance::writer::HistoryWriter;
 use ::history::traits::HistoryWriter as HistoryWriterTrait;
 
-use crate::traits::{
-  Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
-};
+use crate::traits::TestExecutor as TestExecutorTrait;
 
 pub struct Executor {
   spread: Float,
@@ -56,7 +52,7 @@ impl Executor {
 }
 
 #[async_trait]
-impl ExecutorTrait for Executor {
+impl TestExecutorTrait for Executor {
   async fn open(
     &mut self,
   ) -> ExecutionResult<BoxStream<ExecutionResult<BookTicker>>> {
@@ -103,34 +99,6 @@ impl ExecutorTrait for Executor {
       .boxed();
     return Ok(db_stream);
   }
-
-  async fn create_order(
-    &mut self,
-    _: ObjectId,
-    _: ObjectId,
-    _: String,
-    _: Option<Float>,
-    _: Float,
-    _: Option<OrderOption>,
-  ) -> ExecutionResult<ObjectId> {
-    return Err(
-      ExecutionFailed::new("Call create_order from TestExecutorTrait.").into(),
-    );
-  }
-
-  async fn remove_order(
-    &mut self,
-    _: ObjectId,
-    _: ObjectId,
-  ) -> ExecutionResult<ExecutionSummary> {
-    return Err(
-      ExecutionFailed::new("Call remove_position from TestExecutorTrait.")
-        .into(),
-    );
-  }
-}
-
-impl TestExecutorTrait for Executor {
   fn get_current_trade(&self) -> Option<BookTicker> {
     return self.cur_trade.clone();
   }

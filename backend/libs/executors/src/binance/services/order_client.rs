@@ -60,12 +60,13 @@ impl Client {
 impl IOrderClient for Client {
   async fn new_order(
     &self,
-    api_key: &APIKey,
-    position: &OrderRequest<i64>,
+    api_key: Arc<APIKey>,
+    position: Arc<OrderRequest<i64>>,
   ) -> ExecutionResult<OrderResponse<Float, DateTime>> {
+    let api_key = api_key.as_ref();
     let qs = self
       .qs_signer
-      .append_sign(api_key, to_qs(position)?.as_str());
+      .append_sign(api_key, to_qs(&position)?.as_str());
     let mut header = HeaderMap::default();
     self.header_signer.append_sign(api_key, &mut header)?;
     let resp = self.client.post(Some(header), Some(qs)).await?;
@@ -79,10 +80,11 @@ impl IOrderClient for Client {
 
   async fn cancel_order(
     &self,
-    api_key: &APIKey,
-    req: &CancelOrderRequest<i64>,
+    api_key: Arc<APIKey>,
+    req: Arc<CancelOrderRequest<i64>>,
   ) -> ExecutionResult<OrderResponse<Float, DateTime>> {
-    let qs = self.qs_signer.append_sign(api_key, to_qs(req)?.as_str());
+    let api_key = api_key.as_ref();
+    let qs = self.qs_signer.append_sign(api_key, to_qs(&req)?.as_str());
     let mut header = HeaderMap::default();
     self.header_signer.append_sign(api_key, &mut header)?;
     let resp = self.client.delete(Some(header), Some(qs)).await?;

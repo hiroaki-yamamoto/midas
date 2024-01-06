@@ -15,11 +15,11 @@ use ::errors::ExecutionResult;
 #[async_trait]
 pub trait Executor {
   async fn open(
-    &mut self,
+    &self,
   ) -> ExecutionResult<BoxStream<ExecutionResult<BookTicker>>>;
 
   async fn create_order(
-    &mut self,
+    &self,
     bot_id: ObjectId,
     api_key_id: ObjectId,
     symbol: String,
@@ -29,13 +29,17 @@ pub trait Executor {
   ) -> ExecutionResult<ObjectId>;
 
   async fn remove_order(
-    &mut self,
+    &self,
     api_key_id: ObjectId,
     id: ObjectId,
   ) -> ExecutionResult<ExecutionSummary>;
 }
 
+#[async_trait]
 pub trait TestExecutor {
+  async fn open(
+    &mut self,
+  ) -> ExecutionResult<BoxStream<ExecutionResult<BookTicker>>>;
   fn get_current_trade(&self) -> Option<BookTicker>;
   fn maker_fee(&self) -> Float;
   fn taker_fee(&self) -> Float;

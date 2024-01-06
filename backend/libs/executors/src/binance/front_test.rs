@@ -6,16 +6,12 @@ use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::oid::ObjectId;
 use ::rug::Float;
 
-use ::entities::{
-  BookTicker, ExecutionSummary, ExecutionType, Order, OrderInner, OrderOption,
-};
-use ::errors::{ExecutionFailed, ExecutionResult};
+use ::entities::{BookTicker, ExecutionType, Order, OrderInner};
+use ::errors::ExecutionResult;
 use ::observers::traits::ITradeSubscriber as TradeSubscriberTrait;
 use ::subscribe::nats::Client as Nats;
 
-use crate::traits::{
-  Executor as ExecutorTrait, TestExecutor as TestExecutorTrait,
-};
+use crate::traits::TestExecutor as TestExecutorTrait;
 
 use ::observers::binance::TradeSubscriber;
 
@@ -45,7 +41,24 @@ impl Executor {
   }
 }
 
+#[async_trait]
 impl TestExecutorTrait for Executor {
+  async fn open(
+    &mut self,
+  ) -> ExecutionResult<BoxStream<ExecutionResult<BookTicker>>> {
+    let observer = self.observer.clone();
+    let stream = try_stream! {
+      let mut src_stream = observer.subscribe().await?;
+      while let Some(v) = src_stream.next().await {
+        self.cur_trade = Some(v.clone());
+        self.execute_order(ExecutionType::Taker)?;
+        yield v;
+      }
+      self.cur_trade = None;
+    };
+    return Ok(Box::pin(stream));
+  }
+
   fn get_current_trade(&self) -> Option<BookTicker> {
     return self.cur_trade.clone();
   }
@@ -67,49 +80,5 @@ impl TestExecutorTrait for Executor {
   }
   fn set_positions(&mut self, positions: HashMap<ObjectId, OrderInner>) {
     self.positions = positions;
-  }
-}
-
-#[async_trait]
-impl ExecutorTrait for Executor {
-  async fn open(
-    &mut self,
-  ) -> ExecutionResult<BoxStream<ExecutionResult<BookTicker>>> {
-    let observer = self.observer.clone();
-    let stream = try_stream! {
-      let mut src_stream = observer.subscribe().await?;
-      while let Some(v) = src_stream.next().await {
-        self.cur_trade = Some(v.clone());
-        self.execute_order(ExecutionType::Taker)?;
-        yield v;
-      }
-      self.cur_trade = None;
-    };
-    return Ok(Box::pin(stream));
-  }
-
-  async fn create_order(
-    &mut self,
-    _: ObjectId,
-    _: ObjectId,
-    _: String,
-    _: Option<Float>,
-    _: Float,
-    _: Option<OrderOption>,
-  ) -> ExecutionResult<ObjectId> {
-    return Err(
-      ExecutionFailed::new("Call create_order from TestExecutorTrait.").into(),
-    );
-  }
-
-  async fn remove_order(
-    &mut self,
-    _: ObjectId,
-    _: ObjectId,
-  ) -> ExecutionResult<ExecutionSummary> {
-    return Err(
-      ExecutionFailed::new("Call remove_position from TestExecutorTrait.")
-        .into(),
-    );
   }
 }

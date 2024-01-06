@@ -6,21 +6,20 @@ use ::futures::future::{join, try_join_all, BoxFuture};
 use ::futures::stream::BoxStream;
 use ::futures::{FutureExt, StreamExt, TryFutureExt};
 use ::log::{as_error, as_serde, error};
-use ::mongodb::bson::{oid::ObjectId, DateTime};
+use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::Database;
 use ::rug::Float;
 
 use ::entities::{
   BookTicker, ExecutionSummary, Order, OrderInner, OrderOption,
 };
-use ::errors::{ExecutionErrors, ExecutionResult, HTTPErrors, StatusFailure};
+use ::errors::ExecutionResult;
 use ::keychain::binance::APIKeySigner;
 use ::keychain::{IKeyChain, KeyChain};
 use ::observers::binance::TradeSubscriber;
 use ::observers::traits::ITradeSubscriber as TradeSubscriberTrait;
 use ::position::binance::{
-  entities::OrderResponse, interfaces::IOrderResponseRepo,
-  services::OrderResponseRepo,
+  interfaces::IOrderResponseRepo, services::OrderResponseRepo,
 };
 use ::position::{
   entities::Position, interfaces::IPositionRepo, services::PositionRepo,
@@ -78,7 +77,7 @@ impl Executor {
 #[async_trait]
 impl ExecutorTrait for Executor {
   async fn open(
-    &mut self,
+    &self,
   ) -> ExecutionResult<BoxStream<'_, ExecutionResult<BookTicker>>> {
     let stream = try_stream! {
       let observer = TradeSubscriber::new(
@@ -93,7 +92,7 @@ impl ExecutorTrait for Executor {
     return Ok(Box::pin(stream));
   }
   async fn create_order(
-    &mut self,
+    &self,
     bot_id: ObjectId,
     api_key_id: ObjectId,
     symbol: String,
@@ -103,13 +102,17 @@ impl ExecutorTrait for Executor {
   ) -> ExecutionResult<ObjectId> {
     let position_group = Position::new(bot_id, BotMode::Live, &symbol);
     self.position_repo.save(&[&position_group]).await?;
-    let api_key = self.keychain.get(Exchanges::Binance, api_key_id).await?;
-    let resp_defers: Vec<BoxFuture<ExecutionResult<()>>> = self
-      .new_order_request_maker
-      .build(symbol, budget, price, order_option)
+    let api_key =
+      Arc::new(self.keychain.get(Exchanges::Binance, api_key_id).await?);
+    let req =
+      self
+        .new_order_request_maker
+        .build(symbol, budget, price, order_option);
+    let resp_defers: Vec<BoxFuture<ExecutionResult<()>>> = req
       .into_iter()
       .map(|req| {
-        return self.cli.new_order(&api_key, &req);
+        let req = Arc::new(req);
+        return self.cli.new_order(api_key.clone(), req);
       })
       .map(|fut| {
         let repo = self.order_resp_repo.clone();
@@ -128,11 +131,12 @@ impl ExecutorTrait for Executor {
   }
 
   async fn remove_order(
-    &mut self,
+    &self,
     api_key_id: ObjectId,
     gid: ObjectId,
   ) -> ExecutionResult<ExecutionSummary> {
-    let api_key = self.keychain.get(Exchanges::Binance, api_key_id).await?;
+    let api_key =
+      Arc::new(self.keychain.get(Exchanges::Binance, api_key_id).await?);
     let position = self.position_repo.get(&gid).await?;
     let mut order_resp_cur = self
       .order_resp_repo
@@ -156,47 +160,39 @@ impl ExecutorTrait for Executor {
       let pos = Arc::new(pos);
       // Cancel Order
       let maker = self.cancel_request_maker.clone();
-      order_cancel_vec.push({
-        let api_key = api_key.clone();
-        let mut cli = self.cli.clone();
-        let pos = pos.clone();
-        let cancel_order = maker.build(pos.as_ref())?;
-        cli.cancel_order(&api_key, &cancel_order)
-      });
+      let pos = pos.clone();
+      let cancel_order = Arc::new(maker.build(pos.as_ref())?);
+      let order_resp_repo = self.order_resp_repo.clone();
+      order_cancel_vec.push(
+        self
+          .cli
+          .cancel_order(api_key.clone(), cancel_order)
+          .and_then(|mut order_resp| async move {
+            order_resp.gid = Some(position.exit_gid.clone());
+            let _ = order_resp_repo.save(&[&order_resp]).await?;
+            return Ok(());
+          })
+          .boxed(),
+      );
       if pos.fills.is_some() {
         // Sell the position
-        let qs = self.reverse_request_maker.build(&api_key, pos.as_ref())?;
+        let req = Arc::new(self.reverse_request_maker.build(pos.as_ref())?);
         let pos: Order = pos.as_ref().into();
         let pos_pur_price: OrderInner = pos.clone().sum();
-        position_reverse_vec.push({
-          let mut cli = self.cli.clone();
-          let order_resp_repo = self.order_resp_repo.clone();
-          async move {
-            let resp = cli.post(None, Some(&qs)).await?;
-            let status = resp.status();
-            if !status.is_success() {
-              return Err(ExecutionErrors::from(StatusFailure {
-                url: Some(resp.url().to_string()),
-                code: status.as_u16(),
-                text: resp
-                  .text()
-                  .await
-                  .unwrap_or("Failed to get the text".to_string()),
-              }));
-            }
-            let rev_order_resp: OrderResponse<String, i64> = resp
-              .json()
-              .await
-              .map_err(|e| HTTPErrors::RequestFailure(e))?;
-            let mut rev_order_resp =
-              OrderResponse::<Float, DateTime>::try_from(rev_order_resp)?;
-            rev_order_resp.gid = Some(position.exit_gid.clone());
-            let _ = order_resp_repo.save(&[&rev_order_resp]).await?;
-            let rev_order_resp: Order = (&rev_order_resp).into();
-            let rev_pos_price: OrderInner = rev_order_resp.sum();
-            return Ok((pos_pur_price, rev_pos_price, cli.get_state()));
-          }
-        });
+        let order_resp_repo = self.order_resp_repo.clone();
+        position_reverse_vec.push(
+          self
+            .cli
+            .new_order(api_key.clone(), req)
+            .and_then(|mut resp| async move {
+              resp.gid = Some(position.exit_gid.clone());
+              let _ = order_resp_repo.save(&[&resp]).await?;
+              let resp: Order = (&resp).into();
+              let rev_pos_price: OrderInner = resp.sum();
+              return Ok((pos_pur_price, rev_pos_price));
+            })
+            .boxed(),
+        );
       };
     }
     let (cancel_resp, reverse_resp) = join(
@@ -204,16 +200,10 @@ impl ExecutorTrait for Executor {
       try_join_all(position_reverse_vec),
     )
     .await;
-    let (cancel_resp, reverse_resp) = (cancel_resp?, reverse_resp?);
-    let pos_state = reverse_resp.iter().map(|(_, _, state)| *state).max();
-    if let Some(state) = pos_state {
-      if self.cli.get_state() >= state {
-        self.cli.set_state(state);
-      }
-    }
+    let (_, reverse_resp) = (cancel_resp?, reverse_resp?);
     let mut pur_order = OrderInner::default();
     let mut sell_order = OrderInner::default();
-    for (pur, sell, _) in reverse_resp.iter() {
+    for (pur, sell) in reverse_resp.iter() {
       pur_order += pur;
       sell_order += sell;
     }

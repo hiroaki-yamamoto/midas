@@ -1,3 +1,5 @@
+use ::std::sync::Arc;
+
 use ::async_trait::async_trait;
 use ::mongodb::bson::DateTime;
 use ::rug::Float;
@@ -12,12 +14,12 @@ use super::super::entities::{CancelOrderRequest, OrderRequest};
 pub trait IOrderClient {
   async fn new_order(
     &self,
-    api_key: &APIKey,
-    position: &OrderRequest<i64>,
+    api_key: Arc<APIKey>,
+    position: Arc<OrderRequest<i64>>,
   ) -> ExecutionResult<OrderResponse<Float, DateTime>>;
   async fn cancel_order(
     &self,
-    api_key: &APIKey,
-    req: &CancelOrderRequest<i64>,
+    api_key: Arc<APIKey>,
+    req: Arc<CancelOrderRequest<i64>>,
   ) -> ExecutionResult<OrderResponse<Float, DateTime>>;
 }
