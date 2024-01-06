@@ -4,7 +4,6 @@ use ::async_trait::async_trait;
 use ::futures::future::join;
 use ::futures::stream::StreamExt;
 use ::mongodb::Database;
-pub use ::reqwest::Result as ReqRes;
 use ::url::Url;
 
 use ::clients::binance::REST_ENDPOINTS;
@@ -28,17 +27,16 @@ pub struct SymbolFetcher {
 }
 
 impl SymbolFetcher {
-  pub async fn new(broker: Nats, db: &Database) -> ReqRes<Self> {
+  pub async fn new(broker: Nats, db: &Database) -> SymbolFetchResult<Self> {
     let recorder = SymbolWriter::new(&db).await;
-    let urls: Vec<Url> = REST_ENDPOINTS
+    let urls: SymbolFetchResult<Vec<Url>> = REST_ENDPOINTS
       .into_iter()
-      .filter_map(|&url| {
-        (String::from(url) + "/api/v3/exchangeInfo").parse().ok()
-      })
+      .map(|&url| Ok((String::from(url) + "/api/v3/exchangeInfo").parse()?))
       .collect();
+    let urls = urls?;
     let ret = Self {
       broker: broker,
-      cli: RestClient::new(urls, StdDur::from_secs(5), StdDur::from_secs(5))?,
+      cli: RestClient::new(&urls, StdDur::from_secs(5), StdDur::from_secs(5))?,
       recorder,
     };
     return Ok(ret);

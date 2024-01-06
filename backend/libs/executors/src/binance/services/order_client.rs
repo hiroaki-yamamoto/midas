@@ -7,6 +7,7 @@ use ::reqwest::header::HeaderMap;
 use ::reqwest::Response;
 use ::rug::Float;
 use ::serde_qs::to_string as to_qs;
+use ::url::Url;
 
 use ::clients::binance::REST_ENDPOINTS;
 use ::errors::{ExecutionResult, StatusFailure};
@@ -30,14 +31,13 @@ impl Client {
     qs_signer: Arc<dyn IQueryStringSigner + Send + Sync>,
     header_signer: Arc<dyn IHeaderSigner + Send + Sync>,
   ) -> ExecutionResult<Self> {
-    let client = RestClient::new(
-      REST_ENDPOINTS
-        .into_iter()
-        .filter_map(|&url| format!("{}/api/v3/order", url).parse().ok())
-        .collect(),
-      StdDur::from_secs(5),
-      StdDur::from_secs(5),
-    )?;
+    let url: ExecutionResult<Vec<Url>> = REST_ENDPOINTS
+      .iter()
+      .map(|url| Ok(format!("{}/api/v3/order", url).parse()?))
+      .collect();
+    let url = url?;
+    let client =
+      RestClient::new(&url, StdDur::from_secs(5), StdDur::from_secs(5))?;
     return Ok(Self {
       client: Arc::new(client),
       qs_signer,

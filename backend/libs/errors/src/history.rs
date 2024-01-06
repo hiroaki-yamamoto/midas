@@ -1,6 +1,7 @@
 use ::err_derive::Error;
 use ::mongodb::error::Error as DBErr;
 use ::reqwest::Error as ReqErr;
+use ::url::ParseError as URLParseErr;
 
 use crate::HTTPErrors;
 use crate::MaximumAttemptExceeded;
@@ -18,6 +19,8 @@ pub enum FetchErr {
   HTTPErr(#[source] HTTPErrors),
   #[error(display = "Maximum Attempt Exceeded: {}", _0)]
   MaximumAttemptExceeded(#[source] MaximumAttemptExceeded),
+  #[error(display = "URL Parse Error: {}", _0)]
+  URLParseErr(#[source] URLParseErr),
 }
 
 #[derive(Debug, Error)]

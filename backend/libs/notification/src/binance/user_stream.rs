@@ -280,7 +280,7 @@ impl UserStreamTrait for UserStream {
               let lis_key = lis_key.clone();
               let me = Arc::clone(&me);
               async move {
-                let mut me = me.lock().await;
+                let me = me.lock().await;
                 return me.cli.put(
                   Some(header),
                   Some(&[("listenKey", lis_key)])

@@ -5,6 +5,7 @@ use ::async_trait::async_trait;
 use ::log::warn;
 use ::rand::random;
 use ::tokio::time::sleep;
+use ::url::Url;
 
 use ::clients::binance::REST_ENDPOINTS;
 use ::config::DEFAULT_RECONNECT_INTERVAL;
@@ -25,15 +26,14 @@ pub struct HistoryFetcher {
 
 impl HistoryFetcher {
   pub fn new(num_reconnect: Option<i8>) -> FetchResult<Self> {
+    let url: FetchResult<Vec<Url>> = REST_ENDPOINTS
+      .iter()
+      .map(|endpoint| Ok((endpoint.to_string() + "/api/v3/klines").parse()?))
+      .collect();
     return Ok(Self {
       num_reconnect: num_reconnect.unwrap_or(20),
       client: RestClient::new(
-        REST_ENDPOINTS
-          .into_iter()
-          .filter_map(|&endpoint| {
-            return (String::from(endpoint) + "/api/v3/klines").parse().ok();
-          })
-          .collect(),
+        &url?,
         StdDur::from_secs(5),
         StdDur::from_secs(5),
       )?,

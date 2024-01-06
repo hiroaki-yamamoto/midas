@@ -10,6 +10,7 @@ use ::reqwest::header::InvalidHeaderValue;
 use ::reqwest::Error as ReqwestErr;
 use ::rug::Float;
 use ::serde_qs::Error as QueryError;
+use ::url::ParseError as URLParseErr;
 
 use crate::{
   APIHeaderErrors, HTTPErrors, KeyChainError, ObjectNotFound, ObserverError,
@@ -62,6 +63,8 @@ pub enum ExecutionErrors {
   OrderFilled,
   #[error(display = "Invalid Qty {}", _0)]
   InvalidQty(Float),
+  #[error(display = "URL parse error: {}", _0)]
+  URLParseErr(#[source] URLParseErr),
 }
 
 pub type ExecutionResult<T> = Result<T, ExecutionErrors>;

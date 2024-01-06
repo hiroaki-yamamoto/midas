@@ -28,7 +28,7 @@ macro_rules! method {
 #[derive(Debug)]
 pub struct RestClient {
   state: AtomicUsize,
-  urls: Arc<Vec<Url>>,
+  urls: Arc<[Url]>,
   cli: Client,
 }
 
@@ -45,12 +45,12 @@ impl Clone for RestClient {
 
 impl RestClient {
   pub fn new(
-    urls: Vec<Url>,
+    urls: &[Url],
     con_timeout: Duration,
     req_timeout: Duration,
   ) -> ReqRes<Self> {
     return Ok(Self {
-      urls: Arc::new(urls),
+      urls: Arc::from(urls),
       cli: Client::builder()
         .connect_timeout(con_timeout)
         .timeout(req_timeout)

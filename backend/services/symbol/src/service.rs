@@ -4,6 +4,7 @@ use ::warp::filters::BoxedFilter;
 use ::warp::reject;
 use ::warp::{Filter, Rejection, Reply};
 
+use ::errors::SymbolFetchResult;
 use ::rpc::base_symbols::BaseSymbols;
 use ::rpc::exchanges::Exchanges;
 use ::rpc::status::Status;
@@ -22,10 +23,7 @@ pub struct Service {
 }
 
 impl Service {
-  pub async fn new(
-    db: &Database,
-    broker: Nats,
-  ) -> binance_fetcher::ReqRes<Self> {
+  pub async fn new(db: &Database, broker: Nats) -> SymbolFetchResult<Self> {
     return Ok(Self {
       binance_fetcher: binance_fetcher::SymbolFetcher::new(broker, db).await?,
       binance_recorder: binance_recorder::SymbolWriter::new(db).await,

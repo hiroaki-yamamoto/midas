@@ -1188,6 +1188,7 @@ dependencies = [
  "subscribe",
  "tokio",
  "types",
+ "url",
  "writers",
 ]
 

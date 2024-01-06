@@ -19,3 +19,11 @@ impl ListenKeyPair {
     };
   }
 }
+
+impl From<ListenKeyPair> for ListenKey {
+  fn from(listen_key_pair: ListenKeyPair) -> Self {
+    return Self {
+      listen_key: listen_key_pair.listen_key,
+    };
+  }
+}
