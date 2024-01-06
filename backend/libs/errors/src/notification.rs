@@ -5,6 +5,7 @@ use ::async_nats::jetstream::context::CreateStreamError;
 use ::err_derive::Error;
 use ::reqwest::Error as ReqErr;
 use ::serde_json::Error as JSONErr;
+use ::url::ParseError as UrlParseErr;
 
 use crate::APIHeaderErrors;
 use crate::HTTPErrors;
@@ -38,6 +39,8 @@ pub enum NotificationError {
   PublishError(#[source] PublishError),
   #[error(display = "Nats Consumer Error: {}", _0)]
   ConsumerError(#[source] ConsumerError),
+  #[error(display = "URL Parse Error: {}", _0)]
+  UrlParseError(#[source] UrlParseErr),
 }
 
 impl From<ReqErr> for NotificationError {
