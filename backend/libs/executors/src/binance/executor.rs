@@ -160,22 +160,8 @@ impl ExecutorTrait for Executor {
         let api_key = api_key.clone();
         let mut cli = self.cli.clone();
         let pos = pos.clone();
-        async move {
-          let qs = maker.build(&api_key, pos.as_ref())?;
-          let resp = cli.delete(None, Some(qs)).await?;
-          let status = resp.status();
-          if !status.is_success() {
-            return Err(ExecutionErrors::from(StatusFailure {
-              url: Some(resp.url().to_string()),
-              code: status.as_u16(),
-              text: resp
-                .text()
-                .await
-                .unwrap_or("Failed to get the text".to_string()),
-            }));
-          }
-          return Ok((resp, cli.get_state()));
-        }
+        let cancel_order = maker.build(pos.as_ref())?;
+        cli.cancel_order(&api_key, &cancel_order)
       });
       if pos.fills.is_some() {
         // Sell the position
@@ -219,11 +205,7 @@ impl ExecutorTrait for Executor {
     )
     .await;
     let (cancel_resp, reverse_resp) = (cancel_resp?, reverse_resp?);
-    let order_state = cancel_resp.iter().map(|(_, state)| *state).max();
     let pos_state = reverse_resp.iter().map(|(_, _, state)| *state).max();
-    if let Some(state) = order_state {
-      self.cli.set_state(state);
-    }
     if let Some(state) = pos_state {
       if self.cli.get_state() >= state {
         self.cli.set_state(state);
