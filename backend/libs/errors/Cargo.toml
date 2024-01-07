@@ -8,7 +8,7 @@ edition = "2021"
 
 [dependencies]
 err-derive = "0.3.1"
-serde = { version = "1.0.193", features = ["derive"] }
+serde = { version = "1.0.195", features = ["derive"] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 url = "2.5.0"
 warp = { version = "0.3.6", features = ["tls"] }
