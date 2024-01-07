@@ -2182,6 +2182,7 @@ dependencies = [
  "log",
  "mongodb",
  "position",
+ "reqwest",
  "rmp-serde",
  "round_robin_client",
  "rug",

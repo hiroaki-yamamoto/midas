@@ -1,21 +1,28 @@
+use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
+use ::reqwest::header::HeaderMap;
 use ::url::Url;
 
 use ::clients::binance::REST_ENDPOINTS;
 use ::errors::NotificationResult;
+use ::errors::UserStreamResult;
+use ::keychain::APIKey;
+use ::keychain::IHeaderSigner;
 use ::round_robin_client::RestClient;
-use ::keychain::IQueryStringSigner
 
-use super::super::interfaces::IListenKeyClient;
+use super::super::{entities::ListenKey, interfaces::IListenKeyClient};
 
 pub struct ListenKeyClient {
   cli: RestClient,
+  signer: Arc<dyn IHeaderSigner + Send + Sync>,
 }
 
 impl ListenKeyClient {
-  pub fn new() -> NotificationResult<Self> {
+  pub fn new(
+    signer: Arc<dyn IHeaderSigner + Send + Sync>,
+  ) -> NotificationResult<Self> {
     let url: NotificationResult<Vec<Url>> = REST_ENDPOINTS
       .iter()
       .map(|endpoint| {
@@ -25,13 +32,23 @@ impl ListenKeyClient {
     let url = url?;
     let cli =
       RestClient::new(&url, Duration::from_secs(5), Duration::from_secs(5))?;
-    return Ok(Self { cli });
+    return Ok(Self { cli, signer });
   }
 }
 
+#[async_trait]
 impl IListenKeyClient for ListenKeyClient {
   async fn create(&self, api_key: Arc<APIKey>) -> UserStreamResult<ListenKey> {
-
+    let mut header = HeaderMap::default();
+    self.signer.append_sign(&api_key, &mut header)?;
+    let resp: ListenKey = self
+      .cli
+      .post::<()>(Some(header), None)
+      .await?
+      .error_for_status()?
+      .json()
+      .await?;
+    return Ok(resp);
   }
   async fn delete(
     &self,
