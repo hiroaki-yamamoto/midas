@@ -19,5 +19,5 @@ mongodb = { version = "2.8.0", default-features = false, features = [
   "async-std-runtime",
   "bson-chrono-0_4",
 ] }
-async-trait = "0.1.76"
+async-trait = "0.1.77"
 futures = "0.3.30"

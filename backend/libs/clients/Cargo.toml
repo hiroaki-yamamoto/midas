@@ -16,4 +16,4 @@ reqwest = "0.11.23"
 mongodb = { version = "2.8.0", default-features = false, features = [
   "async-std-runtime",
 ] }
-async-trait = "0.1.76"
+async-trait = "0.1.77"
