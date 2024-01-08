@@ -57,7 +57,7 @@ impl IListenKeyClient for ListenKeyClient {
   ) -> UserStreamResult<()> {
     let mut header = HeaderMap::default();
     self.signer.append_sign(&api_key, &mut header)?;
-    self
+    let _ = self
       .cli
       .delete(Some(header), Some(listen_key))
       .await?
@@ -68,5 +68,14 @@ impl IListenKeyClient for ListenKeyClient {
     &self,
     api_key: Arc<APIKey>,
     listen_key: Arc<APIKey>,
-  ) -> UserStreamResult<()>;
+  ) -> UserStreamResult<()> {
+    let mut header = HeaderMap::default();
+    self.signer.append_sign(&api_key, &mut header)?;
+    let _ = self
+      .cli
+      .put(Some(header), Some(listen_key))
+      .await?
+      .error_for_status()?;
+    return Ok(());
+  }
 }
