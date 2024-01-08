@@ -10,7 +10,9 @@ use ::errors::ParseError;
 use ::rpc::api_key::ApiKey as RPCAPIKey;
 use ::rpc::exchanges::Exchanges;
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(
+  Debug, Clone, Default, Serialize, Deserialize, Eq, PartialEq, Hash,
+)]
 pub struct APIKeyInner {
   #[serde(default, rename = "_id", skip_serializing_if = "Option::is_none")]
   pub id: Option<ObjectId>,
@@ -19,7 +21,7 @@ pub struct APIKeyInner {
   pub prv_key: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 #[serde(tag = "exchange", rename_all = "camelCase")]
 pub enum APIKey {
   Binance(APIKeyInner),

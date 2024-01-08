@@ -17,6 +17,6 @@ pub trait IListenKeyClient {
   async fn extend_lifetime(
     &self,
     api_key: Arc<APIKey>,
-    listen_key: Arc<APIKey>,
+    listen_key: Arc<ListenKey>,
   ) -> UserStreamResult<()>;
 }

@@ -3,11 +3,10 @@ use ::std::sync::Arc;
 use ::std::time::Duration;
 
 use ::async_trait::async_trait;
-use ::futures::future::join_all;
+use ::futures::future::try_join_all;
 use ::futures::{SinkExt, StreamExt};
-use ::log::{as_display, error, info, warn};
+use ::log::{as_display, as_error, error, info, warn};
 use ::serde_json::{from_slice as from_json_bin, from_str as from_json_str};
-use ::tokio::sync::Mutex;
 use ::tokio::time::{interval, sleep};
 use ::tokio::{join, select};
 use ::tokio_stream::StreamMap;
@@ -16,11 +15,11 @@ use ::tokio_tungstenite::tungstenite::{
   client::IntoClientRequest, Error as WebSocketError, Message,
 };
 
-use ::clients::binance::{APIHeader, REST_ENDPOINTS, WS_ENDPOINT};
+use ::clients::binance::WS_ENDPOINT;
 use ::errors::{MaximumAttemptExceeded, NotificationResult, WebsocketError};
+use ::keychain::binance::APIKeySigner;
 use ::keychain::pubsub::APIKeyPubSub;
-use ::keychain::{APIKey, APIKeyEvent, APIKeyInner};
-use ::round_robin_client::RestClient;
+use ::keychain::{APIKey, APIKeyEvent};
 use ::subscribe::nats::Client as Nats;
 use ::subscribe::PubSub;
 use ::types::TLSWebSocket;
@@ -30,15 +29,16 @@ use crate::traits::UserStream as UserStreamTrait;
 use super::entities::{
   CastedUserStreamEvents, ListenKey, ListenKeyPair, RawUserStreamEvents,
 };
+use super::interfaces::IListenKeyClient;
 use super::pubsub::{ListenKeyPubSub, NotifyPubSub, ReauthPubSub};
+use super::services::ListenKeyClient;
 
-#[derive(Debug, Clone)]
 pub struct UserStream {
   key_pubsub: APIKeyPubSub,
   notify_pubsub: NotifyPubSub,
   reauth_pubsub: ReauthPubSub,
   listen_key_pubsub: ListenKeyPubSub,
-  cli: RestClient,
+  cli: Arc<dyn IListenKeyClient + Send + Sync>,
 }
 
 impl UserStream {
@@ -55,21 +55,14 @@ impl UserStream {
       reauth_pubsub?,
       listen_key_pubsub?,
     );
+    let signer = Arc::new(APIKeySigner::new());
+    let cli = Arc::new(ListenKeyClient::new(signer)?);
     return Ok(Self {
       key_pubsub,
       notify_pubsub,
       reauth_pubsub,
       listen_key_pubsub,
-      cli: RestClient::new(
-        REST_ENDPOINTS
-          .into_iter()
-          .filter_map(|endpoint| {
-            format!("{}/api/v3/userDataStream", endpoint).parse().ok()
-          })
-          .collect(),
-        Duration::from_secs(5),
-        Duration::from_secs(5),
-      )?,
+      cli,
     });
   }
   async fn init_websocket<S>(&self, addr: S) -> NotificationResult<TLSWebSocket>
@@ -108,9 +101,9 @@ impl UserStream {
   }
   async fn handle_message(
     &self,
-    api_key: &String,
-    sockets: &mut StreamMap<String, TLSWebSocket>,
-    listen_keys: &mut HashMap<String, String>,
+    api_key: Arc<APIKey>,
+    sockets: &mut StreamMap<Arc<APIKey>, TLSWebSocket>,
+    listen_keys: &mut HashMap<Arc<APIKey>, Arc<ListenKey>>,
     msg: &Message,
   ) -> NotificationResult<()> {
     if let Message::Close(reason) = &msg {
@@ -126,16 +119,16 @@ impl UserStream {
           warn!("Closing connection...");
         }
       };
-      if let Some(mut socket) = sockets.remove(api_key) {
+      if let Some(mut socket) = sockets.remove(&api_key) {
         let _ = socket.close(None).await;
       }
-      listen_keys.remove(api_key);
-      let _ = self.reauth_pubsub.publish(api_key).await;
+      listen_keys.remove(&api_key);
+      let _ = self.reauth_pubsub.publish(api_key.as_ref()).await;
       return Ok(());
     }
     let socket_opt = sockets
       .iter_mut()
-      .find(|(pub_key, _)| pub_key == api_key)
+      .find(|(pub_key, _)| *pub_key == api_key)
       .map(|(_, socket)| socket);
     if let Some(socket) = socket_opt {
       match msg {
@@ -158,25 +151,24 @@ impl UserStream {
   }
 
   async fn handle_disconnect(
-    &mut self,
-    pub_key: &String,
+    &self,
+    api_key: Arc<APIKey>,
   ) -> NotificationResult<()> {
     let retry_sec = Duration::from_secs(5);
-    warn!(api_key = pub_key; "Session Disconnected. Reconnecting...",);
-    let mut key = APIKeyInner::default();
-    key.pub_key = pub_key.clone();
+    let inner = api_key.as_ref().inner();
+    warn!(key = inner.pub_key; "Session Disconnected. Reconnecting...",);
     for _ in 0..5 {
-      match self.get_listen_key(&key).await {
+      match self.get_listen_key(api_key.clone()).await {
         Err(e) => {
           warn!(
-            pub_key = key.pub_key,
+            pub_key = inner.pub_key,
             error = as_display!(e);
             "Failed to reconnect trying in {} secs",
             retry_sec.as_secs(),
           );
         }
         Ok(_) => {
-          info!("pub_key" = key.pub_key; "Reconnected.");
+          info!("pub_key" = inner.pub_key; "Reconnected.");
           return Ok(());
         }
       }
@@ -184,42 +176,30 @@ impl UserStream {
     }
     return Err(MaximumAttemptExceeded.into());
   }
-}
 
-impl APIHeader for UserStream {}
-
-#[async_trait]
-impl UserStreamTrait for UserStream {
   async fn get_listen_key(
-    &mut self,
-    api_key: &APIKeyInner,
+    &self,
+    api_key: Arc<APIKey>,
   ) -> NotificationResult<()> {
-    let header = self.get_pub_header(api_key)?;
-    let resp: ListenKey = self
-      .cli
-      .post::<()>(Some(header), None)
-      .await?
-      .error_for_status()?
-      .json()
-      .await?;
-    let key = ListenKeyPair::new(resp.listen_key, api_key.pub_key.clone());
+    let listen_key = self.cli.create(api_key.clone()).await?;
+    let key = ListenKeyPair::new(listen_key.listen_key, api_key);
     let _ = self.listen_key_pubsub.publish(&key).await?;
     return Ok(());
   }
+
   async fn close_listen_key(
-    &mut self,
-    api_key: &APIKeyInner,
-    listen_key: &String,
+    &self,
+    api_key: Arc<APIKey>,
+    listen_key: Arc<ListenKey>,
   ) -> NotificationResult<()> {
-    let pub_key = self.get_pub_header(api_key)?;
-    let _ = self
-      .cli
-      .delete(Some(pub_key), Some(&[("listenKey", listen_key)]))
-      .await?
-      .error_for_status()?;
+    let _ = self.cli.delete(api_key, listen_key).await?;
     return Ok(());
   }
-  async fn start(&mut self) -> NotificationResult<()> {
+}
+
+#[async_trait]
+impl UserStreamTrait for UserStream {
+  async fn start(&self) -> NotificationResult<()> {
     let (keychain_sub, listen_key_sub, reauth_sub) = join!(
       self.key_pubsub.pull_subscribe("userStream"),
       self.listen_key_pubsub.pull_subscribe("userStream"),
@@ -232,31 +212,26 @@ impl UserStreamTrait for UserStream {
     let mut reauth_sub = reauth_sub.boxed();
     // 1800 = 30 * 60 = 30 mins.
     let mut listen_key_refresh = interval(Duration::from_secs(1800));
-    let mut sockets: StreamMap<String, TLSWebSocket> = StreamMap::new();
+    let mut sockets: StreamMap<Arc<APIKey>, TLSWebSocket> = StreamMap::new();
     // Key = Pub API key, Value = Listen Key
-    let mut listen_keys: HashMap<String, String> = HashMap::new();
-    let me = Arc::new(Mutex::new(self.clone()));
+    let mut listen_keys: HashMap<Arc<APIKey>, Arc<ListenKey>> = HashMap::new();
     loop {
-      let me = Arc::clone(&me);
       select! {
         Some((event, _)) = keychain_sub.next() => {
-          let mut me = me.lock().await;
           match event {
-            APIKeyEvent::Add(APIKey::Binance(api_key)) => {
-              let _ = me.get_listen_key(&api_key).await;
+            APIKeyEvent::Add(api_key) => {
+              let _ = self.get_listen_key(Arc::new(api_key)).await;
             },
-            APIKeyEvent::Remove(APIKey::Binance(api_key)) => {
-              if let Some(listen_key) = listen_keys.remove(&api_key.pub_key) {
-                sockets.remove(&api_key.pub_key);
-                let _ = me.close_listen_key(&api_key, &listen_key);
+            APIKeyEvent::Remove(api_key) => {
+              if let Some(listen_key) = listen_keys.remove(&api_key) {
+                sockets.remove(&api_key);
+                let _ = self.close_listen_key(Arc::new(api_key), listen_key);
               }
             },
           }
-          drop(me)
         },
         Some((listen_key, _)) = listen_key_sub.next() => {
-          let me = me.lock().await;
-          let socket = match me.init_websocket(
+          let socket = match self.init_websocket(
             format!("{}/{}", WS_ENDPOINT[0], listen_key.listen_key)
           ).await {
             Err(e) => {
@@ -265,34 +240,21 @@ impl UserStreamTrait for UserStream {
             },
             Ok(v) => v,
           };
-          drop(me);
-          sockets.insert(listen_key.pub_key.clone(), socket);
-          listen_keys.insert(listen_key.pub_key, listen_key.listen_key);
+          let api_key = listen_key.api_key.clone();
+          sockets.insert(api_key.clone(), socket);
+          listen_keys.insert(api_key.clone(), Arc::new((&listen_key).into()));
         },
         _ = listen_key_refresh.tick() => {
-          let this = me.lock().await;
           let result_defer: Vec<_> = listen_keys
-            .iter().filter_map(|(pub_key, lis_key)| {
-              let header = this.pub_header_from_str(pub_key);
-              return header.map(|header| (lis_key.to_string(), header)).ok();
-            })
-            .map(|(lis_key, header)| {
-              let lis_key = lis_key.clone();
-              let me = Arc::clone(&me);
-              async move {
-                let me = me.lock().await;
-                return me.cli.put(
-                  Some(header),
-                  Some(&[("listenKey", lis_key)])
-                ).await;
-              }
+            .iter().map(|(api_key, lis_key)| {
+              self.cli.extend_lifetime(api_key.clone(), lis_key.clone())
             }).collect();
-          join_all(result_defer).await;
-          drop(this);
+          if let Err(e) = try_join_all(result_defer).await {
+            error!(error = as_error!(e); "Failed to extend listen key lifetime");
+          }
         },
-        Some((pub_key, _)) = reauth_sub.next() => {
-          let mut me = me.lock().await;
-          match me.handle_disconnect(&pub_key).await {
+        Some((api_key, _)) = reauth_sub.next() => {
+          match self.handle_disconnect(Arc::new(api_key)).await {
             Ok(_) => {},
             Err(e) => {
               error!(
@@ -303,7 +265,6 @@ impl UserStreamTrait for UserStream {
         },
         Some((api_key, msg)) = sockets.next() => {
           // I have no idea to handle the dirty close...
-          let me = me.lock().await;
           let user_data = match msg {
             Err(e) => {
               match e {
@@ -311,7 +272,7 @@ impl UserStreamTrait for UserStream {
                 WebSocketError::AlreadyClosed => {
                   sockets.remove(&api_key);
                   listen_keys.remove(&api_key);
-                  let _ = me.reauth_pubsub.publish(&api_key).await;
+                  let _ = self.reauth_pubsub.publish(&api_key).await;
                 },
                 _ => warn!(error = as_display!(e); "Failed to receive payload"),
               }
@@ -319,8 +280,7 @@ impl UserStreamTrait for UserStream {
             },
             Ok(v) => v,
           };
-          me.handle_message(&api_key, &mut sockets, &mut listen_keys, &user_data).await?;
-          drop(me);
+          self.handle_message(api_key, &mut sockets, &mut listen_keys, &user_data).await?;
         }
       };
     }

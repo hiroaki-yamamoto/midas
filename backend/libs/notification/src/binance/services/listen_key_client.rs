@@ -67,7 +67,7 @@ impl IListenKeyClient for ListenKeyClient {
   async fn extend_lifetime(
     &self,
     api_key: Arc<APIKey>,
-    listen_key: Arc<APIKey>,
+    listen_key: Arc<ListenKey>,
   ) -> UserStreamResult<()> {
     let mut header = HeaderMap::default();
     self.signer.append_sign(&api_key, &mut header)?;

@@ -1,5 +1,6 @@
 use super::entities::CastedUserStreamEvents;
 use super::entities::ListenKeyPair;
+use ::keychain::APIKey;
 use ::subscribe::pubsub;
 
 pubsub!(
@@ -9,7 +10,7 @@ pubsub!(
   "BinanceUserStreamNotify",
 );
 
-pubsub!(pub, ReauthPubSub, String, "BinanceUserStreamReAuth",);
+pubsub!(pub, ReauthPubSub, APIKey, "BinanceUserStreamReAuth",);
 pubsub!(
   pub,
   ListenKeyPubSub,

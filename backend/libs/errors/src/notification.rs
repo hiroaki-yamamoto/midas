@@ -7,6 +7,7 @@ use ::reqwest::Error as ReqErr;
 use ::serde_json::Error as JSONErr;
 use ::url::ParseError as UrlParseErr;
 
+use crate::user_stream::UserStreamError;
 use crate::APIHeaderErrors;
 use crate::HTTPErrors;
 use crate::MaximumAttemptExceeded;
@@ -41,6 +42,8 @@ pub enum NotificationError {
   ConsumerError(#[source] ConsumerError),
   #[error(display = "URL Parse Error: {}", _0)]
   UrlParseError(#[source] UrlParseErr),
+  #[error(display = "User Stream Error: {}", _0)]
+  UserStreamError(#[source] UserStreamError),
 }
 
 impl From<ReqErr> for NotificationError {
