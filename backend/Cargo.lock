@@ -524,6 +524,7 @@ dependencies = [
 name = "bot"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "err-derive",
  "errors",
  "gmp-mpfr-sys",

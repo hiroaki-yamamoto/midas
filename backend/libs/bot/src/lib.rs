@@ -1,7 +1,8 @@
 pub mod entities;
 pub mod errors;
-mod info;
+pub mod interfaces;
+pub mod services;
+
 mod transpiler;
 
-pub use self::info::BotInfoWriter;
 pub use self::transpiler::Transpiler;

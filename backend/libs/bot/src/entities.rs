@@ -1,7 +1,7 @@
 use ::std::convert::TryFrom;
 use ::std::str::FromStr;
 
-use ::mongodb::bson;
+use ::mongodb::bson::{self, oid::ObjectId};
 use ::rug::Float;
 use ::serde::{Deserialize, Serialize};
 use ::types::casting::cast_f_from_txt;
@@ -14,8 +14,8 @@ use ::rpc::exchanges::Exchanges;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bot {
-  #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
-  pub id: Option<bson::oid::ObjectId>,
+  #[serde(rename = "_id", default)]
+  pub id: ObjectId,
   pub name: String,
   pub mode: BotMode,
   pub status: BotStatus,
@@ -29,13 +29,14 @@ pub struct Bot {
 
 impl Bot {
   pub fn new(
-    id: Option<bson::oid::ObjectId>,
+    id: Option<ObjectId>,
     name: String,
     base_currency: String,
     exchange: Exchanges,
     trading_amount: Float,
     cond: String,
   ) -> Self {
+    let id: ObjectId = id.unwrap_or_else(ObjectId::new);
     return Self {
       id,
       name,
@@ -61,7 +62,8 @@ impl TryFrom<RPCBot> for Bot {
     let id = value
       .id
       .map(|id| bson::oid::ObjectId::from_str(&id).ok())
-      .flatten();
+      .flatten()
+      .unwrap_or_else(ObjectId::new);
     let cond_ts = value.condition.ok_or(ParseError::new(
       Some("condition"),
       None,
@@ -85,7 +87,7 @@ impl TryFrom<RPCBot> for Bot {
 impl From<Bot> for RPCBot {
   fn from(value: Bot) -> Self {
     return Self {
-      id: value.id.map(|id| id.to_hex()),
+      id: Some(value.id.to_hex()),
       name: value.name,
       mode: Box::new(value.mode),
       status: Box::new(value.status),
