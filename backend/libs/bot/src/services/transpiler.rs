@@ -1,26 +1,36 @@
+use ::std::sync::Arc;
+
+use ::async_trait::async_trait;
 use ::random::generate_random_txt;
 use ::reqwest::header;
 use ::reqwest::Client;
 
 use ::errors::{HTTPResult, StatusFailure};
 
-use super::entities::Bot;
+use crate::entities::Bot;
+use crate::interfaces::ITranspiler;
 
 pub struct Transpiler {
   cli: Client,
-  location: String,
+  location: Arc<str>,
 }
 
 impl Transpiler {
-  pub fn new(cli: Client, location: String) -> Self {
-    return Self { cli, location };
+  pub fn new(cli: Client, location: &str) -> Self {
+    return Self {
+      cli,
+      location: Arc::from(location),
+    };
   }
+}
 
-  pub async fn transpile(&self, bot: &Bot) -> HTTPResult<Bot> {
+#[async_trait]
+impl ITranspiler for Transpiler {
+  async fn transpile(&self, bot: Bot) -> HTTPResult<Bot> {
     let token: String = generate_random_txt(32);
     let resp = self
       .cli
-      .post(self.location.to_owned())
+      .post(self.location.as_ref())
       .header("X-XSRF-TOKEN", &token)
       .header(header::COOKIE, &format!("XSRF-TOKEN={}", token))
       .body(bot.cond_ts.clone())
