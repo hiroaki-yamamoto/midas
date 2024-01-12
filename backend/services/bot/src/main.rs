@@ -1,6 +1,8 @@
 mod context;
 mod routing;
 
+use ::std::sync::Arc;
+
 use ::futures::FutureExt;
 use ::log::{info, warn};
 use ::warp::Filter;
@@ -10,6 +12,7 @@ use ::config::init;
 use ::csrf::{CSRFOption, CSRF};
 use ::warp_utils::handle_rejection;
 
+use self::context::Context;
 use self::routing::construct;
 
 #[tokio::main]
@@ -17,8 +20,9 @@ async fn main() {
   init(|cfg, mut sig, db, _, host| async move {
     let access_logger = log();
     let http_cli = cfg.build_rest_client().unwrap();
+    let context = Context::new(&db, http_cli, &cfg.transpiler_url);
     let csrf = CSRF::new(CSRFOption::builder());
-    let route = construct(&db, http_cli, &cfg.transpiler_url);
+    let route = construct(Arc::new(context));
     let route = csrf
       .protect()
       .and(route)
