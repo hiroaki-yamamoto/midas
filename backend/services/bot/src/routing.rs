@@ -13,7 +13,7 @@ use ::rpc::status::Status;
 use crate::context::Context;
 
 pub fn construct(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
-  return post(ctx).boxed();
+  return post(ctx.clone()).or(put(ctx)).boxed();
 }
 
 fn post(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
@@ -51,5 +51,44 @@ fn post(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
       let bot: RPCBot = bot.into();
       return ::warp::reply::json(&bot);
     });
-  register.boxed()
+  return register.boxed();
+}
+
+fn put(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
+  let modify = ::warp::path::param()
+    .and(::warp::put())
+    .and(::warp::filters::body::json())
+    .and_then(|id: String, bot: RPCBot| async move {
+      // Check ID, and then convert RPCBot to Bot that is used in the backend.
+      if Some(id) == bot.id {
+        let bot = Bot::try_from(bot).map_err(|e| {
+          let code = StatusCode::EXPECTATION_FAILED;
+          let status = Status::new(code.clone(), &e.to_string());
+          return ::warp::reject::custom(status);
+        })?;
+        return Ok(bot);
+      }
+      let code = StatusCode::EXPECTATION_FAILED;
+      let status = Status::new(code.clone(), "ID mismatch");
+      return Err(::warp::reject::custom(status));
+    })
+    .map(move |bot: Bot| (bot, ctx.clone()))
+    .untuple_one()
+    .and_then(|bot: Bot, ctx: Arc<Context>| async move {
+      let _ = ctx
+        .bot_repo
+        .save(&[&bot])
+        .map_err(|e| {
+          let code = StatusCode::INTERNAL_SERVER_ERROR;
+          let status = Status::new(code.clone(), &e.to_string());
+          return ::warp::reject::custom(status);
+        })
+        .await?;
+      return Ok::<Bot, Rejection>(bot);
+    })
+    .map(|bot: Bot| {
+      let bot: RPCBot = bot.into();
+      return ::warp::reply::json(&bot);
+    });
+  return modify.boxed();
 }
