@@ -13,6 +13,10 @@ use ::rpc::status::Status;
 use crate::context::Context;
 
 pub fn construct(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
+  return post(ctx).boxed();
+}
+
+fn post(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
   let register = ::warp::post()
     .and(::warp::filters::body::json())
     .map(move |bot: RPCBot| (bot, ctx.clone()))
