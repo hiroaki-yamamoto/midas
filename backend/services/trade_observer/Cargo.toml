@@ -17,7 +17,7 @@ errors = { path = "../../libs/errors" }
 
 futures = "0.3.30"
 warp = { version = "0.3.6", features = ["tls"] }
-clap = { version = "4.4.13", features = ["derive"] }
+clap = { version = "4.4.16", features = ["derive"] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 tokio = { version = "1.35.1", features = [
   "macros",
