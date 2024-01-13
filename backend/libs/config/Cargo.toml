@@ -33,5 +33,5 @@ tokio = { version = "1.35.1", features = [
   "signal",
   "time",
 ] }
-libc = "0.2.151"
+libc = "0.2.152"
 structured-logger = "1.0.3"
