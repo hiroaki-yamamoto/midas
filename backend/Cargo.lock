@@ -527,6 +527,7 @@ dependencies = [
  "async-trait",
  "err-derive",
  "errors",
+ "futures",
  "gmp-mpfr-sys",
  "mongodb",
  "random",

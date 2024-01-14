@@ -28,3 +28,4 @@ err-derive = "0.3.1"
 rug = { version = "1.22.0", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.1", features = ["force-cross"] }
 async-trait = "0.1.77"
+futures = "0.3.30"
