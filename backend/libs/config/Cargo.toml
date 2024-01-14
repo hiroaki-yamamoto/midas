@@ -18,7 +18,7 @@ mongodb = { version = "2.8.0", default-features = false, features = [
 ] }
 serde = { version = "1.0.195", features = ["derive"] }
 serde_yaml = "0.9.30"
-clap = { version = "4.4.13", features = ["derive"] }
+clap = { version = "4.4.16", features = ["derive"] }
 reqwest = { version = "0.11.23", features = [
   "gzip",
   "brotli",
@@ -33,5 +33,5 @@ tokio = { version = "1.35.1", features = [
   "signal",
   "time",
 ] }
-libc = "0.2.151"
+libc = "0.2.152"
 structured-logger = "1.0.3"
