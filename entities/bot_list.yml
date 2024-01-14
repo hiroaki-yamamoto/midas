@@ -1,0 +1,16 @@
+type: struct
+rust:
+  derive:
+    - Debug
+    - PartialEq
+    - ::serde::Serialize
+    - ::serde::Deserialize
+  attrs:
+    - serde(rename_all = "camelCase")
+typescript:
+  rename: camelCase
+members:
+  bots:
+    array:
+      item:
+        use: Bot

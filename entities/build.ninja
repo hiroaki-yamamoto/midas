@@ -64,5 +64,8 @@ build ./../frontend/src/rpc/history_fetch_request.ts: frontend ./history_fetch_r
 build ./../backend/libs/rpc/src/bot.rs: backend ./bot.yml
 build ./../frontend/src/rpc/bot.ts: frontend ./bot.yml
 
+build ./../backend/libs/rpc/src/bot_list.rs: backend ./bot_list.yml
+build ./../frontend/src/rpc/bot_list.ts: frontend ./bot_list.yml
+
 build ./../backend/libs/rpc/src/trigger_type.rs: backend ./trigger_type.yml
 build ./../frontend/src/rpc/trigger_type.ts: frontend ./trigger_type.yml
