@@ -58,6 +58,9 @@ build ./../frontend/src/rpc/symbol_type.ts: frontend ./symbol_type.yml
 build ./../backend/libs/rpc/src/bot_mode.rs: backend ./bot_mode.yml
 build ./../frontend/src/rpc/bot_mode.ts: frontend ./bot_mode.yml
 
+build ./../backend/libs/rpc/src/pagination.rs: backend ./pagination.yml
+build ./../frontend/src/rpc/pagination.ts: frontend ./pagination.yml
+
 build ./../backend/libs/rpc/src/history_fetch_request.rs: backend ./history_fetch_request.yml
 build ./../frontend/src/rpc/history_fetch_request.ts: frontend ./history_fetch_request.yml
 

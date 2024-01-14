@@ -8,6 +8,7 @@ use ::warp::{Filter, Rejection, Reply};
 
 use ::bot::entities::Bot;
 use ::rpc::bot::Bot as RPCBot;
+use ::rpc::pagination::Pagination;
 use ::rpc::status::Status;
 
 use crate::context::Context;
@@ -91,4 +92,16 @@ fn put(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
       return ::warp::reply::json(&bot);
     });
   return modify.boxed();
+}
+
+fn list(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
+  let list = ::warp::get()
+    .and(::warp::path::end())
+    .and(::warp::query::<Pagination>())
+    .and_then(|pagination: Pagination| async move {
+      let stream = ctx
+        .bot_repo
+        .list(pagination.offset, pagination.limit)
+        .await?;
+    });
 }
