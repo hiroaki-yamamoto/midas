@@ -22,6 +22,7 @@ pub mod test_price_base;
 pub mod timestamp;
 pub mod trigger_type;
 
+mod impl_bot_list;
 mod impl_exchanges;
 mod impl_insert_one_result;
 mod impl_status;
