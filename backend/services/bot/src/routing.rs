@@ -97,11 +97,7 @@ fn put(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
 fn list(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
   let list = ::warp::get()
     .and(::warp::path::end())
-    .and(::warp::query::<Pagination>())
-    .and_then(|pagination: Pagination| async move {
-      let stream = ctx
-        .bot_repo
-        .list(pagination.offset, pagination.limit)
-        .await?;
+    .and_then(|| async move {
+      let stream = ctx.bot_repo.list().await?;
     });
 }
