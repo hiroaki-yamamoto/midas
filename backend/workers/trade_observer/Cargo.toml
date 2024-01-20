@@ -12,7 +12,7 @@ rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 subscribe = { path = "../../libs/subscribe" }
 
-clap = { version = "4.4.16", features = ["derive"] }
+clap = { version = "4.4.18", features = ["derive"] }
 tokio = { version = "1.35.1", features = [
   "signal",
   "rt",
