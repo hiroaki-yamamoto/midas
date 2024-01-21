@@ -36,7 +36,7 @@ tokio-tungstenite = { version = "0.21.0", features = ["native-tls"] }
 serde = { version = "1.0.195", features = ["derive"] }
 tokio-stream = "0.1.14"
 rug = { version = "1.23.0", features = ["serde"] }
-gmp-mpfr-sys = { version = "1.6.1", features = ["force-cross"] }
+gmp-mpfr-sys = { version = "1.6.2", features = ["force-cross"] }
 
 [dev-dependencies]
 test_utils = { path = "../test_utils" }
