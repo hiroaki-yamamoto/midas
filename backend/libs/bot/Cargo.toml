@@ -25,7 +25,7 @@ reqwest = { version = "0.11.23", features = [
   "cookies",
 ] }
 err-derive = "0.3.1"
-rug = { version = "1.23.0", features = ["serde"] }
+rug = { version = "1.24.0", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.2", features = ["force-cross"] }
 async-trait = "0.1.77"
 futures = "0.3.30"
