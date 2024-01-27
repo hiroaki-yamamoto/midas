@@ -11,7 +11,7 @@ types = { path = "../types" }
 random = { path = "../random" }
 
 redis = { version = "0.24.0", features = ["tokio-comp"] }
-serde = "1.0.195"
+serde = "1.0.196"
 rmp-serde = "1.1.2"
 async-trait = "0.1.77"
 tokio = { version = "1.35.1", features = [
