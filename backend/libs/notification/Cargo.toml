@@ -30,7 +30,7 @@ futures = "0.3.30"
 mongodb = { version = "2.8.0", default-features = false, features = [
   "async-std-runtime",
 ] }
-serde = { version = "1.0.195", features = ["derive"] }
+serde = { version = "1.0.196", features = ["derive"] }
 rug = { version = "1.23.0", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.2", features = ["force-cross"] }
 url = "2.5.0"
