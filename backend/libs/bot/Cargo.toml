@@ -12,7 +12,7 @@ errors = { path = "../errors" }
 types = { path = "../types" }
 random = { path = "../random" }
 
-serde = { version = "1.0.195", features = ["derive"] }
+serde = { version = "1.0.196", features = ["derive"] }
 mongodb = { version = "2.8.0", default-features = false, features = [
   "async-std-runtime",
   "bson-chrono-0_4",
@@ -25,7 +25,7 @@ reqwest = { version = "0.11.23", features = [
   "cookies",
 ] }
 err-derive = "0.3.1"
-rug = { version = "1.22.0", features = ["serde"] }
-gmp-mpfr-sys = { version = "1.6.1", features = ["force-cross"] }
+rug = { version = "1.24.0", features = ["serde"] }
+gmp-mpfr-sys = { version = "1.6.2", features = ["force-cross"] }
 async-trait = "0.1.77"
 futures = "0.3.30"
