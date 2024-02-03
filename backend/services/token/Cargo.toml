@@ -22,5 +22,5 @@ tokio = { version = "1.36.0", features = [
   "signal",
 ] }
 futures = "0.3.30"
-libc = "0.2.152"
+libc = "0.2.153"
 warp = { version = "0.3.6", features = ["tls"] }
