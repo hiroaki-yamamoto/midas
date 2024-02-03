@@ -12,7 +12,7 @@ errors = { path = "../errors" }
 keychain = { path = "../keychain" }
 rpc = { path = "../rpc" }
 
-reqwest = "0.11.23"
+reqwest = "0.11.24"
 mongodb = { version = "2.8.0", default-features = false, features = [
   "async-std-runtime",
 ] }
