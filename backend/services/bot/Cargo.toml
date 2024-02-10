@@ -19,14 +19,14 @@ warp = { version = "0.3.6", features = ["tls"] }
 mongodb = { version = "2.8.0", default-features = false, features = [
   "async-std-runtime",
 ] }
-reqwest = { version = "0.11.23", features = [
+reqwest = { version = "0.11.24", features = [
   "gzip",
   "brotli",
   "json",
   "rustls-tls",
   "cookies",
 ] }
-tokio = { version = "1.35.1", features = [
+tokio = { version = "1.36.0", features = [
   "macros",
   "rt",
   "rt-multi-thread",
@@ -35,5 +35,5 @@ tokio = { version = "1.35.1", features = [
 futures = "0.3.30"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 clap = { version = "4.4.18", features = ["derive"] }
-libc = "0.2.152"
+libc = "0.2.153"
 http = "1.0.0"
