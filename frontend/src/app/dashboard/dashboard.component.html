@@ -13,6 +13,8 @@
     </a>
   </header>
   <mat-accordion>
-    <app-bot-panel *ngFor="let bot of botsInfo" [bot]="bot"></app-bot-panel>
+    @for (bot of botsInfoHandler.bots; track bot.id) {
+      <app-bot-panel [bot]="bot"></app-bot-panel>
+    }
   </mat-accordion>
 </section>
