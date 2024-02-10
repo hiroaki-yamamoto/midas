@@ -13,7 +13,7 @@ keychain = { path = "../keychain" }
 rpc = { path = "../rpc" }
 
 reqwest = "0.11.24"
-mongodb = { version = "2.8.0", default-features = false, features = [
+mongodb = { version = "2.8.1", default-features = false, features = [
   "async-std-runtime",
 ] }
 async-trait = "0.1.77"

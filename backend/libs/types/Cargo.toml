@@ -12,7 +12,7 @@ errors = { path = "../errors" }
 url = "2.5.0"
 serde = { version = "1.0.196", features = ["derive"] }
 tokio = { version = "1.36.0", features = ["sync", "net"] }
-mongodb = { version = "2.8.0", default-features = false, features = [
+mongodb = { version = "2.8.1", default-features = false, features = [
   "async-std-runtime",
 ] }
 tokio-tungstenite = { version = "0.21.0", features = ["native-tls"] }
