@@ -23,8 +23,8 @@ tokio = { version = "1.36.0", features = [
   "macros",
   "signal",
 ] }
-clap = { version = "4.4.18", features = ["derive"] }
-mongodb = { version = "2.8.0", default-features = false, features = [
+clap = { version = "4.5.0", features = ["derive"] }
+mongodb = { version = "2.8.1", default-features = false, features = [
   "async-std-runtime",
 ] }
 futures = "0.3.30"

@@ -8,6 +8,6 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.77"
-mongodb = { version = "2.8.0", default-features = false, features = [
+mongodb = { version = "2.8.1", default-features = false, features = [
   "async-std-runtime",
 ] }

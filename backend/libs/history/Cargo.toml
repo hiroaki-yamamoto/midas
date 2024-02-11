@@ -23,7 +23,7 @@ kvs = { path = "../kvs" }
 async-trait = "0.1.77"
 futures = "0.3.30"
 rand = "0.8.5"
-mongodb = { version = "2.8.0", default-features = false, features = [
+mongodb = { version = "2.8.1", default-features = false, features = [
   "async-std-runtime",
 ] }
 rmp-serde = "1.1.2"
