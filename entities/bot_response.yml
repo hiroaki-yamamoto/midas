@@ -1,0 +1,27 @@
+type: struct
+rust:
+  derive:
+    - Debug
+    - Clone
+    - PartialEq
+    - ::serde::Serialize
+    - ::serde::Deserialize
+  attrs:
+    - serde(rename_all = "camelCase")
+typescript:
+  rename: camelCase
+members:
+  id:
+    type: string
+  status:
+    use: BotStatus
+  mode:
+    use: BotMode
+  created_at:
+    type: { use: Timestamp }
+  name: string
+  exchange: { use: Exchanges }
+  base_currency: string
+  trading_amount: string
+  condition:
+    type: string

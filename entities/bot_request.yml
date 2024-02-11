@@ -14,20 +14,9 @@ members:
   id:
     optional: true
     type: string
-  status:
-    use: BotStatus
-  mode:
-    use: BotMode
-  created_at:
-    optional: true
-    type: { use: Timestamp }
   name: string
   exchange: { use: Exchanges }
   base_currency: string
   trading_amount: string
   condition:
-    rust:
-      attrs:
-        - 'serde(skip_serializing_if = "Option::is_none")'
-    optional: true
     type: string

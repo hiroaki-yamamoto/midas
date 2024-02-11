@@ -13,4 +13,4 @@ members:
   bots:
     array:
       item:
-        use: Bot
+        use: BotResponse

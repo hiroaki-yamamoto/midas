@@ -52,6 +52,9 @@ build ./../frontend/src/rpc/bot_status.ts: frontend ./bot_status.yml
 build ./../backend/libs/rpc/src/api_key_list.rs: backend ./api_key_list.yml
 build ./../frontend/src/rpc/api_key_list.ts: frontend ./api_key_list.yml
 
+build ./../backend/libs/rpc/src/bot_request.rs: backend ./bot_request.yml
+build ./../frontend/src/rpc/bot_request.ts: frontend ./bot_request.yml
+
 build ./../backend/libs/rpc/src/symbol_type.rs: backend ./symbol_type.yml
 build ./../frontend/src/rpc/symbol_type.ts: frontend ./symbol_type.yml
 
@@ -64,11 +67,11 @@ build ./../frontend/src/rpc/pagination.ts: frontend ./pagination.yml
 build ./../backend/libs/rpc/src/history_fetch_request.rs: backend ./history_fetch_request.yml
 build ./../frontend/src/rpc/history_fetch_request.ts: frontend ./history_fetch_request.yml
 
-build ./../backend/libs/rpc/src/bot.rs: backend ./bot.yml
-build ./../frontend/src/rpc/bot.ts: frontend ./bot.yml
-
 build ./../backend/libs/rpc/src/bot_list.rs: backend ./bot_list.yml
 build ./../frontend/src/rpc/bot_list.ts: frontend ./bot_list.yml
 
 build ./../backend/libs/rpc/src/trigger_type.rs: backend ./trigger_type.yml
 build ./../frontend/src/rpc/trigger_type.ts: frontend ./trigger_type.yml
+
+build ./../backend/libs/rpc/src/bot_response.rs: backend ./bot_response.yml
+build ./../frontend/src/rpc/bot_response.ts: frontend ./bot_response.yml
