@@ -7,8 +7,9 @@ use ::serde::{Deserialize, Serialize};
 use ::types::casting::cast_f_from_txt;
 
 use ::errors::ParseError;
-use ::rpc::bot::Bot as RPCBot;
 use ::rpc::bot_mode::BotMode;
+use ::rpc::bot_request::BotRequest as RPCBotReq;
+use ::rpc::bot_response::BotResponse as RPCBotResp;
 use ::rpc::bot_status::BotStatus;
 use ::rpc::exchanges::Exchanges;
 
@@ -52,9 +53,25 @@ impl Bot {
   }
 }
 
-impl TryFrom<RPCBot> for Bot {
+impl From<Bot> for RPCBotResp {
+  fn from(value: Bot) -> Self {
+    return Self {
+      id: value.id.to_hex(),
+      name: value.name,
+      mode: Box::new(value.mode),
+      status: Box::new(value.status),
+      base_currency: value.base_currency,
+      exchange: value.exchange,
+      created_at: Box::new(value.created_at.to_chrono().into()),
+      trading_amount: value.trading_amount.to_string(),
+      condition: value.cond_ts,
+    };
+  }
+}
+
+impl TryFrom<RPCBotReq> for Bot {
   type Error = ParseError;
-  fn try_from(value: RPCBot) -> Result<Self, Self::Error> {
+  fn try_from(value: RPCBotReq) -> Result<Self, Self::Error> {
     let exchange = value.exchange;
     let trading_amount = value.trading_amount;
     let trading_amount =
@@ -64,38 +81,18 @@ impl TryFrom<RPCBot> for Bot {
       .map(|id| bson::oid::ObjectId::from_str(&id).ok())
       .flatten()
       .unwrap_or_else(ObjectId::new);
-    let cond_ts = value.condition.ok_or(ParseError::new(
-      Some("condition"),
-      None,
-      Some("Missing condition script"),
-    ))?;
+    let cond_ts = value.condition;
     return Ok(Self {
       id,
       name: value.name,
       base_currency: value.base_currency,
-      mode: *value.mode,
-      status: *value.status,
+      mode: BotMode::BackTest,
+      status: BotStatus::Stopped,
       exchange,
       created_at: bson::DateTime::now(),
       cond_ts,
       cond_js: None,
       trading_amount,
     });
-  }
-}
-
-impl From<Bot> for RPCBot {
-  fn from(value: Bot) -> Self {
-    return Self {
-      id: Some(value.id.to_hex()),
-      name: value.name,
-      mode: Box::new(value.mode),
-      status: Box::new(value.status),
-      base_currency: value.base_currency,
-      exchange: value.exchange,
-      created_at: Some(Box::new(value.created_at.to_chrono().into())),
-      trading_amount: value.trading_amount.to_string(),
-      condition: Some(value.cond_ts),
-    };
   }
 }

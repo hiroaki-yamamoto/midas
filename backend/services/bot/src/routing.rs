@@ -8,8 +8,9 @@ use ::warp::filters::BoxedFilter;
 use ::warp::{Filter, Rejection, Reply};
 
 use ::bot::entities::Bot;
-use ::rpc::bot::Bot as RPCBot;
 use ::rpc::bot_list::BotList;
+use ::rpc::bot_request::BotRequest as RPCBotReq;
+use ::rpc::bot_response::BotResponse as RPCBotResp;
 use ::rpc::status::Status;
 
 use crate::context::Context;
@@ -21,9 +22,9 @@ pub fn construct(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
 fn post(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
   let register = ::warp::post()
     .and(::warp::filters::body::json())
-    .map(move |bot: RPCBot| (bot, ctx.clone()))
+    .map(move |bot: RPCBotReq| (bot, ctx.clone()))
     .untuple_one()
-    .and_then(|bot: RPCBot, ctx: Arc<Context>| async move {
+    .and_then(|bot: RPCBotReq, ctx: Arc<Context>| async move {
       let mut bot = Bot::try_from(bot).map_err(|e| {
         let code = StatusCode::EXPECTATION_FAILED;
         let status = Status::new(code.clone(), &e.to_string());
@@ -50,7 +51,7 @@ fn post(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
       return Ok::<Bot, Rejection>(bot);
     })
     .map(|bot: Bot| {
-      let bot: RPCBot = bot.into();
+      let bot: RPCBotResp = bot.into();
       return ::warp::reply::json(&bot);
     });
   return register.boxed();
@@ -60,7 +61,7 @@ fn put(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
   let modify = ::warp::path::param()
     .and(::warp::put())
     .and(::warp::filters::body::json())
-    .and_then(|id: String, bot: RPCBot| async move {
+    .and_then(|id: String, bot: RPCBotReq| async move {
       // Check ID, and then convert RPCBot to Bot that is used in the backend.
       if Some(id) == bot.id {
         let bot = Bot::try_from(bot).map_err(|e| {
@@ -89,7 +90,7 @@ fn put(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
       return Ok::<Bot, Rejection>(bot);
     })
     .map(|bot: Bot| {
-      let bot: RPCBot = bot.into();
+      let bot: RPCBotResp = bot.into();
       return ::warp::reply::json(&bot);
     });
   return modify.boxed();
@@ -109,7 +110,7 @@ fn list(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
           return ::warp::reject::custom(status);
         })
         .await?;
-      let bots: Vec<Box<RPCBot>> = stream
+      let bots: Vec<Box<RPCBotResp>> = stream
         .filter_map(|bot_result| async move {
           if let Err(ref e) = bot_result {
             let e = e.clone();
@@ -118,14 +119,14 @@ fn list(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
           return bot_result.ok();
         })
         .map(|bot: Bot| {
-          let bot: RPCBot = bot.into();
+          let bot: RPCBotResp = bot.into();
           return Box::new(bot);
         })
         .collect()
         .await;
-      return Ok::<Vec<Box<RPCBot>>, Rejection>(bots);
+      return Ok::<Vec<Box<RPCBotResp>>, Rejection>(bots);
     })
-    .map(|bots: Vec<Box<RPCBot>>| {
+    .map(|bots: Vec<Box<RPCBotResp>>| {
       let bot_list = BotList::new(bots.as_slice());
       return ::warp::reply::json(&bot_list);
     });
