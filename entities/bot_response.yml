@@ -25,3 +25,7 @@ members:
   trading_amount: string
   condition:
     type: string
+    optional: true
+    rust:
+      attrs:
+        - 'serde(skip_serializing_if = "Option::is_none")'

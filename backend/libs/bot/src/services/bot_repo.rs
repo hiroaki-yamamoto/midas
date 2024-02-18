@@ -1,7 +1,7 @@
 use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::{doc, oid::ObjectId, to_document};
-use ::mongodb::options::UpdateOptions;
+use ::mongodb::options::{FindOptions, UpdateOptions};
 use ::mongodb::results::UpdateResult;
 use ::mongodb::{Collection, Database};
 
@@ -46,11 +46,22 @@ impl IBotRepo for BotRepo {
     return Ok(result?);
   }
   async fn list(&self) -> BotInfoResult<BoxStream<BotInfoResult<Bot>>> {
-    let cursor = self.col.find(None, None).await?.map(|doc_result| {
-      return doc_result.map_err(|e| {
-        return BotInfoError::from(e);
+    let cursor = self
+      .col
+      .find(
+        None,
+        FindOptions::builder()
+          .projection(doc! {
+            "cond_ts": 0,
+          })
+          .build(),
+      )
+      .await?
+      .map(|doc_result| {
+        return doc_result.map_err(|e| {
+          return BotInfoError::from(e);
+        });
       });
-    });
     return Ok(cursor.boxed());
   }
 }

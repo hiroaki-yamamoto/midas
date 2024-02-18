@@ -7,7 +7,8 @@ use super::timestamp::Timestamp;
 #[serde(rename_all = "camelCase")]
 pub struct BotResponse {
   pub base_currency: String,
-  pub condition: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub condition: Option<String>,
   pub created_at: Box<Timestamp>,
   pub exchange: Box<Exchanges>,
   pub id: String,

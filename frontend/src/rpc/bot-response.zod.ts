@@ -7,7 +7,7 @@ import { Timestamp } from './timestamp.zod';
 
 export const BotResponse = z.object({
   baseCurrency: z.string(),
-  condition: z.string(),
+  condition: z.string().optional(),
   createdAt: z.lazy(() => Timestamp),
   exchange: z.lazy(() => Exchanges),
   id: z.string(),

@@ -529,6 +529,7 @@ dependencies = [
  "errors",
  "futures",
  "gmp-mpfr-sys",
+ "log",
  "mongodb",
  "random",
  "reqwest",

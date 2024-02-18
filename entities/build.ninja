@@ -5,73 +5,73 @@ rule frontend
   command = ../deps/egen/bin/egen -i $in -j yaml -o ../frontend/src/rpc -p zod-ts
 
 build ./../backend/libs/rpc/src/progress.rs: backend ./progress.yml
-build ./../frontend/src/rpc/progress.ts: frontend ./progress.yml
+build ./../frontend/src/rpc/progress.zod.ts: frontend ./progress.yml
 
 build ./../backend/libs/rpc/src/api_rename.rs: backend ./api_rename.yml
-build ./../frontend/src/rpc/api_rename.ts: frontend ./api_rename.yml
+build ./../frontend/src/rpc/api_rename.zod.ts: frontend ./api_rename.yml
 
 build ./../backend/libs/rpc/src/position_status.rs: backend ./position_status.yml
-build ./../frontend/src/rpc/position_status.ts: frontend ./position_status.yml
+build ./../frontend/src/rpc/position_status.zod.ts: frontend ./position_status.yml
 
 build ./../backend/libs/rpc/src/status.rs: backend ./status.yml
-build ./../frontend/src/rpc/status.ts: frontend ./status.yml
+build ./../frontend/src/rpc/status.zod.ts: frontend ./status.yml
 
 build ./../backend/libs/rpc/src/base_symbols.rs: backend ./base_symbols.yml
-build ./../frontend/src/rpc/base_symbols.ts: frontend ./base_symbols.yml
+build ./../frontend/src/rpc/base_symbols.zod.ts: frontend ./base_symbols.yml
 
 build ./../backend/libs/rpc/src/symbol_list.rs: backend ./symbol_list.yml
-build ./../frontend/src/rpc/symbol_list.ts: frontend ./symbol_list.yml
+build ./../frontend/src/rpc/symbol_list.zod.ts: frontend ./symbol_list.yml
 
 build ./../backend/libs/rpc/src/test_price_base.rs: backend ./test_price_base.yml
-build ./../frontend/src/rpc/test_price_base.ts: frontend ./test_price_base.yml
+build ./../frontend/src/rpc/test_price_base.zod.ts: frontend ./test_price_base.yml
 
 build ./../backend/libs/rpc/src/api_key.rs: backend ./api_key.yml
-build ./../frontend/src/rpc/api_key.ts: frontend ./api_key.yml
+build ./../frontend/src/rpc/api_key.zod.ts: frontend ./api_key.yml
 
 build ./../backend/libs/rpc/src/bookticker.rs: backend ./bookticker.yml
-build ./../frontend/src/rpc/bookticker.ts: frontend ./bookticker.yml
+build ./../frontend/src/rpc/bookticker.zod.ts: frontend ./bookticker.yml
 
 build ./../backend/libs/rpc/src/insert_one_result.rs: backend ./insert_one_result.yml
-build ./../frontend/src/rpc/insert_one_result.ts: frontend ./insert_one_result.yml
+build ./../frontend/src/rpc/insert_one_result.zod.ts: frontend ./insert_one_result.yml
 
 build ./../backend/libs/rpc/src/timestamp.rs: backend ./timestamp.yml
-build ./../frontend/src/rpc/timestamp.ts: frontend ./timestamp.yml
+build ./../frontend/src/rpc/timestamp.zod.ts: frontend ./timestamp.yml
 
 build ./../backend/libs/rpc/src/exchanges.rs: backend ./exchanges.yml
-build ./../frontend/src/rpc/exchanges.ts: frontend ./exchanges.yml
+build ./../frontend/src/rpc/exchanges.zod.ts: frontend ./exchanges.yml
 
 build ./../backend/libs/rpc/src/position.rs: backend ./position.yml
-build ./../frontend/src/rpc/position.ts: frontend ./position.yml
+build ./../frontend/src/rpc/position.zod.ts: frontend ./position.yml
 
 build ./../backend/libs/rpc/src/symbol_info.rs: backend ./symbol_info.yml
-build ./../frontend/src/rpc/symbol_info.ts: frontend ./symbol_info.yml
+build ./../frontend/src/rpc/symbol_info.zod.ts: frontend ./symbol_info.yml
 
 build ./../backend/libs/rpc/src/bot_status.rs: backend ./bot_status.yml
-build ./../frontend/src/rpc/bot_status.ts: frontend ./bot_status.yml
+build ./../frontend/src/rpc/bot_status.zod.ts: frontend ./bot_status.yml
 
 build ./../backend/libs/rpc/src/api_key_list.rs: backend ./api_key_list.yml
-build ./../frontend/src/rpc/api_key_list.ts: frontend ./api_key_list.yml
+build ./../frontend/src/rpc/api_key_list.zod.ts: frontend ./api_key_list.yml
 
 build ./../backend/libs/rpc/src/bot_request.rs: backend ./bot_request.yml
-build ./../frontend/src/rpc/bot_request.ts: frontend ./bot_request.yml
+build ./../frontend/src/rpc/bot_request.zod.ts: frontend ./bot_request.yml
 
 build ./../backend/libs/rpc/src/symbol_type.rs: backend ./symbol_type.yml
-build ./../frontend/src/rpc/symbol_type.ts: frontend ./symbol_type.yml
+build ./../frontend/src/rpc/symbol_type.zod.ts: frontend ./symbol_type.yml
 
 build ./../backend/libs/rpc/src/bot_mode.rs: backend ./bot_mode.yml
-build ./../frontend/src/rpc/bot_mode.ts: frontend ./bot_mode.yml
+build ./../frontend/src/rpc/bot_mode.zod.ts: frontend ./bot_mode.yml
 
 build ./../backend/libs/rpc/src/pagination.rs: backend ./pagination.yml
-build ./../frontend/src/rpc/pagination.ts: frontend ./pagination.yml
+build ./../frontend/src/rpc/pagination.zod.ts: frontend ./pagination.yml
 
 build ./../backend/libs/rpc/src/history_fetch_request.rs: backend ./history_fetch_request.yml
-build ./../frontend/src/rpc/history_fetch_request.ts: frontend ./history_fetch_request.yml
+build ./../frontend/src/rpc/history_fetch_request.zod.ts: frontend ./history_fetch_request.yml
 
 build ./../backend/libs/rpc/src/bot_list.rs: backend ./bot_list.yml
-build ./../frontend/src/rpc/bot_list.ts: frontend ./bot_list.yml
+build ./../frontend/src/rpc/bot_list.zod.ts: frontend ./bot_list.yml
 
 build ./../backend/libs/rpc/src/trigger_type.rs: backend ./trigger_type.yml
-build ./../frontend/src/rpc/trigger_type.ts: frontend ./trigger_type.yml
+build ./../frontend/src/rpc/trigger_type.zod.ts: frontend ./trigger_type.yml
 
 build ./../backend/libs/rpc/src/bot_response.rs: backend ./bot_response.yml
-build ./../frontend/src/rpc/bot_response.ts: frontend ./bot_response.yml
+build ./../frontend/src/rpc/bot_response.zod.ts: frontend ./bot_response.yml

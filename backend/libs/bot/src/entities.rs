@@ -24,6 +24,7 @@ pub struct Bot {
   pub exchange: Box<Exchanges>,
   pub created_at: bson::DateTime,
   pub trading_amount: Float,
+  #[serde(default = "String::new")]
   pub cond_ts: String,
   pub cond_js: Option<String>,
 }
@@ -64,7 +65,11 @@ impl From<Bot> for RPCBotResp {
       exchange: value.exchange,
       created_at: Box::new(value.created_at.to_chrono().into()),
       trading_amount: value.trading_amount.to_string(),
-      condition: value.cond_ts,
+      condition: if value.cond_ts.is_empty() {
+        None
+      } else {
+        Some(value.cond_ts)
+      },
     };
   }
 }
@@ -90,7 +95,7 @@ impl TryFrom<RPCBotReq> for Bot {
       status: BotStatus::Stopped,
       exchange,
       created_at: bson::DateTime::now(),
-      cond_ts,
+      cond_ts: cond_ts,
       cond_js: None,
       trading_amount,
     });
