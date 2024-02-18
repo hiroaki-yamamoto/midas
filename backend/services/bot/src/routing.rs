@@ -41,7 +41,7 @@ fn post(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
         .await?;
       let _ = ctx
         .bot_repo
-        .save(&[&bot])
+        .save(&bot)
         .map_err(|e| {
           let code = StatusCode::INTERNAL_SERVER_ERROR;
           let status = Status::new(code.clone(), &e.to_string());
@@ -80,7 +80,7 @@ fn put(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
     .and_then(|bot: Bot, ctx: Arc<Context>| async move {
       let _ = ctx
         .bot_repo
-        .save(&[&bot])
+        .save(&bot)
         .map_err(|e| {
           let code = StatusCode::INTERNAL_SERVER_ERROR;
           let status = Status::new(code.clone(), &e.to_string());

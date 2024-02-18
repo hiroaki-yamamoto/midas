@@ -9,6 +9,6 @@ use crate::errors::BotInfoResult;
 #[async_trait]
 pub trait IBotRepo {
   async fn get_by_id(&self, id: ObjectId) -> BotInfoResult<Bot>;
-  async fn save(&self, model: &[&Bot]) -> BotInfoResult<UpdateResult>;
+  async fn save(&self, model: &Bot) -> BotInfoResult<UpdateResult>;
   async fn list(&self) -> BotInfoResult<BoxStream<BotInfoResult<Bot>>>;
 }

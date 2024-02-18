@@ -34,13 +34,12 @@ impl IBotRepo for BotRepo {
       .ok_or(ObjectNotFound::new("Bot", Some(id.to_hex().as_str())))?;
     return Ok(doc);
   }
-  async fn save(&self, model: &[&Bot]) -> BotInfoResult<UpdateResult> {
-    let ids: Vec<ObjectId> = model.iter().map(|p| p.id.clone()).collect();
+  async fn save(&self, model: &Bot) -> BotInfoResult<UpdateResult> {
     let result = self
       .col
-      .update_many(
-        doc! {"_id": {"$in": ids}},
-        to_document(model)?,
+      .update_one(
+        doc! {"_id": model.id},
+        doc! {"$set": to_document(model)?},
         UpdateOptions::builder().upsert(true).build(),
       )
       .await;
