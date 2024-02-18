@@ -11,7 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { SymbolService, IBaseCurrencies } from '../resources/symbol.service';
 import { Exchanges } from '../../rpc/exchanges.zod';
-import { Bot } from '../../rpc/bot.zod';
+import { BotRequest } from '../../rpc/bot-request.zod';
 
 import { faSave } from '@fortawesome/free-solid-svg-icons';
 
@@ -118,7 +118,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       const val = form.value;
       val.tradingAmount = val.tradingAmount.toString();
 
-      const model = Bot.parse(val);
+      const model = BotRequest.parse(val);
 
       this.http.post('/bot/', model).subscribe(() => {
         this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });

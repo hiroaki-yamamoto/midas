@@ -8,7 +8,7 @@ import {
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 
-import { Bot } from '../../rpc/bot.zod';
+import { BotResponse } from '../../rpc/bot-response.zod';
 import { Position } from '../../rpc/position.zod';
 import { PositionStatus } from '../../rpc/position-status.zod';
 import { IGraphStats } from './interfaces';
@@ -22,7 +22,7 @@ import { ISeries } from '../date-graph/date-graph.component';
 })
 export class BotPanelComponent implements OnInit {
 
-  @Input() bot: Bot;
+  @Input() bot: BotResponse;
   @ViewChild('curPosPaginator', { static: true }) curPosPaginator: MatPaginator;
   @ViewChild('arcPosPaginator', { static: true }) arcPosPaginator: MatPaginator;
 

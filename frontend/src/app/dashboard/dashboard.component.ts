@@ -3,7 +3,7 @@ import {
   OnInit,
 } from '@angular/core';
 
-import { Bot } from '../../rpc/bot.zod';
+import { BotResponse } from '../../rpc/bot-response.zod';
 import { BotService } from '../resources/bot.service';
 import { ISeries } from '../date-graph/date-graph.component';
 
@@ -14,13 +14,13 @@ interface IGraphData {
 }
 
 class BotInfoHandler {
-  public bots: Bot[];
+  public bots: BotResponse[];
 
   constructor() {
     this.bots = [];
   }
 
-  public next(value: Bot[]) {
+  public next(value: BotResponse[]) {
     this.bots = value || [];
   }
 
