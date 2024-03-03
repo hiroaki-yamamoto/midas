@@ -1,16 +1,20 @@
 use ::std::convert::TryFrom;
 use ::std::sync::Arc;
+use std::str::FromStr;
 
 use ::futures::{StreamExt, TryFutureExt};
 use ::http::StatusCode;
 use ::log::{as_error, error};
+use ::mongodb::bson::oid::ObjectId;
 use ::warp::filters::BoxedFilter;
 use ::warp::{Filter, Rejection, Reply};
 
 use ::bot::entities::Bot;
+use ::bot::errors::BotInfoError;
 use ::rpc::bot_list::BotList;
 use ::rpc::bot_request::BotRequest as RPCBotReq;
 use ::rpc::bot_response::BotResponse as RPCBotResp;
+use ::rpc::bot_status::BotStatus;
 use ::rpc::status::Status;
 
 use crate::context::Context;
@@ -60,8 +64,33 @@ fn post(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
 fn put(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
   let modify = ::warp::path::param()
     .and(::warp::put())
+    .map(move |id: String| (id, ctx.clone()))
+    .untuple_one()
+    .and_then(|id: String, ctx: Arc<Context>| async move {
+      let oid = ObjectId::from_str(&id).map_err(|e| {
+        let code = StatusCode::EXPECTATION_FAILED;
+        let status = Status::new(code.clone(), &e.to_string());
+        return ::warp::reject::custom(status);
+      })?;
+      let bot = ctx.bot_repo.get_by_id(oid).await.map_err(|e| {
+        let code = if let BotInfoError::ObjectNotFound(_) = e {
+          StatusCode::NOT_FOUND
+        } else {
+          StatusCode::INTERNAL_SERVER_ERROR
+        };
+        let status = Status::new(code.clone(), &e.to_string());
+        return ::warp::reject::custom(status);
+      })?;
+      if bot.status != BotStatus::Stopped {
+        let code = StatusCode::EXPECTATION_FAILED;
+        let status = Status::new(code.clone(), "Bot is not stopped");
+        return Err(::warp::reject::custom(status));
+      }
+      return Ok((id, ctx));
+    })
+    .untuple_one()
     .and(::warp::filters::body::json())
-    .and_then(|id: String, bot: RPCBotReq| async move {
+    .and_then(|id: String, ctx: Arc<Context>, bot: RPCBotReq| async move {
       // Check ID, and then convert RPCBot to Bot that is used in the backend.
       if Some(id) == bot.id {
         let bot = Bot::try_from(bot).map_err(|e| {
@@ -69,13 +98,12 @@ fn put(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
           let status = Status::new(code.clone(), &e.to_string());
           return ::warp::reject::custom(status);
         })?;
-        return Ok(bot);
+        return Ok((bot, ctx));
       }
       let code = StatusCode::EXPECTATION_FAILED;
       let status = Status::new(code.clone(), "ID mismatch");
       return Err(::warp::reject::custom(status));
     })
-    .map(move |bot: Bot| (bot, ctx.clone()))
     .untuple_one()
     .and_then(|bot: Bot, ctx: Arc<Context>| async move {
       let _ = ctx
