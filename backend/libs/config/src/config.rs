@@ -2,7 +2,7 @@ use ::std::fs::{read_to_string, File};
 use ::std::io::Read;
 use ::std::time::Duration;
 
-use ::log::{as_error, warn};
+use ::log::warn;
 use ::mongodb::error::Result as DBResult;
 use ::mongodb::{
   options::ClientOptions as DBCliOpt, Client as DBCli, Database as DB,
@@ -71,7 +71,7 @@ impl Config {
         Ok(o) => return Ok(o?),
         Err(e) => {
           warn!(
-            error = as_error!(e);
+            error: err = e;
             "Failed to estanblish the connection to redis. Retrying.",
           );
         }

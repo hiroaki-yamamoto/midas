@@ -5,7 +5,7 @@ use ::async_trait::async_trait;
 use ::futures::future::{join, try_join_all, BoxFuture};
 use ::futures::stream::BoxStream;
 use ::futures::{FutureExt, StreamExt, TryFutureExt};
-use ::log::{as_error, as_serde, error};
+use ::log::error;
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::Database;
 use ::rug::Float;
@@ -149,9 +149,9 @@ impl ExecutorTrait for Executor {
         Ok(pos) => pos,
         Err(e) => {
           error!(
-            error = as_error!(e),
+            error: err = e,
             gid = gid.to_hex(),
-            exchange = as_serde!(Exchanges::Binance);
+            exchange: serde = Exchanges::Binance;
             "Error occured on retriving the order response from DB. Skipping..."
           );
           continue;

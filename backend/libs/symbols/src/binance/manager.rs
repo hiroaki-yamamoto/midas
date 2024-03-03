@@ -1,7 +1,7 @@
 use ::std::collections::HashSet;
 
 use ::errors::CreateStreamResult;
-use ::log::{as_error, error};
+use ::log::error;
 use ::subscribe::nats::Client as Nats;
 
 use super::entities::Symbol;
@@ -56,7 +56,7 @@ impl SymbolUpdateEventManager {
       {
         error!(
           symbol = add_item.symbol.to_owned(),
-          error = as_error!(e);
+          error:err = e;
           "Failed to publish the newly added symbol",
         );
       };
@@ -69,7 +69,7 @@ impl SymbolUpdateEventManager {
       {
         error!(
           symbol = del_item.symbol.to_owned(),
-          error = as_error!(e);
+          error:err = e;
           "Failed to publish the deleted symbol",
         );
       }

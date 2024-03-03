@@ -5,7 +5,7 @@ use ::std::time::Duration;
 use ::async_trait::async_trait;
 use ::futures::future::try_join_all;
 use ::futures::{SinkExt, StreamExt};
-use ::log::{as_display, as_error, error, info, warn};
+use ::log::{error, info, warn};
 use ::serde_json::{from_slice as from_json_bin, from_str as from_json_str};
 use ::tokio::time::{interval, sleep};
 use ::tokio::{join, select};
@@ -110,7 +110,7 @@ impl UserStream {
       match reason {
         Some(reason) => {
           warn!(
-            code = as_display!(reason.code),
+            code:% = reason.code,
             reason = reason.reason;
             "Closing connection...",
           );
@@ -162,7 +162,7 @@ impl UserStream {
         Err(e) => {
           warn!(
             pub_key = inner.pub_key,
-            error = as_display!(e);
+            error: err = e;
             "Failed to reconnect trying in {} secs",
             retry_sec.as_secs(),
           );
@@ -235,7 +235,7 @@ impl UserStreamTrait for UserStream {
             format!("{}/{}", WS_ENDPOINT[0], listen_key.listen_key)
           ).await {
             Err(e) => {
-              warn!(error = as_display!(e); "Switching Protocol Failed");
+              warn!(error: err = e; "Switching Protocol Failed");
               continue;
             },
             Ok(v) => v,
@@ -250,7 +250,7 @@ impl UserStreamTrait for UserStream {
               self.cli.extend_lifetime(api_key.clone(), lis_key.clone())
             }).collect();
           if let Err(e) = try_join_all(result_defer).await {
-            error!(error = as_error!(e); "Failed to extend listen key lifetime");
+            error!(error: err = e; "Failed to extend listen key lifetime");
           }
         },
         Some((api_key, _)) = reauth_sub.next() => {
@@ -258,7 +258,7 @@ impl UserStreamTrait for UserStream {
             Ok(_) => {},
             Err(e) => {
               error!(
-                error = as_display!(e); "Failed to authenticate listen key",
+                error: err = e; "Failed to authenticate listen key",
               );
             },
           };
@@ -274,7 +274,7 @@ impl UserStreamTrait for UserStream {
                   listen_keys.remove(&api_key);
                   let _ = self.reauth_pubsub.publish(&api_key).await;
                 },
-                _ => warn!(error = as_display!(e); "Failed to receive payload"),
+                _ => warn!(error: err = e; "Failed to receive payload"),
               }
               continue;
             },

@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 use ::futures::{StreamExt, TryFutureExt};
 use ::http::StatusCode;
-use ::log::{as_error, error};
+use ::log::error;
 use ::mongodb::bson::oid::ObjectId;
 use ::warp::filters::BoxedFilter;
 use ::warp::{Filter, Rejection, Reply};
@@ -142,7 +142,7 @@ fn list(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
         .filter_map(|bot_result| async move {
           if let Err(ref e) = bot_result {
             let e = e.clone();
-            error!(error = as_error!(e); "Failed to get bot info");
+            error!(error: err = e; "Failed to get bot info");
           }
           return bot_result.ok();
         })

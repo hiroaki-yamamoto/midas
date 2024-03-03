@@ -2,7 +2,7 @@ use ::std::sync::Arc;
 
 use ::futures::future::{try_join, TryFutureExt};
 use ::futures::stream::{BoxStream, StreamExt};
-use ::log::{as_error, as_serde, warn};
+use ::log::warn;
 use ::serde_json::to_string as jsonify;
 use ::warp::ws::Message;
 
@@ -78,9 +78,9 @@ impl Context {
               }
               Err(err) => {
                 warn!(
-                  error = as_error!(err),
-                  exchange = as_serde!(exchange_name),
-                  symbol = as_serde!(sym);
+                  error: err = err,
+                  exchange: serde = exchange_name,
+                  symbol: serde = sym;
                   "Failed to get progress"
                 );
                 None

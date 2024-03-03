@@ -6,7 +6,7 @@ use ::std::sync::Arc;
 use ::std::time::{Duration, UNIX_EPOCH};
 
 use ::futures::StreamExt;
-use ::log::{as_debug, as_error, error, info};
+use ::log::{error, info};
 
 #[cfg(debug_assertions)]
 use ::log::warn;
@@ -53,8 +53,8 @@ async fn main() {
           let end = req.end.map(|end| end.into()).unwrap_or(UNIX_EPOCH);
           info!(
             symbol = req.symbol,
-            start_at = as_debug!(start),
-            end_at = as_debug!(end);
+            start_at: debug = start,
+            end_at: debug = end;
             "Start splitting currency",
           );
           let (fetcher, writer) = match req.exchange.as_ref() {
@@ -66,7 +66,7 @@ async fn main() {
           if let Err(e) = writer.delete_by_symbol(&req.symbol).await {
             error!(
               symbol = req.symbol,
-              error = as_error!(e);
+              error: err = e;
               "Failed to clean historical data",
             );
             continue;
@@ -81,7 +81,7 @@ async fn main() {
           };
           let mut splitter = match splitter {
             Err(e) => {
-              error!(error = as_error!(e); "Failed to initialize DateSplitter");
+              error!(error: err = e; "Failed to initialize DateSplitter");
               continue;
             },
             Ok(v) => v
@@ -89,7 +89,7 @@ async fn main() {
           if let Err(e) = cur_prog_kvs.reset(
             exchange_name.clone(), symbol.clone()
           ).await {
-            error!(error = as_error!(e); "Failed to reset the progress");
+            error!(error: err = e; "Failed to reset the progress");
             continue;
           }
           if let Err(e) = num_prg_kvs.set(
@@ -98,7 +98,7 @@ async fn main() {
             splitter.len().unwrap_or(0) as i64,
             WriteOption::default().duration(Duration::from_secs(180).into()).into(),
           ).await {
-            error!(error = as_error!(e); "Failed to set the number of objects to fetch");
+            error!(error: err = e; "Failed to set the number of objects to fetch");
           }
 
           #[cfg(debug_assertions)]
@@ -110,8 +110,8 @@ async fn main() {
             {
               if dupe_list.contains(&start) {
                 warn!(
-                  start = as_debug!(start),
-                  end = as_debug!(end);
+                  start: debug = start,
+                  end: debug = end;
                   "Dupe detected",
                 );
               }
@@ -120,7 +120,10 @@ async fn main() {
             if let Err(e) = resp_pubsub.publish(
               &req.clone().start(Some(start.into())).end(Some(end.into()))
             ).await {
-              error!(error = as_error!(e); "Error occured while sending splite date data");
+              error!(
+                error: err = e;
+                "Error occured while sending splite date data"
+              );
             }
           }
 

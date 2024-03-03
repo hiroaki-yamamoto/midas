@@ -4,7 +4,7 @@ use ::std::task::Poll;
 use ::async_trait::async_trait;
 use ::errors::{ObserverError, ObserverResult, ParseResult};
 use ::futures::{SinkExt, Stream, StreamExt};
-use ::log::{as_error, as_serde, debug, info};
+use ::log::{debug, info};
 use ::random::generate_random_txt;
 use ::rug::Float;
 
@@ -51,23 +51,23 @@ impl BookTickerSocket {
   ) -> WSMessageDetail<BookTicker<Float>> {
     match payload {
       WebsocketPayload::BookTicker(book_ticker) => {
-        info!(payload = as_serde!(book_ticker); "Received Payload");
+        info!(payload: serde = book_ticker; "Received Payload");
         let book_ticker: ParseResult<BookTicker<Float>> =
           book_ticker.try_into();
         return match book_ticker {
           Ok(book_ticker) => WSMessageDetail::EntityReceived(book_ticker),
           Err(error) => {
-            info!(error=as_error!(error); "Error");
+            info!(error: err = error; "Error");
             WSMessageDetail::Continue
           }
         };
       }
       WebsocketPayload::Error(error) => {
-        info!(error=as_serde!(&error); "Error");
+        info!(error: serde = error; "Error");
         WSMessageDetail::Continue
       }
       WebsocketPayload::Result(result) => {
-        info!(result=as_serde!(&result); "Unexpected Result");
+        info!(result: serde = result; "Unexpected Result");
         WSMessageDetail::Continue
       }
     }
@@ -111,7 +111,7 @@ impl IBookTickerSocket for BookTickerSocket {
         .collect(),
     }
     .into_subscribe();
-    debug!(payload = as_serde!(payload); "Start Subscribe");
+    debug!(payload: serde = payload; "Start Subscribe");
     self.socket.send(payload).await?;
     let result = self.socket.next().await;
     if let Some(WSMessageDetail::EntityReceived(WebsocketPayload::Result(
@@ -119,12 +119,12 @@ impl IBookTickerSocket for BookTickerSocket {
     ))) = &result
     {
       if result.id == self.id {
-        info!(result=as_serde!(&result); "Subscribed.");
+        info!(result: serde = result; "Subscribed.");
         return Ok(());
       }
     }
     self.symbols.append(&mut symbols.to_vec());
-    debug!(result = as_serde!(result); "Failed to subscribe.");
+    debug!(result: serde = result; "Failed to subscribe.");
     return Err(ObserverError::Other("Failed to subscribe.".to_string()));
   }
 
@@ -141,7 +141,7 @@ impl IBookTickerSocket for BookTickerSocket {
       })
       .collect();
     for payload in payloads {
-      debug!(payload = as_serde!(payload); "Start Unsubscribe");
+      debug!(payload: serde = payload; "Start Unsubscribe");
       self.socket.send(payload).await?;
     }
     // Remove symbols from the map

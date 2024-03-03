@@ -3,7 +3,7 @@ use ::std::sync::Arc;
 use ::async_trait::async_trait;
 use ::futures::future::try_join;
 use ::futures::sink::SinkExt;
-use ::log::{as_serde, warn};
+use ::log::warn;
 use ::serde_json::to_string as jsonify;
 use ::warp::ws::{Message, WebSocket};
 
@@ -66,10 +66,10 @@ impl ISocketResponseService for SocketResponseService {
       let _ = websink.flush().await;
     } else {
       warn!(
-        exchange = as_serde!(exchange),
-        symbol = as_serde!(symbol),
-        size = as_serde!(size),
-        cur = as_serde!(cur);
+        exchange: serde = exchange,
+        symbol: serde = symbol,
+        size: serde = size,
+        cur: serde = cur;
         "Failed to get progress"
       );
     }

@@ -1,6 +1,6 @@
 use ::clap::Parser;
 use ::libc::{SIGINT, SIGTERM};
-use ::log::{as_error, error};
+use ::log::error;
 use ::tokio::signal::unix as signal;
 
 use ::config::{Config, DEFAULT_CONFIG_PATH};
@@ -33,6 +33,6 @@ async fn main() {
   let mut sig =
     signal::signal(signal::SignalKind::from_raw(SIGTERM | SIGINT)).unwrap();
   if let Err(e) = exchange.start(&mut sig).await {
-    error!(error = as_error!(e); "An Error Occurred.");
+    error!(error: err = e; "An Error Occurred.");
   }
 }

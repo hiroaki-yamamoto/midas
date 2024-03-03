@@ -7,7 +7,7 @@ use ::futures::executor::block_on;
 use ::futures::sink::Sink;
 use ::futures::sink::SinkExt;
 use ::futures::stream::{Stream, StreamExt};
-use ::log::{as_display, error, info, warn};
+use ::log::{error, info, warn};
 use ::rand::thread_rng;
 use ::rand::Rng;
 use ::serde::{de::DeserializeOwned, ser::Serialize};
@@ -132,7 +132,7 @@ where
         return Ok(MsgDetail::Disconnected);
       }
       Message::Frame(frame) => {
-        warn!(frame = as_display!(frame); "Received Unexpected Frame Message");
+        warn!(frame: % = frame; "Received Unexpected Frame Message");
         return Ok(MsgDetail::Continue);
       }
     }
@@ -177,7 +177,7 @@ where
       return match payload {
         Ok(payload) => Poll::Ready(Some(payload)),
         Err(err) => {
-          error!(error = as_display!(err); "Error while polling websocket stream.");
+          error!(error: % = err; "Error while polling websocket stream.");
           Poll::Ready(None)
         }
       };

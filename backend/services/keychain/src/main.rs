@@ -1,7 +1,7 @@
 use ::futures::FutureExt;
 use ::futures::StreamExt;
 use ::http::StatusCode;
-use ::log::{as_display, info, warn};
+use ::log::{info, warn};
 use ::mongodb::bson::{doc, oid::ObjectId};
 use ::std::convert::TryFrom;
 use ::warp::Filter;
@@ -51,7 +51,7 @@ async fn main() {
       .and_then(|keychain: KeyChain| async move {
         match keychain.list(doc! {}).await {
           Err(e) => {
-            warn!(error = as_display!(e); "An error was occured when querying");
+            warn!(error: err = e; "An error was occured when querying");
             return Err(::warp::reject());
           }
           Ok(cursor) => {
