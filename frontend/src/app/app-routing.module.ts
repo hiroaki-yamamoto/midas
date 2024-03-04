@@ -1,5 +1,8 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import {
+  Routes, RouterModule,
+  ActivatedRouteSnapshot, RouterStateSnapshot,
+} from '@angular/router';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { InfoComponent } from './info/info.component';
 import { KeychainComponent } from './keychain/keychain.component';
@@ -17,8 +20,17 @@ const routes: Routes = [
     component: KeychainComponent
   },
   {
-    path: 'edit-bot',
+    path: 'edit-bot/:botId',
     component: BotEditorComponent,
+    canActivate: [
+      (route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean => {
+        const botId = route.params.botId;
+        if (!botId) {
+          return true;
+        }
+        throw new Error('Not implemented');
+      }
+    ],
   },
   {
     path: 'sync/:exchange',
