@@ -1,0 +1,17 @@
+type: struct
+rust:
+  derive:
+    - "Debug"
+    - "PartialEq"
+    - "Clone"
+    - "::serde::Serialize"
+    - "::serde::Deserialize"
+typescript:
+  rename: camelCase
+members:
+  granularity:
+    rust:
+      attrs:
+        - serde(default="BotGetRequest::default_granularity")
+    type:
+      use: SummaryDetail

@@ -11,16 +11,59 @@ use ::warp::{Filter, Rejection, Reply};
 
 use ::bot::entities::Bot;
 use ::bot::errors::BotInfoError;
+use ::rpc::bot_get_request::BotGetRequest as RPCBotGetReq;
 use ::rpc::bot_list::BotList;
 use ::rpc::bot_request::BotRequest as RPCBotReq;
 use ::rpc::bot_response::BotResponse as RPCBotResp;
 use ::rpc::bot_status::BotStatus;
 use ::rpc::status::Status;
+use ::rpc::summary_detail::SummaryDetail;
 
 use crate::context::Context;
 
 pub fn construct(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
-  return list(ctx.clone()).or(post(ctx.clone())).or(put(ctx)).boxed();
+  return get(ctx.clone())
+    .or(list(ctx.clone()))
+    .or(post(ctx.clone()))
+    .or(put(ctx))
+    .boxed();
+}
+
+fn get(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
+  let get = ::warp::path::param()
+    .and(::warp::query())
+    .and(::warp::get())
+    .map(move |id: String, query: RPCBotGetReq| (id, query, ctx.clone()))
+    .untuple_one()
+    .and_then(
+      |id: String, query: RPCBotGetReq, ctx: Arc<Context>| async move {
+        let oid = ObjectId::from_str(&id).map_err(|e| {
+          let code = StatusCode::EXPECTATION_FAILED;
+          let status = Status::new(code.clone(), &e.to_string());
+          return ::warp::reject::custom(status);
+        })?;
+        let bot = match *query.granularity {
+          SummaryDetail::Detail => ctx.bot_repo.get_by_id(oid),
+          SummaryDetail::Summary => ctx.bot_repo.summary_by_id(oid),
+        }
+        .await
+        .map_err(|e| {
+          let code = if let BotInfoError::ObjectNotFound(_) = e {
+            StatusCode::NOT_FOUND
+          } else {
+            StatusCode::INTERNAL_SERVER_ERROR
+          };
+          let status = Status::new(code.clone(), &e.to_string());
+          return ::warp::reject::custom(status);
+        })?;
+        return Ok::<Bot, Rejection>(bot);
+      },
+    )
+    .map(|bot: Bot| {
+      let bot: RPCBotResp = bot.into();
+      return ::warp::reply::json(&bot);
+    });
+  return get.boxed();
 }
 
 fn post(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {

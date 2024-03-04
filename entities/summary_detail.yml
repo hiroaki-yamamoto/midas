@@ -1,0 +1,11 @@
+type: enum
+rust:
+  derive:
+    - "Debug"
+    - "PartialEq"
+    - "Clone"
+    - "::serde::Serialize"
+    - "::serde::Deserialize"
+members:
+  - "Summary"
+  - "Detail"
