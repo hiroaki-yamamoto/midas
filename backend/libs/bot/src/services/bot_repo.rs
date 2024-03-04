@@ -1,7 +1,7 @@
 use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::{doc, oid::ObjectId, to_document};
-use ::mongodb::options::{FindOptions, UpdateOptions};
+use ::mongodb::options::{FindOneOptions, FindOptions, UpdateOptions};
 use ::mongodb::results::UpdateResult;
 use ::mongodb::{Collection, Database};
 
@@ -26,6 +26,19 @@ impl BotRepo {
 
 #[async_trait]
 impl IBotRepo for BotRepo {
+  async fn summary_by_id(&self, id: ObjectId) -> BotInfoResult<Bot> {
+    let doc = self
+      .col
+      .find_one(
+        doc! {"_id": id},
+        FindOneOptions::builder()
+          .projection(doc! {"cond_ts": 0})
+          .build(),
+      )
+      .await?
+      .ok_or(ObjectNotFound::new("Bot", Some(id.to_hex().as_str())))?;
+    return Ok(doc);
+  }
   async fn get_by_id(&self, id: ObjectId) -> BotInfoResult<Bot> {
     let doc = self
       .col
