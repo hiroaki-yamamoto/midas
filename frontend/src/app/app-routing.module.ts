@@ -1,12 +1,17 @@
-import { NgModule } from '@angular/core';
+import { NgModule, inject } from '@angular/core';
 import {
   Routes, RouterModule,
-  ActivatedRouteSnapshot, RouterStateSnapshot,
+  ActivatedRouteSnapshot,
 } from '@angular/router';
+import { Observable } from 'rxjs';
+
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { InfoComponent } from './info/info.component';
 import { KeychainComponent } from './keychain/keychain.component';
 import { BotEditorComponent } from './bot-editor/bot-editor.component';
+import {
+  ActivationService as BotEditorActivationService
+} from './bot-editor/activation.service';
 import { SyncComponent } from './sync/sync.component';
 
 
@@ -23,12 +28,8 @@ const routes: Routes = [
     path: 'edit-bot/:botId',
     component: BotEditorComponent,
     canActivate: [
-      (route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean => {
-        const botId = route.params.botId;
-        if (!botId) {
-          return true;
-        }
-        throw new Error('Not implemented');
+      (route: ActivatedRouteSnapshot): Observable<boolean> => {
+        return inject(BotEditorActivationService).canActivate(route);
       }
     ],
   },
