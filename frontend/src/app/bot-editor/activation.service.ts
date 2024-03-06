@@ -16,6 +16,7 @@ export class ActivationService {
   ): Observable<boolean> {
     const botId = route.params.botId;
     if (!botId) {
+      delete route.data.bot;
       return of(true);
     }
     return this.bot_svc.get(botId).pipe(map(
