@@ -35,6 +35,14 @@ pub enum Filters {
     apply_to_market: bool,
     avg_price_mins: Option<f64>,
   },
+  #[serde(rename = "NOTIONAL", rename_all = "camelCase")]
+  Notional {
+    min_notional: String,
+    apply_min_to_market: bool,
+    max_notional: String,
+    apply_max_to_market: bool,
+    avg_price_mins: Option<f64>,
+  },
   #[serde(rename = "ICEBERG_PARTS", rename_all = "camelCase")]
   IcebergParts { limit: Option<i32> },
   #[serde(rename = "MAX_NUM_ORDERS", rename_all = "camelCase")]
