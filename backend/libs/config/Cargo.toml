@@ -25,7 +25,7 @@ reqwest = { version = "0.11.24", features = [
   "json",
   "rustls-tls",
 ] }
-redis = { version = "0.24.0", features = ["connection-manager", "tokio-comp"] }
+redis = { version = "0.25.0", features = ["connection-manager", "tokio-comp"] }
 tokio = { version = "1.36.0", features = [
   "macros",
   "rt",

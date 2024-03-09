@@ -60,8 +60,8 @@ dependencies:
     specifier: ^3.21.11
     version: 3.21.11
   monaco-editor:
-    specifier: ^0.46.0
-    version: 0.46.0
+    specifier: ^0.47.0
+    version: 0.47.0
   rxjs:
     specifier: ~7.8.1
     version: 7.8.1
@@ -8749,8 +8749,8 @@ packages:
     hasBin: true
     dev: true
 
-  /monaco-editor@0.46.0:
-    resolution: {integrity: sha512-ADwtLIIww+9FKybWscd7OCfm9odsFYHImBRI1v9AviGce55QY8raT+9ihH8jX/E/e6QVSGM+pKj4jSUSRmALNQ==}
+  /monaco-editor@0.47.0:
+    resolution: {integrity: sha512-VabVvHvQ9QmMwXu4du008ZDuyLnHs9j7ThVFsiJoXSOQk18+LF89N4ADzPbFenm0W4V2bGHnFBztIRQTgBfxzw==}
     dev: false
 
   /mrmime@2.0.0:
