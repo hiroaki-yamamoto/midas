@@ -78,7 +78,7 @@ dependencies:
 devDependencies:
   '@angular-devkit/build-angular':
     specifier: ~17.2.0
-    version: 17.2.2(@angular/compiler-cli@17.2.3)(@angular/localize@17.2.3)(@types/node@20.11.24)(karma@6.4.3)(typescript@5.3.3)
+    version: 17.2.2(@angular/compiler-cli@17.2.3)(@angular/localize@17.2.4)(@types/node@20.11.24)(karma@6.4.3)(typescript@5.3.3)
   '@angular-eslint/builder':
     specifier: 17.2.1
     version: 17.2.1(eslint@8.57.0)(typescript@5.3.3)
@@ -101,8 +101,8 @@ devDependencies:
     specifier: ~17.2.0
     version: 17.2.3(@angular/compiler@17.2.3)(typescript@5.3.3)
   '@angular/localize':
-    specifier: 17.2.3
-    version: 17.2.3(@angular/compiler-cli@17.2.3)(@angular/compiler@17.2.3)
+    specifier: 17.2.4
+    version: 17.2.4(@angular/compiler-cli@17.2.3)(@angular/compiler@17.2.3)
   '@cypress/schematic':
     specifier: 2.5.1
     version: 2.5.1(@angular/cli@17.2.2)(@angular/core@17.2.3)
@@ -237,7 +237,7 @@ packages:
       - chokidar
     dev: true
 
-  /@angular-devkit/build-angular@17.2.2(@angular/compiler-cli@17.2.3)(@angular/localize@17.2.3)(@types/node@20.11.24)(karma@6.4.3)(typescript@5.3.3):
+  /@angular-devkit/build-angular@17.2.2(@angular/compiler-cli@17.2.3)(@angular/localize@17.2.4)(@types/node@20.11.24)(karma@6.4.3)(typescript@5.3.3):
     resolution: {integrity: sha512-K55xBiWBfxD4wmxLR2viOPbBryOk6YaZeNr72IMkp1yIrIy1BES6LDJi7R9fDW7+TprqZdM4B91Tkc+BCwYQzQ==}
     engines: {node: ^18.13.0 || >=20.9.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
     peerDependencies:
@@ -283,7 +283,7 @@ packages:
       '@angular-devkit/build-webpack': 0.1702.2(webpack-dev-server@4.15.1)(webpack@5.90.1)
       '@angular-devkit/core': 17.2.2
       '@angular/compiler-cli': 17.2.3(@angular/compiler@17.2.3)(typescript@5.3.3)
-      '@angular/localize': 17.2.3(@angular/compiler-cli@17.2.3)(@angular/compiler@17.2.3)
+      '@angular/localize': 17.2.4(@angular/compiler-cli@17.2.3)(@angular/compiler@17.2.3)
       '@babel/core': 7.23.9
       '@babel/generator': 7.23.6
       '@babel/helper-annotate-as-pure': 7.22.5
@@ -639,13 +639,13 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /@angular/localize@17.2.3(@angular/compiler-cli@17.2.3)(@angular/compiler@17.2.3):
-    resolution: {integrity: sha512-RCReeQabENpWNzhF/jZMhiMCbGt78lb5mgiMNvbGet62IHR62q3Qu1bXprjJvgGIHsxQlM4pkGgMGTZ/8/my4A==}
+  /@angular/localize@17.2.4(@angular/compiler-cli@17.2.3)(@angular/compiler@17.2.3):
+    resolution: {integrity: sha512-l6qZzP7f0fH6bCufyrhlUD6n7ggfTEaerIZW/jw0mnXFqVsHVfXX2jWHKljaZJWT3vhDp312i8xAukoAPM0uSQ==}
     engines: {node: ^18.13.0 || >=20.9.0}
     hasBin: true
     peerDependencies:
-      '@angular/compiler': 17.2.3
-      '@angular/compiler-cli': 17.2.3
+      '@angular/compiler': 17.2.4
+      '@angular/compiler-cli': 17.2.4
     dependencies:
       '@angular/compiler': 17.2.3(@angular/core@17.2.3)
       '@angular/compiler-cli': 17.2.3(@angular/compiler@17.2.3)(typescript@5.3.3)
