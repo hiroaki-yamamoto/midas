@@ -2,9 +2,7 @@ import {
   Component, OnInit, OnDestroy, NgZone,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import {
-  Observable
-} from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -96,10 +94,12 @@ export class BotEditorComponent implements OnInit, OnDestroy {
           if (data.bot) {
             const bot = BotResponse.parse(data.bot);
             form.name.setValue(bot.name);
-            form.exchange.setValue(bot.exchange);
-            this.form.get('baseCurrency').setValue(bot.baseCurrency);
             form.tradingAmount.setValue(bot.tradingAmount);
             form.condition.setValue(bot.condition);
+            form.exchange.setValue(bot.exchange);
+            this.exchangeChanged().subscribe(() => {
+              this.form.get('baseCurrency').setValue(bot.baseCurrency);
+            });
           }
         },
       );
@@ -111,14 +111,16 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     if (document.onkeydown) { document.onkeydown = undefined; }
   }
 
-  exchangeChanged(): void {
+  exchangeChanged(): Observable<IBaseCurrencies> {
     this.form.get('baseCurrency').disable();
-    this.symbol
+    return this.symbol
       .list_base_currencies(this.form.get('exchange').value)
-      .subscribe((baseCurrencies: IBaseCurrencies) => {
-        this.baseCurrencies = baseCurrencies;
-      });
-    this.form.get('baseCurrency').enable();
+      .pipe(
+        tap((baseCurrencies: IBaseCurrencies) => {
+          this.baseCurrencies = baseCurrencies;
+          this.form.get('baseCurrency').enable();
+        })
+      );
   }
 
   submit(form: FormGroup): (KeyboardEvent) => void {
