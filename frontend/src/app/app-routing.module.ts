@@ -34,6 +34,10 @@ const routes: Routes = [
     ],
   },
   {
+    path: 'new-bot',
+    component: BotEditorComponent,
+  },
+  {
     path: 'sync/:exchange',
     component: SyncComponent,
   },

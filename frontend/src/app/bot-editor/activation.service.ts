@@ -19,14 +19,17 @@ export class ActivationService {
       delete route.data.bot;
       return of(true);
     }
-    return this.bot_svc.get(botId).pipe(map(
-      (bot: BotResponse) => {
-        if (!bot) {
-          return false;
+    return this.bot_svc.get(botId, 'Detail')
+      .pipe(map((bot: BotResponse) => {
+        if (bot) {
+          const data = {
+            ...route.data,
+            bot: bot,
+          };
+          route.data = Object.preventExtensions(data);
+          return true;
         }
-        route.data.bot = bot;
-        return true;
-      }
-    ));
+        return false;
+      }));
   }
 }
