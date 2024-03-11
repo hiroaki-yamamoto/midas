@@ -12,6 +12,7 @@ import { SymbolService, IBaseCurrencies } from '../resources/symbol.service';
 import { Exchanges } from '../../rpc/exchanges.zod';
 import { BotRequest } from '../../rpc/bot-request.zod';
 import { BotResponse } from '../../rpc/bot-response.zod';
+import { BotService } from '../resources/bot.service';
 
 import { faSave } from '@fortawesome/free-solid-svg-icons';
 
@@ -41,6 +42,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     private snackbar: MatSnackBar,
     private zone: NgZone,
     private route: ActivatedRoute,
+    private botSvc: BotService,
   ) { }
 
   getDefCode(): Observable<string> {
@@ -68,14 +70,13 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const form = {
+    this.form = new FormGroup({
       name: new FormControl('', [Validators.required]),
       exchange: new FormControl('', [Validators.required]),
       baseCurrency: new FormControl({ disabled: true }),
       tradingAmount: new FormControl('', [Validators.required]),
       condition: new FormControl(),
-    };
-    this.form = new FormGroup(form);
+    });
     document.onkeydown = this.submit(this.form);
     this.getDefCode().subscribe((code) => {
       this.zone.runOutsideAngular(() => {
@@ -86,23 +87,27 @@ export class BotEditorComponent implements OnInit, OnDestroy {
     });
     this.http.get('/assets/bot-condition.ts', { responseType: 'text' })
       .subscribe((code: string) => {
-        form.condition.setValue(code);
+        this.form.get('condition').setValue(code);
       });
     this.route.data
       .subscribe(
         (data: { bot: object | void; }) => {
           if (data.bot) {
             const bot = BotResponse.parse(data.bot);
-            form.name.setValue(bot.name);
-            form.tradingAmount.setValue(bot.tradingAmount);
-            form.condition.setValue(bot.condition);
-            form.exchange.setValue(bot.exchange);
-            this.exchangeChanged().subscribe(() => {
-              this.form.get('baseCurrency').setValue(bot.baseCurrency);
-            });
+            this.setBotToForm(bot);
           }
         },
       );
+  }
+
+  setBotToForm(bot: BotResponse): void {
+    this.form.get('name').setValue(bot.name);
+    this.form.get('tradingAmount').setValue(bot.tradingAmount);
+    this.form.get('condition').setValue(bot.condition);
+    this.form.get('exchange').setValue(bot.exchange);
+    this.exchangeChanged().subscribe(() => {
+      this.form.get('baseCurrency').setValue(bot.baseCurrency);
+    });
   }
 
   ngOnDestroy(): void {
@@ -137,10 +142,9 @@ export class BotEditorComponent implements OnInit, OnDestroy {
 
       const model = BotRequest.parse(val);
 
-      this.http.post('/bot/', model).subscribe(() => {
+      this.botSvc.post(model).subscribe(() => {
         this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });
       });
     };
   }
-
 }
