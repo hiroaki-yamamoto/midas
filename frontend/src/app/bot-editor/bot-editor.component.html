@@ -10,7 +10,7 @@
     <div class="amounts">
       <mat-form-field>
         <mat-label i18n>Exchange</mat-label>
-        <mat-select (selectionChange)="exchangeChanged()"
+        <mat-select (selectionChange)="exchangeChanged().subscribe()"
           formControlName="exchange">
           <mat-option *ngFor="let exchange of exchanges" [value]="exchange">
             {{ exchange | titlecase }}

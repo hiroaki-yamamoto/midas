@@ -119,7 +119,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
   exchangeChanged(): Observable<IBaseCurrencies> {
     this.form.get('baseCurrency').disable();
     return this.symbol
-      .list_base_currencies(this.form.get('exchange').value)
+      .list_base_currencies(this.form.get('exchange').value as Exchanges)
       .pipe(
         tap((baseCurrencies: IBaseCurrencies) => {
           this.baseCurrencies = baseCurrencies;
