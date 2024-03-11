@@ -35,6 +35,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
 
   private extraLib: monaco.IDisposable;
   private langModel: monaco.IDisposable;
+  private botId: string;
 
   constructor(
     private http: HttpClient,
@@ -94,6 +95,7 @@ export class BotEditorComponent implements OnInit, OnDestroy {
         (data: { bot: object | void; }) => {
           if (data.bot) {
             const bot = BotResponse.parse(data.bot);
+            this.botId = bot.id;
             this.setBotToForm(bot);
           }
         },
@@ -142,7 +144,9 @@ export class BotEditorComponent implements OnInit, OnDestroy {
 
       const model = BotRequest.parse(val);
 
-      this.botSvc.post(model).subscribe(() => {
+      this.botSvc.post(model).subscribe((rawBot: object) => {
+        const bot = BotResponse.parse(rawBot);
+        // 🤔 How can I change bot creation mode to edit mode???
         this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });
       });
     };
