@@ -149,6 +149,15 @@ fn put(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
     })
     .untuple_one()
     .and_then(|bot: Bot, ctx: Arc<Context>| async move {
+      let bot = ctx
+        .transpiler
+        .transpile(bot)
+        .map_err(|e| {
+          let code = StatusCode::INTERNAL_SERVER_ERROR;
+          let status = Status::new(code.clone(), &e.to_string());
+          return ::warp::reject::custom(status);
+        })
+        .await?;
       let _ = ctx
         .bot_repo
         .save(&bot)
