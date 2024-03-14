@@ -143,10 +143,14 @@ export class BotEditorComponent implements OnInit, OnDestroy {
       val.tradingAmount = val.tradingAmount.toString();
 
       const model = BotRequest.parse(val);
-
-      this.botSvc.post(model).subscribe((rawBot: object) => {
+      if (this.botId) {
+        model.id = this.botId;
+      }
+      const saveObserver =
+        (this.botId) ? this.botSvc.put(model) : this.botSvc.post(model);
+      saveObserver.subscribe((rawBot: object) => {
         const bot = BotResponse.parse(rawBot);
-        // 🤔 How can I change bot creation mode to edit mode???
+        this.botId = bot.id;
         this.snackbar.open('Bot Saved', 'Dismiss', { duration: 3000 });
       });
     };

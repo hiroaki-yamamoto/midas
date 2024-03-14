@@ -30,7 +30,7 @@ export class BotService {
   }
 
   put(bot: BotRequest): Observable<BotResponse> {
-    return this.http.put('/bot', bot)
+    return this.http.put(`/bot/${bot.id}`, bot)
       .pipe(map((data: object) => BotResponse.parse(data)));
   }
 }
