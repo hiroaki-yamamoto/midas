@@ -23,7 +23,7 @@ rmp-serde = "1.1.2"
 async-trait = "0.1.77"
 serde = { version = "1.0.197", features = ["derive", "rc"] }
 serde_qs = "0.12.0"
-reqwest = { version = "0.11.24", features = [
+reqwest = { version = "0.11.25", features = [
   "gzip",
   "brotli",
   "json",
