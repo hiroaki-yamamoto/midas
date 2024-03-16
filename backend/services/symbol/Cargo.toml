@@ -21,7 +21,7 @@ mongodb = { version = "2.8.1", default-features = false, features = [
   "async-std-runtime",
 ] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-clap = { version = "4.5.1", features = ["derive"] }
+clap = { version = "4.5.2", features = ["derive"] }
 tokio = { version = "1.36.0", features = [
   "macros",
   "rt",
@@ -33,5 +33,5 @@ libc = "0.2.153"
 warp = { version = "0.3.6", features = ["tls"] }
 num-traits = "0.2.18"
 serde = { version = "1.0.197", features = ["derive"] }
-serde_json = "1.0.113"
-http = "1.0.0"
+serde_json = "1.0.114"
+http = "1.1.0"
