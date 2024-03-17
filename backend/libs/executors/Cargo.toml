@@ -21,9 +21,9 @@ writers = { path = "../writers" }
 position = { path = "../position" }
 
 async-stream = "0.3.5"
-async-trait = "0.1.77"
+async-trait = "0.1.78"
 futures = "0.3.30"
-mongodb = { version = "2.8.1", default-features = false, features = [
+mongodb = { version = "2.8.2", default-features = false, features = [
   "async-std-runtime",
 ] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }

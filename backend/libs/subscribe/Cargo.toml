@@ -9,7 +9,7 @@ edition = "2021"
 [dependencies]
 errors = { path = "../errors" }
 
-async-trait = "0.1.77"
+async-trait = "0.1.78"
 log = { version = "0.4.21", features = ["kv_unstable", "serde"] }
 async-nats = "0.34.0"
 rmp-serde = "1.1.2"
