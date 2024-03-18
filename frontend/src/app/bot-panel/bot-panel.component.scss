@@ -11,3 +11,12 @@ div.positions {
 table.position-table {
   flex: content;
 }
+
+mat-panel-title {
+  display: flex;
+  flex-direction: row;
+}
+
+.spacer {
+  flex: auto;
+}

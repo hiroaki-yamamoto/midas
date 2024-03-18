@@ -1,6 +1,13 @@
 <mat-expansion-panel (opened)="open()">
   <mat-expansion-panel-header>
-    <mat-panel-title>{{ bot.name }}</mat-panel-title>
+    <mat-panel-title>
+      {{ bot.name }}
+      <div class="spacer"></div>
+      <a mat-icon-button
+        routerLink="/edit-bot/{{ bot.id }}">
+        <mat-icon>mode_edit</mat-icon>
+      </a>
+    </mat-panel-title>
   </mat-expansion-panel-header>
   <section>
     <header>
