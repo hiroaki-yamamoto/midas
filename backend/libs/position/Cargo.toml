@@ -13,11 +13,11 @@ entities = { path = "../entities" }
 writers = { path = "../writers" }
 
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-serde = { version = "1.0.196", features = ["derive", "rc"] }
+serde = { version = "1.0.197", features = ["derive", "rc"] }
 rug = { version = "1.24.0", features = ["serde"] }
-mongodb = { version = "2.8.1", default-features = false, features = [
+mongodb = { version = "2.8.2", default-features = false, features = [
   "async-std-runtime",
   "bson-chrono-0_4",
 ] }
-async-trait = "0.1.77"
+async-trait = "0.1.78"
 futures = "0.3.30"
