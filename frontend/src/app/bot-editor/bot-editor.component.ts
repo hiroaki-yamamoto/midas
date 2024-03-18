@@ -86,10 +86,6 @@ export class BotEditorComponent implements OnInit, OnDestroy {
         });
       });
     });
-    this.http.get('/assets/bot-condition.ts', { responseType: 'text' })
-      .subscribe((code: string) => {
-        this.form.get('condition').setValue(code);
-      });
     this.route.data
       .subscribe(
         (data: { bot: object | void; }) => {
@@ -97,6 +93,11 @@ export class BotEditorComponent implements OnInit, OnDestroy {
             const bot = BotResponse.parse(data.bot);
             this.botId = bot.id;
             this.setBotToForm(bot);
+          } else {
+            this.http.get('/assets/bot-condition.ts', { responseType: 'text' })
+              .subscribe((code: string) => {
+                this.form.get('condition').setValue(code);
+              });
           }
         },
       );
