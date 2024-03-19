@@ -126,6 +126,6 @@ impl OrderResponse<Float, DateTime> {
 
 impl<DT> ICalculable for OrderResponse<Float, DT> {
   fn get_orig_amount(&self) -> Float {
-    return self.orig_qty.unwrap_or(Float::with_val(128, 0));
+    return self.orig_qty.clone().unwrap_or(Float::with_val(128, 0));
   }
 }
