@@ -5,6 +5,7 @@ use ::futures::future::try_join;
 use ::futures::StreamExt;
 use ::rug::Float;
 
+use ::entities::{Order, OrderInner};
 use ::errors::PositionResult;
 use ::rpc::position::Position as PositionRpc;
 use ::rpc::timestamp::Timestamp as RpcTimestamp;
@@ -26,11 +27,19 @@ impl IPositionConverter for PositionConverter {
       self.order_resp_repo.find_by_exit_position(position),
     )
     .await?;
+    // :thinking: Needs an idea to represent entry price
     let amount = entry_order_resp
       .filter_map(|order| async { order.ok() })
-      .fold(Float::with_val(128, 0.0), |acc, res| async {
-        acc + res.orig_qty.unwrap_or(Float::with_val(128, 0.0))
-      })
+      .fold(
+        (Float::with_val(128, 0.0), OrderInner::default()),
+        |acc, res| async {
+          let order: Order = (&res).into();
+          return (
+            acc.0 + res.orig_qty.unwrap_or(Float::with_val(128, 0.0)),
+            acc.1 + order.sum(),
+          );
+        },
+      )
       .await;
     let entry_at: DateTime = position.entry_at.into();
     let rpc_pos = PositionRpc {
