@@ -12,8 +12,6 @@ use ::types::casting::{cast_datetime_from_i64, cast_f_from_txt};
 
 use super::{Fill, OrderType, Side};
 
-use crate::interfaces::IProfitCalculable;
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderResponse<FT, DT> {
@@ -121,14 +119,5 @@ impl OrderResponse<Float, DateTime> {
       }
     }
     return false;
-  }
-}
-
-impl<DT> IProfitCalculable for OrderResponse<Float, DT> {
-  fn get_orig_amount(&self) -> Float {
-    return self.orig_qty.clone().unwrap_or(Float::with_val(128, 0));
-  }
-  fn get_price(&self) -> Float {
-    return self.price.clone().unwrap_or(Float::with_val(128, 0));
   }
 }
