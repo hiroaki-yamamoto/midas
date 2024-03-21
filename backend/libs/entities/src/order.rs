@@ -1,3 +1,5 @@
+use ::std::iter::Sum;
+
 use ::rug::Float;
 
 #[derive(Debug, Clone)]
@@ -28,7 +30,7 @@ where
   type Output = Self;
   fn add(self, rhs: T) -> Self::Output {
     let rhs = rhs.as_ref();
-    return Self {
+    return Self::Output {
       qty: self.qty.clone() + &rhs.qty,
       price: ((self.qty.clone() * &self.price)
         + (rhs.qty.clone() * &rhs.price))
@@ -50,6 +52,21 @@ where
   }
 }
 
+impl<'a> Sum<&'a OrderInner> for OrderInner {
+  fn sum<I>(iter: I) -> Self
+  where
+    I: Iterator<Item = &'a OrderInner>,
+  {
+    return iter.fold(
+      OrderInner {
+        price: Float::with_val(128, 0.0),
+        qty: Float::with_val(128, 0.0),
+      },
+      |acc, item| acc + item,
+    );
+  }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct Order {
   pub symbol: String,
@@ -65,12 +82,6 @@ impl Order {
   }
 
   pub fn sum(&self) -> OrderInner {
-    return self.inner.clone().into_iter().fold(
-      OrderInner {
-        price: Float::with_val(128, 0.0),
-        qty: Float::with_val(128, 0.0),
-      },
-      |acc, item| acc + item,
-    );
+    return self.inner.iter().sum();
   }
 }
