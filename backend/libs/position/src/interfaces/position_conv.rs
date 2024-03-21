@@ -6,10 +6,6 @@ use ::rpc::position::Position as PositionRpc;
 use crate::entities::Position;
 
 #[async_trait]
-pub trait IPositionRpcConv {
+pub trait IPositionConverter {
   async fn to_rpc(&self, position: &Position) -> PositionResult<PositionRpc>;
-  async fn from_rpc(
-    &self,
-    position_rpc: &PositionRpc,
-  ) -> PositionResult<Position>;
 }
