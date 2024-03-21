@@ -19,4 +19,8 @@ pub trait IOrderResponseRepo {
     &self,
     position: &Position,
   ) -> PositionResult<BoxStream<PositionResult<OrderResponse<Float, DateTime>>>>;
+  async fn find_by_exit_position(
+    &self,
+    position: &Position,
+  ) -> PositionResult<BoxStream<PositionResult<OrderResponse<Float, DateTime>>>>;
 }

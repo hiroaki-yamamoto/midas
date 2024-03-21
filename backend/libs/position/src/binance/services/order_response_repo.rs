@@ -78,4 +78,16 @@ impl IOrderResponseRepo for OrderResponseRepo {
       .map_err(|e| PositionError::from(e));
     return Ok(order_resp_stream.boxed());
   }
+  async fn find_by_exit_position(
+    &self,
+    position: &Position,
+  ) -> PositionResult<BoxStream<PositionResult<OrderResponse<Float, DateTime>>>>
+  {
+    let order_resp_stream = self
+      .col
+      .find(doc! {"gid": position.exit_gid}, None)
+      .await?
+      .map_err(|e| PositionError::from(e));
+    return Ok(order_resp_stream.boxed());
+  }
 }
