@@ -27,8 +27,7 @@ impl IPositionConverter for PositionConverter {
       self.order_resp_repo.find_by_exit_position(position),
     )
     .await?;
-    // :thinking: Needs an idea to represent entry price
-    let amount = entry_order_resp
+    let (amount, order_inner) = entry_order_resp
       .filter_map(|order| async { order.ok() })
       .fold(
         (Float::with_val(128, 0.0), OrderInner::default()),
@@ -54,6 +53,7 @@ impl IPositionConverter for PositionConverter {
         return Box::new(dt);
       }),
       amount: amount.to_string(),
+      entry_price: order_inner.price.to_string(),
     };
   }
 }
