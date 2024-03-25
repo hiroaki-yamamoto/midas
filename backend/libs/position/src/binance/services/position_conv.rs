@@ -8,6 +8,7 @@ use ::rug::Float;
 use ::entities::{Order, OrderInner};
 use ::errors::PositionResult;
 use ::rpc::position::Position as PositionRpc;
+use ::rpc::position_status::PositionStatus as RpcPositionStatus;
 use ::rpc::timestamp::Timestamp as RpcTimestamp;
 use ::types::DateTime;
 
@@ -27,7 +28,7 @@ impl IPositionConverter for PositionConverter {
       self.order_resp_repo.find_by_exit_position(position),
     )
     .await?;
-    let (amount, order_inner) = entry_order_resp
+    let (amount, entry_order_inner) = entry_order_resp
       .filter_map(|order| async { order.ok() })
       .fold(
         (Float::with_val(128, 0.0), OrderInner::default()),
@@ -40,9 +41,23 @@ impl IPositionConverter for PositionConverter {
         },
       )
       .await;
+    let mut exit_order_inner_len = 0;
+    let exit_order_inner = exit_order_resp
+      .filter_map(|order| async { order.ok() })
+      .fold(OrderInner::default(), |acc, res| async {
+        let order: Order = (&res).into();
+        exit_order_inner_len += order.inner.len();
+        return acc + order.sum();
+      })
+      .await;
     let entry_at: DateTime = position.entry_at.into();
     let rpc_pos = PositionRpc {
       id: position.id.to_hex(),
+      status: Box::new(if exit_order_inner_len < 1 {
+        RpcPositionStatus::CLOSE
+      } else {
+        RpcPositionStatus::OPEN
+      }),
       mode: Box::new(position.mode),
       bot_id: position.bot_id.to_hex(),
       symbol: position.symbol.clone(),
@@ -53,7 +68,13 @@ impl IPositionConverter for PositionConverter {
         return Box::new(dt);
       }),
       amount: amount.to_string(),
-      entry_price: order_inner.price.to_string(),
+      entry_price: entry_order_inner.price.to_string(),
+      exit_price: if exit_order_inner_len > 0 {
+        Some(exit_order_inner.price.to_string())
+      } else {
+        None
+      },
     };
+    return Ok(rpc_pos);
   }
 }
