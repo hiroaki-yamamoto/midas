@@ -17,7 +17,7 @@ use crate::entities::Position;
 use crate::interfaces::IPositionConverter;
 
 pub struct PositionConverter {
-  pub order_resp_repo: Arc<dyn IOrderResponseRepo>,
+  pub order_resp_repo: Arc<dyn IOrderResponseRepo + Send + Sync>,
 }
 
 #[async_trait]
@@ -41,14 +41,18 @@ impl IPositionConverter for PositionConverter {
         },
       )
       .await;
-    let mut exit_order_inner_len = 0;
-    let exit_order_inner = exit_order_resp
+    let (exit_order_inner_len, exit_order_inner) = exit_order_resp
       .filter_map(|order| async { order.ok() })
-      .fold(OrderInner::default(), |acc, res| async {
-        let order: Order = (&res).into();
-        exit_order_inner_len += order.inner.len();
-        return acc + order.sum();
-      })
+      .fold(
+        (0, OrderInner::default()),
+        |(acc_order_len, acc_order_inner), res| async move {
+          let order: Order = (&res).into();
+          return (
+            acc_order_len + order.inner.len(),
+            acc_order_inner + order.sum(),
+          );
+        },
+      )
       .await;
     let entry_at: DateTime = position.entry_at.into();
     let rpc_pos = PositionRpc {
@@ -58,7 +62,7 @@ impl IPositionConverter for PositionConverter {
       } else {
         RpcPositionStatus::OPEN
       }),
-      mode: Box::new(position.mode),
+      mode: Box::new(position.mode.clone()),
       bot_id: position.bot_id.to_hex(),
       symbol: position.symbol.clone(),
       entry_at: Box::new(entry_at.into()),
