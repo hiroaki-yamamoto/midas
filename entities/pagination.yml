@@ -4,5 +4,7 @@ rust:
 typescript:
   rename: camelCase
 members:
-  offset: u64
+  id:
+    type: string
+    optional: true
   limit: i64

@@ -1,10 +1,12 @@
 use ::async_trait::async_trait;
+use ::futures::stream::{BoxStream, StreamExt, TryStreamExt};
 use ::mongodb::bson::{doc, oid::ObjectId, to_document};
-use ::mongodb::options::UpdateOptions;
+use ::mongodb::options::{FindOptions, UpdateOptions};
 use ::mongodb::results::UpdateResult;
 use ::mongodb::{Collection, Database};
 
-use ::errors::{ObjectNotFound, PositionResult};
+use ::errors::{ObjectNotFound, PositionError, PositionResult};
+use ::rpc::pagination::Pagination;
 use ::writers::DatabaseWriter;
 
 use crate::entities::Position;
@@ -60,5 +62,32 @@ impl IPositionRepo for PositionRepo {
       .await?
       .ok_or(ObjectNotFound::new("Position", id.to_hex().as_str()))?;
     return Ok(position);
+  }
+
+  async fn list_by_bot_id(
+    &self,
+    bot_id: ObjectId,
+    pg: Pagination,
+  ) -> PositionResult<BoxStream<'_, PositionResult<Position>>> {
+    let mut query = doc! { "bot_id": bot_id };
+    if let Some(id) = pg.id {
+      query.insert("_id", doc! { "$gt": id });
+    }
+    return Ok(
+      self
+        .col
+        .find(
+          query,
+          FindOptions::builder()
+            .limit(if pg.limit > 0 { Some(pg.limit) } else { None })
+            .build(),
+        )
+        .await?
+        .map_err(|e| {
+          let e: PositionError = e.into();
+          return e;
+        })
+        .boxed(),
+    );
   }
 }
