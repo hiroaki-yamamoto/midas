@@ -10,7 +10,7 @@ use crate::entities::Position;
 
 #[async_trait]
 pub trait IPositionRepo {
-  async fn save(&self, position: &[&Position]) -> PositionResult<UpdateResult>;
+  async fn save(&self, position: &Position) -> PositionResult<UpdateResult>;
   async fn get(&self, id: &ObjectId) -> PositionResult<Position>;
   async fn list_by_bot_id(
     &self,

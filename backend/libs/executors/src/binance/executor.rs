@@ -101,7 +101,7 @@ impl ExecutorTrait for Executor {
     order_option: Option<OrderOption>,
   ) -> ExecutionResult<ObjectId> {
     let position_group = Position::new(bot_id, BotMode::Live, &symbol);
-    self.position_repo.save(&[&position_group]).await?;
+    self.position_repo.save(&position_group).await?;
     let api_key =
       Arc::new(self.keychain.get(Exchanges::Binance, api_key_id).await?);
     let req =

@@ -39,20 +39,16 @@ impl DatabaseWriter for PositionRepo {
 
 #[async_trait]
 impl IPositionRepo for PositionRepo {
-  async fn save(&self, position: &[&Position]) -> PositionResult<UpdateResult> {
-    let ids: Vec<ObjectId> = position.iter().map(|p| p.id.clone()).collect();
-    return Ok(
-      self
-        .col
-        .update_many(
-          doc! {
-            "_id": { "$in": ids }
-          },
-          to_document(position)?,
-          UpdateOptions::builder().upsert(true).build(),
-        )
-        .await?,
-    );
+  async fn save(&self, position: &Position) -> PositionResult<UpdateResult> {
+    let result = self
+      .col
+      .update_one(
+        doc! {"_id": &position.id},
+        doc! { "$set": to_document(position)? },
+        UpdateOptions::builder().upsert(true).build(),
+      )
+      .await?;
+    return Ok(result);
   }
 
   async fn get(&self, id: &ObjectId) -> PositionResult<Position> {
