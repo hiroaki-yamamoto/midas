@@ -6,9 +6,9 @@ use ::types::stateful_setter;
 
 use ::rpc::bot_mode::BotMode;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Position {
-  #[serde(rename = "_id")]
+  #[serde(rename = "_id", default)]
   pub id: ObjectId,
   pub mode: BotMode,
   pub bot_id: ObjectId,

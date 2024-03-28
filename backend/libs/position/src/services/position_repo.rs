@@ -2,7 +2,6 @@ use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt, TryStreamExt};
 use ::mongodb::bson::{doc, oid::ObjectId, to_document};
 use ::mongodb::options::{FindOptions, UpdateOptions};
-use ::mongodb::results::UpdateResult;
 use ::mongodb::{Collection, Database};
 
 use ::errors::{ObjectNotFound, PositionError, PositionResult};
@@ -39,7 +38,7 @@ impl DatabaseWriter for PositionRepo {
 
 #[async_trait]
 impl IPositionRepo for PositionRepo {
-  async fn save(&self, position: &Position) -> PositionResult<UpdateResult> {
+  async fn save(&self, position: &Position) -> PositionResult<Position> {
     let result = self
       .col
       .update_one(
@@ -48,7 +47,16 @@ impl IPositionRepo for PositionRepo {
         UpdateOptions::builder().upsert(true).build(),
       )
       .await?;
-    return Ok(result);
+    let res_pos = if let Some(id) = result.upserted_id {
+      let id = id.as_object_id().ok_or(PositionError::BSONCastFailed(id))?;
+      Position {
+        id,
+        ..position.clone()
+      }
+    } else {
+      position.clone()
+    };
+    return Ok(res_pos);
   }
 
   async fn get(&self, id: &ObjectId) -> PositionResult<Position> {
