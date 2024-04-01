@@ -21,3 +21,4 @@ mongodb = { version = "2.8.2", default-features = false, features = [
 ] }
 async-trait = "0.1.78"
 futures = "0.3.30"
+async-stream = "0.3.5"
