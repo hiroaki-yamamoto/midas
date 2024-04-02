@@ -1,7 +1,7 @@
-mod position_demo_repo;
-pub use position_demo_repo::PositionDemoRepo;
+mod position_repo;
+pub use position_repo::PositionRepo;
 
 #[cfg(debug_assertions)]
-mod position_repo;
+mod position_demo_repo;
 #[cfg(debug_assertions)]
-pub use position_repo::PositionRepo;
+pub use position_demo_repo::PositionDemoRepo;
