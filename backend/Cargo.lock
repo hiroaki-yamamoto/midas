@@ -2581,6 +2581,7 @@ dependencies = [
  "rpc",
  "rug",
  "serde",
+ "tokio-stream",
  "types",
  "writers",
 ]
