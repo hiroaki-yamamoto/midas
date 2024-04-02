@@ -10,14 +10,14 @@ errors = { path = "../errors" }
 types = { path = "../types" }
 
 log = { version = "0.4.21", features = ["kv_unstable"] }
-reqwest = { version = "0.12.1", features = [
+reqwest = { version = "0.12.2", features = [
   "gzip",
   "brotli",
   "json",
   "rustls-tls",
 ] }
 serde = "1.0.197"
-tokio = { version = "1.36.0", features = [
+tokio = { version = "1.37.0", features = [
   "time",
   "rt",
   "rt-multi-thread",
@@ -26,8 +26,8 @@ tokio = { version = "1.36.0", features = [
 tokio-tungstenite = { version = "0.21.0", features = ["native-tls"] }
 rand = "0.8.5"
 futures = "0.3.30"
-serde_json = "1.0.114"
-async-trait = "0.1.78"
+serde_json = "1.0.115"
+async-trait = "0.1.79"
 
 [dev-dependencies]
 test_utils = { path = "../test_utils" }
