@@ -19,13 +19,13 @@ mongodb = { version = "2.8.2", default-features = false, features = [
 serde = { version = "1.0.197", features = ["derive"] }
 serde_yaml = "0.9.34+deprecated"
 clap = { version = "4.5.4", features = ["derive"] }
-reqwest = { version = "0.12.2", features = [
+reqwest = { version = "0.12.3", features = [
   "gzip",
   "brotli",
   "json",
   "rustls-tls",
 ] }
-redis = { version = "0.25.2", features = ["connection-manager", "tokio-comp"] }
+redis = { version = "0.25.3", features = ["connection-manager", "tokio-comp"] }
 tokio = { version = "1.37.0", features = [
   "macros",
   "rt",
