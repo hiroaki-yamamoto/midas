@@ -22,7 +22,7 @@ mongodb = { version = "2.8.2", default-features = false, features = [
 rmp-serde = "1.1.2"
 async-trait = "0.1.79"
 serde = { version = "1.0.197", features = ["derive", "rc"] }
-serde_qs = "0.12.0"
+serde_qs = "0.13.0"
 reqwest = { version = "0.12.3", features = [
   "gzip",
   "brotli",
