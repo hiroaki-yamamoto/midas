@@ -1,6 +1,5 @@
 use ::async_trait::async_trait;
 use ::mongodb::bson::oid::ObjectId;
-use ::rug::rand::RandState;
 use ::std::time::Duration;
 
 use ::entities::OrderInner;
