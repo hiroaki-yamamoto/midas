@@ -35,7 +35,9 @@ impl IPositionConverter for PositionConverter {
         |acc, res| async {
           let order: Order = (&res).into();
           return (
-            acc.0 + res.orig_qty.unwrap_or(Float::with_val(128, 0.0)),
+            acc.0
+              + res.orig_qty.unwrap_or(Float::with_val(128, 0.0))
+                * res.price.unwrap_or(Float::with_val(128, 0.0)),
             acc.1 + order.sum(),
           );
         },
