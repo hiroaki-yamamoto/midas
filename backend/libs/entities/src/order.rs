@@ -2,6 +2,9 @@ use ::std::iter::Sum;
 
 use ::rug::Float;
 
+#[cfg(debug_assertions)]
+use ::rug::rand::RandState;
+
 #[derive(Debug, Clone)]
 pub struct OrderInner {
   pub price: Float,
@@ -13,6 +16,17 @@ impl Default for OrderInner {
     return Self {
       price: Float::with_val(128, 0.0),
       qty: Float::with_val(128, 0.0),
+    };
+  }
+}
+
+impl OrderInner {
+  #[cfg(debug_assertions)]
+  pub fn random() -> Self {
+    let mut rand_state = RandState::new();
+    return OrderInner {
+      price: Float::with_val(128, Float::random_cont(&mut rand_state)) * 100,
+      qty: Float::with_val(128, Float::random_cont(&mut rand_state)) * 100,
     };
   }
 }
