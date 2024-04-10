@@ -6,6 +6,6 @@ mod position_demo_conv;
 #[cfg(debug_assertions)]
 mod position_demo_repo;
 #[cfg(debug_assertions)]
-pub use position_demo_conv::PositionDemoConv;
+pub use position_demo_conv::PositionDemoConverter;
 #[cfg(debug_assertions)]
 pub use position_demo_repo::PositionDemoRepo;
