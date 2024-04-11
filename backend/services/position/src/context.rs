@@ -42,7 +42,7 @@ impl Context {
   }
   #[cfg(not(debug_assertions))]
   pub async fn new(exchange: Exchanges, db: Database) -> Self {
-    Self {
+    return Self {
       position_repo: Arc::new(PositionRepo::new(db.clone()).await),
       position_converter: match exchange {
         Exchanges::Binance => {
