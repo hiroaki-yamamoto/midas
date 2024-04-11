@@ -20,6 +20,14 @@ pub struct PositionConverter {
   pub order_resp_repo: Arc<dyn IOrderResponseRepo + Send + Sync>,
 }
 
+impl PositionConverter {
+  pub fn new(
+    order_resp_repo: Arc<dyn IOrderResponseRepo + Send + Sync>,
+  ) -> Self {
+    return Self { order_resp_repo };
+  }
+}
+
 #[async_trait]
 impl IPositionConverter for PositionConverter {
   async fn to_rpc(&self, position: &Position) -> PositionResult<PositionRpc> {

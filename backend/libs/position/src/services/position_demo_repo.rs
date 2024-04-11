@@ -13,6 +13,9 @@ use crate::interfaces::IPositionRepo;
 pub struct PositionDemoRepo;
 
 impl PositionDemoRepo {
+  pub fn new() -> Self {
+    return Self;
+  }
   fn generate_oid_lt(&self, oid: &ObjectId) -> ObjectId {
     let mut ret = oid.clone();
     while &ret <= oid {

@@ -2590,6 +2590,11 @@ dependencies = [
 [[package]]
 name = "position_service"
 version = "0.1.0"
+dependencies = [
+ "mongodb",
+ "position",
+ "rpc",
+]
 
 [[package]]
 name = "powerfmt"
