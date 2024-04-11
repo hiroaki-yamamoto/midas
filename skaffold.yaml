@@ -73,6 +73,12 @@ build:
         dockerfile: devel.dockerfile
         buildArgs:
           SERVICE: bot_service
+    - image: position-service
+      context: backend
+      docker:
+        dockerfile: devel.dockerfile
+        buildArgs:
+          SERVICE: position_service
 manifests:
   kustomize:
     paths:
