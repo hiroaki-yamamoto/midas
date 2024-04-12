@@ -2591,9 +2591,14 @@ dependencies = [
 name = "position_service"
 version = "0.1.0"
 dependencies = [
+ "access_logger",
+ "config",
+ "csrf",
  "mongodb",
  "position",
  "rpc",
+ "tokio",
+ "warp",
 ]
 
 [[package]]
