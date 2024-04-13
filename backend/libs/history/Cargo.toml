@@ -20,7 +20,7 @@ clients = { path = "../clients" }
 round_robin_client = { path = "../round_robin_client" }
 kvs = { path = "../kvs" }
 
-async-trait = "0.1.79"
+async-trait = "0.1.80"
 futures = "0.3.30"
 rand = "0.8.5"
 mongodb = { version = "2.8.2", default-features = false, features = [
