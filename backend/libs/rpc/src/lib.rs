@@ -14,6 +14,7 @@ pub mod history_fetch_request;
 pub mod insert_one_result;
 pub mod pagination;
 pub mod position;
+pub mod position_query;
 pub mod position_status;
 pub mod progress;
 pub mod status;

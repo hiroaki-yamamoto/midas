@@ -2597,6 +2597,7 @@ dependencies = [
  "mongodb",
  "position",
  "rpc",
+ "serde",
  "tokio",
  "warp",
 ]

@@ -70,6 +70,9 @@ build ./../frontend/src/rpc/pagination.zod.ts: frontend ./pagination.yml
 build ./../backend/libs/rpc/src/history_fetch_request.rs: backend ./history_fetch_request.yml
 build ./../frontend/src/rpc/history_fetch_request.zod.ts: frontend ./history_fetch_request.yml
 
+build ./../backend/libs/rpc/src/position_query.rs: backend ./position_query.yml
+build ./../frontend/src/rpc/position_query.zod.ts: frontend ./position_query.yml
+
 build ./../backend/libs/rpc/src/bot_list.rs: backend ./bot_list.yml
 build ./../frontend/src/rpc/bot_list.zod.ts: frontend ./bot_list.yml
 
