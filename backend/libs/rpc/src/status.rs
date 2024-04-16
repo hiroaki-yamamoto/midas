@@ -1,3 +1,4 @@
+pub use ::http::StatusCode;
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

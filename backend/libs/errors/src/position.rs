@@ -5,7 +5,7 @@ use ::mongodb::error::Error as DBErr;
 
 use crate::object::ObjectNotFound;
 
-#[derive(Debug, Error)]
+#[derive(Clone, Debug, Error)]
 pub enum PositionError {
   #[error(display = "Database error: {}", _0)]
   DBError(#[error(source)] DBErr),

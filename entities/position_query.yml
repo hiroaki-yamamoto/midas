@@ -2,10 +2,11 @@ type: struct
 rust:
   derive:
     [Debug, Clone, PartialEq, "::serde::Serialize", "::serde::Deserialize"]
+  attrs: ['serde(rename_all = "camelCase")']
+attrs: ['serde(rename_all = "camelCase")']
 typescript:
   rename: camelCase
 members:
-  id:
-    type: string
-    optional: true
-  limit: i64
+  pagination:
+    use: Pagination
+  demo_mode: bool

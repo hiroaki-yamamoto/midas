@@ -2593,9 +2593,12 @@ dependencies = [
  "access_logger",
  "config",
  "csrf",
+ "futures",
+ "log",
  "mongodb",
  "position",
  "rpc",
+ "serde",
  "tokio",
  "warp",
 ]

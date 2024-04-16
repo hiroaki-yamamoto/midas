@@ -28,6 +28,9 @@ build ./../frontend/src/rpc/test_price_base.zod.ts: frontend ./test_price_base.y
 build ./../backend/libs/rpc/src/api_key.rs: backend ./api_key.yml
 build ./../frontend/src/rpc/api_key.zod.ts: frontend ./api_key.yml
 
+build ./../backend/libs/rpc/src/position_list.rs: backend ./position_list.yml
+build ./../frontend/src/rpc/position_list.zod.ts: frontend ./position_list.yml
+
 build ./../backend/libs/rpc/src/bookticker.rs: backend ./bookticker.yml
 build ./../frontend/src/rpc/bookticker.zod.ts: frontend ./bookticker.yml
 
@@ -69,6 +72,9 @@ build ./../frontend/src/rpc/pagination.zod.ts: frontend ./pagination.yml
 
 build ./../backend/libs/rpc/src/history_fetch_request.rs: backend ./history_fetch_request.yml
 build ./../frontend/src/rpc/history_fetch_request.zod.ts: frontend ./history_fetch_request.yml
+
+build ./../backend/libs/rpc/src/position_query.rs: backend ./position_query.yml
+build ./../frontend/src/rpc/position_query.zod.ts: frontend ./position_query.yml
 
 build ./../backend/libs/rpc/src/bot_list.rs: backend ./bot_list.yml
 build ./../frontend/src/rpc/bot_list.zod.ts: frontend ./bot_list.yml
