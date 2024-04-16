@@ -2595,6 +2595,7 @@ dependencies = [
  "config",
  "csrf",
  "futures",
+ "log",
  "mongodb",
  "position",
  "rpc",
