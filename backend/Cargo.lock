@@ -2601,6 +2601,7 @@ dependencies = [
  "serde",
  "tokio",
  "warp",
+ "warp_utils",
 ]
 
 [[package]]
