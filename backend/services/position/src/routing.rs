@@ -42,8 +42,16 @@ fn list_by_bot(ctx: Arc<Context>) -> BoxedFilter<(impl Reply,)> {
     .and_then(
       |ctx: Arc<Context>, bot_id: ObjectId, qs: PositionQuery| async move {
         let conv = ctx.position_converter.clone();
-        let positions: Vec<Box<PositionRpc>> = ctx
-          .position_repo
+        #[cfg(debug_assertions)]
+        let pos_repo = if qs.demo_mode {
+          ctx.position_demo_repo.clone()
+        } else {
+          ctx.position_repo.clone()
+        };
+        #[cfg(not(debug_assertions))]
+        let pos_repo = ctx.position_repo.clone();
+
+        let positions: Vec<Box<PositionRpc>> = pos_repo
           .list_by_bot_id(bot_id, *qs.pagination.clone())
           .map_err(|e| {
             let code = StatusCode::INTERNAL_SERVER_ERROR;

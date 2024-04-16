@@ -9,4 +9,7 @@ typescript:
 members:
   pagination:
     use: Pagination
-  demo_mode: bool
+  demo_mode:
+    type: bool
+    rust:
+      attrs: ["cfg(debug_assertions)"]

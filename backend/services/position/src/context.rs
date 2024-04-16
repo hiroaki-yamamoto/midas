@@ -15,29 +15,29 @@ use ::position::services::{
 };
 
 pub struct Context {
+  #[cfg(debug_assertions)]
+  pub position_demo_repo: Arc<dyn IPositionRepo + Send + Sync>,
+  #[cfg(debug_assertions)]
+  pub position_demo_conv: Arc<dyn IPositionConverter + Send + Sync>,
+
   pub position_repo: Arc<dyn IPositionRepo + Send + Sync>,
   pub position_converter: Arc<dyn IPositionConverter + Send + Sync>,
 }
 
 impl Context {
   #[cfg(debug_assertions)]
-  pub async fn new(demo_mode: bool, exchange: Exchanges, db: Database) -> Self {
-    return if demo_mode {
-      Self {
-        position_repo: Arc::new(PositionDemoRepo::new()),
-        position_converter: Arc::new(DemoPosConv::new()),
-      }
-    } else {
-      Self {
-        position_repo: Arc::new(PositionRepo::new(db.clone()).await),
-        position_converter: match exchange {
-          Exchanges::Binance => {
-            let order_resp_repo =
-              Arc::new(OrderResponseRepo::new(db.clone()).await);
-            Arc::new(BinancePosConv::new(order_resp_repo))
-          }
-        },
-      }
+  pub async fn new(exchange: Exchanges, db: Database) -> Self {
+    return Self {
+      position_demo_repo: Arc::new(PositionDemoRepo::new()),
+      position_demo_conv: Arc::new(DemoPosConv::new()),
+      position_repo: Arc::new(PositionRepo::new(db.clone()).await),
+      position_converter: match exchange {
+        Exchanges::Binance => {
+          let order_resp_repo =
+            Arc::new(OrderResponseRepo::new(db.clone()).await);
+          Arc::new(BinancePosConv::new(order_resp_repo))
+        }
+      },
     };
   }
   #[cfg(not(debug_assertions))]
