@@ -13,7 +13,7 @@ errors = { path = "../errors" }
 
 futures-core = "0.3.30"
 num-traits = "0.2.18"
-serde = { version = "1.0.197", features = ["derive"] }
+serde = { version = "1.0.198", features = ["derive"] }
 bson = "2.10.0"
 bytes = "1.6.0"
 ring = "0.17.8"
