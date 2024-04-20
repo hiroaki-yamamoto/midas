@@ -21,7 +21,7 @@ position = { path = "../position" }
 
 async-trait = "0.1.80"
 rmp-serde = "1.2.0"
-serde_json = "1.0.115"
+serde_json = "1.0.116"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 tokio = { version = "1.37.0", features = ["time", "macros", "sync"] }
 tokio-stream = "0.1.15"
@@ -34,7 +34,7 @@ serde = { version = "1.0.198", features = ["derive"] }
 rug = { version = "1.24.1", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.2", features = ["force-cross"] }
 url = "2.5.0"
-reqwest = { version = "0.12.3", features = [
+reqwest = { version = "0.12.4", features = [
   "gzip",
   "brotli",
   "json",

@@ -12,7 +12,7 @@ serde = { version = "1.0.198", features = ["derive"] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 url = "2.5.0"
 warp = { version = "0.3.7", features = ["tls"] }
-reqwest = { version = "0.12.3", features = [
+reqwest = { version = "0.12.4", features = [
   "gzip",
   "brotli",
   "json",
@@ -23,7 +23,7 @@ mongodb = { version = "2.8.2", default-features = false, features = [
   "bson-chrono-0_4",
 ] }
 serde_qs = "0.13.0"
-serde_json = "1.0.115"
+serde_json = "1.0.116"
 serde_yaml = "0.9.34+deprecated"
 redis = "0.25.3"
 async-nats = "0.34.0"
