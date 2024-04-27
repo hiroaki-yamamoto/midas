@@ -30,8 +30,8 @@ importers:
         specifier: ~17.3.0
         version: 17.3.5(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(@angular/platform-browser@17.3.5(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(rxjs@7.8.1)
       '@angular/material':
-        specifier: 17.3.5
-        version: 17.3.5(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/cdk@17.3.5(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(@angular/forms@17.3.5(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(@angular/platform-browser@17.3.5(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(rxjs@7.8.1))(@angular/platform-browser@17.3.5(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(rxjs@7.8.1)
+        specifier: 17.3.6
+        version: 17.3.6(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/cdk@17.3.5(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(@angular/forms@17.3.5(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(@angular/platform-browser@17.3.5(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(rxjs@7.8.1))(@angular/platform-browser@17.3.5(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(rxjs@7.8.1)
       '@angular/platform-browser':
         specifier: ~17.3.0
         version: 17.3.5(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))
@@ -369,11 +369,11 @@ packages:
       '@angular/compiler': 17.3.6
       '@angular/compiler-cli': 17.3.6
 
-  '@angular/material@17.3.5':
-    resolution: {integrity: sha512-1+QqBQ8HVOwxOkx/v2n53JA9ALOee55yVDbnAv7TkseNN4JEDxOcE5TO5HGmdV2A4tcsXQ00MIdy04jiB4sCng==}
+  '@angular/material@17.3.6':
+    resolution: {integrity: sha512-sttN0JNvd2QvCCFIsxb5noiy7tgQdWrwvmrkJ+3KguHh5X84jDliA/d8N7Xgy2IBLnS/q/Hl9DdRCOiItWG1bw==}
     peerDependencies:
       '@angular/animations': ^17.0.0 || ^18.0.0
-      '@angular/cdk': 17.3.5
+      '@angular/cdk': 17.3.6
       '@angular/common': ^17.0.0 || ^18.0.0
       '@angular/core': ^17.0.0 || ^18.0.0
       '@angular/forms': ^17.0.0 || ^18.0.0
@@ -6051,7 +6051,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ? '@angular/material@17.3.5(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/cdk@17.3.5(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(@angular/forms@17.3.5(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(@angular/platform-browser@17.3.5(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(rxjs@7.8.1))(@angular/platform-browser@17.3.5(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(rxjs@7.8.1)'
+  ? '@angular/material@17.3.6(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/cdk@17.3.5(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(@angular/forms@17.3.5(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(@angular/platform-browser@17.3.5(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(rxjs@7.8.1))(@angular/platform-browser@17.3.5(@angular/animations@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4)))(rxjs@7.8.1)'
   : dependencies:
       '@angular/animations': 17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))
       '@angular/cdk': 17.3.5(@angular/common@17.3.5(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1))(@angular/core@17.3.5(rxjs@7.8.1)(zone.js@0.14.4))(rxjs@7.8.1)
