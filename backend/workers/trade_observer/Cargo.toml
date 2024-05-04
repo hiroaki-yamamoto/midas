@@ -21,7 +21,7 @@ tokio = { version = "1.37.0", features = [
 ] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 futures = "0.3.30"
-libc = "0.2.153"
+libc = "0.2.154"
 mongodb = { version = "2.8.2", default-features = false, features = [
   "async-std-runtime",
 ] }
