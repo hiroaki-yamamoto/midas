@@ -22,7 +22,7 @@ symbols = { path = "../../libs/symbols" }
 kvs = { path = "../../libs/kvs" }
 
 serde = { version = "1.0.200", features = ["derive"] }
-rmp-serde = "1.2.0"
+rmp-serde = "1.3.0"
 mongodb = { version = "2.8.2", default-features = false, features = [
   "async-std-runtime",
 ] }
@@ -37,8 +37,8 @@ tokio = { version = "1.37.0", features = [
 ] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 futures = "0.3.30"
-num-traits = "0.2.18"
-libc = "0.2.153"
+num-traits = "0.2.19"
+libc = "0.2.154"
 warp = { version = "0.3.7", features = ["tls"] }
 serde_json = "1.0.116"
 http = "1.1.0"

@@ -12,7 +12,7 @@ types = { path = "../types" }
 errors = { path = "../errors" }
 
 futures-core = "0.3.30"
-num-traits = "0.2.18"
+num-traits = "0.2.19"
 serde = { version = "1.0.200", features = ["derive"] }
 bson = "2.10.0"
 bytes = "1.6.0"
