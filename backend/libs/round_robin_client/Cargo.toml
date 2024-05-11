@@ -26,7 +26,7 @@ tokio = { version = "1.37.0", features = [
 tokio-tungstenite = { version = "0.21.0", features = ["native-tls"] }
 rand = "0.8.5"
 futures = "0.3.30"
-serde_json = "1.0.116"
+serde_json = "1.0.117"
 async-trait = "0.1.80"
 
 [dev-dependencies]
