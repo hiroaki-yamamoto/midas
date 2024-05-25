@@ -80,7 +80,7 @@ importers:
     devDependencies:
       '@angular-devkit/build-angular':
         specifier: ~17.3.0
-        version: 17.3.7(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/localize@17.3.9(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6))))(@types/express@4.17.21)(@types/node@20.12.12)(chokidar@3.6.0)(karma@6.4.3)(typescript@5.4.5)
+        version: 17.3.7(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/localize@17.3.10(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6))))(@types/express@4.17.21)(@types/node@20.12.12)(chokidar@3.6.0)(karma@6.4.3)(typescript@5.4.5)
       '@angular-eslint/builder':
         specifier: 17.4.1
         version: 17.4.1(eslint@9.3.0)(typescript@5.4.5)
@@ -103,8 +103,8 @@ importers:
         specifier: ~17.3.0
         version: 17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5)
       '@angular/localize':
-        specifier: 17.3.9
-        version: 17.3.9(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))
+        specifier: 17.3.10
+        version: 17.3.10(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))
       '@cypress/schematic':
         specifier: 2.5.1
         version: 2.5.1(@angular/cli@17.3.7(chokidar@3.6.0))(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6))
@@ -143,7 +143,7 @@ importers:
         version: 7.9.0(eslint@9.3.0)(typescript@5.4.5)
       cypress:
         specifier: latest
-        version: 13.9.0
+        version: 13.10.0
       d3-path:
         specifier: ^3.1.0
         version: 3.1.0
@@ -357,13 +357,13 @@ packages:
       '@angular/platform-browser': 17.3.9
       rxjs: ^6.5.3 || ^7.4.0
 
-  '@angular/localize@17.3.9':
-    resolution: {integrity: sha512-ECWWw6GoJh2laopHIf+QT4bDDpSWwQJk95SGPI5mQIEXZXw6w9ms05Sfb8KJTNRXs9kcotloIGK9YanFZxzK1g==}
+  '@angular/localize@17.3.10':
+    resolution: {integrity: sha512-B/r+jsYiuxm2llBsOE2rKomB5vSnTnICWcfooBDtDUAfTZNQIoSdPt2SAIbRN/c4GLZsiU53k0+jLl67HdtO2g==}
     engines: {node: ^18.13.0 || >=20.9.0}
     hasBin: true
     peerDependencies:
-      '@angular/compiler': 17.3.9
-      '@angular/compiler-cli': 17.3.9
+      '@angular/compiler': 17.3.10
+      '@angular/compiler-cli': 17.3.10
 
   '@angular/material@17.3.9':
     resolution: {integrity: sha512-iNLXGfTsXYQ7lX9UkU4ifb6+lVKjDFQJkWE8HmNWC3C2KXC9k15UefPKy4/sZUVzLE/yOBHPfNDwdhaJGlcu+g==}
@@ -2896,8 +2896,8 @@ packages:
   custom-event@1.0.1:
     resolution: {integrity: sha512-GAj5FOq0Hd+RsCGVJxZuKaIDXDf3h6GQoNEjFgbLLI/trgtavwUbSnZ5pVfg27DVCaWjIohryS0JFwIJyT2cMg==}
 
-  cypress@13.9.0:
-    resolution: {integrity: sha512-atNjmYfHsvTuCaxTxLZr9xGoHz53LLui3266WWxXJHY7+N6OdwJdg/feEa3T+buez9dmUXHT1izCOklqG82uCQ==}
+  cypress@13.10.0:
+    resolution: {integrity: sha512-tOhwRlurVOQbMduX+KonoMeQILs2cwR3yHGGENoFvvSoLUBHmJ8b9/n21gFSDqjlOJ+SRVcwuh+fG/JDsHsT6Q==}
     engines: {node: ^16.0.0 || ^18.0.0 || >=20.0.0}
     hasBin: true
 
@@ -3790,6 +3790,7 @@ packages:
 
   inflight@1.0.6:
     resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
+    deprecated: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
 
   inherits@2.0.3:
     resolution: {integrity: sha512-x00IRNXNy63jwGkJmzPigoySHbaqpNuzKbBOmzK+g2OdZpQ9w+sxCN+VSB3ja7IAge2OP2qpfxTjeNcyjmW1uw==}
@@ -4847,6 +4848,7 @@ packages:
   read-package-json@7.0.1:
     resolution: {integrity: sha512-8PcDiZ8DXUjLf687Ol4BR8Bpm2umR7vhoZOzNRt+uxD9GpBh/K+CAAALVIiYFknmvlmyg7hM7BSNUXPaCCqd0Q==}
     engines: {node: ^16.14.0 || >=18.0.0}
+    deprecated: This package is no longer supported. Please use @npmcli/package-json instead.
 
   readable-stream@2.3.8:
     resolution: {integrity: sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA==}
@@ -5778,7 +5780,7 @@ snapshots:
     transitivePeerDependencies:
       - chokidar
 
-  '@angular-devkit/build-angular@17.3.7(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/localize@17.3.9(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6))))(@types/express@4.17.21)(@types/node@20.12.12)(chokidar@3.6.0)(karma@6.4.3)(typescript@5.4.5)':
+  '@angular-devkit/build-angular@17.3.7(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/localize@17.3.10(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6))))(@types/express@4.17.21)(@types/node@20.12.12)(chokidar@3.6.0)(karma@6.4.3)(typescript@5.4.5)':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@angular-devkit/architect': 0.1703.7(chokidar@3.6.0)
@@ -5846,7 +5848,7 @@ snapshots:
       webpack-merge: 5.10.0
       webpack-subresource-integrity: 5.1.0(webpack@5.90.3(esbuild@0.20.1))
     optionalDependencies:
-      '@angular/localize': 17.3.9(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))
+      '@angular/localize': 17.3.10(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))
       esbuild: 0.20.1
       karma: 6.4.3
     transitivePeerDependencies:
@@ -6048,7 +6050,7 @@ snapshots:
       rxjs: 7.8.1
       tslib: 2.6.2
 
-  '@angular/localize@17.3.9(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))':
+  '@angular/localize@17.3.10(@angular/compiler-cli@17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5))(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))':
     dependencies:
       '@angular/compiler': 17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6))
       '@angular/compiler-cli': 17.3.9(@angular/compiler@17.3.9(@angular/core@17.3.9(rxjs@7.8.1)(zone.js@0.14.6)))(typescript@5.4.5)
@@ -9163,7 +9165,7 @@ snapshots:
 
   custom-event@1.0.1: {}
 
-  cypress@13.9.0:
+  cypress@13.10.0:
     dependencies:
       '@cypress/request': 3.0.1
       '@cypress/xvfb': 1.2.4(supports-color@8.1.1)
