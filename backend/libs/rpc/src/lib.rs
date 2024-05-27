@@ -26,6 +26,7 @@ pub mod symbol_type;
 pub mod test_price_base;
 pub mod timestamp;
 pub mod trigger_type;
+pub use ::http::StatusCode;
 
 mod impl_bot_list;
 mod impl_exchanges;

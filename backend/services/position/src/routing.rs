@@ -11,7 +11,8 @@ use ::warp::{Filter, Rejection, Reply};
 use ::rpc::position::Position as PositionRpc;
 use ::rpc::position_list::PositionList;
 use ::rpc::position_query::PositionQuery;
-use ::rpc::status::{Status, StatusCode};
+use ::rpc::status::Status;
+use ::rpc::StatusCode;
 
 use crate::context::Context;
 

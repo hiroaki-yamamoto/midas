@@ -10,11 +10,6 @@ if [ ! -x `which helm` ]; then
   exit 1
 fi
 
-if [ ! -x `which yq` ]; then
-  echo "Install yq: https://github.com/mikefarah/yq"
-  exit 1
-fi
-
 addRepo() {
   local name=$1
   local repo=$2
@@ -31,7 +26,7 @@ helmInstall() {
 }
 
 NAMESPACE_PATH="${WORKDIR}/./namespace.yml"
-MIDAS_NAMESPACE=`yq '.metadata.name' $NAMESPACE_PATH`
+MIDAS_NAMESPACE=`${WORKDIR}/../deps/yq/bin/yq '.metadata.name' $NAMESPACE_PATH`
 
 echo "Refreshing the release menu in the repo"
 helm repo update
