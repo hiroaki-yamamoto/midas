@@ -30,7 +30,7 @@ rmp-serde = "1.3.0"
 serde_qs = "0.13.0"
 url = "2.5.0"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-tokio = { version = "1.37.0", features = [
+tokio = { version = "1.38.0", features = [
   "macros",
   "rt",
   "rt-multi-thread",
@@ -48,4 +48,4 @@ reqwest = { version = "0.12.4", features = [
   "cookies",
 ] }
 rug = { version = "1.24.1", features = ["serde"] }
-gmp-mpfr-sys = { version = "1.6.2", features = ["force-cross"] }
+gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
