@@ -40,4 +40,4 @@ err-derive = "0.3.1"
 tokio = { version = "1.38.0", features = ["sync", "time"] }
 rug = { version = "1.24.1", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
-url = "2.5.0"
+url = "2.5.1"
