@@ -29,7 +29,7 @@ mongodb = { version = "2.8.2", default-features = false, features = [
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 ring = "0.17.8"
 serde = { version = "1.0.203", features = ["derive", "rc"] }
-reqwest = { version = "0.12.4", features = [
+reqwest = { version = "0.12.5", features = [
   "gzip",
   "brotli",
   "json",
@@ -40,4 +40,4 @@ err-derive = "0.3.1"
 tokio = { version = "1.38.0", features = ["sync", "time"] }
 rug = { version = "1.24.1", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
-url = "2.5.1"
+url = "2.5.2"
