@@ -15,7 +15,7 @@ writers = { path = "../writers" }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 serde = { version = "1.0.203", features = ["derive", "rc"] }
 rug = { version = "1.24.1", features = ["serde"] }
-mongodb = { version = "2.8.2", default-features = false, features = [
+mongodb = { version = "3.0.0", default-features = false, features = [
   "async-std-runtime",
   "bson-chrono-0_4",
 ] }

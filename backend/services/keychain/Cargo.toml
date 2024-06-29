@@ -16,7 +16,7 @@ subscribe = { path = "../../libs/subscribe" }
 warp_utils = { path = "../../libs/warp_utils" }
 
 clap = { version = "4.5.8", features = ["derive"] }
-mongodb = { version = "2.8.2", default-features = false, features = [
+mongodb = { version = "3.0.0", default-features = false, features = [
   "async-std-runtime",
 ] }
 tokio = { version = "1.38.0", features = [

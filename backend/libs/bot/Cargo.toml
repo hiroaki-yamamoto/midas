@@ -13,7 +13,7 @@ types = { path = "../types" }
 random = { path = "../random" }
 
 serde = { version = "1.0.203", features = ["derive"] }
-mongodb = { version = "2.8.2", default-features = false, features = [
+mongodb = { version = "3.0.0", default-features = false, features = [
   "async-std-runtime",
   "bson-chrono-0_4",
 ] }
