@@ -3,6 +3,7 @@ use ::std::time::Duration as StdDur;
 use ::async_trait::async_trait;
 use ::futures::future::join;
 use ::futures::stream::StreamExt;
+use ::mongodb::bson::doc;
 use ::mongodb::Database;
 use ::url::Url;
 
@@ -47,7 +48,7 @@ impl SymbolFetcher {
 impl SymbolFetcherTrait for SymbolFetcher {
   async fn refresh(&mut self) -> SymbolFetchResult<Vec<SymbolInfo>> {
     let resp = self.cli.get::<()>(None, None).await?;
-    let old_symbols = self.recorder.list(None).await?;
+    let old_symbols = self.recorder.list(doc! {}).await?;
     let old_symbols: Vec<Symbol> = old_symbols.collect().await;
     let resp_status = resp.status();
     if resp_status.is_success() {
@@ -68,7 +69,7 @@ impl SymbolFetcherTrait for SymbolFetcher {
       return Ok(
         self
           .recorder
-          .list(None)
+          .list(doc! {})
           .await?
           .map(|item| item.into())
           .collect()

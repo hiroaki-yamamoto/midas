@@ -40,7 +40,7 @@ impl KeyChain {
 #[async_trait]
 impl IKeyChain for KeyChain {
   async fn push(&self, api_key: APIKey) -> KeyChainResult<Option<ObjectId>> {
-    let result = self.col.insert_one(&api_key, None).await?;
+    let result = self.col.insert_one(&api_key).await?;
     let id = result.inserted_id.as_object_id();
     let mut api_key = api_key.clone();
     api_key.inner_mut().id = id.clone();
@@ -61,7 +61,6 @@ impl IKeyChain for KeyChain {
         UpdateModifications::Pipeline(vec![doc! {
           "$set": doc! {"label": label},
         }]),
-        None,
       )
       .await?;
     return Ok(());
@@ -73,7 +72,7 @@ impl IKeyChain for KeyChain {
   ) -> KeyChainResult<BoxStream<'_, APIKey>> {
     let stream = self
       .col
-      .find(filter, None)
+      .find(filter)
       .await?
       .filter_map(|res| async { res.ok() })
       .boxed();
@@ -87,22 +86,17 @@ impl IKeyChain for KeyChain {
   ) -> KeyChainResult<APIKey> {
     let key = self
       .col
-      .find_one(
-        doc! {
-          "_id": id,
-          "exchange": exchange.as_str().to_lowercase(),
-        },
-        None,
-      )
+      .find_one(doc! {
+        "_id": id,
+        "exchange": exchange.as_str().to_lowercase(),
+      })
       .await?
       .ok_or(ObjectNotFound::new("APIKey", id.to_hex().as_str()));
     return Ok(key?);
   }
 
   async fn delete(&self, id: ObjectId) -> KeyChainResult<()> {
-    if let Some(doc) =
-      self.col.find_one_and_delete(doc! {"_id": id}, None).await?
-    {
+    if let Some(doc) = self.col.find_one_and_delete(doc! {"_id": id}).await? {
       let api_key: APIKey = doc;
       let event = APIKeyEvent::Remove(api_key);
       let _ = self.pubsub.publish(&event).await?;

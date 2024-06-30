@@ -1,7 +1,6 @@
 use ::std::convert::TryFrom;
 
 use ::async_trait::async_trait;
-use ::futures::future::FutureExt;
 use ::futures::stream::BoxStream;
 use ::futures::StreamExt;
 use ::mongodb::bson::{doc, Document};
@@ -46,7 +45,7 @@ impl DatabaseWriter for HistoryWriter {
 #[async_trait]
 impl HistoryWriterTrait for HistoryWriter {
   async fn delete_by_symbol(&self, symbol: &str) -> MongoResult<DeleteResult> {
-    return self.col.delete_many(doc! {"symbol": symbol}, None).await;
+    return self.col.delete_many(doc! {"symbol": symbol}).await;
   }
 
   async fn write(
@@ -54,25 +53,18 @@ impl HistoryWriterTrait for HistoryWriter {
     klines: KlinesByExchange,
   ) -> WriterResult<InsertManyResult> {
     let klines = Vec::<Kline>::try_from(klines)?;
-    return Ok(self.col.insert_many(klines, None).await?);
+    return Ok(self.col.insert_many(klines).await?);
   }
 
   async fn list(
     self,
-    query: impl Into<Option<Document>> + Send + 'async_trait,
+    query: Document,
   ) -> MongoResult<BoxStream<'async_trait, KlinesByExchange>> {
-    let st = self
-      .col
-      .find(query, None)
-      .map(|cur_res| {
-        cur_res.map(|cur| {
-          cur
-            .filter_map(|kline| async { kline.ok() })
-            .map(|kline| KlinesByExchange::Binance(vec![kline]))
-            .boxed()
-        })
-      })
-      .await;
-    return st;
+    let cur = self.col.find(query).await?;
+    let st = cur
+      .filter_map(|kline| async move { kline.ok() })
+      .map(|kline| KlinesByExchange::Binance(vec![kline]))
+      .boxed();
+    return Ok(st);
   }
 }

@@ -16,9 +16,7 @@ writers = { path = "../writers" }
 bytes = "1.6.0"
 ring = "0.17.8"
 futures = "0.3.30"
-mongodb = { version = "2.8.2", default-features = false, features = [
-  "async-std-runtime",
-] }
+mongodb = "3.0.0"
 rmp-serde = "1.3.0"
 async-trait = "0.1.80"
 serde = { version = "1.0.203", features = ["derive", "rc"] }

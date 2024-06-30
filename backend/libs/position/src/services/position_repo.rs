@@ -44,8 +44,8 @@ impl IPositionRepo for PositionRepo {
       .update_one(
         doc! {"_id": &position.id},
         doc! { "$set": to_document(position)? },
-        UpdateOptions::builder().upsert(true).build(),
       )
+      .with_options(UpdateOptions::builder().upsert(true).build())
       .await?;
     let res_pos = if let Some(id) = result.upserted_id {
       let id = id.as_object_id().ok_or(PositionError::BSONCastFailed(id))?;
@@ -62,7 +62,7 @@ impl IPositionRepo for PositionRepo {
   async fn get(&self, id: &ObjectId) -> PositionResult<Position> {
     let position = self
       .col
-      .find_one(doc! { "_id": id }, None)
+      .find_one(doc! { "_id": id })
       .await?
       .ok_or(ObjectNotFound::new("Position", id.to_hex().as_str()))?;
     return Ok(position);
@@ -80,8 +80,8 @@ impl IPositionRepo for PositionRepo {
     return Ok(
       self
         .col
-        .find(
-          query,
+        .find(query)
+        .with_options(
           FindOptions::builder()
             .limit(if pg.limit > 0 { Some(pg.limit) } else { None })
             .build(),
