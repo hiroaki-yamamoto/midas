@@ -60,8 +60,8 @@ impl IOrderResponseRepo for OrderResponseRepo {
             "_id": { "$in": ids }
           },
           to_document(order_response)?,
-          UpdateOptions::builder().upsert(true).build(),
         )
+        .with_options(UpdateOptions::builder().upsert(true).build())
         .await?,
     );
   }
@@ -73,7 +73,7 @@ impl IOrderResponseRepo for OrderResponseRepo {
   {
     let order_resp_stream = self
       .col
-      .find(doc! {"gid": position.entry_gid}, None)
+      .find(doc! {"gid": position.entry_gid})
       .await?
       .map_err(|e| PositionError::from(e));
     return Ok(order_resp_stream.boxed());
@@ -85,7 +85,7 @@ impl IOrderResponseRepo for OrderResponseRepo {
   {
     let order_resp_stream = self
       .col
-      .find(doc! {"gid": position.exit_gid}, None)
+      .find(doc! {"gid": position.exit_gid})
       .await?
       .map_err(|e| PositionError::from(e));
     return Ok(order_resp_stream.boxed());

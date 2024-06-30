@@ -16,6 +16,6 @@ pub trait HistoryWriter {
   ) -> WriterResult<InsertManyResult>;
   async fn list(
     self,
-    query: impl Into<Option<Document>> + Send + 'async_trait,
+    query: Document,
   ) -> MongoResult<BoxStream<'async_trait, KlinesByExchange>>;
 }

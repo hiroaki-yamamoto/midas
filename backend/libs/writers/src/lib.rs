@@ -10,7 +10,7 @@ pub trait DatabaseWriter {
     let col_name = self.get_col_name();
     let db = self.get_database();
     let has_index = db
-      .run_command(doc! {"listIndexes": &col_name}, None)
+      .run_command(doc! {"listIndexes": &col_name})
       .await
       .map(|item| {
         return item
@@ -28,13 +28,10 @@ pub trait DatabaseWriter {
         } })
       }
       let _ = db
-        .run_command(
-          doc! {
-            "createIndexes": &col_name,
-            "indexes": indices
-          },
-          None,
-        )
+        .run_command(doc! {
+          "createIndexes": &col_name,
+          "indexes": indices
+        })
         .await;
     }
   }

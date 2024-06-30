@@ -6,7 +6,6 @@ use ::log::warn;
 use ::serde_json::to_string as jsonify;
 use ::warp::ws::Message;
 
-use ::entities::HistoryFetchRequest;
 use ::history::entities::FetchStatusChanged;
 use ::rpc::exchanges::Exchanges;
 use ::rpc::progress::Progress;
@@ -21,7 +20,6 @@ pub struct Context {
   pub num_obj: ProgressKVS,
   pub sync_prog: ProgressKVS,
   pub status: Arc<dyn PubSub<Output = FetchStatusChanged> + Send + Sync>,
-  pub splitter: Arc<dyn PubSub<Output = HistoryFetchRequest> + Send + Sync>,
   pub symbol_reader: Arc<dyn SymbolReader + Send + Sync>,
   pub socket_response: Arc<dyn ISocketResponseService + Send + Sync>,
   pub socket_request: Arc<dyn ISocketRequestService + Send + Sync>,
@@ -32,7 +30,6 @@ impl Context {
     num_obj: ProgressKVS,
     sync_prog: ProgressKVS,
     status: Arc<dyn PubSub<Output = FetchStatusChanged> + Send + Sync>,
-    splitter: Arc<dyn PubSub<Output = HistoryFetchRequest> + Send + Sync>,
     symbol_reader: Arc<dyn SymbolReader + Send + Sync>,
     socket_response: Arc<dyn ISocketResponseService + Send + Sync>,
     socket_request: Arc<dyn ISocketRequestService + Send + Sync>,
@@ -41,7 +38,6 @@ impl Context {
       num_obj,
       sync_prog,
       status,
-      splitter,
       symbol_reader,
       socket_response,
       socket_request,

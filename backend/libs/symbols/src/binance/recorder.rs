@@ -1,6 +1,6 @@
 use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
-use ::mongodb::bson;
+use ::mongodb::bson::{doc, Document};
 use ::mongodb::error::Result as DBResult;
 use ::mongodb::results::InsertManyResult;
 use ::mongodb::{Collection, Database};
@@ -32,9 +32,9 @@ impl SymbolWriter {
 
   pub(crate) async fn list(
     &self,
-    query: impl Into<Option<bson::Document>> + Send,
+    query: Document,
   ) -> DBResult<InHouseListSymbolStream> {
-    let cur = self.col.find(query, None).await?;
+    let cur = self.col.find(query).await?;
     let cur = cur.filter_map(|doc| async { doc.ok() }).boxed();
     return Ok(cur);
   }
@@ -43,8 +43,8 @@ impl SymbolWriter {
     &self,
     value: Vec<Symbol>,
   ) -> DBResult<InsertManyResult> {
-    let _ = self.col.delete_many(bson::doc! {}, None).await?;
-    return Ok(self.col.insert_many(value.into_iter(), None).await?);
+    let _ = self.col.delete_many(doc! {}).await?;
+    return Ok(self.col.insert_many(value.into_iter()).await?);
   }
 }
 
@@ -60,7 +60,7 @@ impl DBWriterTrait for SymbolWriter {
 #[async_trait]
 impl SymbolReaderTrait for SymbolWriter {
   async fn list_all(&self) -> DBResult<ListSymbolStream> {
-    let cur = self.col.find(None, None).await?;
+    let cur = self.col.find(doc! {}).await?;
     let cur = cur
       .filter_map(|doc_res| async { doc_res.ok() })
       .map(|doc| doc.into());
@@ -71,7 +71,7 @@ impl SymbolReaderTrait for SymbolWriter {
     return Ok(
       self
         .col
-        .find(bson::doc! {"status": "TRADING"}, None)
+        .find(doc! {"status": "TRADING"})
         .await?
         .filter_map(|doc_res| async { doc_res.ok() })
         .map(|item| item.into())
@@ -83,7 +83,7 @@ impl SymbolReaderTrait for SymbolWriter {
     return Ok(
       self
         .col
-        .distinct("quoteAsset", None, None)
+        .distinct("quoteAsset", doc! {})
         .await?
         .into_iter()
         .filter_map(|base_bson| base_bson.as_str().map(|base| base.to_string()))

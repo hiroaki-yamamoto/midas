@@ -1,7 +1,7 @@
 use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
 use ::mongodb::bson::{doc, oid::ObjectId, to_document};
-use ::mongodb::options::{FindOneOptions, FindOptions, UpdateOptions};
+use ::mongodb::options::{FindOneOptions, UpdateOptions};
 use ::mongodb::results::UpdateResult;
 use ::mongodb::{Collection, Database};
 
@@ -29,8 +29,8 @@ impl IBotRepo for BotRepo {
   async fn summary_by_id(&self, id: ObjectId) -> BotInfoResult<Bot> {
     let doc = self
       .col
-      .find_one(
-        doc! {"_id": id},
+      .find_one(doc! {"_id": id})
+      .with_options(
         FindOneOptions::builder()
           .projection(doc! {"cond_ts": 0})
           .build(),
@@ -42,7 +42,7 @@ impl IBotRepo for BotRepo {
   async fn get_by_id(&self, id: ObjectId) -> BotInfoResult<Bot> {
     let doc = self
       .col
-      .find_one(doc! {"_id": id}, None)
+      .find_one(doc! {"_id": id})
       .await?
       .ok_or(ObjectNotFound::new("Bot", Some(id.to_hex().as_str())))?;
     return Ok(doc);
@@ -50,25 +50,18 @@ impl IBotRepo for BotRepo {
   async fn save(&self, model: &Bot) -> BotInfoResult<UpdateResult> {
     let result = self
       .col
-      .update_one(
-        doc! {"_id": model.id},
-        doc! {"$set": to_document(model)?},
-        UpdateOptions::builder().upsert(true).build(),
-      )
+      .update_one(doc! {"_id": model.id}, doc! {"$set": to_document(model)?})
+      .with_options(UpdateOptions::builder().upsert(true).build())
       .await;
     return Ok(result?);
   }
   async fn list(&self) -> BotInfoResult<BoxStream<BotInfoResult<Bot>>> {
     let cursor = self
       .col
-      .find(
-        None,
-        FindOptions::builder()
-          .projection(doc! {
-            "cond_ts": 0,
-          })
-          .build(),
-      )
+      .find(doc! {})
+      .projection(doc! {
+        "cond_ts": 0,
+      })
       .await?
       .map(|doc_result| {
         return doc_result.map_err(|e| {

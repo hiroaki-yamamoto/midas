@@ -52,7 +52,6 @@ impl Service {
       num_obj_kvs,
       sync_prog_kvs,
       status,
-      splitter,
       symbol_reader,
       soc_resp,
       sock_req,

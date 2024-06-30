@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 
 use ::async_trait::async_trait;
 use ::futures::stream::{BoxStream, StreamExt};
+use ::mongodb::bson::doc;
 use ::mongodb::bson::oid::ObjectId;
 use ::mongodb::Database;
 use ::rug::Float;
@@ -60,7 +61,7 @@ impl TestExecutorTrait for Executor {
     let price_base = self.price_base_policy.clone();
     let writer = self.writer.clone();
     let db_stream = writer
-      .list(None)
+      .list(doc! {})
       .await?
       .filter_map(|klines| async { Vec::<Kline>::try_from(klines).ok() })
       .map(move |klines| {
