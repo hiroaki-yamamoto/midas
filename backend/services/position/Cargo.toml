@@ -13,7 +13,7 @@ access_logger = { path = "../../libs/access_logger" }
 csrf = { path = "../../libs/csrf" }
 warp_utils = { path = "../../libs/warp_utils" }
 
-mongodb = { version = "2.8.2", default-features = false, features = [
+mongodb = { version = "3.0.0", default-features = false, features = [
   "async-std-runtime",
   "bson-chrono-0_4",
 ] }
