@@ -16,7 +16,7 @@ reqwest = { version = "0.12.5", features = [
   "json",
   "rustls-tls",
 ] }
-serde = "1.0.203"
+serde = "1.0.204"
 tokio = { version = "1.38.0", features = [
   "time",
   "rt",

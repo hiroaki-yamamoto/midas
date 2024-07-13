@@ -14,7 +14,7 @@ errors = { path = "../errors" }
 kvs = { path = "../kvs" }
 
 mongodb = "3.0.0"
-serde = { version = "1.0.203", features = ["derive"] }
+serde = { version = "1.0.204", features = ["derive"] }
 serde_yaml = "0.9.34+deprecated"
 clap = { version = "4.5.8", features = ["derive"] }
 reqwest = { version = "0.12.5", features = [
