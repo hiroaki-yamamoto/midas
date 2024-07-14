@@ -13,7 +13,7 @@ access_logger = { path = "../../libs/access_logger" }
 csrf = { path = "../../libs/csrf" }
 warp_utils = { path = "../../libs/warp_utils" }
 
-mongodb = "3.0.0"
+mongodb = "3.0.1"
 tokio = { version = "1.38.0", features = [
   "macros",
   "rt",

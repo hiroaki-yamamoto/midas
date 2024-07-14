@@ -21,9 +21,9 @@ writers = { path = "../writers" }
 position = { path = "../position" }
 
 async-stream = "0.3.5"
-async-trait = "0.1.80"
+async-trait = "0.1.81"
 futures = "0.3.30"
-mongodb = "3.0.0"
+mongodb = "3.0.1"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 ring = "0.17.8"
 serde = { version = "1.0.204", features = ["derive", "rc"] }

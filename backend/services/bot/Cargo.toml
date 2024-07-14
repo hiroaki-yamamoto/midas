@@ -16,7 +16,7 @@ warp_utils = { path = "../../libs/warp_utils" }
 rpc = { path = "../../libs/rpc" }
 
 warp = { version = "0.3.7", features = ["tls"] }
-mongodb = "3.0.0"
+mongodb = "3.0.1"
 reqwest = { version = "0.12.5", features = [
   "gzip",
   "brotli",
@@ -32,6 +32,6 @@ tokio = { version = "1.38.0", features = [
 ] }
 futures = "0.3.30"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-clap = { version = "4.5.8", features = ["derive"] }
+clap = { version = "4.5.9", features = ["derive"] }
 libc = "0.2.154"
 http = "1.1.0"

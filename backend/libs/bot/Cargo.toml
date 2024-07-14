@@ -14,7 +14,7 @@ random = { path = "../random" }
 
 bson = { version = "2.11.0", features = ["chrono-0_4"] }
 serde = { version = "1.0.204", features = ["derive"] }
-mongodb = "3.0.0"
+mongodb = "3.0.1"
 reqwest = { version = "0.12.5", features = [
   "gzip",
   "brotli",
@@ -25,6 +25,6 @@ reqwest = { version = "0.12.5", features = [
 err-derive = "0.3.1"
 rug = { version = "1.24.1", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
-async-trait = "0.1.80"
+async-trait = "0.1.81"
 futures = "0.3.30"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
