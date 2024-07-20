@@ -17,7 +17,7 @@ warp_utils = { path = "../../libs/warp_utils" }
 
 clap = { version = "4.5.9", features = ["derive"] }
 mongodb = "3.0.1"
-tokio = { version = "1.38.0", features = [
+tokio = { version = "1.38.1", features = [
   "macros",
   "rt",
   "rt-multi-thread",

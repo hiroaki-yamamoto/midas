@@ -15,7 +15,7 @@ warp_utils = { path = "../../libs/warp_utils" }
 
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 clap = { version = "4.5.9", features = ["derive"] }
-tokio = { version = "1.38.0", features = [
+tokio = { version = "1.38.1", features = [
   "macros",
   "rt",
   "rt-multi-thread",
