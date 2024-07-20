@@ -29,7 +29,7 @@ tokio-tungstenite = { version = "0.23.1", features = ["native-tls"] }
 futures = "0.3.30"
 mongodb = "3.0.1"
 serde = { version = "1.0.204", features = ["derive"] }
-rug = { version = "1.24.1", features = ["serde"] }
+rug = { version = "1.25.0", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
 url = "2.5.2"
 reqwest = { version = "0.12.5", features = [
