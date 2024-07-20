@@ -24,7 +24,7 @@ reqwest = { version = "0.12.5", features = [
   "rustls-tls",
   "cookies",
 ] }
-tokio = { version = "1.38.0", features = [
+tokio = { version = "1.38.1", features = [
   "macros",
   "rt",
   "rt-multi-thread",
