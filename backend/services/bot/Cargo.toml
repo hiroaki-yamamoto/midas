@@ -24,7 +24,7 @@ reqwest = { version = "0.12.5", features = [
   "rustls-tls",
   "cookies",
 ] }
-tokio = { version = "1.38.1", features = [
+tokio = { version = "1.39.2", features = [
   "macros",
   "rt",
   "rt-multi-thread",
@@ -32,6 +32,6 @@ tokio = { version = "1.38.1", features = [
 ] }
 futures = "0.3.30"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-clap = { version = "4.5.9", features = ["derive"] }
+clap = { version = "4.5.11", features = ["derive"] }
 libc = "0.2.154"
 http = "1.1.0"
