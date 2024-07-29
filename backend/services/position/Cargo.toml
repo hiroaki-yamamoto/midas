@@ -14,7 +14,7 @@ csrf = { path = "../../libs/csrf" }
 warp_utils = { path = "../../libs/warp_utils" }
 
 mongodb = "3.0.1"
-tokio = { version = "1.38.1", features = [
+tokio = { version = "1.39.2", features = [
   "macros",
   "rt",
   "rt-multi-thread",
