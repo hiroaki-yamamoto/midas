@@ -30,7 +30,7 @@ impl From<WriteOption> for SetOptions {
   fn from(value: WriteOption) -> Self {
     let mut opt = SetOptions::default();
     if let Some(duration) = value.duration {
-      opt = opt.with_expiration(SetExpiry::PX(duration.as_millis() as usize));
+      opt = opt.with_expiration(SetExpiry::PX(duration.as_millis() as u64));
     }
     if value.non_existent_only {
       opt = opt.conditional_set(ExistenceCheck::NX);
