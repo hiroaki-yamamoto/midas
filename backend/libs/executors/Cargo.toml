@@ -35,7 +35,7 @@ reqwest = { version = "0.12.5", features = [
 ] }
 serde_qs = "0.13.0"
 err-derive = "0.3.1"
-tokio = { version = "1.38.1", features = ["sync", "time"] }
+tokio = { version = "1.39.2", features = ["sync", "time"] }
 rug = { version = "1.25.0", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
 url = "2.5.2"
