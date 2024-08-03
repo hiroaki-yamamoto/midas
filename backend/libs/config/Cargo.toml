@@ -16,14 +16,14 @@ kvs = { path = "../kvs" }
 mongodb = "3.0.1"
 serde = { version = "1.0.204", features = ["derive"] }
 serde_yaml = "0.9.34+deprecated"
-clap = { version = "4.5.11", features = ["derive"] }
+clap = { version = "4.5.13", features = ["derive"] }
 reqwest = { version = "0.12.5", features = [
   "gzip",
   "brotli",
   "json",
   "rustls-tls",
 ] }
-redis = { version = "0.26.0", features = ["connection-manager", "tokio-comp"] }
+redis = { version = "0.26.1", features = ["connection-manager", "tokio-comp"] }
 tokio = { version = "1.39.2", features = [
   "macros",
   "rt",
