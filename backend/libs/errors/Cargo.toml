@@ -20,7 +20,7 @@ reqwest = { version = "0.12.5", features = [
 ] }
 mongodb = "3.0.1"
 serde_qs = "0.13.0"
-serde_json = "1.0.120"
+serde_json = "1.0.121"
 serde_yaml = "0.9.34+deprecated"
 redis = "0.26.0"
 async-nats = "0.35.1"
