@@ -12,7 +12,7 @@ subscribe = { path = "../../libs/subscribe" }
 
 notification = { path = "../../libs/notification" }
 
-clap = { version = "4.5.15", features = ["derive"] }
-tokio = { version = "1.39.2", features = ["rt", "rt-multi-thread", "signal"] }
+clap = { version = "4.5.16", features = ["derive"] }
+tokio = { version = "1.39.3", features = ["rt", "rt-multi-thread", "signal"] }
 libc = "0.2.154"
 futures = "0.3.30"

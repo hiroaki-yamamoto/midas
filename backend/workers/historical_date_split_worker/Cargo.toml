@@ -17,13 +17,13 @@ history = { path = "../../libs/history" }
 date_splitter = { path = "../../libs/date_splitter" }
 
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-tokio = { version = "1.39.2", features = [
+tokio = { version = "1.39.3", features = [
   "rt",
   "rt-multi-thread",
   "macros",
   "signal",
 ] }
-clap = { version = "4.5.15", features = ["derive"] }
+clap = { version = "4.5.16", features = ["derive"] }
 mongodb = "3.0.1"
 futures = "0.3.30"
 libc = "0.2.154"
