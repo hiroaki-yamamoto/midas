@@ -12,8 +12,8 @@ rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 subscribe = { path = "../../libs/subscribe" }
 
-clap = { version = "4.5.15", features = ["derive"] }
-tokio = { version = "1.39.2", features = [
+clap = { version = "4.5.16", features = ["derive"] }
+tokio = { version = "1.39.3", features = [
   "signal",
   "rt",
   "rt-multi-thread",
