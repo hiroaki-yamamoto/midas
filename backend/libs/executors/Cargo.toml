@@ -27,7 +27,7 @@ mongodb = "3.0.1"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 ring = "0.17.8"
 serde = { version = "1.0.209", features = ["derive", "rc"] }
-reqwest = { version = "0.12.5", features = [
+reqwest = { version = "0.12.7", features = [
   "gzip",
   "brotli",
   "json",

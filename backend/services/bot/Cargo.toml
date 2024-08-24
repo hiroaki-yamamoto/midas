@@ -17,7 +17,7 @@ rpc = { path = "../../libs/rpc" }
 
 warp = { version = "0.3.7", features = ["tls"] }
 mongodb = "3.0.1"
-reqwest = { version = "0.12.5", features = [
+reqwest = { version = "0.12.7", features = [
   "gzip",
   "brotli",
   "json",
