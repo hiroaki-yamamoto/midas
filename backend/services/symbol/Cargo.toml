@@ -17,10 +17,10 @@ access_logger = { path = "../../libs/access_logger" }
 subscribe = { path = "../../libs/subscribe" }
 warp_utils = { path = "../../libs/warp_utils" }
 
-mongodb = "3.0.1"
+mongodb = "3.1.0"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 clap = { version = "4.5.16", features = ["derive"] }
-tokio = { version = "1.39.3", features = [
+tokio = { version = "1.40.0", features = [
   "macros",
   "rt",
   "rt-multi-thread",
