@@ -17,7 +17,7 @@ serde = { version = "1.0.209", features = ["derive"] }
 bson = "2.11.0"
 bytes = "1.6.0"
 ring = "0.17.8"
-mongodb = "3.0.1"
+mongodb = "3.1.0"
 chrono = { version = "0.4.38", features = ["serde"] }
 rug = { version = "1.25.0", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }

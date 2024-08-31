@@ -13,7 +13,7 @@ log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 errors = { path = "../errors" }
 kvs = { path = "../kvs" }
 
-mongodb = "3.0.1"
+mongodb = "3.1.0"
 serde = { version = "1.0.209", features = ["derive"] }
 serde_yaml = "0.9.34+deprecated"
 clap = { version = "4.5.16", features = ["derive"] }
@@ -24,7 +24,7 @@ reqwest = { version = "0.12.7", features = [
   "rustls-tls",
 ] }
 redis = { version = "0.26.1", features = ["connection-manager", "tokio-comp"] }
-tokio = { version = "1.39.3", features = [
+tokio = { version = "1.40.0", features = [
   "macros",
   "rt",
   "rt-multi-thread",
