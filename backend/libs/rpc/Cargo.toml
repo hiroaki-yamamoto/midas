@@ -9,7 +9,7 @@ edition = "2021"
 types = { path = "../types" }
 errors = { path = "../errors" }
 
-serde = { version = "1.0.204", features = ["derive", "rc"] }
+serde = { version = "1.0.209", features = ["derive", "rc"] }
 http = "1.1.0"
 warp = "0.3.7"
 bson = "2.11.0"

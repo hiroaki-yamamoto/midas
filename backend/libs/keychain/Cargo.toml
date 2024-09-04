@@ -16,12 +16,12 @@ writers = { path = "../writers" }
 bytes = "1.6.0"
 ring = "0.17.8"
 futures = "0.3.30"
-mongodb = "3.0.1"
+mongodb = "3.1.0"
 rmp-serde = "1.3.0"
 async-trait = "0.1.81"
-serde = { version = "1.0.204", features = ["derive", "rc"] }
+serde = { version = "1.0.209", features = ["derive", "rc"] }
 serde_qs = "0.13.0"
-reqwest = { version = "0.12.5", features = [
+reqwest = { version = "0.12.7", features = [
   "gzip",
   "brotli",
   "json",

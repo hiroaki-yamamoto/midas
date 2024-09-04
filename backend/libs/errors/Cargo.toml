@@ -8,23 +8,23 @@ edition = "2021"
 
 [dependencies]
 err-derive = "0.3.1"
-serde = { version = "1.0.204", features = ["derive"] }
+serde = { version = "1.0.209", features = ["derive"] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 url = "2.5.2"
 warp = { version = "0.3.7", features = ["tls"] }
-reqwest = { version = "0.12.5", features = [
+reqwest = { version = "0.12.7", features = [
   "gzip",
   "brotli",
   "json",
   "rustls-tls",
 ] }
-mongodb = "3.0.1"
+mongodb = "3.1.0"
 serde_qs = "0.13.0"
-serde_json = "1.0.120"
+serde_json = "1.0.127"
 serde_yaml = "0.9.34+deprecated"
-redis = "0.26.0"
+redis = "0.26.1"
 async-nats = "0.35.1"
 rmp-serde = "1.3.0"
 tokio-tungstenite = "0.23.1"
-tokio = { version = "1.39.2", features = ["sync"] }
-rug = { version = "1.25.0", features = ["serde"] }
+tokio = { version = "1.40.0", features = ["sync"] }
+rug = { version = "1.26.0", features = ["serde"] }

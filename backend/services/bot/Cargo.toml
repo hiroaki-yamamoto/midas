@@ -16,15 +16,15 @@ warp_utils = { path = "../../libs/warp_utils" }
 rpc = { path = "../../libs/rpc" }
 
 warp = { version = "0.3.7", features = ["tls"] }
-mongodb = "3.0.1"
-reqwest = { version = "0.12.5", features = [
+mongodb = "3.1.0"
+reqwest = { version = "0.12.7", features = [
   "gzip",
   "brotli",
   "json",
   "rustls-tls",
   "cookies",
 ] }
-tokio = { version = "1.39.2", features = [
+tokio = { version = "1.40.0", features = [
   "macros",
   "rt",
   "rt-multi-thread",
@@ -32,6 +32,6 @@ tokio = { version = "1.39.2", features = [
 ] }
 futures = "0.3.30"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-clap = { version = "4.5.11", features = ["derive"] }
+clap = { version = "4.5.16", features = ["derive"] }
 libc = "0.2.154"
 http = "1.1.0"

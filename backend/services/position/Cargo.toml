@@ -13,14 +13,14 @@ access_logger = { path = "../../libs/access_logger" }
 csrf = { path = "../../libs/csrf" }
 warp_utils = { path = "../../libs/warp_utils" }
 
-mongodb = "3.0.1"
-tokio = { version = "1.39.2", features = [
+mongodb = "3.1.0"
+tokio = { version = "1.40.0", features = [
   "macros",
   "rt",
   "rt-multi-thread",
   "signal",
 ] }
 warp = { version = "0.3.7", features = ["tls"] }
-serde = { version = "1.0.204", features = ["derive"] }
+serde = { version = "1.0.209", features = ["derive"] }
 futures = "0.3.30"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
