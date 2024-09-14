@@ -45,5 +45,5 @@ reqwest = { version = "0.12.7", features = [
   "rustls-tls",
   "cookies",
 ] }
-rug = { version = "1.26.0", features = ["serde"] }
+rug = { version = "1.26.1", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
