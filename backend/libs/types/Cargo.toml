@@ -12,10 +12,10 @@ errors = { path = "../errors" }
 url = "2.5.2"
 serde = { version = "1.0.210", features = ["derive"] }
 tokio = { version = "1.40.0", features = ["sync", "net"] }
-bson = { version = "2.11.0", features = ["chrono-0_4"] }
+bson = { version = "2.12.0", features = ["chrono-0_4"] }
 mongodb = "3.1.0"
-tokio-tungstenite = { version = "0.23.1", features = ["native-tls"] }
+tokio-tungstenite = { version = "0.24.0", features = ["native-tls"] }
 serde_json = "1.0.128"
-rug = { version = "1.26.0", features = ["serde"] }
+rug = { version = "1.26.1", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
 chrono = "0.4.38"
