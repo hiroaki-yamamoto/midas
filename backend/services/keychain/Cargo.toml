@@ -15,7 +15,7 @@ access_logger = { path = "../../libs/access_logger" }
 subscribe = { path = "../../libs/subscribe" }
 warp_utils = { path = "../../libs/warp_utils" }
 
-clap = { version = "4.5.17", features = ["derive"] }
+clap = { version = "4.5.18", features = ["derive"] }
 mongodb = "3.1.0"
 tokio = { version = "1.40.0", features = [
   "macros",

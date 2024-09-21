@@ -12,4 +12,4 @@ errors = { path = "../errors" }
 serde = { version = "1.0.210", features = ["derive", "rc"] }
 http = "1.1.0"
 warp = "0.3.7"
-bson = "2.12.0"
+bson = "2.13.0"
