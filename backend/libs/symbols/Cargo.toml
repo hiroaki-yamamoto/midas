@@ -16,7 +16,7 @@ round_robin_client = { path = "../round_robin_client" }
 clients = { path = "../clients" }
 writers = { path = "../writers" }
 
-async-trait = "0.1.82"
+async-trait = "0.1.83"
 futures = "0.3.30"
 mongodb = "3.1.0"
 reqwest = { version = "0.12.7", features = ["gzip", "brotli", "json"] }
