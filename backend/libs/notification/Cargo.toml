@@ -26,7 +26,7 @@ log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 tokio = { version = "1.40.0", features = ["time", "macros", "sync"] }
 tokio-stream = "0.1.16"
 tokio-tungstenite = { version = "0.24.0", features = ["native-tls"] }
-futures = "0.3.30"
+futures = "0.3.31"
 mongodb = "3.1.0"
 serde = { version = "1.0.210", features = ["derive"] }
 rug = { version = "1.26.1", features = ["serde"] }

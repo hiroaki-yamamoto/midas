@@ -17,7 +17,7 @@ clients = { path = "../clients" }
 writers = { path = "../writers" }
 
 async-trait = "0.1.83"
-futures = "0.3.30"
+futures = "0.3.31"
 mongodb = "3.1.0"
 reqwest = { version = "0.12.7", features = ["gzip", "brotli", "json"] }
 serde = { version = "1.0.210", features = ["derive"] }
