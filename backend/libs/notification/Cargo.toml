@@ -32,7 +32,7 @@ serde = { version = "1.0.210", features = ["derive"] }
 rug = { version = "1.26.1", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
 url = "2.5.2"
-reqwest = { version = "0.12.7", features = [
+reqwest = { version = "0.12.8", features = [
   "gzip",
   "brotli",
   "json",
