@@ -12,8 +12,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       cookie:
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.7.0
+        version: 0.7.1
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -26,8 +26,8 @@ packages:
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
 
-  cookie@0.6.0:
-    resolution: {integrity: sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw==}
+  cookie@0.7.1:
+    resolution: {integrity: sha512-6DnInpx7SJ2AK3+CTUE/ZM0vWTUboZCegxhC2xiIydHR9jNuTAASBrfEpHhiGOZw/nX51bHt6YQl8jsGo4y/0w==}
     engines: {node: '>= 0.6'}
 
   js-yaml@4.1.0:
@@ -43,7 +43,7 @@ snapshots:
 
   argparse@2.0.1: {}
 
-  cookie@0.6.0: {}
+  cookie@0.7.1: {}
 
   js-yaml@4.1.0:
     dependencies:
