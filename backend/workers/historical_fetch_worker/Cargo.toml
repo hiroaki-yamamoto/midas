@@ -25,5 +25,5 @@ tokio = { version = "1.40.0", features = [
 ] }
 clap = { version = "4.5.18", features = ["derive"] }
 mongodb = "3.1.0"
-futures = "0.3.30"
+futures = "0.3.31"
 libc = "0.2.154"
