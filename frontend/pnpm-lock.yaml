@@ -30,8 +30,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.6(@angular/common@18.2.6(@angular/core@18.2.6(rxjs@7.8.1)(zone.js@0.15.0))(rxjs@7.8.1))(@angular/core@18.2.6(rxjs@7.8.1)(zone.js@0.15.0))(@angular/platform-browser@18.2.6(@angular/animations@18.2.6(@angular/core@18.2.6(rxjs@7.8.1)(zone.js@0.15.0)))(@angular/common@18.2.6(@angular/core@18.2.6(rxjs@7.8.1)(zone.js@0.15.0))(rxjs@7.8.1))(@angular/core@18.2.6(rxjs@7.8.1)(zone.js@0.15.0)))(rxjs@7.8.1)
       '@angular/material':
-        specifier: 18.2.6
-        version: 18.2.6(umm7ktixl6wd63fdyskl2q5mde)
+        specifier: 18.2.7
+        version: 18.2.7(umm7ktixl6wd63fdyskl2q5mde)
       '@angular/platform-browser':
         specifier: ~18.2.0
         version: 18.2.6(@angular/animations@18.2.6(@angular/core@18.2.6(rxjs@7.8.1)(zone.js@0.15.0)))(@angular/common@18.2.6(@angular/core@18.2.6(rxjs@7.8.1)(zone.js@0.15.0))(rxjs@7.8.1))(@angular/core@18.2.6(rxjs@7.8.1)(zone.js@0.15.0))
@@ -395,11 +395,11 @@ packages:
       '@angular/compiler': 18.2.7
       '@angular/compiler-cli': 18.2.7
 
-  '@angular/material@18.2.6':
-    resolution: {integrity: sha512-ObxC/vomSb9QF3vIztuiInQzws+D6u09Dhfx6uNFjtyICqxEFpF7+Qx7QVDWrsuXOgxZTKgacK8f46iV8hWUfg==}
+  '@angular/material@18.2.7':
+    resolution: {integrity: sha512-mgPj2TCIrsngmu3iNnoaPc6su7uPv+NPCv9HaiKhTx4QGae8EW+RvUxEZJvh4Qaym1fJTi3hjnVeWvQDLQt4CA==}
     peerDependencies:
       '@angular/animations': ^18.0.0 || ^19.0.0
-      '@angular/cdk': 18.2.6
+      '@angular/cdk': 18.2.7
       '@angular/common': ^18.0.0 || ^19.0.0
       '@angular/core': ^18.0.0 || ^19.0.0
       '@angular/forms': ^18.0.0 || ^19.0.0
@@ -6040,7 +6040,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@angular/material@18.2.6(umm7ktixl6wd63fdyskl2q5mde)':
+  '@angular/material@18.2.7(umm7ktixl6wd63fdyskl2q5mde)':
     dependencies:
       '@angular/animations': 18.2.6(@angular/core@18.2.6(rxjs@7.8.1)(zone.js@0.15.0))
       '@angular/cdk': 18.2.6(@angular/common@18.2.6(@angular/core@18.2.6(rxjs@7.8.1)(zone.js@0.15.0))(rxjs@7.8.1))(@angular/core@18.2.6(rxjs@7.8.1)(zone.js@0.15.0))(rxjs@7.8.1)
