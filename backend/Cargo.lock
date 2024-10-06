@@ -2773,9 +2773,9 @@ checksum = "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f"
 
 [[package]]
 name = "schannel"
-version = "0.1.24"
+version = "0.1.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9aaafd5a2b6e3d657ff009d82fbd630b6bd54dd4eb06f21693925cdf80f9b8b"
+checksum = "19ea6da6180bc0aca0973d69ef8aa2f4409e9815060b7b69377c67cc021734be"
 dependencies = [
  "windows-sys 0.59.0",
 ]
@@ -3487,9 +3487,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-retry2"
-version = "0.5.5"
+version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c093bc28674bb8824c31e3c4dd87512d0b9427ce8ec45f0a38a3bf57c426b636"
+checksum = "903934dba1c4c2f2e9cb460ef10b5695e0b0ecad3bf9ee7c8675e540c5e8b2d1"
 dependencies = [
  "pin-project",
  "rand",
