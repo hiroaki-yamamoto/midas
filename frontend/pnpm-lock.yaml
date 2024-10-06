@@ -4219,8 +4219,8 @@ packages:
     resolution: {integrity: sha512-cKTUFc/rbKUd/9meOvgrpJ2WrNzymt6jfRDdwg5UCnVzv9dTpEj9JS5m3wtziXVCjluIXyL8pcaukYqezIzZQA==}
     engines: {node: ^16.14.0 || >=18.0.0}
 
-  markerjs2@2.32.2:
-    resolution: {integrity: sha512-clxO3ODp0Ks6tKxgu4mlMXiljkRL0wW/U3UaNBMKehXLIdDX0fg+VNiCCqGXV7iqHDYJdEGeXgdLiQEHg8EpwQ==}
+  markerjs2@2.32.3:
+    resolution: {integrity: sha512-D7oD4BT5NOsQbugdcO2TFmcw9ZMHp96Ih09A5f0UndxiQNWuz+j5zymtkTHs0WU+oOR8K6dyTufv4KtfJ6diBg==}
 
   media-typer@0.3.0:
     resolution: {integrity: sha512-dq+qelQ9akHpcOl/gUVRTxVIOkAJ1wR3QAvb4RsVjS8oVoFjDGTc679wJYmUmknUF5HwMLOgb5O+a3KxfWapPQ==}
@@ -5730,7 +5730,7 @@ snapshots:
       d3-transition: 3.0.1(d3-selection@3.0.0)
       d3-voronoi-treemap: 1.1.2
       flatpickr: 4.6.13
-      markerjs2: 2.32.2
+      markerjs2: 2.32.3
       pdfmake: 0.2.13
       polylabel: 1.1.0
       seedrandom: 3.0.5
@@ -10214,7 +10214,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  markerjs2@2.32.2: {}
+  markerjs2@2.32.3: {}
 
   media-typer@0.3.0: {}
 
