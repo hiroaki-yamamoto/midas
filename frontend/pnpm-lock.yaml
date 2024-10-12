@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@amcharts/amcharts5':
         specifier: ^5.6.2
-        version: 5.10.6
+        version: 5.10.7
       '@angular/animations':
         specifier: ~18.2.0
         version: 18.2.8(@angular/core@18.2.8(rxjs@7.8.1)(zone.js@0.15.0))
@@ -189,8 +189,8 @@ importers:
 
 packages:
 
-  '@amcharts/amcharts5@5.10.6':
-    resolution: {integrity: sha512-WSwaRxR887JWjFHm7RQZiD6LKs8VmjYaMC927MMYvx8cJqx5/2YXKQrRHwgAxpfIsR3yHfpg+VF3pabpJLz7YQ==}
+  '@amcharts/amcharts5@5.10.7':
+    resolution: {integrity: sha512-8ZH2DwZzx3hIVUaoClrxps18qq6duBvorCNAZ45OWnP5xfHEHvYn1ofsMw0FhBjKjj8QZHu8KDwKwLG5sLWMgg==}
 
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
@@ -5717,7 +5717,7 @@ packages:
 
 snapshots:
 
-  '@amcharts/amcharts5@5.10.6':
+  '@amcharts/amcharts5@5.10.7':
     dependencies:
       '@types/d3': 7.4.3
       '@types/d3-chord': 3.0.6
