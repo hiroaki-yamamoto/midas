@@ -9,7 +9,7 @@
   "private": true,
   "dependencies": {
     "argparse": "^2.0.1",
-    "cookie": "^0.7.0",
+    "cookie": "^1.0.0",
     "js-yaml": "^4.1.0",
     "typescript": "^5.0.0"
   }
