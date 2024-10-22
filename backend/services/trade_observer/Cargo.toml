@@ -15,9 +15,9 @@ access_logger = { path = "../../libs/access_logger" }
 subscribe = { path = "../../libs/subscribe" }
 errors = { path = "../../libs/errors" }
 
-futures = "0.3.30"
+futures = "0.3.31"
 warp = { version = "0.3.7", features = ["tls"] }
-clap = { version = "4.5.16", features = ["derive"] }
+clap = { version = "4.5.20", features = ["derive"] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 tokio = { version = "1.40.0", features = [
   "macros",
@@ -28,4 +28,4 @@ tokio = { version = "1.40.0", features = [
 ] }
 libc = "0.2.154"
 mongodb = "3.1.0"
-serde_json = "1.0.127"
+serde_json = "1.0.132"

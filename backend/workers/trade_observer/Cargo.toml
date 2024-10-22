@@ -12,7 +12,7 @@ rpc = { path = "../../libs/rpc" }
 config = { path = "../../libs/config" }
 subscribe = { path = "../../libs/subscribe" }
 
-clap = { version = "4.5.16", features = ["derive"] }
+clap = { version = "4.5.20", features = ["derive"] }
 tokio = { version = "1.40.0", features = [
   "signal",
   "rt",
@@ -20,6 +20,6 @@ tokio = { version = "1.40.0", features = [
   "macros",
 ] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-futures = "0.3.30"
+futures = "0.3.31"
 libc = "0.2.154"
 mongodb = "3.1.0"

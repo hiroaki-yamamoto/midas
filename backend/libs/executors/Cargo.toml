@@ -20,14 +20,14 @@ entities = { path = "../entities" }
 writers = { path = "../writers" }
 position = { path = "../position" }
 
-async-stream = "0.3.5"
-async-trait = "0.1.81"
-futures = "0.3.30"
+async-stream = "0.3.6"
+async-trait = "0.1.83"
+futures = "0.3.31"
 mongodb = "3.1.0"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 ring = "0.17.8"
-serde = { version = "1.0.209", features = ["derive", "rc"] }
-reqwest = { version = "0.12.7", features = [
+serde = { version = "1.0.210", features = ["derive", "rc"] }
+reqwest = { version = "0.12.8", features = [
   "gzip",
   "brotli",
   "json",
@@ -36,6 +36,6 @@ reqwest = { version = "0.12.7", features = [
 serde_qs = "0.13.0"
 err-derive = "0.3.1"
 tokio = { version = "1.40.0", features = ["sync", "time"] }
-rug = { version = "1.26.0", features = ["serde"] }
+rug = { version = "1.26.1", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
 url = "2.5.2"
