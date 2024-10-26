@@ -13,7 +13,7 @@ config = { path = "../../libs/config" }
 subscribe = { path = "../../libs/subscribe" }
 
 clap = { version = "4.5.20", features = ["derive"] }
-tokio = { version = "1.40.0", features = [
+tokio = { version = "1.41.0", features = [
   "signal",
   "rt",
   "rt-multi-thread",

@@ -17,7 +17,7 @@ reqwest = { version = "0.12.8", features = [
   "rustls-tls",
 ] }
 serde = "1.0.213"
-tokio = { version = "1.40.0", features = [
+tokio = { version = "1.41.0", features = [
   "time",
   "rt",
   "rt-multi-thread",
