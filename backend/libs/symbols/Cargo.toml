@@ -20,7 +20,7 @@ async-trait = "0.1.83"
 futures = "0.3.31"
 mongodb = "3.1.0"
 reqwest = { version = "0.12.9", features = ["gzip", "brotli", "json"] }
-serde = { version = "1.0.213", features = ["derive"] }
+serde = { version = "1.0.214", features = ["derive"] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 serde_json = "1.0.132"
 url = "2.5.2"

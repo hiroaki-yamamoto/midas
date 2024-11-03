@@ -13,7 +13,7 @@ entities = { path = "../entities" }
 writers = { path = "../writers" }
 
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-serde = { version = "1.0.213", features = ["derive", "rc"] }
+serde = { version = "1.0.214", features = ["derive", "rc"] }
 rug = { version = "1.26.1", features = ["serde"] }
 mongodb = "3.1.0"
 async-trait = "0.1.83"
