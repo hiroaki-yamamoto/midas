@@ -10,7 +10,7 @@ errors = { path = "../errors" }
 types = { path = "../types" }
 
 log = { version = "0.4.22", features = ["kv_unstable"] }
-reqwest = { version = "0.12.8", features = [
+reqwest = { version = "0.12.9", features = [
   "gzip",
   "brotli",
   "json",
