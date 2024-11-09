@@ -24,7 +24,7 @@ reqwest = { version = "0.12.9", features = [
   "rustls-tls",
 ] }
 redis = { version = "0.27.0", features = ["connection-manager", "tokio-comp"] }
-tokio = { version = "1.41.0", features = [
+tokio = { version = "1.41.1", features = [
   "macros",
   "rt",
   "rt-multi-thread",

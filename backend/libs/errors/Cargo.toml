@@ -10,7 +10,7 @@ edition = "2021"
 err-derive = "0.3.1"
 serde = { version = "1.0.214", features = ["derive"] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-url = "2.5.2"
+url = "2.5.3"
 warp = { version = "0.3.7", features = ["tls"] }
 reqwest = { version = "0.12.9", features = [
   "gzip",
@@ -26,5 +26,5 @@ redis = "0.27.0"
 async-nats = "0.37.0"
 rmp-serde = "1.3.0"
 tokio-tungstenite = "0.24.0"
-tokio = { version = "1.41.0", features = ["sync"] }
+tokio = { version = "1.41.1", features = ["sync"] }
 rug = { version = "1.26.1", features = ["serde"] }
