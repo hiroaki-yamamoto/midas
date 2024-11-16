@@ -31,7 +31,7 @@ tokio = { version = "1.41.1", features = [
   "rt-multi-thread",
 ] }
 tokio-tungstenite = { version = "0.24.0", features = ["native-tls"] }
-serde = { version = "1.0.214", features = ["derive"] }
+serde = { version = "1.0.215", features = ["derive"] }
 tokio-stream = "0.1.16"
 rug = { version = "1.26.1", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
