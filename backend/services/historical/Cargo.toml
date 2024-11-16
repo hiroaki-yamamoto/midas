@@ -24,7 +24,7 @@ kvs = { path = "../../libs/kvs" }
 serde = { version = "1.0.214", features = ["derive"] }
 rmp-serde = "1.3.0"
 mongodb = "3.1.0"
-clap = { version = "4.5.20", features = ["derive"] }
+clap = { version = "4.5.21", features = ["derive"] }
 serde_yaml = "0.9.34+deprecated"
 tokio = { version = "1.41.1", features = [
   "macros",
