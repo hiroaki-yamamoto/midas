@@ -21,6 +21,7 @@ export interface ISeries {
 }
 
 @Component({
+  standalone: false,
   selector: 'app-date-graph',
   templateUrl: './date-graph.component.html',
   styleUrls: ['./date-graph.component.scss']
@@ -57,7 +58,7 @@ export class DateGraphComponent implements AfterViewInit, OnDestroy {
       const legend = chart.children.push(am.Legend.new(root, {
         x: am.percent(50),
         centerX: am.percent(50),
-      }))
+      }));
 
       // Create axes
       const dateAxis = chart.xAxes.push(amxy.DateAxis.new(root, {
@@ -86,7 +87,7 @@ export class DateGraphComponent implements AfterViewInit, OnDestroy {
           dateFormat: 'yyyy-MM-dd',
           dateFields: ['date'],
         });
-        return ret
+        return ret;
       };
 
       this.series.forEach((series) => {
@@ -102,7 +103,7 @@ export class DateGraphComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy() {
     this.browserOnly.browserOnly(() => {
       if (this.chartRoot) {
-        this.chartRoot.dispose()
+        this.chartRoot.dispose();
       }
     });
   }

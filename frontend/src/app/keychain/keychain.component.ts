@@ -4,12 +4,13 @@ import { MatDialog } from '@angular/material/dialog';
 
 import { EditDialogComponent } from './edit-dialog/edit-dialog.component';
 import { DeleteWarnComponent } from './delete-warn/delete-warn.component';
-import { RespType, EditDialogData } from './edit-dialog/edit-dialog-data'
+import { RespType, EditDialogData } from './edit-dialog/edit-dialog-data';
 
 import { KeychainService } from '../resources/keychain.service';
 import { ApiKey as APIKey } from '../../rpc/api-key.zod';
 
 @Component({
+  standalone: false,
   selector: 'app-keychain',
   templateUrl: './keychain.component.html',
   styleUrls: ['./keychain.component.scss']

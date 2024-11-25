@@ -44,6 +44,7 @@ class SymbolSyncHandler {
 }
 
 @Component({
+  standalone: false,
   selector: 'app-sync',
   templateUrl: './sync.component.html',
   styleUrls: ['./sync.component.scss']

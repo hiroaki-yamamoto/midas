@@ -1,12 +1,13 @@
 import { Component, Input, ViewChild, AfterViewInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort'
+import { MatSort } from '@angular/material/sort';
 
 import { Bookticker as BookTicker } from '../../../rpc/bookticker.zod';
 import { TradeObserverService } from '../../resources/trade-observer.service';
 
 @Component({
+  standalone: false,
   selector: 'app-book-ticker',
   templateUrl: './book-ticker.component.html',
   styleUrls: ['./book-ticker.component.scss']

@@ -3,6 +3,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { IDialogData } from './idialog-data';
 
 @Component({
+  standalone: false,
   selector: 'app-delete-warn',
   templateUrl: './delete-warn.component.html',
   styleUrls: ['./delete-warn.component.scss']

@@ -17,6 +17,7 @@ import { BotService } from '../resources/bot.service';
 import { faSave } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
+  standalone: false,
   selector: 'app-bot-editor',
   templateUrl: './bot-editor.component.html',
   styleUrls: ['./bot-editor.component.scss']

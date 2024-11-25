@@ -3,7 +3,7 @@ import { FormGroup, FormControl, Validators } from '@angular/forms';
 
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
-import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
+import { faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { EditDialogData, RespType } from './edit-dialog-data';
 import { KeychainService } from '../../resources/keychain.service';
 import { Exchanges } from '../../../rpc/exchanges.zod';
@@ -13,6 +13,7 @@ export interface EditDialogOption {
 }
 
 @Component({
+  standalone: false,
   selector: 'app-edit-dialog',
   templateUrl: './edit-dialog.component.html',
   styleUrls: ['./edit-dialog.component.scss']

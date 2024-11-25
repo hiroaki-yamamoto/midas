@@ -8,6 +8,7 @@ import {
 // import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 @Component({
+  standalone: false,
   selector: 'app-monaco-editor',
   templateUrl: './monaco-editor.component.html',
   styleUrls: ['./monaco-editor.component.scss'],

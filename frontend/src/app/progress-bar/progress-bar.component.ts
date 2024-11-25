@@ -4,6 +4,7 @@ import { ProgressBarMode } from '@angular/material/progress-bar';
 import { IProgress } from './iprogress';
 
 @Component({
+  standalone: false,
   selector: 'app-progress-bar',
   templateUrl: './progress-bar.component.html',
   styleUrls: ['./progress-bar.component.scss']

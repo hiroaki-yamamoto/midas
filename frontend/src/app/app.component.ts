@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Exchanges } from '../rpc/exchanges.zod';
 
 @Component({
+  standalone: false,
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']

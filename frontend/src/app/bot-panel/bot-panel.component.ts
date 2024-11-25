@@ -16,6 +16,7 @@ import { BrowserOnlyService } from '../browser-only.service';
 import { ISeries } from '../date-graph/date-graph.component';
 
 @Component({
+  standalone: false,
   selector: 'app-bot-panel',
   templateUrl: './bot-panel.component.html',
   styleUrls: ['./bot-panel.component.scss']
