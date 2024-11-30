@@ -5215,11 +5215,11 @@ packages:
   tinyqueue@2.0.3:
     resolution: {integrity: sha512-ppJZNDuKGgxzkHihX8v9v9G5f+18gzaTfrukGrq6ueg0lmH4nqVnA2IPG0AEH3jKEk2GRJCUhDoqpoiw3PHLBA==}
 
-  tldts-core@6.1.64:
-    resolution: {integrity: sha512-uqnl8vGV16KsyflHOzqrYjjArjfXaU6rMPXYy2/ZWoRKCkXtghgB4VwTDXUG+t0OTGeSewNAG31/x1gCTfLt+Q==}
+  tldts-core@6.1.65:
+    resolution: {integrity: sha512-Uq5t0N0Oj4nQSbU8wFN1YYENvMthvwU13MQrMJRspYCGLSAZjAfoBOJki5IQpnBM/WFskxxC/gIOTwaedmHaSg==}
 
-  tldts@6.1.64:
-    resolution: {integrity: sha512-ph4AE5BXWIOsSy9stpoeo7bYe/Cy7VfpciIH4RhVZUPItCJmhqWCN0EVzxd8BOHiyNb42vuJc6NWTjJkg91Tuw==}
+  tldts@6.1.65:
+    resolution: {integrity: sha512-xU9gLTfAGsADQ2PcWee6Hg8RFAv0DnjMGVJmDnUmI8a9+nYmapMQix4afwrdaCtT+AqP4MaxEzu7cCrYmBPbzQ==}
     hasBin: true
 
   tmp@0.0.33:
@@ -11222,11 +11222,11 @@ snapshots:
 
   tinyqueue@2.0.3: {}
 
-  tldts-core@6.1.64: {}
+  tldts-core@6.1.65: {}
 
-  tldts@6.1.64:
+  tldts@6.1.65:
     dependencies:
-      tldts-core: 6.1.64
+      tldts-core: 6.1.65
 
   tmp@0.0.33:
     dependencies:
@@ -11242,7 +11242,7 @@ snapshots:
 
   tough-cookie@5.0.0:
     dependencies:
-      tldts: 6.1.64
+      tldts: 6.1.65
 
   tree-dump@1.0.2(tslib@2.8.1):
     dependencies:
