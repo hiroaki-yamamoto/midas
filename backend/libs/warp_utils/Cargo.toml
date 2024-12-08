@@ -9,5 +9,5 @@ edition = "2021"
 csrf = { path = "../csrf" }
 rpc = { path = "../rpc" }
 
-http = "1.1.0"
+http = "1.2.0"
 warp = "0.3.7"
