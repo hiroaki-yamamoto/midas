@@ -23,7 +23,7 @@ position = { path = "../position" }
 async-stream = "0.3.6"
 async-trait = "0.1.83"
 futures = "0.3.31"
-mongodb = "3.1.0"
+mongodb = "3.1.1"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 ring = "0.17.8"
 serde = { version = "1.0.216", features = ["derive", "rc"] }

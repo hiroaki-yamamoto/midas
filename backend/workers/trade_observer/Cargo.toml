@@ -22,4 +22,4 @@ tokio = { version = "1.42.0", features = [
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 futures = "0.3.31"
 libc = "0.2.154"
-mongodb = "3.1.0"
+mongodb = "3.1.1"
