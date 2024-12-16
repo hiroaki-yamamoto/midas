@@ -15,7 +15,8 @@ use ::serde_json::{from_str as json_parse, to_string as jsonify};
 use ::tokio::time::interval;
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::{
-  protocol::frame::coding::CloseCode, protocol::CloseFrame, Error as WSError,
+  protocol::frame::coding::CloseCode, protocol::frame::Payload,
+  protocol::frame::Utf8Payload, protocol::CloseFrame, Error as WSError,
   Message, Result as WSResult,
 };
 use futures::FutureExt;
@@ -107,23 +108,27 @@ where
   ) -> WebsocketMessageResult<MsgDetail<R>> {
     match msg {
       Message::Text(text) => {
-        info!(payload = text; "Received Text Message");
+        info!(payload = text.as_str(); "Received Text Message");
         let payload: R = json_parse(text.as_str())?;
         return Ok(MsgDetail::EntityReceived(payload));
       }
       Message::Binary(blob) => {
-        info!(payload = String::from_utf8_lossy(&blob); "Received Binary Message");
-        let payload = String::from_utf8(blob)?;
+        let payload = blob.into_text()?.to_string();
+        info!(payload = payload; "Received Binary Message");
         let payload: R = json_parse(&payload)?;
         return Ok(MsgDetail::EntityReceived(payload));
       }
       Message::Ping(payload) => {
-        info!(payload = String::from_utf8_lossy(&payload); "Received Ping Message");
-        let _ = self.send_msg(Message::Pong(payload)).await?;
+        let payload = payload.into_text()?.to_string();
+        info!(payload = payload; "Received Ping Message");
+        let _ = self
+          .send_msg(Message::Pong(Payload::Vec(payload.as_bytes().to_vec())))
+          .await?;
         return Ok(MsgDetail::Continue);
       }
       Message::Pong(payload) => {
-        info!(payload = String::from_utf8_lossy(&payload); "Received Pong Message");
+        let payload = payload.into_text()?.to_string();
+        info!(payload = payload; "Received Pong Message");
         return Ok(MsgDetail::Continue);
       }
       Message::Close(_) => {
@@ -225,7 +230,7 @@ where
 
   fn start_send(mut self: Pin<&mut Self>, item: W) -> Result<(), Self::Error> {
     let payload = jsonify(&item)?;
-    let msg = Message::Text(payload);
+    let msg = Message::Text(payload.into());
 
     return block_on(self.send_msg(msg)).map_err(|err| err.into());
   }
