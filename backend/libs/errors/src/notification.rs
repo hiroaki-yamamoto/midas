@@ -2,9 +2,9 @@ use ::std::io::Error as IOErr;
 
 use ::async_nats::jetstream::context::CreateStreamError;
 
-use ::err_derive::Error;
 use ::reqwest::Error as ReqErr;
 use ::serde_json::Error as JSONErr;
+use ::thiserror::Error;
 use ::url::ParseError as UrlParseErr;
 
 use crate::user_stream::UserStreamError;
@@ -18,32 +18,32 @@ use crate::{ConsumerError, PublishError};
 
 #[derive(Debug, Error)]
 pub enum NotificationError {
-  #[error(display = "Multiple Float Parsing Errors: {}", _0)]
-  MultipleParseErrors(#[source] VecElementErrs<ParseError>),
-  #[error(display = "Parsing Error: {}", _0)]
-  ParseError(#[source] ParseError),
-  #[error(display = "IOError: {}", _0)]
-  IOError(#[source] IOErr),
-  #[error(display = "APIHeaderError: {}", _0)]
-  APIHeaderError(#[source] APIHeaderErrors),
-  #[error(display = "HttpError: {}", _0)]
-  HttpErr(#[source] HTTPErrors),
-  #[error(display = "WebSocket Error: {}", _0)]
-  WebSocketErr(#[source] WebsocketError),
-  #[error(display = "JSON Error: {}", _0)]
-  JSONErr(#[source] JSONErr),
-  #[error(display = "Maximum Attempt Exceeded: {}", _0)]
-  MaximumAttemptExceeded(#[source] MaximumAttemptExceeded),
-  #[error(display = "Nats Stream Creation Error: {}", _0)]
-  CreateStreamError(#[source] CreateStreamError),
-  #[error(display = "Nats Publish Error: {}", _0)]
-  PublishError(#[source] PublishError),
-  #[error(display = "Nats Consumer Error: {}", _0)]
-  ConsumerError(#[source] ConsumerError),
-  #[error(display = "URL Parse Error: {}", _0)]
-  UrlParseError(#[source] UrlParseErr),
-  #[error(display = "User Stream Error: {}", _0)]
-  UserStreamError(#[source] UserStreamError),
+  #[error("Multiple Float Parsing Errors: {}", _0)]
+  MultipleParseErrors(#[from] VecElementErrs<ParseError>),
+  #[error("Parsing Error: {}", _0)]
+  ParseError(#[from] ParseError),
+  #[error("IOError: {}", _0)]
+  IOError(#[from] IOErr),
+  #[error("APIHeaderError: {}", _0)]
+  APIHeaderError(#[from] APIHeaderErrors),
+  #[error("HttpError: {}", _0)]
+  HttpErr(#[from] HTTPErrors),
+  #[error("WebSocket Error: {}", _0)]
+  WebSocketErr(#[from] WebsocketError),
+  #[error("JSON Error: {}", _0)]
+  JSONErr(#[from] JSONErr),
+  #[error("Maximum Attempt Exceeded: {}", _0)]
+  MaximumAttemptExceeded(#[from] MaximumAttemptExceeded),
+  #[error("Nats Stream Creation Error: {}", _0)]
+  CreateStreamError(#[from] CreateStreamError),
+  #[error("Nats Publish Error: {}", _0)]
+  PublishError(#[from] PublishError),
+  #[error("Nats Consumer Error: {}", _0)]
+  ConsumerError(#[from] ConsumerError),
+  #[error("URL Parse Error: {}", _0)]
+  UrlParseError(#[from] UrlParseErr),
+  #[error("User Stream Error: {}", _0)]
+  UserStreamError(#[from] UserStreamError),
 }
 
 impl From<ReqErr> for NotificationError {

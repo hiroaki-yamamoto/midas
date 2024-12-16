@@ -1,8 +1,8 @@
-use ::err_derive::Error;
 use ::serde::Serialize;
+use ::thiserror::Error;
 
 #[derive(Clone, Debug, Error, Serialize)]
-#[error(display = "Validation Failed")]
+#[error("Validation Failed")]
 pub struct ValidationErr {
   pub field: String,
   pub reason: String,

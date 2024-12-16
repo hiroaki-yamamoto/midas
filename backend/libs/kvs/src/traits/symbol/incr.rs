@@ -19,7 +19,6 @@ pub trait Incr: OptExecution {
   ) -> KVSResult<()> {
     let channel_name = self.channel_name(exchange.clone(), symbol.clone());
     let mut cmds = self.__commands__();
-    // let mut cmds = cmds.lock().await;
     cmds.incr(channel_name.as_ref(), delta).await?;
     self.execute_opt(exchange, symbol, opt).await?;
     return Ok(());

@@ -1,11 +1,11 @@
 use ::std::error::Error as ErrTrait;
 
-use ::err_derive::Error;
+use ::thiserror::Error;
 
 use ::serde::Serialize;
 
 #[derive(Debug, Clone, Serialize, Error)]
-#[error(display = "Error (index: {}, err: {:?}", index, err)]
+#[error("Error (index: {}, err: {:?}", index, err)]
 pub struct VecElementErr<T>
 where
   T: ErrTrait,
@@ -26,7 +26,7 @@ where
 pub type RawVecElemErrs<T> = Vec<VecElementErr<T>>;
 
 #[derive(Debug, Clone, Serialize, Error)]
-#[error(display = "Multiple Errors: {:?}", errors)]
+#[error("Multiple Errors: {:?}", errors)]
 pub struct VecElementErrs<T>
 where
   T: ErrTrait,

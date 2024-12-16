@@ -1,5 +1,5 @@
-use ::err_derive::Error;
+use ::thiserror::Error;
 
 #[derive(Debug, Clone, Default, Error)]
-#[error(display = "Maximum retrieving count exceeded.")]
+#[error("Maximum retrieving count exceeded.")]
 pub struct MaximumAttemptExceeded;

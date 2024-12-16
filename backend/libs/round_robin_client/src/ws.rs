@@ -16,8 +16,7 @@ use ::tokio::time::interval;
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::{
   protocol::frame::coding::CloseCode, protocol::frame::Payload,
-  protocol::frame::Utf8Payload, protocol::CloseFrame, Error as WSError,
-  Message, Result as WSResult,
+  protocol::CloseFrame, Error as WSError, Message, Result as WSResult,
 };
 use futures::FutureExt;
 

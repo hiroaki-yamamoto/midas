@@ -1,7 +1,7 @@
-use ::err_derive::Error;
+use ::thiserror::Error;
 
 #[derive(Debug, Clone, Error)]
-#[error(display = "Entity {} Not Found (Key: {:?})", entity, key)]
+#[error("Entity {} Not Found (Key: {:?})", entity, key)]
 pub struct ObjectNotFound {
   entity: String,
   key: Option<String>,
