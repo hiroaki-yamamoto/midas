@@ -1,7 +1,7 @@
-use ::err_derive::Error;
+use ::thiserror::Error;
 
 #[derive(Debug, Clone, Error)]
-#[error(display = "Unknown Exchange: {}", exchange)]
+#[error("Unknown Exchange: {}", exchange)]
 pub struct UnknownExchangeError {
   exchange: String,
 }

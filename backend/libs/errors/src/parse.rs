@@ -1,11 +1,11 @@
 use ::std::error::Error;
 use ::std::fmt::Debug;
 
-use ::err_derive::Error as ErrorDerive;
+use ::thiserror::Error as ErrorDerive;
 
 #[derive(Debug, Default, Clone, ErrorDerive)]
 #[error(
-  display = "Failed to parse: (field: {:?}, input: {:?}, desc: {:?})",
+  "Failed to parse: (field: {:?}, input: {:?}, desc: {:?})",
   field,
   input,
   desc

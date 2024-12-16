@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 
-use ::err_derive::Error;
+use ::thiserror::Error;
 
 #[derive(Debug, Clone, Error)]
-#[error(display = "Initialization Failed: {:?}", message)]
+#[error("Initialization Failed: {:?}", message)]
 pub struct InitError {
   message: Option<String>,
 }

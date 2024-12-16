@@ -22,9 +22,9 @@ reqwest = { version = "0.12.9", features = [
   "rustls-tls",
   "cookies",
 ] }
-err-derive = "0.3.1"
 rug = { version = "1.26.1", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
 async-trait = "0.1.83"
 futures = "0.3.31"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
+thiserror = "2.0.7"

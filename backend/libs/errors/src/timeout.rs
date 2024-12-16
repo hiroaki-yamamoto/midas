@@ -1,7 +1,7 @@
-use ::err_derive::Error;
+use ::thiserror::Error;
 
 #[derive(Debug, Error)]
-#[error(display = "Timeout")]
+#[error("Timeout")]
 pub struct TimeoutError;
 
 pub type TimeoutResult<T> = Result<T, TimeoutError>;

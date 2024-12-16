@@ -1,7 +1,7 @@
-use ::err_derive::Error;
+use ::thiserror::Error;
 
 #[derive(Debug, Clone, Error)]
-#[error(display = "Field {} is required, but it's empty", field)]
+#[error("Field {} is required, but it's empty", field)]
 pub struct EmptyError {
   pub field: String,
 }

@@ -1,17 +1,12 @@
-use ::err_derive::Error;
 use ::reqwest::header::{InvalidHeaderName, InvalidHeaderValue};
 use ::reqwest::Error as RequestError;
+use ::thiserror::Error;
 use ::warp::reject::Reject;
 
 use crate::MaximumAttemptExceeded;
 
 #[derive(Debug, Clone, Error)]
-#[error(
-  display = "Status Failue (code: {}, text: {}, url: {:?})",
-  code,
-  text,
-  url
-)]
+#[error("Status Failue (code: {}, text: {}, url: {:?})", code, text, url)]
 pub struct StatusFailure {
   pub url: Option<String>,
   pub code: u16,
@@ -28,16 +23,16 @@ impl Reject for StatusFailure {}
 
 #[derive(Debug, Error)]
 pub enum HTTPErrors {
-  #[error(display = "Invalid Header Value: {}", _0)]
-  InvalidHeaderValue(#[source] InvalidHeaderValue),
-  #[error(display = "Invalid Header Name {}", _0)]
-  InvalidHeaderName(#[source] InvalidHeaderName),
-  #[error(display = "Failed to send a request: {}", _0)]
-  RequestFailure(#[source] RequestError),
-  #[error(display = "Response Status Expectation Failure: {}", _0)]
-  ResponseFailure(#[source] StatusFailure),
-  #[error(display = "Round-robin Error")]
-  RoundRobinExceeded(#[source] MaximumAttemptExceeded),
+  #[error("Invalid Header Value: {}", _0)]
+  InvalidHeaderValue(#[from] InvalidHeaderValue),
+  #[error("Invalid Header Name {}", _0)]
+  InvalidHeaderName(#[from] InvalidHeaderName),
+  #[error("Failed to send a request: {}", _0)]
+  RequestFailure(#[from] RequestError),
+  #[error("Response Status Expectation Failure: {}", _0)]
+  ResponseFailure(#[from] StatusFailure),
+  #[error("Round-robin Error")]
+  RoundRobinExceeded(#[from] MaximumAttemptExceeded),
 }
 
 pub type HTTPResult<T> = Result<T, HTTPErrors>;
