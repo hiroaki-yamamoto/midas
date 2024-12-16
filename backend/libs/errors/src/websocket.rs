@@ -2,6 +2,7 @@ use ::err_derive::Error;
 use ::serde::Serialize;
 use ::serde_json::Error as JsonError;
 use ::std::io::Error as IoError;
+use ::std::str::Utf8Error;
 use ::std::string::FromUtf8Error;
 use ::tokio_tungstenite::tungstenite::Error as SocketError;
 
@@ -41,7 +42,9 @@ pub enum WebsocketMessageError {
   #[error(display = "JSON decode Error: {:?}", _0)]
   JsonError(#[source] JsonError),
   #[error(display = "UTF8 Decode error: {:?}", _0)]
-  UTF8Error(#[source] FromUtf8Error),
+  UTF8DecodeError(#[source] FromUtf8Error),
+  #[error(display = "UTF8 Error: {:?}", _0)]
+  UTF8Error(#[source] Utf8Error),
 }
 
 #[derive(Debug, Error)]

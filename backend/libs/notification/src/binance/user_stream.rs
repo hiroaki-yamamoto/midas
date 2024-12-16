@@ -136,7 +136,7 @@ impl UserStream {
           let _ = socket.send(Message::Pong(d.to_owned())).await;
         }
         Message::Binary(binary) => {
-          let event: RawUserStreamEvents = from_json_bin(binary)?;
+          let event: RawUserStreamEvents = from_json_bin(binary.as_slice())?;
           self.handle_user_stream_event(event).await?;
         }
         Message::Text(text) => {
