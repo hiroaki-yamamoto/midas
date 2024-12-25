@@ -111,7 +111,7 @@ impl UserStream {
         Some(reason) => {
           warn!(
             code:% = reason.code,
-            reason = reason.reason;
+            reason = format!("{:?}", reason.reason);
             "Closing connection...",
           );
         }
@@ -136,7 +136,7 @@ impl UserStream {
           let _ = socket.send(Message::Pong(d.to_owned())).await;
         }
         Message::Binary(binary) => {
-          let event: RawUserStreamEvents = from_json_bin(binary.as_slice())?;
+          let event: RawUserStreamEvents = from_json_bin(binary)?;
           self.handle_user_stream_event(event).await?;
         }
         Message::Text(text) => {

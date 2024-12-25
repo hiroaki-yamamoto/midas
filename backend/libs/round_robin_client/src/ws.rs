@@ -11,12 +11,14 @@ use ::log::{error, info, warn};
 use ::rand::thread_rng;
 use ::rand::Rng;
 use ::serde::{de::DeserializeOwned, ser::Serialize};
-use ::serde_json::{from_str as json_parse, to_string as jsonify};
+use ::serde_json::{
+  from_slice as json_bin_parse, from_str as json_parse, to_string as jsonify,
+};
 use ::tokio::time::interval;
 use ::tokio_tungstenite::connect_async;
 use ::tokio_tungstenite::tungstenite::{
-  protocol::frame::coding::CloseCode, protocol::frame::Payload,
-  protocol::CloseFrame, Error as WSError, Message, Result as WSResult,
+  protocol::frame::coding::CloseCode, protocol::CloseFrame, Error as WSError,
+  Message, Result as WSResult,
 };
 use futures::FutureExt;
 
@@ -112,22 +114,18 @@ where
         return Ok(MsgDetail::EntityReceived(payload));
       }
       Message::Binary(blob) => {
-        let payload = blob.into_text()?.to_string();
-        info!(payload = payload; "Received Binary Message");
-        let payload: R = json_parse(&payload)?;
+        let payload = blob.to_vec();
+        info!(payload = format!("{:?}", blob); "Received Binary Message");
+        let payload: R = json_bin_parse(payload.as_slice())?;
         return Ok(MsgDetail::EntityReceived(payload));
       }
       Message::Ping(payload) => {
-        let payload = payload.into_text()?.to_string();
-        info!(payload = payload; "Received Ping Message");
-        let _ = self
-          .send_msg(Message::Pong(Payload::Vec(payload.as_bytes().to_vec())))
-          .await?;
+        info!(payload = format!("{:?}", payload); "Received Ping Message");
+        let _ = self.send_msg(Message::Pong(payload)).await?;
         return Ok(MsgDetail::Continue);
       }
       Message::Pong(payload) => {
-        let payload = payload.into_text()?.to_string();
-        info!(payload = payload; "Received Pong Message");
+        info!(payload = format!("{:?}", payload); "Received Pong Message");
         return Ok(MsgDetail::Continue);
       }
       Message::Close(_) => {
