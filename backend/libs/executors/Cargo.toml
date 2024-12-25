@@ -34,7 +34,7 @@ reqwest = { version = "0.12.9", features = [
   "rustls-tls",
 ] }
 serde_qs = "0.13.0"
-thiserror = "2.0.7"
+thiserror = "2.0.9"
 tokio = { version = "1.42.0", features = ["sync", "time"] }
 rug = { version = "1.26.1", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
