@@ -10,7 +10,7 @@ edition = "2021"
 errors = { path = "../errors" }
 
 url = "2.5.3"
-serde = { version = "1.0.216", features = ["derive"] }
+serde = { version = "1.0.217", features = ["derive"] }
 tokio = { version = "1.42.0", features = ["sync", "net"] }
 bson = { version = "2.13.0", features = ["chrono-0_4"] }
 mongodb = "3.1.1"
