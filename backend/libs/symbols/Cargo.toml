@@ -16,12 +16,12 @@ round_robin_client = { path = "../round_robin_client" }
 clients = { path = "../clients" }
 writers = { path = "../writers" }
 
-async-trait = "0.1.83"
+async-trait = "0.1.85"
 futures = "0.3.31"
 mongodb = "3.1.1"
-reqwest = { version = "0.12.11", features = ["gzip", "brotli", "json"] }
+reqwest = { version = "0.12.12", features = ["gzip", "brotli", "json"] }
 serde = { version = "1.0.217", features = ["derive"] }
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-serde_json = "1.0.134"
+serde_json = "1.0.135"
 url = "2.5.3"
 rmp-serde = "1.3.0"

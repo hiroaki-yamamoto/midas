@@ -21,21 +21,21 @@ writers = { path = "../writers" }
 position = { path = "../position" }
 
 async-stream = "0.3.6"
-async-trait = "0.1.83"
+async-trait = "0.1.85"
 futures = "0.3.31"
 mongodb = "3.1.1"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
 ring = "0.17.8"
 serde = { version = "1.0.217", features = ["derive", "rc"] }
-reqwest = { version = "0.12.11", features = [
+reqwest = { version = "0.12.12", features = [
   "gzip",
   "brotli",
   "json",
   "rustls-tls",
 ] }
 serde_qs = "0.13.0"
-thiserror = "2.0.9"
-tokio = { version = "1.42.0", features = ["sync", "time"] }
+thiserror = "2.0.11"
+tokio = { version = "1.43.0", features = ["sync", "time"] }
 rug = { version = "1.26.1", features = ["serde"] }
 gmp-mpfr-sys = { version = "1.6.4", features = ["force-cross"] }
 url = "2.5.3"

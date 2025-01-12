@@ -19,8 +19,8 @@ warp_utils = { path = "../../libs/warp_utils" }
 
 mongodb = "3.1.1"
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-clap = { version = "4.5.23", features = ["derive"] }
-tokio = { version = "1.42.0", features = [
+clap = { version = "4.5.26", features = ["derive"] }
+tokio = { version = "1.43.0", features = [
   "macros",
   "rt",
   "rt-multi-thread",
@@ -31,5 +31,5 @@ libc = "0.2.154"
 warp = { version = "0.3.7", features = ["tls"] }
 num-traits = "0.2.19"
 serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.134"
+serde_json = "1.0.135"
 http = "1.2.0"

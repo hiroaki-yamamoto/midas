@@ -14,8 +14,8 @@ rpc = { path = "../../libs/rpc" }
 warp_utils = { path = "../../libs/warp_utils" }
 
 log = { version = "0.4", features = ["kv_unstable", "kv_unstable_serde"] }
-clap = { version = "4.5.23", features = ["derive"] }
-tokio = { version = "1.42.0", features = [
+clap = { version = "4.5.26", features = ["derive"] }
+tokio = { version = "1.43.0", features = [
   "macros",
   "rt",
   "rt-multi-thread",
